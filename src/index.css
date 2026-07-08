@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .hidden-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@layer utilities {
+  .animate-cruise {
+    animation: cruise 2s ease-in-out infinite;
+  }
+  .animate-cloud-1 {
+    animation: cloud-pass 3s linear infinite;
+  }
+  .animate-cloud-2 {
+    animation: cloud-pass 4s linear infinite 1.5s;
+  }
+}
+
+@keyframes cruise {
+  0%, 100% { transform: translateY(0) rotate(45deg); }
+  50% { transform: translateY(-8px) rotate(45deg); }
+}
+
+@keyframes cloud-pass {
+  0% { transform: translateX(40px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(-40px); opacity: 0; }
+}
