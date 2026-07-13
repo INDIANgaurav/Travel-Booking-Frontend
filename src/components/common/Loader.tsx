@@ -31,7 +31,7 @@ export default function Loader({ fullScreen = false }: { fullScreen?: boolean })
   }
 
   return (
-    <div className="flex items-center justify-center p-8 w-full h-full min-h-[200px]">
+    <div className="flex flex-1 items-center justify-center p-8 w-full h-full min-h-[60vh]">
       {content}
     </div>
   );
