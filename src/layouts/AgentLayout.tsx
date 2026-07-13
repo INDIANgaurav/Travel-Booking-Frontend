@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, Plane, Building2, User as UserIcon, FileText, Menu, ChevronRight } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '../store/authSlice';
 
-export default function AdminLayout() {
+export default function AgentLayout() {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -23,29 +23,22 @@ export default function AdminLayout() {
     {
       title: 'Overview',
       items: [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
+        { name: 'Dashboard', path: '/agent-portal/dashboard', icon: <LayoutDashboard size={20} /> },
       ]
     },
     {
-      title: 'Management',
+      title: 'Bookings',
       items: [
-        { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
-        { name: 'Sub-Admins', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
-        { name: 'Agents', path: '/admin/agents', icon: <Briefcase size={20} /> },
-        { name: 'Bookings', path: '/admin/bookings', icon: <CreditCard size={20} /> },
+        { name: 'Search Flights', path: '/agent-portal/flights', icon: <Plane size={20} /> },
+        { name: 'Search Hotels', path: '/agent-portal/hotels', icon: <Building2 size={20} /> },
+        { name: 'My Bookings', path: '/agent-portal/bookings', icon: <CreditCard size={20} /> },
       ]
     },
     {
       title: 'Business',
       items: [
-        { name: 'Inventory & CMS', path: '/admin/inventory', icon: <PackageOpen size={20} /> },
-        { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
-      ]
-    },
-    {
-      title: 'System',
-      items: [
-        { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
+        { name: 'Customers', path: '/agent-portal/customers', icon: <Users size={20} /> },
+        { name: 'Invoices', path: '/agent-portal/invoices', icon: <FileText size={20} /> },
       ]
     }
   ];
@@ -58,11 +51,11 @@ export default function AdminLayout() {
       >
         <div className={`p-4 border-b border-blue-800/50 flex items-center h-20 ${isSidebarOpen ? 'justify-between' : 'justify-center'}`}>
           {isSidebarOpen && (
-            <Link to="/admin/dashboard" className="flex flex-col">
+            <Link to="/agent-portal/dashboard" className="flex flex-col">
               <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white tracking-tight">
-                Travel Admin
+                Agent Portal
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-blue-300 font-bold">Control Panel</span>
+              <span className="text-[10px] uppercase tracking-widest text-blue-300 font-bold">B2B Partner</span>
             </Link>
           )}
           <button 
@@ -111,17 +104,17 @@ export default function AdminLayout() {
         </nav>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden print:h-auto print:overflow-visible">
-        {/* Top Navbar */}
-        <header className="print:hidden h-20 bg-white border-b border-gray-100 flex items-center justify-end px-8 z-10 shadow-sm flex-shrink-0">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen">
+        {/* Top Header */}
+        <header className="print:hidden h-20 bg-white border-b border-gray-100 flex items-center justify-end px-8 shadow-sm z-10 flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="relative">
               <button 
-                className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 focus:outline-none"
+                className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-md">
                   {user?.avatar ? (
                     <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -129,39 +122,33 @@ export default function AdminLayout() {
                   )}
                 </div>
                 <div className="text-left hidden md:block">
-                  <p className="text-sm font-bold text-gray-900 leading-tight">{user?.name || 'Administrator'}</p>
-                  <p className="text-[11px] text-gray-500 font-medium">Super Admin</p>
+                  <p className="text-sm font-bold text-gray-900 leading-tight">{user?.name}</p>
+                  <p className="text-xs text-gray-500 font-medium">{user?.email}</p>
                 </div>
               </button>
 
               {isDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsDropdownOpen(false)}
-                  ></div>
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl py-2 border border-gray-100 transform opacity-100 scale-100 transition-all origin-top-right z-50">
-                    <div className="px-4 py-3 border-b border-gray-50">
-                      <p className="text-sm text-gray-500 font-medium">Signed in as</p>
-                      <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
-                    </div>
-                    
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 font-medium transition-colors"
-                    >
-                      <LogOut size={16} /> Logout
-                    </button>
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl py-2 border border-gray-100 transform opacity-100 scale-100 transition-all origin-top-right">
+                  <div className="px-4 py-3 border-b border-gray-50">
+                    <p className="text-sm text-gray-500 font-medium">Signed in as Agent</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
                   </div>
-                </>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 font-medium transition-colors"
+                  >
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-[#F8FAFC]">
-          <div className="h-full">
+        <main className="flex-1 overflow-auto bg-gray-50/50 p-4 lg:p-8">
+          <div className="max-w-7xl mx-auto h-full">
             <Outlet />
           </div>
         </main>

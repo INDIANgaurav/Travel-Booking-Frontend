@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated } from '../../store/authSlice';
-import { Plane, User } from 'lucide-react';
+import { Plane, User, ArrowLeft } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -14,13 +14,18 @@ export default function FlightBookingPage() {
 
   const { selectedOutbound, selectedReturn, tripType } = location.state || {};
 
-  const [bookingStep, setBookingStep] = useState(2); 
+  const [bookingStep, setBookingStep] = useState(1); 
+  const [maxStepReached, setMaxStepReached] = useState(1); 
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   
   const [adults, setAdults] = useState([{ name: '', gender: 'Male', passengerType: 'Adult' }]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Fare summary states
+  const [showBaseFare, setShowBaseFare] = useState(false);
+  const [showTaxes, setShowTaxes] = useState(false);
   
   useEffect(() => {
     if (!selectedOutbound) {
@@ -64,16 +69,19 @@ export default function FlightBookingPage() {
 
       const totalAmount = selectedOutbound.price + 1651;
       
+      const generatedPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
       const { data } = await api.post('/api/bookings/flight', {
         totalAmount,
         date: selectedOutbound.departureTime,
         details: {
           airline: selectedOutbound.airline,
-          from: selectedOutbound.origin,
-          to: selectedOutbound.destination,
+          from: selectedOutbound.departureCity,
+          to: selectedOutbound.arrivalCity,
           passengers: adults,
           contactDetails: { email: contactEmail, phone: contactPhone, countryCode: '91' },
-          seats: selectedSeats
+          seats: selectedSeats,
+          pnr: generatedPnr
         }
       });
 
@@ -93,7 +101,7 @@ export default function FlightBookingPage() {
             });
             
             toast.success('Payment successful! Booking confirmed.');
-            navigate('/');
+            navigate(`/invoice/${data.booking._id}`);
           } catch (error) {
             toast.error('Payment verification failed.');
           }
@@ -124,17 +132,36 @@ export default function FlightBookingPage() {
   return (
     <div className="min-h-screen bg-[#e5eef5] pb-20">
       <div className="bg-[#0a1930] text-white py-4 px-6 md:px-20 flex items-center justify-between shadow-md sticky top-0 z-50">
-        <h1 className="text-2xl font-black">Complete your booking</h1>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 rounded-full transition hover:bg-white/10 text-white"
+            title="Go Back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-2xl font-black hidden sm:block">Complete your booking</h1>
+        </div>
         <div className="hidden md:flex items-center space-x-6 text-[13px] text-gray-400">
-          <span className={`cursor-pointer font-medium hover:text-white ${bookingStep >= 1 ? 'text-white' : ''}`} onClick={() => setBookingStep(1)}>Trip Summary</span>
+          <span 
+            className={`font-medium transition-colors ${bookingStep >= 1 ? 'text-white font-bold' : ''} ${maxStepReached >= 1 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+            onClick={() => { if (maxStepReached >= 1) setBookingStep(1); }}
+          >Trip Summary</span>
           <span>•</span>
-          <span className="cursor-pointer hover:text-white">Travel Insurance</span>
+          <span 
+            className={`transition-colors ${bookingStep >= 2 ? 'text-white font-bold' : ''} ${maxStepReached >= 2 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+            onClick={() => { if (maxStepReached >= 2) setBookingStep(2); }}
+          >Traveller Details</span>
           <span>•</span>
-          <span className={`cursor-pointer hover:text-white ${bookingStep >= 2 ? 'text-white' : ''}`} onClick={() => setBookingStep(2)}>Traveller Details</span>
+          <span 
+            className={`transition-colors ${bookingStep >= 3 ? 'text-white font-bold' : ''} ${maxStepReached >= 3 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+            onClick={() => { if (maxStepReached >= 3) setBookingStep(3); }}
+          >Seats & Meals</span>
           <span>•</span>
-          <span className={`cursor-pointer hover:text-white ${bookingStep >= 3 ? 'text-white' : ''}`} onClick={() => setBookingStep(3)}>Seats & Meals</span>
-          <span>•</span>
-          <span className={`cursor-pointer hover:text-white ${bookingStep >= 4 ? 'text-white' : ''}`} onClick={() => setBookingStep(4)}>Add-ons</span>
+          <span 
+            className={`transition-colors ${bookingStep >= 4 ? 'text-white font-bold' : ''} ${maxStepReached >= 4 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+            onClick={() => { if (maxStepReached >= 4) setBookingStep(4); }}
+          >Add-ons</span>
         </div>
       </div>
 
@@ -209,7 +236,7 @@ export default function FlightBookingPage() {
                </div>
 
                <div className="p-4 border-t border-gray-200 bg-white flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-                  <button onClick={() => setBookingStep(2)} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
+                  <button onClick={() => { setBookingStep(2); if (maxStepReached < 2) setMaxStepReached(2); }} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
                </div>
             </div>
           )}
@@ -330,7 +357,7 @@ export default function FlightBookingPage() {
                </div>
 
                <div className="p-4 border-t border-gray-200 bg-white flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-                  <button onClick={() => setBookingStep(3)} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
+                  <button onClick={() => { setBookingStep(3); if (maxStepReached < 3) setMaxStepReached(3); }} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
                </div>
             </div>
           )}
@@ -347,7 +374,12 @@ export default function FlightBookingPage() {
                  <div className="flex justify-between items-center bg-white p-3 border border-gray-200 rounded">
                    <div className="flex items-center gap-2">
                      <span className="font-bold text-gray-800 text-[14px]">New Delhi → Navi Mumbai</span>
-                     <span className="text-[12px] text-gray-500">1 of 1 Seat(s) Selected</span>
+                     <span className="text-[12px] text-gray-500">{selectedSeats.length} of {adults.length} Seat(s) Selected</span>
+                     {selectedSeats.length > 0 && (
+                       <span className="text-[12px] font-bold text-white bg-green-500 px-2 py-0.5 rounded ml-2">
+                         Seat(s): {selectedSeats.join(', ')}
+                       </span>
+                     )}
                    </div>
                    <div className="text-right">
                      <span className="font-bold text-gray-800 text-[14px]">₹ 301</span>
@@ -477,7 +509,7 @@ export default function FlightBookingPage() {
                </div>
 
                <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end relative z-20">
-                  <button onClick={() => setBookingStep(4)} className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700">CONTINUE</button>
+                  <button onClick={() => { setBookingStep(4); if (maxStepReached < 4) setMaxStepReached(4); }} className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700">CONTINUE</button>
                </div>
             </div>
           )}
@@ -511,14 +543,59 @@ export default function FlightBookingPage() {
                <h3 className="font-bold text-[18px] text-gray-900">Fare Summary</h3>
              </div>
              <div className="p-4">
-               <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600 flex items-center gap-2"><span className="border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-[10px]">+</span> Base Fare</span>
-                  <span className="font-medium">₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+               {/* Base Fare */}
+               <div className="border-b border-gray-100 py-2">
+                 <div 
+                   className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 -mx-1 rounded"
+                   onClick={() => setShowBaseFare(!showBaseFare)}
+                 >
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <span className="border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        {showBaseFare ? '-' : '+'}
+                      </span> 
+                      Base Fare
+                    </span>
+                    <span className="font-medium">₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                 </div>
+                 {showBaseFare && (
+                   <div className="pl-6 pr-1 py-2 text-sm text-gray-500 space-y-1 bg-gray-50 mt-1 rounded-md">
+                     <div className="flex justify-between">
+                       <span>Adult(s) (1 X ₹ {selectedOutbound.price.toLocaleString('en-IN')})</span>
+                       <span>₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                     </div>
+                   </div>
+                 )}
                </div>
-               <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-gray-600 flex items-center gap-2"><span className="border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-[10px]">+</span> Taxes and Surcharges</span>
-                  <span className="font-medium">₹ 1,651</span>
+
+               {/* Taxes and Surcharges */}
+               <div className="border-b border-gray-100 py-2">
+                 <div 
+                   className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-1 -mx-1 rounded"
+                   onClick={() => setShowTaxes(!showTaxes)}
+                 >
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <span className="border border-gray-300 rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        {showTaxes ? '-' : '+'}
+                      </span> 
+                      Taxes and Surcharges
+                    </span>
+                    <span className="font-medium">₹ 1,651</span>
+                 </div>
+                 {showTaxes && (
+                   <div className="pl-6 pr-1 py-2 text-sm text-gray-500 space-y-1 bg-gray-50 mt-1 rounded-md">
+                     <div className="flex justify-between">
+                       <span>Airline Taxes</span>
+                       <span>₹ 850</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>Fee & Surcharge</span>
+                       <span>₹ 801</span>
+                     </div>
+                   </div>
+                 )}
                </div>
+
+               {/* Total */}
                <div className="flex justify-between items-center py-4 mt-2">
                   <span className="font-bold text-gray-900 text-[18px]">Total Amount</span>
                   <span className="font-black text-[20px] text-gray-900">₹ {(selectedOutbound.price + 1651).toLocaleString('en-IN')}</span>

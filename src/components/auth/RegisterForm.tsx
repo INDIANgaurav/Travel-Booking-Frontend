@@ -3,6 +3,8 @@ import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import api from '../../services/api';
+import { auth } from '../../config/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface RegisterFormProps {
   role: 'USER' | 'AGENT';
@@ -74,10 +76,39 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      
+      await api.post('/api/auth/google', { token: idToken, role });
+      
+      if (role === 'AGENT') {
+        setSuccessMsg('Your agent account has been created and is pending admin approval. Redirecting...');
+      } else {
+        setSuccessMsg('Account created successfully! Redirecting to login...');
+      }
+
+      setTimeout(() => {
+        onToggleMode();
+      }, 1500);
+      
+    } catch (err: any) {
+      setError(err.message || err.response?.data?.message || 'Google sign-in failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="animate-in slide-in-from-left-4 duration-300">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h2>
-      <p className="text-sm text-gray-500 mb-6">Sign up and start your adventure</p>
+      <p className="text-sm text-gray-500 mb-6">
+        {role === 'AGENT' ? 'Register as a Travel Agent to grow your business' : 'Sign up and start your adventure'}
+      </p>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
@@ -216,7 +247,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
         </div>
       </div>
 
-      <Button variant="outline" fullWidth icon={
+      <Button variant="outline" fullWidth type="button" onClick={handleGoogleSignIn} disabled={isLoading} icon={
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
       }>
         Continue with Google

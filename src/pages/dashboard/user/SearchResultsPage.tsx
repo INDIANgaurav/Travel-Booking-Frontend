@@ -68,7 +68,7 @@ export default function SearchResultsPage() {
   const renderHeader = () => (
     <div className="flex items-center gap-4 mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
       <button 
-        onClick={() => navigate('/dashboard/home')}
+        onClick={() => navigate('/')}
         className="p-3 hover:bg-gray-100 rounded-full transition text-gray-500 bg-gray-50"
       >
         <ArrowLeft size={20} />

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, CreditCard, TrendingUp, ArrowUpRight, Activity, Globe, Package } from 'lucide-react';
 import api from '../../../services/api';
 import Loader from '../../../components/common/Loader';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, bookings: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -58,10 +60,10 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: 'Total Revenue', value: `₹ ${stats.revenue.toLocaleString()}`, icon: <TrendingUp size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+18.2%' },
-    { title: 'Total Bookings', value: stats.bookings, icon: <CreditCard size={24} />, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+5.4%' },
-    { title: 'Active Users', value: stats.users, icon: <Users size={24} />, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12.1%' },
-    { title: 'API Requests (24h)', value: '14.2k', icon: <Activity size={24} />, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+2.4%' },
+    { title: 'Total Revenue', value: `₹ ${stats.revenue.toLocaleString()}`, icon: <TrendingUp size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+18.2%', path: '/admin/finance' },
+    { title: 'Total Bookings', value: stats.bookings, icon: <CreditCard size={24} />, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+5.4%', path: '/admin/bookings' },
+    { title: 'Active Users', value: stats.users, icon: <Users size={24} />, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12.1%', path: '/admin/users' },
+    { title: 'API Requests (24h)', value: '14.2k', icon: <Activity size={24} />, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+2.4%', path: '' },
   ];
 
   return (
@@ -75,7 +77,11 @@ export default function AdminDashboard() {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card, index) => (
-          <div key={index} className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 hover:border-gray-200 transition-all flex flex-col justify-between group">
+          <div 
+            key={index} 
+            onClick={() => card.path && navigate(card.path)}
+            className={`bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 hover:border-blue-200 transition-all flex flex-col justify-between group ${card.path ? 'cursor-pointer hover:shadow-md hover:-translate-y-1' : ''}`}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">{card.title}</p>

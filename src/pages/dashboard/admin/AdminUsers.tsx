@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Search } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 import Loader from '../../../components/common/Loader';
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +22,19 @@ export default function AdminUsers() {
     };
     fetchUsers();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) {
+      try {
+        await api.delete(`/api/admin/users/${id}`);
+        toast.success('User deleted successfully');
+        setUsers(users.filter((u: any) => u._id !== id));
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        toast.error('Failed to delete user');
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -56,7 +69,8 @@ export default function AdminUsers() {
                 <th className="px-6 py-4 rounded-tl-2xl">Name</th>
                 <th className="px-6 py-4">Contact</th>
                 <th className="px-6 py-4">Role</th>
-                <th className="px-6 py-4 rounded-tr-2xl">Joined Date</th>
+                <th className="px-6 py-4">Joined Date</th>
+                <th className="px-6 py-4 rounded-tr-2xl text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100/80">
@@ -92,6 +106,17 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-600">
                     {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {user.role !== 'SUPER_ADMIN' && (
+                      <button 
+                        onClick={() => handleDelete(user._id)}
+                        className="inline-flex items-center gap-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-red-200"
+                        title="Delete User"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

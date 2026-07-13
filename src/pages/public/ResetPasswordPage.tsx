@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { KeyRound, Lock, ArrowLeft } from 'lucide-react';
+import { KeyRound, Lock, ArrowLeft, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
       
       // Auto redirect to login after a few seconds
       setTimeout(() => {
-        navigate('/login');
+        navigate('/?login=true');
       }, 3000);
       
     } catch (error: any) {
@@ -68,8 +68,8 @@ export default function ResetPasswordPage() {
               <h3 className="text-lg font-medium text-gray-900">Password Reset Complete!</h3>
               <p className="text-sm text-gray-500">Your password has been successfully reset. Redirecting to login...</p>
               
-              <Link to="/login" className="flex items-center justify-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                Continue to Login
+              <Link to="/?login=true" className="flex items-center justify-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                Return to login
               </Link>
             </div>
           ) : (
@@ -120,9 +120,10 @@ export default function ResetPasswordPage() {
                 </button>
               </div>
               
-              <div className="text-center mt-4">
-                <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 inline-flex items-center">
-                  <ArrowLeft size={16} className="mr-1" /> Back to log in
+              <div className="text-sm">
+                <Link to="/?login=true" className="text-sm font-medium text-gray-600 hover:text-gray-900 inline-flex items-center">
+                  <ArrowRight size={16} className="mr-2 rotate-180" />
+                  Back to login
                 </Link>
               </div>
             </form>

@@ -6,6 +6,8 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { setCredentials } from '../../store/authSlice';
 import api from '../../services/api';
+import { auth } from '../../config/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface LoginFormProps {
   role: 'USER' | 'AGENT';
@@ -31,6 +33,12 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       const response = await api.post('/api/auth/login', { email, password });
       
       const { token, ...user } = response.data;
+      
+      // Block normal users from logging in via the MyBiz tab
+      if (role === 'AGENT' && user.role === 'USER') {
+        throw new Error('Normal users cannot log in from the MyBiz tab. Please use the Personal Account tab.');
+      }
+
       dispatch(setCredentials({ user, token }));
       
       // Redirect based on role
@@ -39,7 +47,35 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       else navigate('/admin');
       
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to log in. Please check your credentials.');
+      setError(err.message || err.response?.data?.message || 'Failed to log in. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      
+      const response = await api.post('/api/auth/google', { token: idToken, role });
+      const { token, ...user } = response.data;
+      
+      if (role === 'AGENT' && user.role === 'USER') {
+        throw new Error('Normal users cannot log in from the MyBiz tab. Please use the Personal Account tab.');
+      }
+
+      dispatch(setCredentials({ user, token }));
+      
+      if (user.role === 'USER') navigate('/dashboard');
+      else if (user.role === 'AGENT') navigate('/agent-portal');
+      else navigate('/admin');
+      
+    } catch (err: any) {
+      setError(err.message || err.response?.data?.message || 'Google sign-in failed.');
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +84,9 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
   return (
     <div className="animate-in slide-in-from-right-4 duration-300">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back!</h2>
-      <p className="text-sm text-gray-500 mb-6">Login to continue your journey with us</p>
+      <p className="text-sm text-gray-500 mb-6">
+        {role === 'AGENT' ? 'Log in to your Travel Agent portal' : 'Log in to your Traveller account'}
+      </p>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
@@ -106,7 +144,7 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
         </div>
       </div>
 
-      <Button variant="outline" fullWidth icon={
+      <Button variant="outline" fullWidth type="button" onClick={handleGoogleSignIn} disabled={isLoading} icon={
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
       }>
         Continue with Google

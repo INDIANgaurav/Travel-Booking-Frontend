@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
-import { ChevronDown, Check, Plane, Building2, User } from 'lucide-react';
+import { ChevronDown, Check, Plane, Building2, User, ArrowLeft } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser, logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
@@ -39,7 +41,14 @@ const CITIES: Record<string, string> = {
 
 export default function FlightSearchResults() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
+
+  const getLocalISO = (d: Date) => {
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
+  };
   
   const [defaultDate] = useState(() => new Date().toISOString());
   const [defaultReturnDate] = useState(() => new Date(Date.now() + 86400000 * 2).toISOString());
@@ -77,42 +86,59 @@ export default function FlightSearchResults() {
 
   const [suggestedFlights, setSuggestedFlights] = useState<Flight[]>([]);
 
-  // URL Sync Effect
-  useEffect(() => {
-    const fetchFlights = async () => {
-      setLoading(true);
-      try {
-        const passengers = adults + children + infants;
-        let baseParams = `cabinClass=${encodeURIComponent(cabinClass)}&passengers=${passengers}`;
-        if (nonStopFilter) baseParams += `&stops=0`;
-        if (morningFilter) baseParams += `&morningDeparture=true`;
+  const fetchFlights = async (useUrlParams = false) => {
+    setLoading(true);
+    try {
+      const qFrom = useUrlParams ? (searchParams.get('from') || 'DEL') : from;
+      const qTo = useUrlParams ? (searchParams.get('to') || 'BOM') : to;
+      
+      const qDateStr = useUrlParams ? searchParams.get('date') : null;
+      const qDate = useUrlParams ? (qDateStr ? new Date(qDateStr) : date) : date;
+      
+      const qTripType = useUrlParams ? (searchParams.get('tripType') || 'Round Trip') : tripType;
+      
+      const qReturnDateStr = useUrlParams ? searchParams.get('returnDate') : null;
+      const qReturnDate = useUrlParams ? (qReturnDateStr ? new Date(qReturnDateStr) : returnDate) : returnDate;
+      
+      const qCabinClass = useUrlParams ? (searchParams.get('cabinClass') || 'Economy') : cabinClass;
+      
+      const qAdults = useUrlParams ? parseInt(searchParams.get('adults') || '1') : adults;
+      const qChildren = useUrlParams ? parseInt(searchParams.get('children') || '0') : children;
+      const qInfants = useUrlParams ? parseInt(searchParams.get('infants') || '0') : infants;
+      const qPassengers = qAdults + qChildren + qInfants;
 
-        const outRes = await api.get(`/api/searches/flights?from=${from}&to=${to}&date=${date.toISOString()}&${baseParams}`);
-        setOutboundFlights(outRes.data);
-        if (outRes.data.length > 0) {
-          setSelectedOutbound(outRes.data[0]);
-          setSuggestedFlights([]);
-        } else {
-          // Fetch cheapest suggestions for any route on this date
-          const suggRes = await api.get(`/api/searches/flights?date=${date.toISOString()}`);
-          const sorted = suggRes.data.sort((a: Flight, b: Flight) => a.price - b.price).slice(0, 3);
-          setSuggestedFlights(sorted);
-        }
+      let baseParams = `cabinClass=${encodeURIComponent(qCabinClass)}&passengers=${qPassengers}`;
+      if (nonStopFilter) baseParams += `&stops=0`;
+      if (morningFilter) baseParams += `&morningDeparture=true`;
 
-        if (tripType === 'Round Trip' && returnDate) {
-          const retRes = await api.get(`/api/searches/flights?from=${to}&to=${from}&date=${returnDate.toISOString()}&${baseParams}`);
-          setReturnFlights(retRes.data);
-          if (retRes.data.length > 0) setSelectedReturn(retRes.data[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching flights:", error);
-      } finally {
-        setLoading(false);
+      const outRes = await api.get(`/api/searches/flights?from=${qFrom}&to=${qTo}&date=${getLocalISO(qDate)}&${baseParams}`);
+      setOutboundFlights(outRes.data);
+      if (outRes.data.length > 0) {
+        setSelectedOutbound(outRes.data[0]);
+        setSuggestedFlights([]);
+      } else {
+        const suggRes = await api.get(`/api/searches/flights?date=${getLocalISO(qDate)}`);
+        const sorted = suggRes.data.sort((a: Flight, b: Flight) => a.price - b.price).slice(0, 3);
+        setSuggestedFlights(sorted);
       }
-    };
 
-    fetchFlights();
-  }, [from, to, date, tripType, returnDate, cabinClass, adults, children, infants, nonStopFilter, morningFilter]);
+      if (qTripType === 'Round Trip' && qReturnDate) {
+        const retRes = await api.get(`/api/searches/flights?from=${qTo}&to=${qFrom}&date=${getLocalISO(qReturnDate)}&${baseParams}`);
+        setReturnFlights(retRes.data);
+        if (retRes.data.length > 0) setSelectedReturn(retRes.data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching flights:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // URL Sync Effect (Only on Mount)
+  useEffect(() => {
+    fetchFlights(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatDate = (d: Date) => {
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' }).replace(',', '');
@@ -131,12 +157,18 @@ export default function FlightSearchResults() {
 
   const handleSearch = () => {
     closeAllPickers();
+    fetchFlights(false);
+    
     const query = new URLSearchParams({
       tripType,
       from,
       to,
-      date: date.toISOString(),
-      returnDate: returnDate.toISOString()
+      date: getLocalISO(date),
+      returnDate: getLocalISO(returnDate),
+      cabinClass,
+      adults: adults.toString(),
+      children: children.toString(),
+      infants: infants.toString()
     }).toString();
     navigate(`/flights/search?${query}`, { replace: true });
   };
@@ -171,31 +203,64 @@ export default function FlightSearchResults() {
         
         {/* Compact Logo & Nav Row */}
         <div className="max-w-[1200px] mx-auto py-2 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <Plane size={24} className="text-blue-600" />
-            <span className="text-xl font-black tracking-tight text-gray-900">
-              Travel<span className="text-blue-600">Go</span>
-            </span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <Link to="/" className="flex items-center gap-2">
+              <Plane size={24} className="text-blue-600" />
+              <span className="text-xl font-black tracking-tight text-gray-900">
+                Travel<span className="text-blue-600">Go</span>
+              </span>
+            </Link>
+          </div>
           
           <div className="flex items-center gap-8 mr-12">
             <div className="flex flex-col items-center cursor-pointer text-blue-600">
               <Plane size={20} />
               <span className="text-[10px] font-bold mt-1">Flights</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition">
+            <div 
+              className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition"
+              onClick={() => navigate('/?tab=Hotels')}
+            >
               <Building2 size={20} />
               <span className="text-[10px] font-bold mt-1">Hotels</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 cursor-pointer bg-blue-50/50 px-3 py-1.5 rounded-full border border-blue-100">
-            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white">
-              <User size={14} />
+          {user ? (
+            <div className="group relative py-2">
+              <button className="flex items-center gap-2 cursor-pointer bg-blue-50/50 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-50 transition">
+                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden font-bold text-xs uppercase">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    user.name?.charAt(0) || <User size={14} />
+                  )}
+                </div>
+                <span className="text-xs font-bold text-gray-800">Hi, {user.name?.split(' ')[0] || 'User'}</span>
+                <ChevronDown size={14} className="text-blue-600" />
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-48 hidden group-hover:block z-50">
+                <div className="bg-white rounded-lg shadow-xl py-2 border border-gray-100">
+                  <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
+                  <Link to="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
+                  <button onClick={() => { navigate('/'); dispatch(logout()); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                </div>
+              </div>
             </div>
-            <span className="text-xs font-bold text-gray-800">Hi, User</span>
-            <ChevronDown size={14} className="text-blue-600" />
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 cursor-pointer bg-blue-50/50 px-3 py-1.5 rounded-full border border-blue-100" onClick={() => navigate('/')}>
+              <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white">
+                <User size={14} />
+              </div>
+              <span className="text-xs font-bold text-gray-800">Login</span>
+            </div>
+          )}
         </div>
 
         {/* Search Bar Row */}
@@ -303,6 +368,7 @@ export default function FlightSearchResults() {
               <CustomCalendar 
                 startDate={date}
                 endDate={tripType === 'Round Trip' ? returnDate : null}
+                isOneWay={tripType === 'One Way'}
                 onChange={(start, end) => {
                   if (start) setDate(start);
                   if (end) setReturnDate(end);
@@ -406,6 +472,52 @@ export default function FlightSearchResults() {
                 </div>
                 <span className="text-sm text-gray-700">Morning Departures</span>
               </label>
+            </div>
+
+            {/* Promotional Ad Block */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded shadow-sm border border-blue-100 mt-4 overflow-hidden relative">
+              <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
+              <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-indigo-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
+              
+              <div className="relative z-10">
+                <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-3 inline-block">Sponsored</span>
+                <h3 className="font-black text-gray-900 text-lg leading-tight mb-2">Explore Bali at ₹12,999!</h3>
+                <p className="text-xs text-gray-600 mb-4 leading-relaxed">Book your dream tropical getaway with flat 20% off on Round Trips. Limited time offer.</p>
+                <div className="w-full h-28 rounded-lg overflow-hidden mb-3 shadow-md">
+                  <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80" alt="Bali" className="w-full h-full object-cover transform hover:scale-110 transition duration-700" />
+                </div>
+                <button className="w-full bg-gray-900 text-white font-bold text-xs py-2.5 rounded hover:bg-black transition shadow-lg shadow-gray-300">Grab Offer</button>
+              </div>
+            </div>
+
+            {/* Trending Deals */}
+            <div className="bg-white rounded shadow-sm border border-gray-200 mt-4 overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
+                <h3 className="font-bold text-gray-900 text-sm">Trending Getaways</h3>
+              </div>
+              <div className="divide-y divide-gray-100">
+                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
+                  <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Goa" />
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">Goa</h4>
+                    <span className="text-[10px] text-gray-500 block">Starting from ₹3,499</span>
+                  </div>
+                </div>
+                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
+                  <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Maldives" />
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">Maldives</h4>
+                    <span className="text-[10px] text-gray-500 block">Starting from ₹15,999</span>
+                  </div>
+                </div>
+                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
+                  <img src="https://images.unsplash.com/photo-1518182170546-076616fd4aa6?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Kerala" />
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">Kerala</h4>
+                    <span className="text-[10px] text-gray-500 block">Starting from ₹4,199</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

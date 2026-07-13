@@ -1,23 +1,27 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated, selectCurrentUser } from './store/authSlice'
 
 // Pages
-import AuthPage from './pages/public/AuthPage'
 import LandingPage from './pages/public/LandingPage'
 import DashboardLayout from './layouts/DashboardLayout'
-import HomePage from './pages/dashboard/user/HomePage'
-import ProfilePage from './pages/dashboard/user/ProfilePage'
 import FlightTicket from './pages/dashboard/user/FlightTicket'
-import TravellersPage from './pages/dashboard/user/TravellersPage'
-import SecurityPage from './pages/dashboard/user/SecurityPage'
-import BookingsPage from './pages/dashboard/user/BookingsPage'
-import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
 import PlaceholderPage from './pages/dashboard/user/PlaceholderPage'
+import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
+
+import BookingsPage from './pages/dashboard/user/BookingsPage'
+import ProfilePage from './pages/dashboard/user/ProfilePage'
+import WishlistPage from './pages/dashboard/user/WishlistPage'
+import PropertiesPage from './pages/dashboard/user/PropertiesPage'
 import FlightSearchResults from './pages/public/FlightSearchResults'
 import FlightBookingPage from './pages/public/FlightBookingPage'
 import ForgotPasswordPage from './pages/public/ForgotPasswordPage'
 import ResetPasswordPage from './pages/public/ResetPasswordPage'
+import PartnerConnect from './pages/dashboard/partner/PartnerConnect'
+import HotelSearchResults from './pages/public/HotelSearchResults'
+import HotelDetailsPage from './pages/public/HotelDetailsPage'
+import HotelCheckout from './pages/public/HotelCheckout'
+import HotelBookingSuccess from './pages/public/HotelBookingSuccess'
 
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
@@ -32,6 +36,8 @@ import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
 import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 
 import SubAdminLayout from './layouts/SubAdminLayout'
+import AgentLayout from './layouts/AgentLayout'
+import AgentDashboard from './pages/dashboard/agent/AgentDashboard'
 import { Toaster } from 'react-hot-toast'
 
 function App() {
@@ -42,28 +48,33 @@ function App() {
     if (role === 'SUPER_ADMIN') return '/admin';
     if (role === 'SUB_ADMIN') return '/sub-admin';
     if (role === 'AGENT') return '/agent-portal';
-    return '/dashboard/home';
+    return '/';
   };
 
   // A simple wrapper to protect routes
-  const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
-    if (!isAuthenticated) return <Navigate to="/login" replace />
+  const ProtectedRoute = ({ children, allowedRoles }: { children?: React.ReactNode, allowedRoles?: string[] }) => {
+    if (!isAuthenticated) return <Navigate to="/" replace />
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
       return <Navigate to={getRedirectPath(user.role)} replace /> // Prevent redirect loop
     }
-    return <>{children}</>
+    return <>{children ? children : <Outlet />}</>
   }
 
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
       <Routes>
+        {/* Partner Routes */}
+        <Route path="/partner/connect" element={<PartnerConnect />} />
+
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={isAuthenticated ? <Navigate to={getRedirectPath(user?.role)} /> : <AuthPage />} />
-        <Route path="/register" element={isAuthenticated ? <Navigate to={getRedirectPath(user?.role)} /> : <AuthPage />} />
-        <Route path="/search" element={<FlightSearchResults />} />
-        <Route path="/book/:flightId" element={<FlightBookingPage />} />
+        <Route path="/flights/search" element={<FlightSearchResults />} />
+        <Route path="/hotels/search" element={<HotelSearchResults />} />
+        <Route path="/hotels/checkout" element={<HotelCheckout />} />
+        <Route path="/hotels/booking-success" element={<HotelBookingSuccess />} />
+        <Route path="/hotels/:id" element={<HotelDetailsPage />} />
+        <Route path="/flights/book" element={<FlightBookingPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
@@ -76,14 +87,25 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard/home" replace />} />
-          <Route path="home" element={<PlaceholderPage title="Dashboard Home" />} />
+          <Route index element={<Navigate to="/" replace />} />
+          <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="search" element={<SearchResultsPage />} />
-          <Route path="bookings" element={<PlaceholderPage title="My Bookings" />} />
-          <Route path="profile" element={<PlaceholderPage title="My Profile" />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="wishlist" element={<WishlistPage />} />
+          <Route path="properties" element={<PropertiesPage />} />
+          <Route path="invoice/:id" element={<FlightTicket />} />
         </Route>
 
-        <Route path="/agent-portal" element={<div className="p-8">Agent Dashboard</div>} />
+        {/* Agent Routes */}
+        <Route path="/agent-portal" element={<ProtectedRoute allowedRoles={['AGENT']} />}>
+          <Route element={<AgentLayout />}>
+            <Route index element={<Navigate to="/agent-portal/dashboard" replace />} />
+            <Route path="dashboard" element={<AgentDashboard />} />
+            {/* Additional agent routes can be added here */}
+            <Route path="*" element={<div className="p-8">Agent Page Coming Soon</div>} />
+          </Route>
+        </Route>
         
         {/* Sub Admin Routes */}
         <Route 
@@ -103,6 +125,7 @@ function App() {
           {/* Ops */}
           <Route path="ops/verification" element={<PlaceholderPage title="Booking Verification" />} />
           <Route path="ops/tickets" element={<PlaceholderPage title="Ticket Management" />} />
+          <Route path="ops/properties" element={<AdminInventory />} />
           <Route path="ops/coordination" element={<PlaceholderPage title="Travel Coordination" />} />
           {/* Support */}
           <Route path="support/queries" element={<PlaceholderPage title="Query Management" />} />

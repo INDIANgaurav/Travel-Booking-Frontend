@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
@@ -8,6 +8,7 @@ import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
 
 import CustomCalendar from '../../components/common/CustomCalendar';
+import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
 import CityPicker from '../../components/common/CityPicker';
@@ -38,12 +39,15 @@ export default function LandingPage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
 
-  const [activeTab, setActiveTab] = useState('Flights');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Flights');
   const [tripType, setTripType] = useState('One Way');
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+
 
   const [searchFrom, setSearchFrom] = useState('DEL');
   const [searchTo, setSearchTo] = useState('BOM');
@@ -105,6 +109,16 @@ export default function LandingPage() {
   }, []);
 
   const handleSearch = () => {
+    if (activeTab === 'Hotels') {
+      const query = new URLSearchParams({
+        city: searchTo, // We can use 'searchTo' state as the destination city
+        checkIn: departureDate ? departureDate.toISOString() : '',
+        checkOut: returnDate ? returnDate.toISOString() : ''
+      }).toString();
+      navigate(`/hotels/search?${query}`);
+      return;
+    }
+
     const query = new URLSearchParams({
       tab: activeTab,
       from: searchFrom,
@@ -143,7 +157,7 @@ export default function LandingPage() {
         <div className="max-w-[1200px] w-full px-4 relative z-10 -mt-20" onClick={closeAllPickers}>
           
           {/* Top Tabs Pill */}
-          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-between px-6 py-3 mx-auto relative z-20 w-[90%] max-w-[1000px] mb-[-30px]">
+          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
             {[
               {name: 'Flights', icon: Plane}, {name: 'Hotels', icon: Building2}, {name: 'Villas & Homestays', icon: Map},
               {name: 'Holiday Packages', icon: Map}, {name: 'Trains', icon: Plane}, {name: 'Buses', icon: Bus},
@@ -165,10 +179,10 @@ export default function LandingPage() {
 
           <div className="bg-white rounded-2xl shadow-xl pt-14 pb-8 px-8 relative" onClick={e => e.stopPropagation()}>
             
-            {activeTab === 'Flights' && (
+            {activeTab === 'Flights' ? (
               <div className="relative">
                 {/* Flight Types */}
-                <div className="flex items-center gap-6 mb-4 relative">
+                <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 relative">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input type="radio" name="tripType" checked={tripType === 'One Way'} onChange={() => setTripType('One Way')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
                     <span className={`text-[13px] font-bold transition-colors ${tripType === 'One Way' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>One Way</span>
@@ -182,17 +196,17 @@ export default function LandingPage() {
                     <span className={`text-[13px] font-bold transition-colors ${tripType === 'Multi City' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Multi City</span>
                   </label>
                   
-                  <div className="ml-auto text-[13px] font-bold text-gray-700">
+                  <div className="ml-auto text-[13px] font-bold text-gray-700 hidden lg:block">
                     Book International and Domestic Flights
                   </div>
                 </div>
 
                 {/* Main Inputs Box */}
-                <div className="flex border border-gray-300 rounded-lg overflow-visible h-[110px] relative hover:border-gray-400 transition-colors">
+                <div className="flex flex-col lg:flex-row border border-gray-300 rounded-lg overflow-visible lg:h-[110px] relative hover:border-gray-400 transition-colors">
                   
                   {/* FROM */}
                   <div 
-                    className="flex-1 p-3 px-5 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    className="w-full lg:flex-1 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
                     onClick={() => { closeAllPickers(); setIsFromPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -210,14 +224,14 @@ export default function LandingPage() {
                     )}
                     
                     {/* Swap Button */}
-                    <div className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition">
-                      <Navigation size={14} className="text-blue-600 transform rotate-90" />
+                    <div className="absolute right-8 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition">
+                      <Navigation size={14} className="text-blue-600 transform rotate-180 lg:rotate-90" />
                     </div>
                   </div>
 
                   {/* TO */}
                   <div 
-                    className="flex-1 p-3 px-5 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    className="w-full lg:flex-1 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
                     onClick={() => { closeAllPickers(); setIsToPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -235,9 +249,9 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                <div className="relative flex">
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
-                    className="w-[150px] p-3 px-5 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={() => { setIsDatePickerOpen(true); setIsTravellerPickerOpen(false); setIsCabinPickerOpen(false); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -258,7 +272,7 @@ export default function LandingPage() {
                   </div>
 
                   <div 
-                    className="w-[150px] p-3 px-5 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
                     onClick={() => { setIsDatePickerOpen(true); setIsTravellerPickerOpen(false); setIsCabinPickerOpen(false); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -290,6 +304,7 @@ export default function LandingPage() {
                       <CustomCalendar 
                         startDate={departureDate} 
                         endDate={returnDate}
+                        isOneWay={tripType === 'One Way'}
                         onChange={(start, end) => { setDepartureDate(start); setReturnDate(end); }}
                         onClose={() => setIsDatePickerOpen(false)}
                       />
@@ -297,9 +312,9 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                <div className="relative flex">
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
-                    className="w-[120px] p-3 px-5 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[120px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={() => { setIsTravellerPickerOpen(!isTravellerPickerOpen); setIsDatePickerOpen(false); setIsCabinPickerOpen(false); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -333,9 +348,9 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                <div className="relative flex">
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
-                    className="w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={() => { setIsCabinPickerOpen(!isCabinPickerOpen); setIsDatePickerOpen(false); setIsTravellerPickerOpen(false); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -356,9 +371,9 @@ export default function LandingPage() {
                 </div>
 
                 {/* Special Fares Section */}
-                <div className="mt-5 flex items-center gap-2">
-                  <span className="text-[11px] font-black text-gray-900 tracking-wide w-[80px]">SPECIAL<br/>FARES</span>
-                  <div className="flex items-center gap-2 flex-1">
+                <div className="mt-5 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2">
+                  <span className="text-[11px] font-black text-gray-900 tracking-wide md:w-[80px]">SPECIAL<br className="hidden md:block"/>FARES</span>
+                  <div className="flex items-center gap-2 flex-1 overflow-x-auto pb-2 custom-scrollbar w-full">
                     
                     <button className="flex flex-col items-center justify-center border border-blue-200 bg-blue-50 text-blue-600 rounded-lg px-3 py-1 min-w-[90px]">
                       <span className="text-[13px] font-bold">Regular</span>
@@ -400,17 +415,124 @@ export default function LandingPage() {
                 </div>
 
               </div>
+            ) : activeTab === 'Hotels' ? (
+              <div className="relative">
+                {/* Hotel Search Inputs */}
+                <div className="flex flex-col md:flex-row border border-gray-300 rounded-lg overflow-visible md:h-[110px] relative hover:border-gray-400 transition-colors">
+                  
+                  {/* Destination */}
+                  <div 
+                    className="w-full md:flex-[2] p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    onClick={() => { closeAllPickers(); setIsToPickerOpen(true); }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">City, Property name or Location</span>
+                    </div>
+                    <div className="w-full text-3xl font-black text-gray-900 truncate bg-transparent flex flex-col mt-2">
+                      {searchTo}
+                    </div>
+                    
+                    {isToPickerOpen && (
+                      <div className="absolute top-[100%] left-0 z-50">
+                        <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="DESTINATION" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Check-In */}
+                  <div 
+                    className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    onClick={() => { setIsDatePickerOpen(true); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-In</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    {departureDate ? (
+                      <>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-3xl font-black text-gray-900">{format(departureDate, 'd')}</h3>
+                          <span className="text-xl font-bold text-gray-900">{format(departureDate, "MMM''yy")}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
+                    )}
+                  </div>
+
+                  {/* Check-Out */}
+                  <div 
+                    className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    onClick={() => { setIsDatePickerOpen(true); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-Out</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    {returnDate ? (
+                      <>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-3xl font-black text-gray-900">{format(returnDate, 'd')}</h3>
+                          <span className="text-xl font-bold text-gray-900">{format(returnDate, "MMM''yy")}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
+                      </>
+                    ) : (
+                      <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Select checkout date</p>
+                    )}
+
+                    {isDatePickerOpen && (
+                      <div className="absolute top-[100%] left-[-200px] z-50">
+                        <DualMonthCalendar 
+                          checkIn={departureDate} 
+                          checkOut={returnDate}
+                          onDateChange={(type, date) => {
+                            if (type === 'checkIn') setDepartureDate(date);
+                            else setReturnDate(date);
+                          }}
+                          onClose={() => setIsDatePickerOpen(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rooms & Guests */}
+                  <div 
+                    className="w-full md:flex-1 p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Rooms & Guests</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <h3 className="text-2xl font-black text-gray-900">1</h3>
+                      <span className="text-lg font-bold text-gray-900">Room, </span>
+                      <h3 className="text-2xl font-black text-gray-900">2</h3>
+                      <span className="text-lg font-bold text-gray-900">Adults</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up">
+                 <div className="w-24 h-24 mb-6 bg-blue-50 rounded-full flex items-center justify-center">
+                    <Building2 className="text-blue-300" size={48} />
+                 </div>
+                 <h2 className="text-3xl font-black text-gray-900 mb-2">{activeTab} is Coming Soon!</h2>
+                 <p className="text-lg text-gray-500 font-medium max-w-md mx-auto">We are currently building this module. It will be available in the next phase of TravelGo.</p>
+              </div>
             )}
 
             {/* Massive Search Button Overlapping Bottom */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
-              <button 
-                onClick={handleSearch}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-black text-2xl px-20 py-3 rounded-full shadow-[0_4px_15px_rgba(37,99,235,0.4)] transition-all active:scale-95"
-              >
-                SEARCH
-              </button>
-            </div>
+            {(activeTab === 'Flights' || activeTab === 'Hotels') && (
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
+                  <button onClick={handleSearch} className="w-full md:w-auto px-12 py-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black text-xl hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:scale-105 transition-all duration-300">
+                    SEARCH
+                  </button>
+                </div>
+            )}
           </div>
           
           {/* Explore More Strip */}
@@ -421,33 +543,33 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom Pill Banners */}
-          <div className="bg-white rounded-full shadow-lg flex items-center justify-between px-8 py-3 mx-auto max-w-[900px] gap-6 text-sm">
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6">
+          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[900px] gap-6 text-sm overflow-x-auto custom-scrollbar">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
               <Globe size={20} className="text-blue-600" />
               <span className="font-bold text-gray-700">Where2Go</span>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
               <Map size={20} className="text-blue-600" />
               <div>
                 <span className="font-bold text-gray-700">How2Go <span className="text-[10px] bg-pink-600 text-white px-1 rounded uppercase">New</span></span>
                 <p className="text-[10px] text-gray-500">Find routes to anywhere</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
               <CreditCard size={20} className="text-blue-600" />
               <div>
                 <span className="font-bold text-gray-700">MakeMyTrip ICICI Credit Card</span>
                 <p className="text-[10px] text-gray-500">Never expiring rewards & big benefits</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
               <Users size={20} className="text-blue-600" />
               <div>
                 <span className="font-bold text-gray-700">MICE</span>
                 <p className="text-[10px] text-gray-500">Offsites, Events & Meetings</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Ticket size={20} className="text-blue-600" />
               <span className="font-bold text-gray-700">Gift Cards</span>
             </div>
@@ -463,9 +585,9 @@ export default function LandingPage() {
             <h2 className="text-3xl font-black text-gray-900 mb-2">Popular Destinations</h2>
             <p className="text-gray-500 font-medium">Explore our highly rated tour packages and places.</p>
           </div>
-          <Link to="/login" className="hidden md:flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 transition">
+          <button onClick={() => setIsLoginModalOpen(true)} className="hidden md:flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 transition">
             See all <ChevronRight size={18} />
-          </Link>
+          </button>
         </div>
 
         {destinations.length > 0 ? (
@@ -473,7 +595,7 @@ export default function LandingPage() {
             {destinations.map((dest) => (
               <div 
                 key={dest.name} 
-                onClick={() => navigate('/login')}
+                onClick={() => setIsLoginModalOpen(true)}
                 className="group cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 bg-white flex flex-col"
               >
                 <div className="h-48 overflow-hidden relative">
@@ -561,7 +683,7 @@ export default function LandingPage() {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Partner With Us</h4>
             <ul className="space-y-2">
-              <li><Link to="/login" className="hover:text-white transition text-blue-400 font-semibold">Join as Travel Agent</Link></li>
+              <li><button onClick={() => setIsLoginModalOpen(true)} className="hover:text-white transition text-blue-400 font-semibold">Join as Travel Agent</button></li>
               <li><a href="#" className="hover:text-white transition">List your Hotel</a></li>
             </ul>
           </div>

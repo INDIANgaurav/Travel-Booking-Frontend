@@ -5,7 +5,7 @@ import { logout, selectCurrentUser } from '../store/authSlice';
 import { 
   LayoutDashboard, Users, Briefcase, CreditCard, 
   PackageOpen, DollarSign, LogOut, ShieldCheck, 
-  Menu, Headset, CheckCircle, FileText
+  Menu, Headset, CheckCircle, FileText, Building2
 } from 'lucide-react';
 
 export default function SubAdminLayout() {
@@ -17,8 +17,10 @@ export default function SubAdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    navigate('/');
+    setTimeout(() => {
+      dispatch(logout());
+    }, 0);
   };
 
   // Define department-specific navigation
@@ -49,6 +51,7 @@ export default function SubAdminLayout() {
         items: [
           { name: 'Booking Verification', path: '/sub-admin/ops/verification', icon: <CheckCircle size={20} /> },
           { name: 'Ticket Management', path: '/sub-admin/ops/tickets', icon: <FileText size={20} /> },
+          { name: 'Property Approvals', path: '/sub-admin/ops/properties', icon: <Building2 size={20} /> },
           { name: 'Travel Coordination', path: '/sub-admin/ops/coordination', icon: <Briefcase size={20} /> },
         ]
       });

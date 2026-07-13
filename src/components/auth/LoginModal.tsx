@@ -10,6 +10,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLogin, setIsLogin] = useState(true);
+  const [accountType, setAccountType] = useState<'USER' | 'AGENT'>('USER');
 
   if (!isOpen) return null;
 
@@ -22,27 +23,29 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       />
       
       {/* Modal Container */}
-      <div className="relative z-10 w-[850px] h-[500px] bg-white rounded-2xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-[850px] h-[500px] bg-white rounded-2xl shadow-2xl flex animate-in zoom-in-95 duration-200">
         
-        {/* Close Button - Absolutely positioned outside the modal visually (like MMT) */}
+        {/* Close Button - Absolutely positioned outside the modal visually */}
         <button 
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-900 hover:bg-gray-100 z-50 transition"
+          className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-900 hover:bg-gray-100 z-50 transition border border-gray-100"
         >
           <X size={18} className="font-bold" />
         </button>
 
-        {/* Left Side - Promo Image */}
-        <div className="w-[45%] relative">
-          <img 
-            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop" 
-            alt="Promo" 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
-          
-          <div className="relative z-10 p-10 h-full flex flex-col text-white">
-            <h2 className="text-2xl font-bold mb-8">Sign up/Login now to</h2>
+        {/* Inner wrapper for overflow hidden */}
+        <div className="w-full h-full flex overflow-hidden rounded-2xl">
+          {/* Left Side - Promo Image */}
+          <div className="w-[45%] relative">
+            <img 
+              src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop" 
+              alt="Promo" 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
+            
+            <div className="relative z-10 p-10 h-full flex flex-col text-white">
+              <h2 className="text-2xl font-bold mb-8">Sign up/Login now to</h2>
             
             <div className="space-y-6">
               <div className="flex items-center gap-4">
@@ -70,11 +73,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           
           {/* Top Tabs */}
           <div className="flex rounded-full border border-gray-200 p-1 mb-8 shadow-sm">
-            <button className="flex-1 py-2 text-sm font-bold bg-blue-600 text-white rounded-full transition-all">
-              PERSONAL ACCOUNT
+            <button 
+              onClick={() => setAccountType('USER')}
+              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'USER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              TRAVELLER
             </button>
-            <button className="flex-1 py-2 text-sm font-bold text-gray-500 hover:text-gray-800 rounded-full transition-all">
-              MYBIZ ACCOUNT
+            <button 
+              onClick={() => setAccountType('AGENT')}
+              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'AGENT' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              TRAVEL AGENT
             </button>
           </div>
 
@@ -89,16 +98,16 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
           <div className={`flex-1 overflow-y-auto custom-scrollbar px-1 ${!isLogin ? 'mt-6' : ''}`}>
             {isLogin ? (
-              <LoginForm role="USER" onToggleMode={() => setIsLogin(false)} />
+              <LoginForm role={accountType} onToggleMode={() => setIsLogin(false)} />
             ) : (
-              <RegisterForm role="USER" onToggleMode={() => setIsLogin(true)} />
+              <RegisterForm role={accountType} onToggleMode={() => setIsLogin(true)} />
             )}
           </div>
 
-          {/* We can remove the old manual toggle now because the forms have them built-in! */}
           <div className="mt-4 text-center text-[10px] text-gray-400">
             By proceeding, you agree to TravelGo's Privacy Policy, User Agreement and T&Cs
           </div>
+        </div>
         </div>
 
       </div>

@@ -69,8 +69,8 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
 
-              <Link to="/login" className="flex items-center justify-center text-sm font-medium text-blue-600 hover:text-blue-500">
-                <ArrowLeft size={16} className="mr-2" /> Back to log in
+              <Link to="/?login=true" className="flex items-center justify-center text-sm font-medium text-blue-600 hover:text-blue-500">
+                <ArrowLeft size={16} className="mr-1" /> Back to log in
               </Link>
             </div>
           ) : (
@@ -104,9 +104,9 @@ export default function ForgotPasswordPage() {
                 </button>
               </div>
               
-              <div className="text-center">
-                <Link to="/login" className="flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-900">
-                  <ArrowLeft size={16} className="mr-2" /> Back to log in
+              <div className="text-center mt-4">
+                <Link to="/?login=true" className="flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-900">
+                  <ArrowLeft size={16} className="mr-1" /> Back to log in
                 </Link>
               </div>
             </form>

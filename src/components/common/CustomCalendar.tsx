@@ -5,6 +5,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 interface CustomCalendarProps {
   startDate: Date | null;
   endDate: Date | null;
+  isOneWay?: boolean;
   onChange: (start: Date | null, end: Date | null) => void;
   onClose: () => void;
 }
@@ -23,7 +24,7 @@ const DUMMY_PRICES: Record<number, { price: number, color: string }> = {
   31: { price: 12551, color: 'text-yellow-500' }
 };
 
-export default function CustomCalendar({ startDate, endDate, onChange, onClose }: CustomCalendarProps) {
+export default function CustomCalendar({ startDate, endDate, isOneWay, onChange, onClose }: CustomCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -32,18 +33,20 @@ export default function CustomCalendar({ startDate, endDate, onChange, onClose }
   const onDateClick = (day: Date) => {
     if (isBefore(startOfDay(day), startOfDay(new Date()))) return; // Prevent past dates
 
+    if (isOneWay) {
+      onChange(day, null);
+      return;
+    }
+
     if (startDate && endDate) {
+      // 3rd click: Reset to new start date
+      onChange(day, null);
+    } else if (startDate && !endDate) {
       if (isBefore(day, startDate)) {
         // Clicked before start date, so update start date and clear end date
         onChange(day, null);
       } else {
         // Clicked after start date, so update end date
-        onChange(startDate, day);
-      }
-    } else if (startDate && !endDate) {
-      if (isBefore(day, startDate)) {
-        onChange(day, null);
-      } else {
         onChange(startDate, day);
       }
     } else {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, Users, Smartphone, LogOut, KeyRound, ChevronDown } from 'lucide-react';
+import { User, Users, Smartphone, LogOut, KeyRound, ChevronDown, Building2 } from 'lucide-react';
 import api from '../../../services/api';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, logout, selectCurrentUser } from '../../../store/authSlice';
@@ -28,6 +28,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
+  const [myProperties, setMyProperties] = useState<any[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
@@ -83,6 +85,27 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
+  const fetchMyProperties = async () => {
+    try {
+      setLoadingProperties(true);
+      const token = localStorage.getItem('token');
+      const { data } = await api.get('/api/hotels/my-properties', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMyProperties(data);
+    } catch (error) {
+      console.error('Failed to fetch properties', error);
+    } finally {
+      setLoadingProperties(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'properties') {
+      fetchMyProperties();
+    }
+  }, [activeTab]);
+
   const handleUpdate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -109,8 +132,10 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
     navigate('/');
+    setTimeout(() => {
+      dispatch(logout());
+    }, 0);
   };
 
   if (isLoading) {
@@ -119,7 +144,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans pb-20 relative">
-      <TopNavbar forceWhite={false} />
+      <TopNavbar forceWhite={true} />
 
       {/* Fixed Background Header */}
       <div className="fixed top-0 left-0 w-full h-[320px] bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 z-0">
@@ -182,6 +207,12 @@ export default function ProfilePage() {
                 >
                   <Smartphone size={18} /> Logged In Devices
                 </button>
+                <button 
+                  onClick={() => setActiveTab('properties')}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition ${activeTab === 'properties' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  <Building2 size={18} /> My Properties
+                </button>
               </nav>
 
               <div className="mt-auto px-4 pb-4 space-y-1">
@@ -200,15 +231,18 @@ export default function ProfilePage() {
 
             {/* Right Content Area */}
             <div className="flex-1 p-8">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-black text-gray-900">My Profile</h2>
-              <button 
-                onClick={() => handleUpdate()}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2 rounded font-bold text-sm transition"
-              >
-                SAVE
-              </button>
-            </div>
+            
+            {activeTab === 'profile' && (
+              <>
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-black text-gray-900">My Profile</h2>
+                  <button 
+                    onClick={() => handleUpdate()}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-2 rounded font-bold text-sm transition"
+                  >
+                    SAVE
+                  </button>
+                </div>
 
             {/* Promo Banner */}
             <div className="bg-[#FFF8E7] border border-[#FDECB2] rounded-lg p-4 flex justify-between items-center mb-8">
@@ -359,14 +393,54 @@ export default function ProfilePage() {
                     className="w-full bg-transparent font-bold text-gray-900 focus:outline-none uppercase"
                   />
                 </div>
+                </div>
               </div>
-            </div>
+            </>
+          )}
 
+            {activeTab === 'properties' && (
+              <div>
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-black text-gray-900">My Registered Properties</h2>
+                  <button onClick={() => navigate('/partner/connect')} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold text-sm transition">
+                    + Add New Property
+                  </button>
+                </div>
+
+                {loadingProperties ? (
+                  <p className="text-gray-500 font-medium">Loading properties...</p>
+                ) : myProperties.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-200">
+                    <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-lg font-bold text-gray-900">No properties listed yet</h3>
+                    <p className="text-gray-500 text-sm mt-1">Start growing your business by listing a property.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myProperties.map((hotel) => (
+                      <div key={hotel._id} className="border border-gray-200 rounded-xl p-4 flex gap-4 hover:shadow-md transition bg-white">
+                        <img src={hotel.images[0] || 'https://via.placeholder.com/150'} alt={hotel.name} className="w-32 h-32 object-cover rounded-lg" />
+                        <div className="flex-1 flex flex-col">
+                          <div className="flex justify-between">
+                            <h3 className="text-lg font-black text-gray-900">{hotel.name}</h3>
+                            <span className="font-bold text-gray-900">₹{hotel.pricePerNight} <span className="text-xs text-gray-500 font-normal">/ night</span></span>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">{hotel.city}, {hotel.address}</p>
+                          <div className="mt-auto flex gap-2">
+                            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">Active</span>
+                            <span className="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">{hotel.amenities.length} Amenities</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            </div>
           </div>
         </div>
-      </div>
-      
-      {/* Close Scrollable Content Wrapper */}
       </div>
     </div>
   );
