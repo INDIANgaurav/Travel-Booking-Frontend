@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
+import api from '../../../services/api';
 
 interface EditPropertyModalProps {
   property: any;
@@ -25,17 +26,10 @@ export default function EditPropertyModal({ property, onClose, onSuccess }: Edit
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/hotels/my-properties/${property._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
+      const response = await api.put(`/api/hotels/my-properties/${property._id}`, formData);
+      if (response.data) {
         onSuccess();
+        onClose();
       } else {
         alert('Failed to update property');
       }

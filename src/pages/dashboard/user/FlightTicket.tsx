@@ -44,9 +44,11 @@ export default function FlightTicket() {
   };
 
   // Helper functions for mock/formatted data
-  const passengerName = booking.details?.passengers?.[0]?.name || booking.user?.name || 'PASSENGER';
+  const passengers = booking.details?.passengers?.length > 0 
+    ? booking.details.passengers 
+    : [{ name: booking.user?.name || 'PASSENGER' }];
+    
   const flightNo = `FL-${Math.floor(Math.random() * 900) + 100}`;
-  const seat = booking.details?.seats?.[0] || '18A';
   const gate = `D${Math.floor(Math.random() * 40) + 1}`;
   
   // Create a 3-letter code from city name (mock logic)
@@ -61,7 +63,7 @@ export default function FlightTicket() {
       <div className="print:hidden">
         <TopNavbar forceWhite={true} />
       </div>
-      <div className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] py-8 px-4 font-sans print:bg-white print:py-0 print:px-0 flex flex-col items-center justify-start">
+      <div className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] pt-28 pb-8 px-4 font-sans print:bg-white print:py-0 print:px-0 flex flex-col items-center justify-start">
       <style>{`
         @media print {
           * {
@@ -153,11 +155,16 @@ export default function FlightTicket() {
           </div>
         </div>
       ) : (
-      <div className="w-full max-w-5xl flex drop-shadow-2xl print:drop-shadow-none print:w-full relative overflow-hidden bg-white rounded-3xl">
-        
-        {/* Left Section: Red Sidebar */}
-        <div className="w-16 md:w-24 bg-[#c8102e] flex flex-col items-center py-6 shrink-0 z-10 relative">
-          <Plane className="text-white w-8 h-8 md:w-10 md:h-10 transform rotate-45 mb-4" />
+        <div className="flex flex-col gap-8 w-full items-center">
+          {passengers.map((passenger: any, index: number) => {
+            const pName = passenger.name || passenger.firstName + ' ' + passenger.lastName || 'PASSENGER';
+            const pSeat = booking.details?.seats?.[index] || '18A';
+            return (
+              <div key={index} className="w-full max-w-5xl flex drop-shadow-2xl print:drop-shadow-none print:w-full relative overflow-hidden bg-white rounded-3xl">
+                
+                {/* Left Section: Red Sidebar */}
+                <div className="w-16 md:w-24 bg-[#c8102e] flex flex-col items-center py-6 shrink-0 z-10 relative">
+                  <Plane className="text-white w-8 h-8 md:w-10 md:h-10 transform rotate-45 mb-4" />
           <div className="flex-1 w-full flex items-center justify-center">
              <p className="text-white font-bold tracking-[0.3em] uppercase text-xs md:text-sm -rotate-90 whitespace-nowrap">Boarding Pass</p>
           </div>
@@ -206,7 +213,7 @@ export default function FlightTicket() {
              <div className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-4 mb-6">
                <div>
                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Passenger</p>
-                 <p className="text-sm md:text-base font-bold text-gray-800 uppercase whitespace-nowrap">{passengerName}</p>
+                 <p className="text-sm md:text-base font-bold text-gray-800 uppercase whitespace-nowrap">{pName}</p>
                </div>
                <div>
                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Boarding Time</p>
@@ -218,7 +225,7 @@ export default function FlightTicket() {
                </div>
                <div>
                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Seat</p>
-                 <p className="text-sm md:text-base font-bold text-gray-800">{seat}</p>
+                 <p className="text-sm md:text-base font-bold text-gray-800">{pSeat}</p>
                </div>
                <div>
                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Date</p>
@@ -262,7 +269,7 @@ export default function FlightTicket() {
                
                <div className="pt-4 border-t border-gray-100">
                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Passenger</p>
-                 <p className="text-sm font-bold text-gray-800 uppercase whitespace-nowrap">{passengerName}</p>
+                 <p className="text-sm font-bold text-gray-800 uppercase whitespace-nowrap">{pName}</p>
                </div>
                
                <div>
@@ -277,7 +284,7 @@ export default function FlightTicket() {
                  </div>
                  <div className="bg-[#c8102e] text-white p-3 rounded-xl text-center shadow-lg -mr-4 md:-mr-8 relative z-20">
                    <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Seat</p>
-                   <p className="text-xl font-black">{seat}</p>
+                   <p className="text-xl font-black">{pSeat}</p>
                  </div>
                </div>
              </div>
@@ -287,6 +294,9 @@ export default function FlightTicket() {
           </div>
         </div>
       </div>
+            );
+          })}
+        </div>
       )}
     </div>
     </>

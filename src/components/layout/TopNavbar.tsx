@@ -128,7 +128,15 @@ export default function TopNavbar({ forceWhite = false }: TopNavbarProps) {
                   <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block">
                     <div className="bg-white rounded-lg shadow-xl py-2 border border-gray-100">
                       <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
-                      <Link to="/dashboard/properties" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Your Properties</Link>
+                      {user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN' ? (
+                        <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700">
+                          <Building2 size={16} /> Admin Panel
+                        </div>
+                      ) : user?.role === 'AGENT' && (
+                        <div onClick={() => { navigate('/agent-portal'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700">
+                          <Briefcase size={16} /> Agent Portal
+                        </div>
+                      )}
                       <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
                     </div>
                   </div>

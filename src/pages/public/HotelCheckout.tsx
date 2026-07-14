@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import TopNavbar from '../../components/layout/TopNavbar';
-import { ShieldCheck, Calendar, Users, MapPin, CheckCircle, Info, Heart, ArrowRight, Tag, Shield, Star } from 'lucide-react';
+import { ChevronLeft, Info, Check, Shield, Star, Users, MapPin, Coffee, Wifi, Car, Plane, AlertCircle, Heart, CheckCircle, Tag } from 'lucide-react';
 import api from '../../services/api';
+import Dropdown from '../../components/ui/Dropdown';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/authSlice';
@@ -273,16 +274,16 @@ export default function HotelCheckout() {
               
               <div className="flex gap-4 mb-4">
                 <div className="w-24">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Title</label>
-                  <select 
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Title <span className="text-red-500">*</span></label>
+                  <Dropdown
                     value={guestDetails.title}
-                    onChange={(e) => setGuestDetails({...guestDetails, title: e.target.value})}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none"
-                  >
-                    <option>Mr</option>
-                    <option>Mrs</option>
-                    <option>Ms</option>
-                  </select>
+                    onChange={(val) => setGuestDetails({...guestDetails, title: val})}
+                    options={[
+                      { value: 'Mr', label: 'Mr' },
+                      { value: 'Mrs', label: 'Mrs' },
+                      { value: 'Ms', label: 'Ms' }
+                    ]}
+                  />
                 </div>
                 <div className="flex-1">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Full Name <span className="text-red-500">*</span></label>
@@ -307,7 +308,7 @@ export default function HotelCheckout() {
 
               <div className="flex gap-4 mb-6">
                 <div className="flex-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email Address <span className="lowercase font-normal text-gray-400">(Booking voucher will be sent to this email ID)</span></label>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email Address <span className="text-red-500">*</span> <span className="lowercase font-normal text-gray-400">(Booking voucher will be sent to this email ID)</span></label>
                   <input 
                     type="email" 
                     value={guestDetails.email}
@@ -319,9 +320,13 @@ export default function HotelCheckout() {
                 <div className="flex-1">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mobile Number <span className="text-red-500">*</span></label>
                   <div className="flex">
-                    <select className="border border-r-0 border-gray-300 rounded-l px-2 py-2 text-sm bg-gray-50 outline-none">
-                      <option>+91</option>
-                    </select>
+                    <Dropdown
+                      value="+91"
+                      onChange={() => {}}
+                      options={[
+                        { value: '+91', label: '+91' }
+                      ]}
+                    />
                     <input 
                       type="tel" 
                       value={guestDetails.phone}

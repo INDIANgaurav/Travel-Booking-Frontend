@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Building2, Star, Edit, Trash2, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import EditPropertyModal from './EditPropertyModal';
+import api from '../../../services/api';
 
 interface Property {
   _id: string;
@@ -26,15 +27,9 @@ export default function PropertiesPage() {
 
   const fetchProperties = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/hotels/my-properties', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProperties(data);
+      const response = await api.get('/api/hotels/my-properties');
+      if (response.data) {
+        setProperties(response.data);
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -46,12 +41,8 @@ export default function PropertiesPage() {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/hotels/my-properties/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
+      const response = await api.delete(`/api/hotels/my-properties/${id}`);
+      if (response.data) {
         setProperties(properties.filter(p => p._id !== id));
       } else {
         alert('Failed to delete property');

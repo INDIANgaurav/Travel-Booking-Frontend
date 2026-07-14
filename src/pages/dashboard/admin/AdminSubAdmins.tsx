@@ -5,6 +5,7 @@ import { selectCurrentUser } from '../../../store/authSlice';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
+import Dropdown from '../../../components/ui/Dropdown';
 
 export default function AdminSubAdmins() {
   const user = useSelector(selectCurrentUser);
@@ -129,13 +130,17 @@ export default function AdminSubAdmins() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role / Department</label>
-                <select required value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white" disabled={isCreating}>
-                  <option value="">Select a role...</option>
-                  <option value="Sales">Sales Manager</option>
-                  <option value="Operations">Operations Manager</option>
-                  <option value="Customer Support">Customer Support Manager</option>
-                  <option value="Accounts">Accounts Team</option>
-                </select>
+                <Dropdown
+                  value={formData.department}
+                  onChange={(val) => setFormData({...formData, department: val})}
+                  placeholder="Select a role..."
+                  options={[
+                    { value: 'Sales', label: 'Sales Manager' },
+                    { value: 'Operations', label: 'Operations Manager' },
+                    { value: 'Customer Support', label: 'Customer Support Manager' },
+                    { value: 'Accounts', label: 'Accounts Team' },
+                  ]}
+                />
               </div>
             </div>
             
@@ -192,12 +197,18 @@ export default function AdminSubAdmins() {
                 </td>
                 <td className="px-6 py-4">
                   {editingId === sub._id ? (
-                    <select value={editDepartment} onChange={(e) => setEditDepartment(e.target.value)} className="px-3 py-1 border border-blue-300 rounded outline-none text-sm bg-white">
-                      <option value="Sales">Sales</option>
-                      <option value="Operations">Operations</option>
-                      <option value="Customer Support">Customer Support</option>
-                      <option value="Accounts">Accounts</option>
-                    </select>
+                    <div className="w-40">
+                      <Dropdown 
+                        value={editDepartment} 
+                        onChange={(val) => setEditDepartment(val)}
+                        options={[
+                          { value: 'Sales', label: 'Sales' },
+                          { value: 'Operations', label: 'Operations' },
+                          { value: 'Customer Support', label: 'Customer Support' },
+                          { value: 'Accounts', label: 'Accounts' }
+                        ]}
+                      />
+                    </div>
                   ) : (
                     <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-100">
                       {sub.department || 'Not Assigned'}

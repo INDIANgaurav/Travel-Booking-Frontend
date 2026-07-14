@@ -137,21 +137,46 @@ export default function HotelDetailsPage() {
 
         {/* Image Grid */}
         <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[450px] mb-8 rounded-xl overflow-hidden shadow-sm">
-          <div className="col-span-2 row-span-2 bg-gray-200">
-            <img src={hotel.images?.[0] || 'https://via.placeholder.com/800'} alt="Hotel Main" className="w-full h-full object-cover hover:scale-105 transition duration-500" />
+          <div className="col-span-2 row-span-2 bg-gray-100 flex items-center justify-center relative overflow-hidden group">
+            <img 
+              src={hotel.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} 
+              alt="Hotel Main" 
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80' }}
+            />
           </div>
-          <div className="bg-gray-200">
-            <img src={hotel.images?.[1] || 'https://via.placeholder.com/400'} alt="Hotel View 2" className="w-full h-full object-cover" />
+          <div className="bg-gray-100 flex items-center justify-center relative overflow-hidden group">
+            <img 
+              src={hotel.images?.[1] || 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80'} 
+              alt="Hotel View 2" 
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=400&q=80' }}
+            />
           </div>
-          <div className="bg-gray-200">
-            <img src={hotel.images?.[2] || 'https://via.placeholder.com/400'} alt="Hotel View 3" className="w-full h-full object-cover" />
+          <div className="bg-gray-100 flex items-center justify-center relative overflow-hidden group">
+            <img 
+              src={hotel.images?.[2] || 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=400&q=80'} 
+              alt="Hotel View 3" 
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=400&q=80' }}
+            />
           </div>
-          <div className="bg-gray-200">
-            <img src={hotel.images?.[3] || 'https://via.placeholder.com/400'} alt="Hotel View 4" className="w-full h-full object-cover" />
+          <div className="bg-gray-100 flex items-center justify-center relative overflow-hidden group">
+            <img 
+              src={hotel.images?.[3] || 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=400&q=80'} 
+              alt="Hotel View 4" 
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=400&q=80' }}
+            />
           </div>
-          <div className="bg-gray-200 relative cursor-pointer">
-            <img src={hotel.images?.[4] || 'https://via.placeholder.com/400'} alt="Hotel View 5" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center hover:bg-opacity-50 transition">
+          <div className="bg-gray-100 relative cursor-pointer flex items-center justify-center overflow-hidden group">
+            <img 
+              src={hotel.images?.[4] || 'https://images.unsplash.com/photo-1618773928121-c32242fa11f5?auto=format&fit=crop&w=400&q=80'} 
+              alt="Hotel View 5" 
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1618773928121-c32242fa11f5?auto=format&fit=crop&w=400&q=80' }}
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center hover:bg-opacity-50 transition z-10">
               <span className="text-white font-bold">View All Photos</span>
             </div>
           </div>

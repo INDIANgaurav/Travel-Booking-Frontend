@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated } from '../../store/authSlice';
-import { Plane, User, ArrowLeft } from 'lucide-react';
+import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft } from 'lucide-react';
+import Dropdown from '../../components/ui/Dropdown';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -67,7 +68,7 @@ export default function FlightBookingPage() {
         return;
       }
 
-      const totalAmount = selectedOutbound.price + 1651;
+      const totalAmount = (selectedOutbound.price + 1651) * adults.length;
       
       const generatedPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
       
@@ -101,7 +102,7 @@ export default function FlightBookingPage() {
             });
             
             toast.success('Payment successful! Booking confirmed.');
-            navigate(`/invoice/${data.booking._id}`);
+            navigate(`/dashboard/invoice/${data.booking._id}`);
           } catch (error) {
             toast.error('Payment verification failed.');
           }
@@ -260,92 +261,128 @@ export default function FlightBookingPage() {
                  <span className="font-bold">Important:</span> Enter name as mentioned on your passport or Government approved IDs.
                </div>
 
-               <div className="mx-4 border border-gray-200 rounded mb-4 overflow-hidden">
-                 <div className="p-3 bg-gray-50 flex items-center gap-2 border-b border-gray-200">
-                   <input type="checkbox" className="w-4 h-4 text-blue-500 rounded border-gray-300" defaultChecked />
-                   <span className="font-bold text-[13px] text-gray-900">ADULT 1</span>
-                 </div>
-                 <div className="p-4 bg-white">
-                    <div className="flex gap-4 mb-4">
-                      <div className="flex-1">
-                         <input 
-                            type="text" 
-                            placeholder="First & Middle Name" 
-                            className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" 
-                            value={adults[0].name.split(' ')[0] || ''}
-                            onChange={(e) => setAdults([{ ...adults[0], name: e.target.value + ' ' + (adults[0].name.split(' ')[1] || '') }])}
-                         />
-                      </div>
-                      <div className="flex-1">
-                         <input 
-                            type="text" 
-                            placeholder="Last Name" 
-                            className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" 
-                            value={adults[0].name.split(' ')[1] || ''}
-                            onChange={(e) => setAdults([{ ...adults[0], name: (adults[0].name.split(' ')[0] || '') + ' ' + e.target.value }])}
-                         />
-                      </div>
-                      <div className="flex w-64 border border-gray-300 rounded overflow-hidden">
-                        <div 
-                          className={`flex-1 text-center py-2 text-[12px] font-bold cursor-pointer ${adults[0].gender === 'Male' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                          onClick={() => setAdults([{ ...adults[0], gender: 'Male' }])}
-                        >
-                          MALE
+               {adults.map((adult: any, index: number) => (
+                 <div key={index} className="mx-4 border border-gray-200 rounded mb-4 overflow-hidden">
+                   <div className="p-3 bg-gray-50 flex items-center gap-2 border-b border-gray-200">
+                     <input type="checkbox" className="w-4 h-4 text-blue-500 rounded border-gray-300" checked />
+                     <span className="font-bold text-[13px] text-gray-900">ADULT {index + 1}</span>
+                     {index > 0 && (
+                       <button onClick={() => setAdults(adults.filter((_: any, i: number) => i !== index))} className="ml-auto text-red-500 text-[11px] font-bold uppercase hover:underline">
+                         Remove
+                       </button>
+                     )}
+                   </div>
+                   <div className="p-4 bg-white">
+                      <div className="flex gap-4 mb-4">
+                        <div className="flex-1">
+                           <input 
+                              type="text" 
+                              placeholder="First & Middle Name *" 
+                              className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" 
+                              value={adult.name.split(' ')[0] || ''}
+                              onChange={(e) => {
+                                 const newAdults = [...adults];
+                                 newAdults[index] = { ...adult, name: e.target.value + ' ' + (adult.name.split(' ')[1] || '') };
+                                 setAdults(newAdults);
+                              }}
+                           />
                         </div>
-                        <div className="w-px bg-gray-300"></div>
-                        <div 
-                          className={`flex-1 text-center py-2 text-[12px] font-bold cursor-pointer ${adults[0].gender === 'Female' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                          onClick={() => setAdults([{ ...adults[0], gender: 'Female' }])}
-                        >
-                          FEMALE
+                        <div className="flex-1">
+                           <input 
+                              type="text" 
+                              placeholder="Last Name *" 
+                              className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" 
+                              value={adult.name.split(' ')[1] || ''}
+                              onChange={(e) => {
+                                 const newAdults = [...adults];
+                                 newAdults[index] = { ...adult, name: (adult.name.split(' ')[0] || '') + ' ' + e.target.value };
+                                 setAdults(newAdults);
+                              }}
+                           />
+                        </div>
+                        <div className="flex w-64 border border-gray-300 rounded overflow-hidden">
+                          <div 
+                            className={`flex-1 text-center py-2 text-[12px] font-bold cursor-pointer ${adult.gender === 'Male' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                            onClick={() => {
+                               const newAdults = [...adults];
+                               newAdults[index] = { ...adult, gender: 'Male' };
+                               setAdults(newAdults);
+                            }}
+                          >
+                            MALE
+                          </div>
+                          <div className="w-px bg-gray-300"></div>
+                          <div 
+                            className={`flex-1 text-center py-2 text-[12px] font-bold cursor-pointer ${adult.gender === 'Female' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                            onClick={() => {
+                               const newAdults = [...adults];
+                               newAdults[index] = { ...adult, gender: 'Female' };
+                               setAdults(newAdults);
+                            }}
+                          >
+                            FEMALE
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-4 mb-4">
-                      <div className="flex-1">
-                         <label className="text-[12px] text-gray-600 mb-1 block">Country Code</label>
-                         <select className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500">
-                           <option>Country Code(Optional)</option>
-                           <option>+91</option>
-                         </select>
+                      <div className="flex gap-4 mb-4">
+                        <div className="flex-1">
+                           <label className="text-[12px] text-gray-600 mb-1 block">Country Code</label>
+                           <Dropdown
+                             value="+91"
+                             onChange={() => {}}
+                             options={[
+                               { value: 'Country Code(Optional)', label: 'Country Code(Optional)' },
+                               { value: '+91', label: '+91' },
+                             ]}
+                           />
+                        </div>
+                        <div className="flex-1">
+                           <label className="text-[12px] text-gray-600 mb-1 block">Mobile No</label>
+                           <input type="text" placeholder="Mobile No(Optional)" className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" />
+                        </div>
+                        <div className="flex-1">
+                           <label className="text-[12px] text-gray-600 mb-1 block">Email</label>
+                           <input type="email" placeholder="Email(Optional)" className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" />
+                        </div>
                       </div>
-                      <div className="flex-1">
-                         <label className="text-[12px] text-gray-600 mb-1 block">Mobile No</label>
-                         <input type="text" placeholder="Mobile No(Optional)" className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" />
-                      </div>
-                      <div className="flex-1">
-                         <label className="text-[12px] text-gray-600 mb-1 block">Email</label>
-                         <input type="email" placeholder="Email(Optional)" className="w-full border border-gray-300 rounded p-2 text-[13px] focus:outline-none focus:border-blue-500" />
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                       <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
-                       <span className="text-[13px] font-bold text-gray-800">I require wheelchair <span className="font-normal text-gray-500">(Optional)</span></span>
-                    </div>
+                      <div className="flex items-center gap-2">
+                         <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
+                         <span className="text-[13px] font-bold text-gray-800">I require wheelchair <span className="font-normal text-gray-500">(Optional)</span></span>
+                      </div>
+                   </div>
                  </div>
-               </div>
+               ))}
 
                <div className="mx-4 mb-6">
-                 <button className="text-blue-500 font-bold text-[13px] hover:underline uppercase">+ ADD NEW ADULT</button>
+                 <button 
+                   onClick={() => setAdults([...adults, { name: '', gender: 'Male', passengerType: 'ADULT' }])}
+                   className="text-blue-500 font-bold text-[13px] hover:underline uppercase"
+                 >
+                   + ADD NEW ADULT
+                 </button>
                </div>
 
                <div className="px-6 py-2 border-t border-gray-100 bg-[#f4f4f4]">
                  <h3 className="font-bold text-[14px] text-gray-800 mb-4 mt-2">Booking details will be sent to</h3>
                  <div className="flex gap-4">
                    <div className="w-1/3">
-                     <label className="text-[12px] text-gray-500 mb-1 block">Country Code</label>
-                     <select className="w-full border border-gray-300 bg-white rounded p-2 text-[13px]">
-                       <option>India(91)</option>
-                     </select>
+                     <label className="text-[12px] text-gray-500 mb-1 block">Country Code <span className="text-red-500">*</span></label>
+                     <Dropdown
+                       value="India(91)"
+                       onChange={() => {}}
+                       options={[
+                         { value: 'India(91)', label: 'India(91)' }
+                       ]}
+                     />
                    </div>
                    <div className="w-1/3">
-                     <label className="text-[12px] text-gray-500 mb-1 block">Mobile No</label>
+                     <label className="text-[12px] text-gray-500 mb-1 block">Mobile No <span className="text-red-500">*</span></label>
                      <input type="text" className="w-full border border-gray-300 bg-white rounded p-2 text-[13px]" defaultValue={user?.phone || '9876543210'} onChange={(e) => setContactPhone(e.target.value)} />
                    </div>
                    <div className="w-1/3">
-                     <label className="text-[12px] text-gray-500 mb-1 block">Email</label>
+                     <label className="text-[12px] text-gray-500 mb-1 block">Email <span className="text-red-500">*</span></label>
                      <input type="email" className="w-full border border-gray-300 bg-white rounded p-2 text-[13px]" defaultValue={user?.email || ''} onChange={(e) => setContactEmail(e.target.value)} />
                    </div>
                  </div>
@@ -555,13 +592,13 @@ export default function FlightBookingPage() {
                       </span> 
                       Base Fare
                     </span>
-                    <span className="font-medium">₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                    <span className="font-medium">₹ {(selectedOutbound.price * adults.length).toLocaleString('en-IN')}</span>
                  </div>
                  {showBaseFare && (
                    <div className="pl-6 pr-1 py-2 text-sm text-gray-500 space-y-1 bg-gray-50 mt-1 rounded-md">
                      <div className="flex justify-between">
-                       <span>Adult(s) (1 X ₹ {selectedOutbound.price.toLocaleString('en-IN')})</span>
-                       <span>₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                       <span>Adult(s) ({adults.length} X ₹ {selectedOutbound.price.toLocaleString('en-IN')})</span>
+                       <span>₹ {(selectedOutbound.price * adults.length).toLocaleString('en-IN')}</span>
                      </div>
                    </div>
                  )}
@@ -579,17 +616,17 @@ export default function FlightBookingPage() {
                       </span> 
                       Taxes and Surcharges
                     </span>
-                    <span className="font-medium">₹ 1,651</span>
+                    <span className="font-medium">₹ {(1651 * adults.length).toLocaleString('en-IN')}</span>
                  </div>
                  {showTaxes && (
                    <div className="pl-6 pr-1 py-2 text-sm text-gray-500 space-y-1 bg-gray-50 mt-1 rounded-md">
                      <div className="flex justify-between">
                        <span>Airline Taxes</span>
-                       <span>₹ 850</span>
+                       <span>₹ {(850 * adults.length).toLocaleString('en-IN')}</span>
                      </div>
                      <div className="flex justify-between">
                        <span>Fee & Surcharge</span>
-                       <span>₹ 801</span>
+                       <span>₹ {(801 * adults.length).toLocaleString('en-IN')}</span>
                      </div>
                    </div>
                  )}
@@ -598,7 +635,7 @@ export default function FlightBookingPage() {
                {/* Total */}
                <div className="flex justify-between items-center py-4 mt-2">
                   <span className="font-bold text-gray-900 text-[18px]">Total Amount</span>
-                  <span className="font-black text-[20px] text-gray-900">₹ {(selectedOutbound.price + 1651).toLocaleString('en-IN')}</span>
+                  <span className="font-black text-[20px] text-gray-900">₹ {((selectedOutbound.price + 1651) * adults.length).toLocaleString('en-IN')}</span>
                </div>
              </div>
           </div>

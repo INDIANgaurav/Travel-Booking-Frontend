@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users } from 'lucide-react';
+import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
 import api from '../../services/api';
@@ -40,7 +40,9 @@ export default function LandingPage() {
   const user = useSelector(selectCurrentUser);
 
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Flights');
+  const tabParam = searchParams.get('tab');
+  const formattedTab = tabParam ? tabParam.charAt(0).toUpperCase() + tabParam.slice(1).toLowerCase() : 'Flights';
+  const [activeTab, setActiveTab] = useState(formattedTab);
   const [tripType, setTripType] = useState('One Way');
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -434,7 +436,7 @@ export default function LandingPage() {
                     
                     {isToPickerOpen && (
                       <div className="absolute top-[100%] left-0 z-50">
-                        <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="DESTINATION" />
+                        <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="DESTINATION" type="hotel" />
                       </div>
                     )}
                   </div>
@@ -543,34 +545,34 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom Pill Banners */}
-          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[900px] gap-6 text-sm overflow-x-auto custom-scrollbar">
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
+          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[1100px] gap-6 text-sm hidden-scrollbar">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1 rounded-l-full">
               <Globe size={20} className="text-blue-600" />
               <span className="font-bold text-gray-700">Where2Go</span>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
-              <Map size={20} className="text-blue-600" />
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
+              <Shield size={20} className="text-blue-600" />
               <div>
-                <span className="font-bold text-gray-700">How2Go <span className="text-[10px] bg-pink-600 text-white px-1 rounded uppercase">New</span></span>
-                <p className="text-[10px] text-gray-500">Find routes to anywhere</p>
+                <span className="font-bold text-gray-700">Insurance</span>
+                <p className="text-[10px] text-gray-500">For International Trips</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
-              <CreditCard size={20} className="text-blue-600" />
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
+              <Plane size={20} className="text-blue-600" />
               <div>
-                <span className="font-bold text-gray-700">MakeMyTrip ICICI Credit Card</span>
-                <p className="text-[10px] text-gray-500">Never expiring rewards & big benefits</p>
+                <span className="font-bold text-gray-700">Explore International Flights</span>
+                <p className="text-[10px] text-gray-500">Cheapest Flights to Paris, Bali, Tokyo & more</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0">
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
               <Users size={20} className="text-blue-600" />
               <div>
                 <span className="font-bold text-gray-700">MICE</span>
                 <p className="text-[10px] text-gray-500">Offsites, Events & Meetings</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Ticket size={20} className="text-blue-600" />
+            <div className="flex items-center gap-2 shrink-0 cursor-pointer hover:bg-gray-50 py-1 rounded-r-full pr-2">
+              <Gift size={20} className="text-blue-600" />
               <span className="font-bold text-gray-700">Gift Cards</span>
             </div>
           </div>

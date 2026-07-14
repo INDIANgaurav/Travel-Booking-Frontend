@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface CancellationModalProps {
   bookingId: string;
@@ -52,6 +53,7 @@ export default function CancellationModal({ bookingId, onClose, onSuccess }: Can
       setCancelling(true);
       setError('');
       await api.post(`/api/bookings/${bookingId}/cancel`, { reason });
+      toast.success('Booking cancelled successfully!');
       onSuccess();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to cancel booking');

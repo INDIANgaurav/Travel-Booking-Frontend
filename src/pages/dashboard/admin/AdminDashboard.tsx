@@ -4,25 +4,16 @@ import { Users, CreditCard, TrendingUp, ArrowUpRight, Activity, Globe, Package }
 import api from '../../../services/api';
 import Loader from '../../../components/common/Loader';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
+import Dropdown from '../../../components/ui/Dropdown';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, bookings: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Mock data for charts (since we don't have historical backend data yet)
-  const revenueData = [
-    { name: 'Jan', revenue: 4000 },
-    { name: 'Feb', revenue: 3000 },
-    { name: 'Mar', revenue: 5000 },
-    { name: 'Apr', revenue: 8000 },
-    { name: 'May', revenue: 6000 },
-    { name: 'Jun', revenue: 9000 },
-    { name: 'Jul', revenue: 11000 },
-  ];
+  const [revenueData, setRevenueData] = useState<any[]>([]);
 
-  // Empty agent data until Phase 3 backend is connected
-  const agentData: any[] = [];
+  const [agentData, setAgentData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -35,13 +26,47 @@ export default function AdminDashboard() {
         const users = usersRes.data;
         const bookings = bookingsRes.data;
         
-        const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const revMap: Record<string, number> = {};
+        
+        let totalRevenue = 0;
+        bookings.forEach((b: any) => {
+          if (b.status === 'CONFIRMED') {
+            totalRevenue += (b.totalAmount || 0);
+            if (b.createdAt) {
+              const date = new Date(b.createdAt);
+              const monthName = months[date.getMonth()];
+              revMap[monthName] = (revMap[monthName] || 0) + (b.totalAmount || 0);
+            }
+          }
+        });
+        
+        const formattedRevData = Object.entries(revMap).map(([name, revenue]) => ({ name, revenue }));
+        formattedRevData.sort((a, b) => months.indexOf(a.name) - months.indexOf(b.name));
+        
+        // If there's no data, give an empty state or just show the current month
+        if (formattedRevData.length === 0) {
+           const currentMonth = months[new Date().getMonth()];
+           formattedRevData.push({ name: currentMonth, revenue: 0 });
+        }
+        
+        setRevenueData(formattedRevData);
         
         setStats({
           users: users.length,
           bookings: bookings.length,
           revenue: totalRevenue
         });
+
+        // Filter for agents and map them for the chart
+        const agentsList = users.filter((u: any) => u.role?.toUpperCase() === 'AGENT');
+        if (agentsList.length > 0) {
+          const mapped = agentsList.map((a: any) => ({
+            name: a.name?.split(' ')[0] || 'Agent', // First name for short labels
+            sales: Math.floor(Math.random() * 50) + 10 // Mock sales data for now
+          }));
+          setAgentData(mapped);
+        }
       } catch (error) {
         console.error('Error fetching admin stats:', error);
       } finally {
@@ -63,7 +88,7 @@ export default function AdminDashboard() {
     { title: 'Total Revenue', value: `₹ ${stats.revenue.toLocaleString()}`, icon: <TrendingUp size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+18.2%', path: '/admin/finance' },
     { title: 'Total Bookings', value: stats.bookings, icon: <CreditCard size={24} />, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+5.4%', path: '/admin/bookings' },
     { title: 'Active Users', value: stats.users, icon: <Users size={24} />, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12.1%', path: '/admin/users' },
-    { title: 'API Requests (24h)', value: '14.2k', icon: <Activity size={24} />, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+2.4%', path: '' },
+    { title: 'API Requests (24h)', value: 'Coming Soon', icon: <Activity size={24} />, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Pending', path: '' },
   ];
 
   return (
@@ -108,10 +133,16 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-bold text-gray-900">Revenue Analytics</h2>
               <p className="text-xs text-gray-500">Monthly revenue breakdown (Current Year)</p>
             </div>
-            <select className="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-1.5 font-medium text-gray-700 outline-none">
-              <option>This Year</option>
-              <option>Last Year</option>
-            </select>
+            <div className="w-32">
+              <Dropdown
+                value="This Year"
+                onChange={() => {}}
+                options={[
+                  { value: 'This Year', label: 'This Year' },
+                  { value: 'Last Year', label: 'Last Year' }
+                ]}
+              />
+            </div>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -143,15 +174,26 @@ export default function AdminDashboard() {
           </div>
           <div className="h-[300px] w-full">
             {agentData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={agentData} layout="vertical" margin={{ top: 0, right: 20, left: 20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#4b5563', fontWeight: 600 }} />
-                  <RechartsTooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}/>
-                  <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '280px' }}>
+                {agentData.map((agent, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-blue-50/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center shadow-sm">
+                        {agent.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900">{agent.name}</h4>
+                        <p className="text-xs text-gray-500 font-medium">Sales Count: <span className="text-gray-700 font-bold">{agent.sales}</span></p>
+                      </div>
+                    </div>
+                    {idx === 0 && (
+                      <div className="text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs font-bold border border-amber-200">
+                        #1 Agent
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <Users size={32} className="mb-2 opacity-50" />

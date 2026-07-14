@@ -85,7 +85,7 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
           <div
             key={day.toString()}
             className={`
-              relative flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 cursor-pointer transition-colors group
+              relative flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 cursor-pointer transition-colors group/day
               ${!isSameMonth(day, monthStart) ? 'invisible' : ''}
               ${isPast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 font-bold hover:bg-gray-100'}
               ${isSelectedCheckIn || isSelectedCheckOut ? '!bg-blue-600 !text-white rounded-md' : ''}
@@ -96,21 +96,23 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
             onClick={() => !isPast && onDateClick(cloneDay)}
           >
             <span className="z-10">{formattedDate}</span>
-            {holiday && !isSelectedCheckIn && !isSelectedCheckOut && (
-              <span className="absolute -bottom-1 w-1 h-1 rounded-full" style={{ backgroundColor: holiday.color }}></span>
-            )}
-
             {/* Holiday Tooltip */}
             {holiday && !isPast && (
-              <div className="hidden group-hover:block absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20">
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-10 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
                 {format(day, 'dd MMM')} <br/>
                 <span className="font-bold text-yellow-300">{holiday.name}</span>
               </div>
             )}
             
-            {/* Price indicator mock */}
+            {/* Holiday Text or Price */}
             {!isPast && isSameMonth(day, monthStart) && !isSelectedCheckIn && !isSelectedCheckOut && (
-              <span className="text-[8px] text-gray-400 absolute bottom-0.5">₹1.2k</span>
+              holiday ? (
+                <span className="text-[7px] font-bold absolute bottom-0.5 truncate w-[90%] text-center leading-none" style={{ color: holiday.color }}>
+                  {holiday.name.substring(0, 5)}...
+                </span>
+              ) : (
+                <span className="text-[8px] text-gray-400 absolute bottom-0.5 leading-none">₹1.2k</span>
+              )
             )}
           </div>
         );

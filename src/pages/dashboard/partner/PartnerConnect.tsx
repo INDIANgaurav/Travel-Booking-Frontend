@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, CheckCircle2, ChevronRight, UploadCloud } from 'lucide-react';
 import TopNavbar from '../../../components/layout/TopNavbar';
+import api from '../../../services/api';
 
 export default function PartnerConnect() {
   const navigate = useNavigate();
@@ -59,21 +60,13 @@ export default function PartnerConnect() {
       });
 
       // API call to backend (assumes user is logged in and token is in localStorage)
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/hotels/register', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: data
-      });
+      const response = await api.post('/api/hotels/register', data);
 
-      if (response.ok) {
+      if (response.data) {
         alert('Property registered successfully!');
         navigate('/');
       } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
+        alert('Registration failed');
       }
     } catch (error) {
       console.error('Registration failed:', error);

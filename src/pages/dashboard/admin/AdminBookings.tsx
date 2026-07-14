@@ -3,12 +3,14 @@ import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import { Search } from 'lucide-react';
 import Loader from '../../../components/common/Loader';
+import Dropdown from '../../../components/ui/Dropdown';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -36,7 +38,8 @@ export default function AdminBookings() {
   const filteredBookings = bookings.filter((booking: any) => {
     const matchesSearch = (booking.bookingId || booking._id).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'ALL' || booking.type === filterType;
-    return matchesSearch && matchesFilter;
+    const matchesStatus = statusFilter === 'ALL' || booking.status === statusFilter;
+    return matchesSearch && matchesFilter && matchesStatus;
   });
 
   return (
@@ -59,16 +62,33 @@ export default function AdminBookings() {
       </div>
       
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex gap-2">
-          {['ALL', 'FLIGHT', 'HOTEL'].map(type => (
-            <button 
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${filterType === type ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              {type === 'ALL' ? 'All' : type === 'FLIGHT' ? 'Flights' : 'Hotels'}
-            </button>
-          ))}
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex gap-2">
+            {['ALL', 'FLIGHT', 'HOTEL'].map(type => (
+              <button 
+                key={type}
+                onClick={() => setFilterType(type)}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${filterType === type ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                {type === 'ALL' ? 'All' : type === 'FLIGHT' ? 'Flights' : 'Hotels'}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-600">Status:</span>
+            <div className="w-40">
+              <Dropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { value: 'ALL', label: 'All Status' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'CONFIRMED', label: 'Confirmed' },
+                  { value: 'CANCELLED', label: 'Cancelled' }
+                ]}
+              />
+            </div>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">

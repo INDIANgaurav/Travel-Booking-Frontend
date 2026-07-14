@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import Loader from '../../../components/common/Loader';
+import Dropdown from '../../../components/ui/Dropdown';
 
 interface UserProfile {
   _id: string;
@@ -281,17 +282,20 @@ export default function ProfilePage() {
                   />
                 </div>
                 
-                <div className="bg-gray-50 border border-gray-200 rounded p-3 flex justify-between items-center">
+                <div className="bg-gray-50 border border-gray-200 rounded p-3">
                   <div className="w-full">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase">Gender</label>
-                    <select name="gender" value={formState.gender} onChange={handleChange} className="w-full bg-transparent font-bold text-gray-900 focus:outline-none appearance-none">
-                      <option value="">Select</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Gender</label>
+                    <Dropdown 
+                      value={formState.gender} 
+                      onChange={(val) => setFormState(prev => ({ ...prev, gender: val }))} 
+                      options={[
+                        { value: 'Male', label: 'Male' },
+                        { value: 'Female', label: 'Female' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                      placeholder="Select"
+                    />
                   </div>
-                  <ChevronDown size={16} className="text-gray-400 pointer-events-none" />
                 </div>
                 
                 <div className="bg-gray-50 border border-gray-200 rounded p-3 flex justify-between items-center">

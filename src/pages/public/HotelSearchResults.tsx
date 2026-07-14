@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import TopNavbar from '../../components/layout/TopNavbar';
 import { MapPin, Star, Building2, Check, Wifi, Coffee, Car } from 'lucide-react';
 
@@ -20,7 +21,11 @@ export default function HotelSearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [filteredHotels, setFilteredHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [priceFilters, setPriceFilters] = useState<string[]>([]);
+  const [starFilters, setStarFilters] = useState<number[]>([]);
 
   const city = searchParams.get('city') || 'Delhi';
   const checkIn = searchParams.get('checkIn');
@@ -30,6 +35,35 @@ export default function HotelSearchResults() {
     fetchHotels();
   }, [city, checkIn, checkOut]);
 
+  useEffect(() => {
+    let result = hotels;
+
+    if (priceFilters.length > 0) {
+      result = result.filter(hotel => {
+        return priceFilters.some(filter => {
+          if (filter === '0-2000') return hotel.pricePerNight <= 2000;
+          if (filter === '2000-5000') return hotel.pricePerNight > 2000 && hotel.pricePerNight <= 5000;
+          if (filter === '5000+') return hotel.pricePerNight > 5000;
+          return false;
+        });
+      });
+    }
+
+    if (starFilters.length > 0) {
+      result = result.filter(hotel => starFilters.includes(hotel.rating || 3)); // Fallback rating to 3 if missing
+    }
+
+    setFilteredHotels(result);
+  }, [hotels, priceFilters, starFilters]);
+
+  const togglePriceFilter = (range: string) => {
+    setPriceFilters(prev => prev.includes(range) ? prev.filter(f => f !== range) : [...prev, range]);
+  };
+
+  const toggleStarFilter = (star: number) => {
+    setStarFilters(prev => prev.includes(star) ? prev.filter(s => s !== star) : [...prev, star]);
+  };
+
   const fetchHotels = async () => {
     setLoading(true);
     try {
@@ -38,10 +72,9 @@ export default function HotelSearchResults() {
       if (checkIn) query.append('checkIn', checkIn);
       if (checkOut) query.append('checkOut', checkOut);
 
-      const response = await fetch(`http://localhost:5000/api/hotels/search?${query.toString()}`);
-      if (response.ok) {
-        const data = await response.json();
-        setHotels(data);
+      const response = await api.get(`/api/hotels/search?${query.toString()}`);
+      if (response.data) {
+        setHotels(response.data);
       } else {
         console.error("Failed to fetch hotels");
       }
@@ -79,7 +112,10 @@ export default function HotelSearchResults() {
                 </p>
               </div>
             </div>
-            <button className="mt-4 md:mt-0 bg-white text-blue-900 px-6 py-2.5 rounded-lg font-bold hover:bg-blue-50 transition">
+            <button 
+              onClick={() => navigate('/?tab=Hotels')}
+              className="mt-4 md:mt-0 bg-white text-blue-900 px-6 py-2.5 rounded-lg font-bold hover:bg-blue-50 transition"
+            >
               Modify Search
             </button>
           </div>
@@ -96,15 +132,15 @@ export default function HotelSearchResults() {
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Price Range</h4>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                  <input type="checkbox" checked={priceFilters.includes('0-2000')} onChange={() => togglePriceFilter('0-2000')} className="rounded text-blue-600 focus:ring-blue-500" />
                   <span className="text-sm text-gray-700">₹0 - ₹2000</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                  <input type="checkbox" checked={priceFilters.includes('2000-5000')} onChange={() => togglePriceFilter('2000-5000')} className="rounded text-blue-600 focus:ring-blue-500" />
                   <span className="text-sm text-gray-700">₹2000 - ₹5000</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                  <input type="checkbox" checked={priceFilters.includes('5000+')} onChange={() => togglePriceFilter('5000+')} className="rounded text-blue-600 focus:ring-blue-500" />
                   <span className="text-sm text-gray-700">₹5000+</span>
                 </label>
               </div>
@@ -114,7 +150,11 @@ export default function HotelSearchResults() {
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Star Rating</h4>
               <div className="flex gap-2">
                 {[3, 4, 5].map(star => (
-                  <button key={star} className="flex-1 py-1.5 border border-gray-300 rounded text-sm text-gray-600 font-medium hover:border-blue-500 hover:text-blue-600 transition flex items-center justify-center gap-1">
+                  <button 
+                    key={star} 
+                    onClick={() => toggleStarFilter(star)}
+                    className={`flex-1 py-1.5 border rounded text-sm font-medium transition flex items-center justify-center gap-1 ${starFilters.includes(star) ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600'}`}
+                  >
                     {star} <Star size={12} className="fill-current" />
                   </button>
                 ))}
@@ -153,14 +193,14 @@ export default function HotelSearchResults() {
                 </div>
               ))}
             </div>
-          ) : hotels.length === 0 ? (
+          ) : filteredHotels.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <Building2 size={48} className="text-gray-300 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-700">No hotels found in {city}</h2>
               <p className="text-gray-500 mt-2">Try changing your search destination.</p>
             </div>
           ) : (
-            hotels.map((hotel, idx) => (
+            filteredHotels.map((hotel, idx) => (
               <div key={hotel._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col sm:flex-row hover:shadow-md transition">
                 {/* Image */}
                 <div className="w-full sm:w-72 h-48 sm:h-auto relative shrink-0">

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import { Plane, Building2, MapPin } from 'lucide-react';
 
 interface City {
@@ -18,7 +19,10 @@ const POPULAR_CITIES: City[] = [
   { code: 'MAA', name: 'Chennai', airport: 'Chennai International Airport', country: 'India' },
   { code: 'DXB', name: 'Dubai', airport: 'Dubai International Airport', country: 'UAE' },
   { code: 'BKK', name: 'Bangkok', airport: 'Suvarnabhumi Airport', country: 'Thailand' },
-  { code: 'LHR', name: 'London', airport: 'Heathrow Airport', country: 'UK' }
+  { code: 'LHR', name: 'London', airport: 'Heathrow Airport', country: 'UK' },
+  { code: 'HR', name: 'Haryana', airport: 'Chandigarh Airport', country: 'India' },
+  { code: 'PNQ', name: 'Pune', airport: 'Pune International Airport', country: 'India' },
+  { code: 'JAI', name: 'Jaipur', airport: 'Jaipur International Airport', country: 'India' }
 ];
 
 interface CityPickerProps {
@@ -26,12 +30,33 @@ interface CityPickerProps {
   onChange: (code: string) => void;
   onClose: () => void;
   title?: string;
+  type?: 'hotel' | 'flight';
 }
 
-export default function CityPicker({ value, onChange, onClose, title = "SELECT CITY" }: CityPickerProps) {
+export default function CityPicker({ value, onChange, onClose, title = "SELECT CITY", type = 'flight' }: CityPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [availableCities, setAvailableCities] = useState<City[]>(POPULAR_CITIES);
 
-  const filteredCities = POPULAR_CITIES.filter(city => 
+  useEffect(() => {
+    if (type === 'hotel') {
+      api.get('/api/hotels/cities').then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          // Merge backend dynamic cities with POPULAR_CITIES and remove duplicates
+          const dynamicCities = res.data;
+          
+          // Combine both, but filter out from POPULAR_CITIES if the code already exists in dynamicCities
+          const mergedCities = [
+            ...dynamicCities,
+            ...POPULAR_CITIES.filter(pc => !dynamicCities.some((dc: any) => dc.code === pc.code))
+          ];
+          
+          setAvailableCities(mergedCities);
+        }
+      }).catch(err => console.error("Failed to fetch cities", err));
+    }
+  }, [type]);
+
+  const filteredCities = availableCities.filter(city => 
     city.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     city.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     city.country.toLowerCase().includes(searchQuery.toLowerCase())
