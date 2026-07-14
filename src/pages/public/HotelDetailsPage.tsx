@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TopNavbar from '../../components/layout/TopNavbar';
 import { MapPin, Star, Check, Info, Users, Bed, ChevronRight } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/authSlice';
+import LoginModal from '../../components/auth/LoginModal';
+import toast from 'react-hot-toast';
 
 const HotelSkeleton = () => (
   <div className="max-w-[1200px] mx-auto p-4 mt-8 w-full">
@@ -41,9 +45,11 @@ export default function HotelDetailsPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
+  const user = useSelector(selectCurrentUser);
   
   const [loading, setLoading] = useState(true);
   const [hotel, setHotel] = useState<any>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // MOCK DATA for specific hotel rooms since our DB only has one base price
   const rooms = [
@@ -67,6 +73,12 @@ export default function HotelDetailsPage() {
   }, [state, navigate]);
 
   const handleBookRoom = (room: any) => {
+    if (!user) {
+      toast.error('Please login or signup first to book hotels.');
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     const checkIn = state?.checkIn || new Date().toISOString().split('T')[0];
     const checkOut = state?.checkOut || new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const guests = state?.guests || 1;
@@ -100,7 +112,8 @@ export default function HotelDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f2f2f2] font-sans pb-32">
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       <TopNavbar />
       
       {/* Modification Search Bar Area (Static for now) */}

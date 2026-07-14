@@ -209,12 +209,14 @@ export default function BookingsPage() {
                       >
                         View Details {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
-                      <button 
-                        onClick={() => navigate(`/dashboard/invoice/${booking._id}`)}
-                        className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
-                      >
-                        <Ticket size={16} /> View E-Ticket
-                      </button>
+                      {booking.status !== 'PENDING' && (
+                        <button 
+                          onClick={() => navigate(`/dashboard/invoice/${booking._id}`)}
+                          className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                        >
+                          <Ticket size={16} /> View E-Ticket
+                        </button>
+                      )}
                     </div>
                   </div>
 

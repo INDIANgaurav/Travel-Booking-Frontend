@@ -97,7 +97,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
       }, 1500);
       
     } catch (err: any) {
-      setError(err.message || err.response?.data?.message || 'Google sign-in failed.');
+      setError(err.response?.data?.message || err.message || 'Google sign-in failed.');
     } finally {
       setIsLoading(false);
     }

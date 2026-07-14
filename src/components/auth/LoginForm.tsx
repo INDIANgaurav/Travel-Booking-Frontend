@@ -47,7 +47,7 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       else navigate('/admin');
       
     } catch (err: any) {
-      setError(err.message || err.response?.data?.message || 'Failed to log in. Please check your credentials.');
+      setError(err.response?.data?.message || err.message || 'Failed to log in. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       else navigate('/admin');
       
     } catch (err: any) {
-      setError(err.message || err.response?.data?.message || 'Google sign-in failed.');
+      setError(err.response?.data?.message || err.message || 'Google sign-in failed.');
     } finally {
       setIsLoading(false);
     }

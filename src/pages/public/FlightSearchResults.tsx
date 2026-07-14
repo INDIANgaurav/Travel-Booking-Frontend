@@ -9,6 +9,8 @@ import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
 import CityPicker from '../../components/common/CityPicker';
 import TripTypePicker from '../../components/common/TripTypePicker';
+import LoginModal from '../../components/auth/LoginModal';
+import toast from 'react-hot-toast';
 
 interface Flight {
   _id: string;
@@ -62,6 +64,7 @@ export default function FlightSearchResults() {
   const [outboundFlights, setOutboundFlights] = useState<Flight[]>([]);
   const [returnFlights, setReturnFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [selectedOutbound, setSelectedOutbound] = useState<Flight | null>(null);
   const [selectedReturn, setSelectedReturn] = useState<Flight | null>(null);
@@ -197,7 +200,7 @@ export default function FlightSearchResults() {
 
   return (
     <div className="min-h-screen bg-[#f2f2f2] font-sans pb-32" onClick={closeAllPickers}>
-      
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       {/* Integrated MMT Style Header */}
       <div className="bg-white sticky top-0 z-40 shadow-sm border-b border-gray-200">
         
@@ -775,7 +778,14 @@ export default function FlightSearchResults() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <button 
-                      onClick={() => navigate('/flights/book', { state: { selectedOutbound, selectedReturn, tripType } })}
+                      onClick={() => {
+                        if (!user) {
+                          toast.error('Please login or signup first to book flights.');
+                          setIsLoginModalOpen(true);
+                        } else {
+                          navigate('/flights/book', { state: { selectedOutbound, selectedReturn, tripType } });
+                        }
+                      }}
                       className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-6 rounded text-sm transition"
                     >
                       BOOK NOW

@@ -152,14 +152,18 @@ export default function AdminBookings() {
                     {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4">
-                    <a 
-                      href={`/admin/invoice/${booking._id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                    >
-                      Ticket
-                    </a>
+                    {booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? (
+                      <a 
+                        href={`/admin/invoice/${booking._id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        Ticket
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-medium">Pending</span>
+                    )}
                   </td>
                 </tr>
               )))}
