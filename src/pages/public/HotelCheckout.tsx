@@ -143,7 +143,7 @@ export default function HotelCheckout() {
             });
 
             toast.success("Payment Successful!");
-            navigate(`/invoice/${booking._id}`);
+            navigate(`/dashboard/invoice/${booking._id}`);
           } catch (verifyError) {
             console.error("Verification failed", verifyError);
             toast.error("Payment Verification Failed. Contact Support.");
