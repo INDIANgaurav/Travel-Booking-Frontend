@@ -11,25 +11,25 @@ const CABIN_CLASSES = [
     id: 'Economy',
     name: 'Economy/ Premium Economy',
     features: [],
-    image: 'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/Economy.png'
+    image: 'https://placehold.co/40x40/e2e8f0/1e293b?text=ECO'
   },
   {
     id: 'Premium Economy',
     name: 'Premium Economy',
     features: ['Extra Legroom', 'Extra Baggage', 'Premium Meals'],
-    image: 'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/PremiumEconomy.png'
+    image: 'https://placehold.co/40x40/e2e8f0/1e293b?text=PRE'
   },
   {
     id: 'Business',
     name: 'Business Class',
     features: ['Luxury Lounges', 'Cabin Comfort', 'Premium Dining'],
-    image: 'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/Business.png'
+    image: 'https://placehold.co/40x40/e2e8f0/1e293b?text=BUS'
   },
   {
     id: 'First',
     name: 'First Class',
     features: ['Private Suites', 'Fine Dining', 'Highly Personalised Service'],
-    image: 'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/First.png'
+    image: 'https://placehold.co/40x40/e2e8f0/1e293b?text=FIR'
   }
 ];
 

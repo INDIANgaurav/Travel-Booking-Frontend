@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift } from 'lucide-react';
+import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
+import { selectIsAuthenticated, selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
 import api from '../../services/api';
 import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
@@ -38,6 +38,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
+  const agentMode = useSelector(selectAgentBookingMode);
 
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -60,6 +61,8 @@ export default function LandingPage() {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   const [isCabinPickerOpen, setIsCabinPickerOpen] = useState(false);
+  const [isBookingForOpen, setIsBookingForOpen] = useState(false);
+  const [bookingFor, setBookingFor] = useState('MYSELF');
   const [isFromPickerOpen, setIsFromPickerOpen] = useState(false);
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
@@ -89,6 +92,7 @@ export default function LandingPage() {
     setIsDatePickerOpen(false);
     setIsTravellerPickerOpen(false);
     setIsCabinPickerOpen(false);
+    setIsBookingForOpen(false);
     setIsFromPickerOpen(false);
     setIsToPickerOpen(false);
     setIsTripTypePickerOpen(false);
@@ -127,7 +131,11 @@ export default function LandingPage() {
       to: searchTo,
       date: departureDate ? departureDate.toISOString() : '',
       returnDate: returnDate ? returnDate.toISOString() : '',
-      tripType: tripType
+      tripType: tripType,
+      adults: adults.toString(),
+      children: children.toString(),
+      infants: infants.toString(),
+      cabinClass: cabinClass
     }).toString();
 
     navigate(`/flights/search?${query}`);
@@ -138,25 +146,25 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       
-      {/* Public Navbar (MMT Style) */}
+      {/* Public Navbar */}
       <TopNavbar />
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className="relative min-h-[650px] w-full flex flex-col items-center pt-40 pb-16">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1542224566-6e85f2e6772f?q=80&w=2000&auto=format&fit=crop" 
-            alt="Hero Background" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent"></div>
-        </div>
+      <div className={`relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
+        
+        {/* Dynamic Background Elements */}
+        {!(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') && (
+          <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center"></div>
+            {/* subtle dark overlay to ensure text readability */}
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+        )}
 
         {/* Search Widget Container */}
-        <div className="max-w-[1200px] w-full px-4 relative z-10 -mt-20" onClick={closeAllPickers}>
+        <div className={`mx-auto w-full px-4 relative z-10 -mt-20 transition-all duration-300 ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'max-w-[1200px]' : 'max-w-[1050px]'}`} onClick={closeAllPickers}>
           
           {/* Top Tabs Pill */}
           <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
@@ -179,7 +187,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-14 pb-8 px-8 relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-xl pt-14 pb-8 px-8 relative">
             
             {activeTab === 'Flights' ? (
               <div className="relative">
@@ -208,44 +216,52 @@ export default function LandingPage() {
                   
                   {/* FROM */}
                   <div 
-                    className="w-full lg:flex-1 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { closeAllPickers(); setIsFromPickerOpen(true); }}
+                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsFromPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">From</span>
                     </div>
-                    <div className="w-full text-3xl font-black text-gray-900 truncate bg-transparent flex flex-col">
+                    <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchFrom] || searchFrom}
                     </div>
-                    <p className="text-[11px] text-gray-500 truncate mt-1">{searchFrom}, Airport</p>
+                    <p className="text-[12px] text-gray-500 truncate mt-1">{searchFrom}, Airport</p>
                     
                     {isFromPickerOpen && (
-                      <div className="absolute top-[100%] left-0 z-50">
+                      <div className="absolute top-[100%] left-0 z-50" onClick={e => e.stopPropagation()}>
                         <CityPicker value={searchFrom} onChange={(c) => { setSearchFrom(c); setIsFromPickerOpen(false); }} onClose={() => setIsFromPickerOpen(false)} title="FROM" />
                       </div>
                     )}
                     
                     {/* Swap Button */}
-                    <div className="absolute right-8 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition">
-                      <Navigation size={14} className="text-blue-600 transform rotate-180 lg:rotate-90" />
+                    <div 
+                      className="absolute right-8 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const temp = searchFrom;
+                        setSearchFrom(searchTo);
+                        setSearchTo(temp);
+                      }}
+                    >
+                      <ArrowRightLeft size={14} className="text-blue-600 transform lg:rotate-0 rotate-90" />
                     </div>
                   </div>
 
                   {/* TO */}
                   <div 
-                    className="w-full lg:flex-1 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { closeAllPickers(); setIsToPickerOpen(true); }}
+                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">To</span>
                     </div>
-                    <div className="w-full text-3xl font-black text-gray-900 truncate bg-transparent flex flex-col">
+                    <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchTo] || searchTo}
                     </div>
-                    <p className="text-[11px] text-gray-500 truncate mt-1">{searchTo}, Airport</p>
+                    <p className="text-[12px] text-gray-500 truncate mt-1">{searchTo}, Airport</p>
 
                     {isToPickerOpen && (
-                      <div className="absolute top-[100%] left-0 z-50">
+                      <div className="absolute top-[100%] left-0 z-50" onClick={e => e.stopPropagation()}>
                         <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="TO" />
                       </div>
                     )}
@@ -254,7 +270,7 @@ export default function LandingPage() {
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={() => { setIsDatePickerOpen(true); setIsTravellerPickerOpen(false); setIsCabinPickerOpen(false); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Departure</span>
@@ -262,11 +278,11 @@ export default function LandingPage() {
                     </div>
                     {departureDate ? (
                       <>
-                        <div className="flex items-baseline gap-1">
-                          <h3 className="text-3xl font-black text-gray-900">{format(departureDate, 'd')}</h3>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(departureDate, 'd')}</h3>
                           <span className="text-xl font-bold text-gray-900">{format(departureDate, "MMM''yy")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
+                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
                       </>
                     ) : (
                       <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
@@ -275,7 +291,7 @@ export default function LandingPage() {
 
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { setIsDatePickerOpen(true); setIsTravellerPickerOpen(false); setIsCabinPickerOpen(false); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
@@ -283,11 +299,11 @@ export default function LandingPage() {
                     </div>
                     {returnDate ? (
                       <>
-                        <div className="flex items-baseline gap-1">
-                          <h3 className="text-3xl font-black text-gray-900">{format(returnDate, 'd')}</h3>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(returnDate, 'd')}</h3>
                           <span className="text-xl font-bold text-gray-900">{format(returnDate, "MMM''yy")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
+                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
                       </>
                     ) : (
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Tap to add a return date for bigger discounts</p>
@@ -302,13 +318,15 @@ export default function LandingPage() {
                   </div>
 
                   {isDatePickerOpen && (
-                    <div className="absolute top-[100%] left-[-100px] z-50">
+                    <div className="absolute top-[100%] left-[-100px] z-50" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={departureDate} 
                         endDate={returnDate}
                         isOneWay={tripType === 'One Way'}
                         onChange={(start, end) => { setDepartureDate(start); setReturnDate(end); }}
                         onClose={() => setIsDatePickerOpen(false)}
+                        origin={searchFrom}
+                        destination={searchTo}
                       />
                     </div>
                   )}
@@ -317,22 +335,24 @@ export default function LandingPage() {
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
                     className="w-full sm:flex-1 lg:w-[120px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={() => { setIsTravellerPickerOpen(!isTravellerPickerOpen); setIsDatePickerOpen(false); setIsCabinPickerOpen(false); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(!isTravellerPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Travellers</span>
                       <ChevronDown size={16} className="text-blue-600" />
                     </div>
-                    <div className="flex items-baseline gap-1">
-                      <h3 className="text-3xl font-black text-gray-900">{adults + children + infants}</h3>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <h3 className="text-[40px] leading-none font-black text-gray-900">{adults + children + infants}</h3>
                     </div>
-                    <p className="text-[11px] text-gray-500 font-medium mt-1 flex gap-1">
-                      👤 {adults} 👶 {children} 🍼 {infants}
+                    <p className="text-[12px] text-gray-700 font-bold mt-1 flex items-center gap-2.5">
+                      <span className="flex items-center gap-0.5" title="Adults"><User size={14} className="text-gray-900" /> {adults}</span>
+                      <span className="flex items-center gap-0.5" title="Children"><Smile size={14} className="text-gray-900" /> {children}</span>
+                      <span className="flex items-center gap-0.5" title="Infants"><Baby size={14} className="text-gray-900" /> {infants}</span>
                     </p>
                   </div>
 
                   {isTravellerPickerOpen && (
-                    <div className="absolute top-[100%] right-0 z-50">
+                    <div className="absolute top-[100%] right-0 z-50" onClick={e => e.stopPropagation()}>
                       <TravellerPicker 
                         adults={adults}
                         children={children}
@@ -353,56 +373,117 @@ export default function LandingPage() {
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={() => { setIsCabinPickerOpen(!isCabinPickerOpen); setIsDatePickerOpen(false); setIsTravellerPickerOpen(false); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
                       <ChevronDown size={16} className="text-blue-600" />
                     </div>
-                    <p className="text-[13px] font-black text-gray-900 mt-2 leading-tight">
+                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight">
                       {cabinClass}
                     </p>
                   </div>
                   {isCabinPickerOpen && (
-                    <div className="absolute top-[100%] right-0 z-50">
+                    <div className="absolute top-[100%] right-0 z-50" onClick={e => e.stopPropagation()}>
                       <CabinClassPicker cabinClass={cabinClass} onChange={(c) => { setCabinClass(c); setIsCabinPickerOpen(false); }} />
                     </div>
                   )}
                 </div>
 
+                {user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ' && (
+                  <div className="relative flex flex-col sm:flex-row w-full lg:w-[150px] border-t md:border-t-0 md:border-l border-gray-200">
+                    <div 
+                      className="w-full sm:flex-1 p-3 px-5 cursor-pointer hover:bg-orange-50/30 transition-colors group"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeAllPickers();
+                        setIsBookingForOpen(!isBookingForOpen);
+                      }}
+                    >
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-sm font-bold text-gray-500 group-hover:text-orange-500 transition-colors">Booking For</span>
+                        <ChevronDown size={16} className="text-orange-500" />
+                      </div>
+                      <p className="text-[13px] font-black text-gray-900 mt-2 leading-tight truncate">
+                        {bookingFor === 'MYSELF' ? user.name : bookingFor === 'Others' ? 'Others' : bookingFor}
+                      </p>
+                      <p className="text-[10px] text-gray-500 truncate mt-0.5">
+                        {bookingFor === 'MYSELF' ? user.email : bookingFor === 'Others' ? 'Guests, Interviewee, etc' : 'prerna.jha@mbp.in'}
+                      </p>
+                    </div>
+
+                    {isBookingForOpen && (
+                      <div className="absolute top-[100%] right-0 z-50 w-[300px] bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden py-2 mt-2 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                        <div className="px-4 py-3 bg-blue-50/50 border-b border-gray-100">
+                          <input type="text" placeholder="Primary Traveller's Email ID" className="w-full bg-white border border-gray-200 rounded-md px-3 py-1.5 text-xs outline-none focus:border-blue-400" />
+                          <p className="text-[10px] text-gray-500 mt-2">Enter Primary Traveller Email ID for whom you are making the booking.</p>
+                        </div>
+                        
+                        <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
+                          {/* MYSELF */}
+                          <div 
+                            className={`px-4 py-3 cursor-pointer transition-colors ${bookingFor === 'MYSELF' ? 'bg-orange-50' : 'hover:bg-gray-50'}`}
+                            onClick={() => { setBookingFor('MYSELF'); setIsBookingForOpen(false); }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+                              <span className="font-bold text-sm text-gray-900">{user.name}</span>
+                              <span className="text-[9px] font-bold text-orange-500 bg-orange-100 px-1.5 py-0.5 rounded">MYSELF</span>
+                            </div>
+                            <p className="text-xs text-gray-500 ml-3">{user.email}</p>
+                          </div>
+
+                          {/* Others */}
+                          <div 
+                            className={`px-4 py-3 cursor-pointer transition-colors ${bookingFor === 'Others' ? 'bg-orange-50' : 'hover:bg-gray-50'}`}
+                            onClick={() => { setBookingFor('Others'); setIsBookingForOpen(false); }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+                              <span className="font-bold text-sm text-gray-900">Others</span>
+                            </div>
+                            <p className="text-xs text-gray-500 ml-3">Guests, Interviewee, etc</p>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 </div>
 
                 {/* Special Fares Section */}
-                <div className="mt-5 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-2">
-                  <span className="text-[11px] font-black text-gray-900 tracking-wide md:w-[80px]">SPECIAL<br className="hidden md:block"/>FARES</span>
+                <div className="mt-5 flex flex-col gap-2 relative">
+                  <span className="text-[13px] font-bold text-gray-800 tracking-wide">Select a special fare</span>
                   <div className="flex items-center gap-2 flex-1 overflow-x-auto pb-2 custom-scrollbar w-full">
                     
-                    <button className="flex flex-col items-center justify-center border border-blue-200 bg-blue-50 text-blue-600 rounded-lg px-3 py-1 min-w-[90px]">
+                    <button className="flex flex-col items-center justify-center border border-blue-200 bg-blue-50/60 text-blue-700 rounded-lg px-4 py-1.5 min-w-[100px] hover:bg-blue-50 transition">
                       <span className="text-[13px] font-bold">Regular</span>
-                      <span className="text-[10px] text-blue-500">Regular fares</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Regular fares</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1 min-w-[90px]">
+                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
                       <span className="text-[13px] font-bold">Student</span>
-                      <span className="text-[10px] text-gray-500">Extra discounts</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Extra discounts</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1 min-w-[90px]">
+                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
                       <span className="text-[13px] font-bold">Armed Forces</span>
-                      <span className="text-[10px] text-gray-500">Up to ₹600 off</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1 min-w-[100px]">
+                    <button className="flex flex-col items-center justify-center border border-blue-200 bg-[#f4f8ff] text-blue-700 rounded-lg px-4 py-1.5 min-w-[130px] transition">
                       <div className="flex items-center gap-1">
-                        <span className="text-[13px] font-bold">Have a GST number?</span>
-                        <span className="text-[9px] font-black bg-pink-600 text-white px-1 rounded uppercase">New</span>
+                        <span className="text-[13px] font-bold text-blue-600">Have a GST number?</span>
+                        <span className="text-[9px] font-black bg-purple-600 text-white px-1 rounded uppercase">New</span>
                       </div>
-                      <span className="text-[10px] text-gray-500">Upto 10% Extra Savings!</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Upto 10% Extra Savings!</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1 min-w-[90px]">
+                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
                       <span className="text-[13px] font-bold">Senior Citizen</span>
-                      <span className="text-[10px] text-gray-500">Up to ₹600 off</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-1 min-w-[90px]">
+                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[120px] transition">
                       <span className="text-[13px] font-bold">Doctor and Nurses</span>
-                      <span className="text-[10px] text-gray-500">Up to ₹600 off</span>
+                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
                     </button>
 
                   </div>
@@ -411,7 +492,7 @@ export default function LandingPage() {
                 {/* Flight Tracker Button */}
                 <div className="mt-5">
                    <button className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition">
-                     <span className="text-blue-600">🎫</span>
+                     <Ticket size={16} className="text-blue-600" />
                      <span className="text-[13px] font-bold text-gray-800">Flight Tracker</span>
                    </button>
                 </div>
@@ -494,6 +575,8 @@ export default function LandingPage() {
                             else setReturnDate(date);
                           }}
                           onClose={() => setIsDatePickerOpen(false)}
+                          origin={searchFrom}
+                          destination={searchTo}
                         />
                       </div>
                     )}
@@ -523,14 +606,14 @@ export default function LandingPage() {
                     <Building2 className="text-blue-300" size={48} />
                  </div>
                  <h2 className="text-3xl font-black text-gray-900 mb-2">{activeTab} is Coming Soon!</h2>
-                 <p className="text-lg text-gray-500 font-medium max-w-md mx-auto">We are currently building this module. It will be available in the next phase of TravelGo.</p>
+                 <p className="text-lg text-gray-500 font-medium max-w-md mx-auto">We are currently building this module. It will be available in the next phase of TrippeChalo.</p>
               </div>
             )}
 
             {/* Massive Search Button Overlapping Bottom */}
             {(activeTab === 'Flights' || activeTab === 'Hotels') && (
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
-                  <button onClick={handleSearch} className="w-full md:w-auto px-12 py-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black text-xl hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:scale-105 transition-all duration-300">
+                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl transition-all duration-300 hover:scale-105 ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.4)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)]'}`}>
                     SEARCH
                   </button>
                 </div>
@@ -627,7 +710,7 @@ export default function LandingPage() {
       <div id="features" className="bg-white py-20 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Why Book With TravelGo?</h2>
+            <h2 className="text-3xl font-black text-gray-900 mb-4">Why Book With TrippeChalo?</h2>
             <p className="text-gray-500">We provide the best booking experience for travelers and agents globally.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
@@ -662,7 +745,7 @@ export default function LandingPage() {
           <div>
             <div className="flex items-center gap-2 mb-4 text-white">
               <Plane size={24} className="text-blue-500" />
-              <span className="text-xl font-black tracking-tight">TravelGo</span>
+              <span className="text-xl font-black tracking-tight">TrippeChalo</span>
             </div>
             <p className="mb-4 text-gray-500">The world's leading travel booking platform for users and agents.</p>
           </div>
@@ -691,7 +774,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p>&copy; {new Date().getFullYear()} TravelGo Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} TrippeChalo Inc. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition">Privacy Policy</a>
             <a href="#" className="hover:text-white transition">Terms of Service</a>

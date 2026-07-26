@@ -6,7 +6,7 @@ import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../store/authSlice';
+import { selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
 
 declare global {
   interface Window {
@@ -14,10 +14,26 @@ declare global {
   }
 }
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (document.getElementById('razorpay-script')) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'razorpay-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function HotelCheckout() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
+  const agentBookingMode = useSelector(selectAgentBookingMode);
 
   const [loading, setLoading] = useState(false);
   const [bookingFor, setBookingFor] = useState<'myself' | 'someone_else'>('myself');
@@ -113,13 +129,19 @@ export default function HotelCheckout() {
         }
       };
 
+      if (user?.role === 'TRAVEL_AGENT') {
+        (payload as any).bookingMode = agentBookingMode;
+      }
+
       const { data } = await api.post('/api/bookings/hotel', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const { orderId, amount, currency, booking } = data;
 
-      if (!window.Razorpay) {
+      const res = await loadRazorpayScript();
+
+      if (!res) {
         toast.error("Razorpay SDK not loaded. Please refresh.");
         setLoading(false);
         return;
@@ -129,7 +151,7 @@ export default function HotelCheckout() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
         amount,
         currency,
-        name: "TravelGo",
+        name: "TrippeChalo",
         description: `Hotel Booking - ${hotel.name}`,
         order_id: orderId,
         handler: async function (response: any) {
@@ -155,7 +177,7 @@ export default function HotelCheckout() {
           contact: guestDetails.phone
         },
         theme: {
-          color: "#0a66c2" // MMT Blue
+          color: "#0a66c2" // Blue
         }
       };
 
@@ -187,7 +209,7 @@ export default function HotelCheckout() {
           {/* Left Column - Forms */}
           <div className="flex-1 space-y-6">
             
-            {/* Hotel Summary Card - MMT Style */}
+            {/* Hotel Summary Card */}
             <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-5 flex gap-4">
                 <div className="flex-1">
@@ -512,7 +534,7 @@ export default function HotelCheckout() {
                     <div className="flex justify-between items-start mb-1">
                       <div className="flex items-center gap-1">
                         <Tag size={12} className="text-blue-600" />
-                        <span className="font-bold text-gray-900 text-xs">MMTMAXDROP</span>
+                        <span className="font-bold text-gray-900 text-xs">MAXDROP</span>
                       </div>
                       <span className="text-teal-600 font-bold text-xs">₹454 off</span>
                     </div>
@@ -524,7 +546,7 @@ export default function HotelCheckout() {
                     <div className="flex justify-between items-start mb-1">
                       <div className="flex items-center gap-1">
                         <Tag size={12} className="text-blue-600" />
-                        <span className="font-bold text-gray-900 text-xs">MMTUPIPAY</span>
+                        <span className="font-bold text-gray-900 text-xs">UPIPAY</span>
                       </div>
                       <span className="text-gray-900 font-bold text-xs">₹395 off</span>
                     </div>

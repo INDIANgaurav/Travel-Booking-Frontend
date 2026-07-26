@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { 
   format, 
   addMonths, 
@@ -15,12 +15,15 @@ import {
   isAfter, 
   startOfDay 
 } from 'date-fns';
+import api from '../../services/api';
 
 interface DualMonthCalendarProps {
   checkIn: Date | null;
   checkOut: Date | null;
   onDateChange: (type: 'checkIn' | 'checkOut', date: Date) => void;
   onClose?: () => void;
+  origin?: string;
+  destination?: string;
 }
 
 const HOLIDAYS: Record<string, { name: string; color: string }> = {
@@ -29,9 +32,23 @@ const HOLIDAYS: Record<string, { name: string; color: string }> = {
   '25-12': { name: 'Christmas', color: '#ff4f4f' },
 };
 
-export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onClose }: DualMonthCalendarProps) {
+export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onClose, origin, destination }: DualMonthCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [loadingPrices, setLoadingPrices] = useState(false);
   const today = startOfDay(new Date());
+
+  useEffect(() => {
+    if (origin && destination) {
+      setLoadingPrices(true);
+      api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
+        .then(res => {
+          setPrices(res.data);
+        })
+        .catch(err => console.error("Error fetching calendar prices:", err))
+        .finally(() => setLoadingPrices(false));
+    }
+  }, [origin, destination]);
 
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -111,7 +128,11 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
                   {holiday.name.substring(0, 5)}...
                 </span>
               ) : (
-                <span className="text-[8px] text-gray-400 absolute bottom-0.5 leading-none">₹1.2k</span>
+                <span className="text-[8px] text-gray-500 font-medium absolute bottom-0.5 leading-none">
+                  {prices[format(day, 'yyyy-MM-dd')] 
+                    ? `₹${Math.round(prices[format(day, 'yyyy-MM-dd')])}` 
+                    : (loadingPrices ? '...' : '')}
+                </span>
               )
             )}
           </div>

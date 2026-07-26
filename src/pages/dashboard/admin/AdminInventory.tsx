@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, CheckCircle, XCircle, Search, Trash2, X, AlertTriangle } from 'lucide-react';
 import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 interface Property {
   _id: string;
@@ -55,7 +56,7 @@ export default function AdminInventory() {
       setModalAction(null);
     } catch (error) {
       console.error(`Error executing ${modalAction.type}:`, error);
-      alert(`Failed to execute action`);
+      toast.error(`Failed to execute action`);
     }
   };
 

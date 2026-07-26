@@ -5,13 +5,14 @@ import Button from '../ui/Button';
 import api from '../../services/api';
 import { auth } from '../../config/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-
+import { useNavigate } from 'react-router-dom';
 interface RegisterFormProps {
-  role: 'USER' | 'AGENT';
+  role: 'USER' | 'TRAVEL_AGENT';
   onToggleMode: () => void;
 }
 
 export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   
   const [firstName, setFirstName] = useState('');
@@ -41,7 +42,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
     try {
       const payload = {
         name: role === 'USER' ? `${firstName} ${lastName}` : contactPerson,
-        companyName: role === 'AGENT' ? agencyName : undefined,
+        companyName: role === 'TRAVEL_AGENT' ? agencyName : undefined,
         email,
         phone,
         password,
@@ -50,7 +51,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
 
       await api.post('/api/auth/register', payload);
       
-      if (role === 'AGENT') {
+      if (role === 'TRAVEL_AGENT') {
         setSuccessMsg('Your agent account has been created and is pending admin approval. Redirecting...');
       } else {
         setSuccessMsg('Account created successfully! Redirecting to login...');
@@ -67,7 +68,11 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
       setConfirmPassword('');
       
       setTimeout(() => {
-        onToggleMode();
+        if (role === 'TRAVEL_AGENT') {
+          navigate('/pending-approval');
+        } else {
+          onToggleMode();
+        }
       }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create account.');
@@ -86,7 +91,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
       
       await api.post('/api/auth/google', { token: idToken, role });
       
-      if (role === 'AGENT') {
+      if (role === 'TRAVEL_AGENT') {
         setSuccessMsg('Your agent account has been created and is pending admin approval. Redirecting...');
       } else {
         setSuccessMsg('Account created successfully! Redirecting to login...');
@@ -107,7 +112,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
     <div className="animate-in slide-in-from-left-4 duration-300">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h2>
       <p className="text-sm text-gray-500 mb-6">
-        {role === 'AGENT' ? 'Register as a Travel Agent to grow your business' : 'Sign up and start your adventure'}
+        {role === 'TRAVEL_AGENT' ? 'Register as a Travel Agent to grow your business' : 'Sign up and start your adventure'}
       </p>
 
       {error && (

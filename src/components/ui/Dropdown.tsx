@@ -39,13 +39,13 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-bold text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all gap-3"
+        className="flex items-center justify-between w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-xs font-bold text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all gap-2 h-full min-h-[36px]"
       >
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-2 truncate flex-1 text-left">
           {selectedOption?.icon}
-          {selectedOption ? selectedOption.label : placeholder}
+          <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         </span>
-        <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -61,21 +61,21 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors ${
                     isSelected 
                       ? 'bg-blue-50/50 text-blue-700 font-bold' 
                       : 'text-gray-700 font-medium hover:bg-gray-50'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 truncate">
                     {option.icon && (
-                      <span className={isSelected ? 'text-blue-500' : 'text-gray-400'}>
+                      <span className={isSelected ? 'text-blue-500' : 'text-gray-400 shrink-0'}>
                         {option.icon}
                       </span>
                     )}
-                    {option.label}
+                    <span className="truncate">{option.label}</span>
                   </span>
-                  {isSelected && <Check size={16} className="text-blue-600" />}
+                  {isSelected && <Check size={14} className="text-blue-600 shrink-0 ml-2" />}
                 </button>
               );
             })}

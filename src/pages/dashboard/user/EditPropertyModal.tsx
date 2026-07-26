@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 interface EditPropertyModalProps {
   property: any;
@@ -31,7 +32,7 @@ export default function EditPropertyModal({ property, onClose, onSuccess }: Edit
         onSuccess();
         onClose();
       } else {
-        alert('Failed to update property');
+        toast.error('Failed to update property');
       }
     } catch (error) {
       console.error('Error updating property:', error);

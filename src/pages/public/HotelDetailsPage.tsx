@@ -13,7 +13,7 @@ const HotelSkeleton = () => (
       {/* Title block */}
       <div className="h-10 w-1/3 bg-gray-200 rounded"></div>
       
-      {/* Left side: Images (Mocking the MMT layout) */}
+      {/* Left side: Images */ }
       <div className="flex gap-4">
         {/* Main Image */}
         <div className="w-2/3 h-[400px] bg-gray-200 rounded-lg"></div>

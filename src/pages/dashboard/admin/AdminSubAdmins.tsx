@@ -22,8 +22,9 @@ export default function AdminSubAdmins() {
     department: '',
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDepartment, setEditDepartment] = useState('');
+  const [editData, setEditData] = useState({ name: '', phone: '', department: '' });
 
   const fetchSubAdmins = async () => {
     try {
@@ -69,13 +70,27 @@ export default function AdminSubAdmins() {
 
   const startEdit = (sub: any) => {
     setEditingId(sub._id);
-    setEditDepartment(sub.department || '');
+    setEditData({ name: sub.name, phone: sub.phone || '', department: sub.department || '' });
+    setIsEditModalOpen(true);
   };
 
-  const handleUpdate = async (id: string) => {
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      await api.put(`/api/admin/users/${id}`, { role: 'SUB_ADMIN', department: editDepartment });
+      await api.put(`/api/admin/users/${id}`, { isActive: !currentStatus });
+      toast.success(`Sub-admin ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      setSubAdmins(subAdmins.map((a: any) => a._id === id ? { ...a, isActive: !currentStatus } : a));
+    } catch (error) {
+      toast.error('Failed to update sub-admin status');
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
+    try {
+      await api.put(`/api/admin/users/${editingId}`, editData);
       toast.success('Sub-admin updated');
+      setIsEditModalOpen(false);
       setEditingId(null);
       fetchSubAdmins();
     } catch (error) {
@@ -196,47 +211,26 @@ export default function AdminSubAdmins() {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  {editingId === sub._id ? (
-                    <div className="w-40">
-                      <Dropdown 
-                        value={editDepartment} 
-                        onChange={(val) => setEditDepartment(val)}
-                        options={[
-                          { value: 'Sales', label: 'Sales' },
-                          { value: 'Operations', label: 'Operations' },
-                          { value: 'Customer Support', label: 'Customer Support' },
-                          { value: 'Accounts', label: 'Accounts' }
-                        ]}
-                      />
-                    </div>
-                  ) : (
-                    <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-100">
-                      {sub.department || 'Not Assigned'}
-                    </span>
-                  )}
+                  <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-100">
+                    {sub.department || 'Not Assigned'}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-100">
-                    {sub.isApproved ? 'Active' : 'Pending'}
+                  <span className={`px-3 py-1 text-xs font-bold rounded-full border ${sub.isActive !== false ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                    {sub.isActive !== false ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    {editingId === sub._id ? (
-                      <>
-                        <button onClick={() => handleUpdate(sub._id)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"><Save size={16} /></button>
-                        <button onClick={() => setEditingId(null)} className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors"><X size={16} /></button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => startEdit(sub)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                          <Edit2 size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(sub._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </>
-                    )}
+                    <button onClick={() => handleToggleActive(sub._id, sub.isActive !== false)} className={`p-2 rounded-lg transition-colors ${sub.isActive !== false ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'}`} title={sub.isActive !== false ? "Deactivate" : "Activate"}>
+                      <ShieldCheck size={16} />
+                    </button>
+                    <button onClick={() => startEdit(sub)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(sub._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -245,6 +239,58 @@ export default function AdminSubAdmins() {
         </table>
         )}
       </div>
+
+      {/* Edit SubAdmin Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-black text-gray-900">Edit Sub-Admin</h2>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Full Name</label>
+                <input required type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Phone Number</label>
+                <input required type="tel" value={editData.phone} onChange={(e) => setEditData({...editData, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Department</label>
+                <Dropdown 
+                  value={editData.department} 
+                  onChange={(val) => setEditData({...editData, department: val})}
+                  options={[
+                    { value: 'Sales', label: 'Sales' },
+                    { value: 'Operations', label: 'Operations' },
+                    { value: 'Customer Support', label: 'Customer Support' },
+                    { value: 'Accounts', label: 'Accounts' }
+                  ]}
+                />
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

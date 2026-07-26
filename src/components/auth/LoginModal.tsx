@@ -10,7 +10,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [accountType, setAccountType] = useState<'USER' | 'AGENT'>('USER');
+  const [accountType, setAccountType] = useState<'USER' | 'TRAVEL_AGENT'>('USER');
 
   if (!isOpen) return null;
 
@@ -80,8 +80,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               TRAVELLER
             </button>
             <button 
-              onClick={() => setAccountType('AGENT')}
-              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'AGENT' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
+              onClick={() => setAccountType('TRAVEL_AGENT')}
+              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'TRAVEL_AGENT' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
             >
               TRAVEL AGENT
             </button>
@@ -105,7 +105,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
 
           <div className="mt-4 text-center text-[10px] text-gray-400">
-            By proceeding, you agree to TravelGo's Privacy Policy, User Agreement and T&Cs
+            By proceeding, you agree to TrippeChalo's Privacy Policy, User Agreement and T&Cs
           </div>
         </div>
         </div>

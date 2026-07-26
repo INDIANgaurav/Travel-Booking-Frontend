@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isWithinInterval, isBefore, startOfDay, getDay } from 'date-fns';
+import api from '../../services/api';
 
 interface CustomCalendarProps {
   startDate: Date | null;
@@ -8,24 +9,36 @@ interface CustomCalendarProps {
   isOneWay?: boolean;
   onChange: (start: Date | null, end: Date | null) => void;
   onClose: () => void;
+  origin?: string;
+  destination?: string;
 }
 
-const DUMMY_PRICES: Record<number, { price: number, color: string }> = {
-  1: { price: 12428, color: 'text-blue-500' },
-  2: { price: 12638, color: 'text-red-500' },
-  3: { price: 12638, color: 'text-red-500' },
-  4: { price: 12870, color: 'text-red-500' },
-  5: { price: 12141, color: 'text-green-500' },
-  12: { price: 12603, color: 'text-yellow-500' },
-  13: { price: 12971, color: 'text-red-500' },
-  14: { price: 12287, color: 'text-green-500' },
-  15: { price: 12636, color: 'text-red-500' },
-  16: { price: 12555, color: 'text-yellow-500' },
-  31: { price: 12551, color: 'text-yellow-500' }
-};
+const priceCache: Record<string, Record<string, number>> = {};
 
-export default function CustomCalendar({ startDate, endDate, isOneWay, onChange, onClose }: CustomCalendarProps) {
+export default function CustomCalendar({ startDate, endDate, isOneWay, onChange, onClose, origin, destination }: CustomCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  
+  const cacheKey = `${origin}-${destination}`;
+  const [prices, setPrices] = useState<Record<string, number>>(priceCache[cacheKey] || {});
+  const [loadingPrices, setLoadingPrices] = useState(!priceCache[cacheKey]);
+
+  useEffect(() => {
+    if (origin && destination) {
+      const key = `${origin}-${destination}`;
+      if (!priceCache[key]) {
+        setLoadingPrices(true);
+      }
+      
+      api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
+        .then(res => {
+          priceCache[key] = res.data;
+          setPrices(res.data);
+        })
+        .catch(err => console.error("[CustomCalendar] Error fetching calendar prices:", err))
+        .finally(() => setLoadingPrices(false));
+    }
+  }, [origin, destination]);
+
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -75,7 +88,8 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
           {blanks}
           {days.map((day, idx) => {
             const dateNum = day.getDate();
-            const dummyPrice = DUMMY_PRICES[dateNum % 31];
+            const dateStr = format(day, 'yyyy-MM-dd');
+            const dynamicPrice = prices[dateStr];
             const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
             
             const isSelectedStart = startDate && isSameDay(day, startDate);
@@ -85,7 +99,7 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
 
             let bgClass = "bg-white hover:bg-gray-100";
             let textClass = "text-gray-900";
-            let priceClass = dummyPrice?.color || "text-gray-400";
+            let priceClass = "text-gray-500";
             let roundingClass = "rounded-md";
 
             if (isPast) {
@@ -110,9 +124,9 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
                 className={`flex flex-col items-center justify-center h-14 cursor-pointer transition-colors ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
               >
                 <span className={`text-sm ${textClass}`}>{dateNum}</span>
-                {!isPast && dummyPrice && (
+                {!isPast && (
                   <span className={`text-[9px] font-bold mt-1 ${priceClass}`}>
-                    {dummyPrice.price.toLocaleString('en-IN')}
+                    {dynamicPrice ? `₹${Math.round(dynamicPrice).toLocaleString('en-IN')}` : (loadingPrices ? '...' : '')}
                   </span>
                 )}
               </div>

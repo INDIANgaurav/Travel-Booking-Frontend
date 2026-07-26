@@ -2,16 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { Plane, Calendar, Building2, ChevronRight, FileText, ChevronDown, ChevronUp, MapPin, Users, Briefcase, XCircle, CheckCircle2, AlertCircle, Ticket } from 'lucide-react';
 import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../../store/authSlice';
+import toast from 'react-hot-toast';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import CancellationModal from '../../../components/bookings/CancellationModal';
 import Loader from '../../../components/common/Loader';
+import ETicketModal from '../../../components/bookings/ETicketModal';
 
-export default function BookingsPage() {
+interface BookingsPageProps {
+  mode?: 'PERSONAL' | 'MYBIZ' | 'ALL';
+}
+
+export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
+  const user = useSelector(selectCurrentUser);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('UPCOMING');
   const [cancellationBookingId, setCancellationBookingId] = useState<string | null>(null);
+  const [ticketModalBooking, setTicketModalBooking] = useState<any | null>(null);
   const navigate = useNavigate();
 
   const fetchBookings = async () => {
@@ -48,6 +58,14 @@ export default function BookingsPage() {
     const travelDate = isHotel ? new Date(b.details?.checkOut || b.createdAt) : new Date(b.date || b.createdAt);
     const isPast = travelDate.getTime() < new Date().getTime();
 
+    let isModeMatch = true;
+    if (mode !== 'ALL') {
+      const bMode = b.bookingMode || 'PERSONAL';
+      isModeMatch = bMode === mode;
+    }
+
+    if (!isModeMatch) return false;
+
     if (activeTab === 'UPCOMING') return (status === 'CONFIRMED' || status === 'PENDING') && !isPast;
     if (activeTab === 'CANCELLED') return status === 'CANCELLED';
     if (activeTab === 'COMPLETED') return status === 'COMPLETED' || (status === 'CONFIRMED' && isPast);
@@ -63,9 +81,7 @@ export default function BookingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-20 relative font-sans">
-      <TopNavbar forceWhite={true} />
-      
+    <div className="min-h-[calc(100vh-76px)] bg-gray-100 pb-20 relative font-sans">
       {/* Background Gradient Header */}
       <div className="absolute top-0 left-0 w-full h-[280px] bg-gradient-to-r from-[#00b4cc] to-[#0074d9] z-0"></div>
 
@@ -149,18 +165,18 @@ export default function BookingsPage() {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-x-4 gap-y-4 text-sm text-gray-600">
                         {isHotel ? (
                           <>
                             <div>
                               <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Check In</span>
-                              <span className="font-bold text-gray-900">
+                              <span className="font-bold text-gray-900 whitespace-nowrap">
                                 {booking.details?.checkIn ? new Date(booking.details.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                               </span>
                             </div>
                             <div>
                               <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Check Out</span>
-                              <span className="font-bold text-gray-900">
+                              <span className="font-bold text-gray-900 whitespace-nowrap">
                                 {booking.details?.checkOut ? new Date(booking.details.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                               </span>
                             </div>
@@ -177,7 +193,7 @@ export default function BookingsPage() {
                           <>
                             <div>
                               <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Date</span>
-                              <span className="font-bold text-gray-900">
+                              <span className="font-bold text-gray-900 whitespace-nowrap">
                                 {new Date(booking.date || booking.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </span>
                             </div>
@@ -194,7 +210,7 @@ export default function BookingsPage() {
                       </div>
                     </div>
 
-                    <div className="w-full md:w-auto flex flex-col sm:flex-row justify-end gap-3 mt-4 md:mt-0">
+                    <div className="w-full md:w-auto flex flex-wrap justify-end gap-3 mt-4 md:mt-0">
                       {activeTab === 'UPCOMING' && (
                         <button 
                           onClick={() => setCancellationBookingId(booking._id)}
@@ -210,12 +226,36 @@ export default function BookingsPage() {
                         View Details {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                       {booking.status !== 'PENDING' && (
-                        <button 
-                          onClick={() => navigate(`/dashboard/invoice/${booking._id}`)}
-                          className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
-                        >
-                          <Ticket size={16} /> View E-Ticket
-                        </button>
+                        <>
+                          <button 
+                            onClick={() => setTicketModalBooking(booking)}
+                            className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                          >
+                            <Ticket size={16} /> E-Ticket
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const basePath = user?.role === 'TRAVEL_AGENT' ? '/agent-portal' : user?.role === 'SUPER_ADMIN' ? '/admin' : user?.role === 'SUB_ADMIN' ? '/sub-admin' : '/dashboard';
+                              navigate(`${basePath}/invoice/${booking._id}`);
+                            }}
+                            className="flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                          >
+                            <FileText size={16} /> Invoice
+                          </button>
+                          {!isHotel && booking.status === 'CONFIRMED' && (
+                            <button 
+                              onClick={() => {
+                                toast.success('Redirecting to Airline Web Check-in portal...');
+                                setTimeout(() => {
+                                  window.open('https://www.google.com/search?q=web+check+in+' + booking.details?.airline, '_blank');
+                                }, 1500);
+                              }}
+                              className="flex items-center justify-center gap-2 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                            >
+                              <Plane size={16} /> Web Check-in
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -360,6 +400,13 @@ export default function BookingsPage() {
             setCancellationBookingId(null);
             fetchBookings();
           }}
+        />
+      )}
+
+      {ticketModalBooking && (
+        <ETicketModal 
+          booking={ticketModalBooking} 
+          onClose={() => setTicketModalBooking(null)} 
         />
       )}
     </div>

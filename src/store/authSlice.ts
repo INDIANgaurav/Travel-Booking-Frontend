@@ -7,7 +7,7 @@ interface User {
   name: string;
   email: string;
   phone?: string;
-  role: 'USER' | 'AGENT' | 'SUPER_ADMIN' | 'SUB_ADMIN';
+  role: 'USER' | 'TRAVEL_AGENT' | 'B2B_AGENT' | 'AGENT' | 'SUPPLIER_AGENT' | 'SUPER_ADMIN' | 'SUB_ADMIN' | 'SUPPLIER_PORTAL_ONLY';
   isApproved?: boolean;
   avatar?: string;
   firstName?: string;
@@ -20,12 +20,24 @@ interface User {
   issuingCountry?: string;
   panNumber?: string;
   department?: string;
+  agentStatus?: string;
+  isActive?: boolean;
+  companyName?: string;
+  agencyCode?: string;
+  agencyId?: string;
+  walletBalance?: number;
+  balance?: number;
+  address?: string;
+  city?: string;
+  state?: string;
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  agentBookingMode: 'PERSONAL' | 'MYBIZ';
+  showAgentOnboarding: boolean;
 }
 
 // Load initial state from local storage
@@ -42,6 +54,8 @@ const initialState: AuthState = {
   user: loadUserFromStorage(),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
+  agentBookingMode: (localStorage.getItem('agentBookingMode') as 'PERSONAL' | 'MYBIZ') || 'MYBIZ',
+  showAgentOnboarding: false,
 };
 
 const authSlice = createSlice({
@@ -62,7 +76,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.clear();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     updateProfileData: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
@@ -70,11 +85,20 @@ const authSlice = createSlice({
         localStorage.setItem('user', JSON.stringify(state.user));
       }
     },
+    setAgentBookingMode: (state, action: PayloadAction<'PERSONAL' | 'MYBIZ'>) => {
+      state.agentBookingMode = action.payload;
+      localStorage.setItem('agentBookingMode', action.payload);
+    },
+    setShowAgentOnboarding: (state, action: PayloadAction<boolean>) => {
+      state.showAgentOnboarding = action.payload;
+    }
   },
 });
 
-export const { setCredentials, logout, updateProfileData } = authSlice.actions;
+export const { setCredentials, logout, updateProfileData, setAgentBookingMode, setShowAgentOnboarding } = authSlice.actions;
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
+export const selectAgentBookingMode = (state: RootState) => state.auth.agentBookingMode;
+export const selectShowAgentOnboarding = (state: RootState) => state.auth.showAgentOnboarding;
 
 export default authSlice.reducer;

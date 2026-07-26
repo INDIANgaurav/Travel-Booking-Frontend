@@ -93,12 +93,12 @@ export default function AdminUsers() {
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${
                       user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                      user.role === 'AGENT' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                      user.role === 'TRAVEL_AGENT' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
                       'bg-gray-100 text-gray-700 border border-gray-200'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                         user.role === 'SUPER_ADMIN' ? 'bg-purple-500' :
-                        user.role === 'AGENT' ? 'bg-blue-500' :
+                        user.role === 'TRAVEL_AGENT' ? 'bg-blue-500' :
                         'bg-gray-500'
                       }`}></span>
                       {user.role}

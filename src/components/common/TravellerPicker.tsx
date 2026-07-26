@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface TravellerPickerProps {
   adults: number;
@@ -16,6 +17,16 @@ export default function TravellerPicker({ adults, children, infants, cabinClass,
   const [localCabinClass, setLocalCabinClass] = useState(cabinClass);
 
   const handleApply = () => {
+    if (localAdults === 0 && (localChildren > 0 || localInfants > 0)) {
+      toast.error('At least one adult is required when travelling with children or infants.');
+      setLocalAdults(1);
+      return;
+    }
+    if (localInfants > localAdults) {
+      toast.error('Number of infants cannot exceed the number of adults.');
+      setLocalInfants(localAdults);
+      return;
+    }
     onChange(localAdults, localChildren, localInfants, localCabinClass);
     onClose();
   };

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-do
 import api from '../../services/api';
 import { ChevronDown, Check, Plane, Building2, User, ArrowLeft } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectCurrentUser, logout } from '../../store/authSlice';
+import { selectCurrentUser, logout, selectAgentBookingMode, setAgentBookingMode } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
@@ -11,6 +11,8 @@ import CityPicker from '../../components/common/CityPicker';
 import TripTypePicker from '../../components/common/TripTypePicker';
 import LoginModal from '../../components/auth/LoginModal';
 import toast from 'react-hot-toast';
+import { useFlightSearch } from '../../hooks/useFlightSearch';
+import AgentFlightSearchResults from './AgentFlightSearchResults';
 
 interface Flight {
   _id: string;
@@ -38,37 +40,50 @@ const CITIES: Record<string, string> = {
   MAA: 'Chennai',
   DXB: 'Dubai',
   BKK: 'Bangkok',
-  LHR: 'London'
+  LHR: 'London',
+  SYD: 'Sydney',
+  BNE: 'Brisbane',
+  AKL: 'Auckland',
+  DPS: 'Bali',
+  SIN: 'Singapore'
 };
 
 export default function FlightSearchResults() {
-  const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const user = useSelector(selectCurrentUser);
+  const flightSearchState = useFlightSearch();
+  const {
+    from, setFrom,
+    to, setTo,
+    date, setDate,
+    tripType, setTripType,
+    returnDate, setReturnDate,
+    adults, setAdults,
+    children, setChildren,
+    infants, setInfants,
+    cabinClass, setCabinClass,
+    nonStopFilter, setNonStopFilter,
+    morningFilter, setMorningFilter,
+    sortBy, setSortBy,
+    outboundFlights,
+    returnFlights,
+    loading,
+    selectedOutbound, setSelectedOutbound,
+    selectedReturn, setSelectedReturn,
+    showFlightDetails, setShowFlightDetails,
+    suggestedFlights,
+    sortedOutboundFlights,
+    cheapestFlight,
+    nonStopFlight,
+    preferFlight,
+    handleSearch,
+    getDisplayPrice,
+    user,
+    agentMode,
+    isAgentDiscount,
+    navigate
+  } = flightSearchState;
 
-  const getLocalISO = (d: Date) => {
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
-  };
-  
-  const [defaultDate] = useState(() => new Date().toISOString());
-  const [defaultReturnDate] = useState(() => new Date(Date.now() + 86400000 * 2).toISOString());
-
-  const [from, setFrom] = useState(searchParams.get('from') || 'DEL');
-  const [to, setTo] = useState(searchParams.get('to') || 'BOM');
-  const [date, setDate] = useState<Date>(new Date(searchParams.get('date') || defaultDate));
-  const [tripType, setTripType] = useState(searchParams.get('tripType') || 'Round Trip');
-  const [returnDate, setReturnDate] = useState<Date>(new Date(searchParams.get('returnDate') || defaultReturnDate));
-
-  const [outboundFlights, setOutboundFlights] = useState<Flight[]>([]);
-  const [returnFlights, setReturnFlights] = useState<Flight[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  const [selectedOutbound, setSelectedOutbound] = useState<Flight | null>(null);
-  const [selectedReturn, setSelectedReturn] = useState<Flight | null>(null);
-  const [showFlightDetails, setShowFlightDetails] = useState<Flight | null>(null);
 
   // Picker States
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -77,77 +92,16 @@ export default function FlightSearchResults() {
   const [isFromPickerOpen, setIsFromPickerOpen] = useState(false);
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
-  
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [cabinClass, setCabinClass] = useState('Economy/ Premium Economy');
 
-  const [nonStopFilter, setNonStopFilter] = useState(false);
-  const [morningFilter, setMorningFilter] = useState(false);
-  const [sortBy, setSortBy] = useState('CHEAPEST');
+  const isAgent = user && ['TRAVEL_AGENT', 'AGENT', 'B2B_AGENT', 'SUPPLIER_AGENT'].includes(user.role);
 
-  const [suggestedFlights, setSuggestedFlights] = useState<Flight[]>([]);
-
-  const fetchFlights = async (useUrlParams = false) => {
-    setLoading(true);
-    try {
-      const qFrom = useUrlParams ? (searchParams.get('from') || 'DEL') : from;
-      const qTo = useUrlParams ? (searchParams.get('to') || 'BOM') : to;
-      
-      const qDateStr = useUrlParams ? searchParams.get('date') : null;
-      const qDate = useUrlParams ? (qDateStr ? new Date(qDateStr) : date) : date;
-      
-      const qTripType = useUrlParams ? (searchParams.get('tripType') || 'Round Trip') : tripType;
-      
-      const qReturnDateStr = useUrlParams ? searchParams.get('returnDate') : null;
-      const qReturnDate = useUrlParams ? (qReturnDateStr ? new Date(qReturnDateStr) : returnDate) : returnDate;
-      
-      const qCabinClass = useUrlParams ? (searchParams.get('cabinClass') || 'Economy') : cabinClass;
-      
-      const qAdults = useUrlParams ? parseInt(searchParams.get('adults') || '1') : adults;
-      const qChildren = useUrlParams ? parseInt(searchParams.get('children') || '0') : children;
-      const qInfants = useUrlParams ? parseInt(searchParams.get('infants') || '0') : infants;
-      const qPassengers = qAdults + qChildren + qInfants;
-
-      let baseParams = `cabinClass=${encodeURIComponent(qCabinClass)}&passengers=${qPassengers}`;
-      if (nonStopFilter) baseParams += `&stops=0`;
-      if (morningFilter) baseParams += `&morningDeparture=true`;
-
-      const outRes = await api.get(`/api/searches/flights?from=${qFrom}&to=${qTo}&date=${getLocalISO(qDate)}&${baseParams}`);
-      setOutboundFlights(outRes.data);
-      if (outRes.data.length > 0) {
-        setSelectedOutbound(outRes.data[0]);
-        setSuggestedFlights([]);
-      } else {
-        const suggRes = await api.get(`/api/searches/flights?date=${getLocalISO(qDate)}`);
-        const sorted = suggRes.data.sort((a: Flight, b: Flight) => a.price - b.price).slice(0, 3);
-        setSuggestedFlights(sorted);
-      }
-
-      if (qTripType === 'Round Trip' && qReturnDate) {
-        const retRes = await api.get(`/api/searches/flights?from=${qTo}&to=${qFrom}&date=${getLocalISO(qReturnDate)}&${baseParams}`);
-        setReturnFlights(retRes.data);
-        if (retRes.data.length > 0) setSelectedReturn(retRes.data[0]);
-      }
-    } catch (error) {
-      console.error("Error fetching flights:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // URL Sync Effect (Only on Mount)
-  useEffect(() => {
-    fetchFlights(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (isAgent || isAgentDiscount) {
+    return <AgentFlightSearchResults {...flightSearchState} />;
+  }
 
   const formatDate = (d: Date) => {
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' }).replace(',', '');
   };
-
-  const getCityName = (code: string) => CITIES[code] || code;
 
   const closeAllPickers = () => {
     setIsDatePickerOpen(false);
@@ -158,50 +112,23 @@ export default function FlightSearchResults() {
     setIsTripTypePickerOpen(false);
   };
 
-  const handleSearch = () => {
+  const handleSearchClick = () => {
     closeAllPickers();
-    fetchFlights(false);
-    
-    const query = new URLSearchParams({
-      tripType,
-      from,
-      to,
-      date: getLocalISO(date),
-      returnDate: getLocalISO(returnDate),
-      cabinClass,
-      adults: adults.toString(),
-      children: children.toString(),
-      infants: infants.toString()
-    }).toString();
-    navigate(`/flights/search?${query}`, { replace: true });
+    handleSearch();
   };
 
-  const getSortedFlights = (flights: Flight[]) => {
-    switch (sortBy) {
-      case 'CHEAPEST':
-        return [...flights].sort((a, b) => a.price - b.price);
-      case 'NON STOP FIRST':
-        return [...flights].sort((a, b) => {
-          if (a.stops === b.stops) return a.price - b.price;
-          return a.stops - b.stops;
-        });
-      case 'YOU MAY PREFER':
-        // Custom heuristic: sort by duration then price
-        return [...flights].sort((a, b) => {
-          if (a.durationMinutes === b.durationMinutes) return a.price - b.price;
-          return a.durationMinutes - b.durationMinutes;
-        });
-      default:
-        return flights;
-    }
-  };
+  const getCityName = (code: string) => CITIES[code] || code;
 
-  const sortedOutboundFlights = getSortedFlights(outboundFlights);
+  const formatDuration = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+  };
 
   return (
     <div className="min-h-screen bg-[#f2f2f2] font-sans pb-32" onClick={closeAllPickers}>
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-      {/* Integrated MMT Style Header */}
+      {/* Integrated Header */ }
       <div className="bg-white sticky top-0 z-40 shadow-sm border-b border-gray-200">
         
         {/* Compact Logo & Nav Row */}
@@ -216,9 +143,26 @@ export default function FlightSearchResults() {
             <Link to="/" className="flex items-center gap-2">
               <Plane size={24} className="text-blue-600" />
               <span className="text-xl font-black tracking-tight text-gray-900">
-                Travel<span className="text-blue-600">Go</span>
+                Trippe<span className="text-blue-600">Chalo</span>
               </span>
             </Link>
+
+            {user?.role === 'TRAVEL_AGENT' && (
+              <div className="ml-4 flex items-center p-1 rounded-full bg-gray-100 transition-colors">
+                <button 
+                  onClick={() => dispatch(setAgentBookingMode('PERSONAL'))}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${agentMode === 'PERSONAL' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'}`}
+                >
+                  PERSONAL
+                </button>
+                <button 
+                  onClick={() => dispatch(setAgentBookingMode('MYBIZ'))}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${agentMode === 'MYBIZ' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'}`}
+                >
+                  MYBIZ
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-8 mr-12">
@@ -239,8 +183,16 @@ export default function FlightSearchResults() {
             <div className="group relative py-2">
               <button className="flex items-center gap-2 cursor-pointer bg-blue-50/50 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-50 transition">
                 <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden font-bold text-xs uppercase">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0D8ABC&color=fff`;
+                      }}
+                    />
                   ) : (
                     user.name?.charAt(0) || <User size={14} />
                   )}
@@ -250,9 +202,19 @@ export default function FlightSearchResults() {
               </button>
               <div className="absolute right-0 top-full mt-1 w-48 hidden group-hover:block z-50">
                 <div className="bg-white rounded-lg shadow-xl py-2 border border-gray-100">
-                  <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
-                  <Link to="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
-                  <button onClick={() => { navigate('/'); dispatch(logout()); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                  {user?.role === 'USER' && (
+                    <>
+                      <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
+                      <Link to="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
+                    </>
+                  )}
+                  {(user?.role === 'TRAVEL_AGENT' || user?.role === 'AGENT' || user?.role === 'B2B_AGENT' || user?.role === 'SUPPLIER_AGENT') && (
+                    <Link to="/b2b/home" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">B2B Dashboard</Link>
+                  )}
+                  {(user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
+                    <Link to="/admin/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
+                  )}
+                  <button onClick={() => { navigate('/'); dispatch(logout()); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100 mt-1">Logout</button>
                 </div>
               </div>
             </div>
@@ -376,8 +338,11 @@ export default function FlightSearchResults() {
                   if (start) setDate(start);
                   if (end) setReturnDate(end);
                   if (tripType === 'One Way' && start) setIsDatePickerOpen(false);
+                  if (tripType === 'Round Trip' && start && end) setIsDatePickerOpen(false);
                 }} 
                 onClose={() => setIsDatePickerOpen(false)}
+                origin={from}
+                destination={to}
               />
             </div>
           )}
@@ -582,21 +547,21 @@ export default function FlightSearchResults() {
                     <div className={`${sortBy === 'CHEAPEST' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} w-8 h-8 rounded-full flex items-center justify-center font-black`}><span className={sortBy === 'CHEAPEST' ? '' : ''}>₹</span></div>
                     <div>
                       <p className="font-bold text-gray-900 text-[13px]">CHEAPEST</p>
-                      <p className="text-gray-500 text-[11px]">₹ 6,662 | 02h 20m</p>
+                      <p className="text-gray-500 text-[11px]">{cheapestFlight ? `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')} | ${formatDuration(cheapestFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
                   <div onClick={() => setSortBy('NON STOP FIRST')} className={`flex-1 bg-white border-x border-t ${sortBy === 'NON STOP FIRST' ? 'border-b-4 border-blue-500 shadow-md opacity-100' : 'border-b border-gray-200 shadow-sm opacity-80 bg-gray-50'} rounded p-2 cursor-pointer flex items-center gap-3 transition`}>
                     <div className={`${sortBy === 'NON STOP FIRST' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} w-8 h-8 rounded flex items-center justify-center`}><Plane size={16} /></div>
                     <div>
                       <p className="font-bold text-gray-900 text-[13px]">NON STOP FIRST</p>
-                      <p className="text-gray-500 text-[11px]">₹ 6,662 | 02h 20m</p>
+                      <p className="text-gray-500 text-[11px]">{nonStopFlight ? `₹ ${getDisplayPrice(nonStopFlight.price).toLocaleString('en-IN')} | ${formatDuration(nonStopFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
                   <div onClick={() => setSortBy('YOU MAY PREFER')} className={`flex-1 bg-white border-x border-t ${sortBy === 'YOU MAY PREFER' ? 'border-b-4 border-blue-500 shadow-md opacity-100' : 'border-b border-gray-200 shadow-sm opacity-80 bg-gray-50'} rounded p-2 cursor-pointer flex items-center gap-3 transition`}>
                     <div className="text-gray-400 w-8 h-8 flex items-center justify-center text-xl">⭐</div>
                     <div>
                       <p className="font-bold text-gray-900 text-[13px]">YOU MAY PREFER</p>
-                      <p className="text-gray-500 text-[11px]">₹ 6,662 | 02h 10m</p>
+                      <p className="text-gray-500 text-[11px]">{preferFlight ? `₹ ${getDisplayPrice(preferFlight.price).toLocaleString('en-IN')} | ${formatDuration(preferFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
                   <div className="bg-gray-50 border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:bg-white flex items-center justify-center gap-2 text-gray-700 font-bold text-[13px] w-28">
@@ -627,13 +592,14 @@ export default function FlightSearchResults() {
                 
                 <div className="divide-y divide-gray-200">
                   {sortedOutboundFlights.length > 0 ? (
-                    sortedOutboundFlights.map(flight => (
+                    sortedOutboundFlights.map((flight, index) => (
                       <FlightCard 
-                        key={flight._id} 
+                        key={`${flight._id}-${index}`} 
                         flight={flight} 
                         isSelected={selectedOutbound?._id === flight._id}
                         onSelect={() => setSelectedOutbound(flight)}
                         isRoundTrip={tripType === 'Round Trip'}
+                        displayPrice={getDisplayPrice(flight.price)}
                       />
                     ))
                   ) : (
@@ -669,6 +635,7 @@ export default function FlightSearchResults() {
                                 isSelected={selectedOutbound?._id === flight._id}
                                 onSelect={() => setSelectedOutbound(flight)}
                                 isRoundTrip={false}
+                                displayPrice={getDisplayPrice(flight.price)}
                               />
                             ))}
                           </div>
@@ -703,6 +670,7 @@ export default function FlightSearchResults() {
                           isSelected={selectedReturn?._id === flight._id}
                           onSelect={() => setSelectedReturn(flight)}
                           isRoundTrip={true}
+                          displayPrice={getDisplayPrice(flight.price)}
                         />
                       ))
                     ) : (
@@ -742,7 +710,7 @@ export default function FlightSearchResults() {
                       <p className="text-[11px] text-blue-400 mt-1 cursor-pointer hover:underline pl-9" onClick={() => setShowFlightDetails(selectedOutbound)}>Flight Details</p>
                     </div>
                     <div className="ml-auto flex items-center">
-                      <span className="font-bold text-lg">₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                      <span className="font-bold text-lg">₹ {getDisplayPrice(selectedOutbound.price).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -761,7 +729,7 @@ export default function FlightSearchResults() {
                         <p className="text-[11px] text-blue-400 mt-1 cursor-pointer hover:underline pl-9" onClick={() => setShowFlightDetails(selectedReturn)}>Flight Details</p>
                       </div>
                       <div className="ml-auto flex items-center">
-                        <span className="font-bold text-lg">₹ {selectedReturn.price.toLocaleString('en-IN')}</span>
+                        <span className="font-bold text-lg">₹ {getDisplayPrice(selectedReturn.price).toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   )}
@@ -771,7 +739,7 @@ export default function FlightSearchResults() {
                 <div className="flex items-center gap-6 pl-6">
                   <div className="text-right">
                     <div className="flex items-baseline justify-end gap-1">
-                      <p className="font-black text-[22px]">₹ {((selectedOutbound?.price || 0) + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)).toLocaleString('en-IN')}</p>
+                      <p className="font-black text-[22px]">₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}</p>
                     </div>
                     <p className="text-[10px] text-gray-400">/adult</p>
                     <p className="text-[10px] text-gray-300 mt-1 leading-tight">Flat 12% OFF using FLYMON<br/>code | Flat Rs. 585 OFF using<br/>BREAKFREE code<br/><span className="text-blue-400 cursor-pointer">Fare Details</span></p>
@@ -783,7 +751,7 @@ export default function FlightSearchResults() {
                           toast.error('Please login or signup first to book flights.');
                           setIsLoginModalOpen(true);
                         } else {
-                          navigate('/flights/book', { state: { selectedOutbound, selectedReturn, tripType } });
+                          navigate('/flights/booking', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
                         }
                       }}
                       className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-6 rounded text-sm transition"
@@ -865,7 +833,7 @@ export default function FlightSearchResults() {
 }
 
 // Subcomponent for Flight Card
-function FlightCard({ flight, isSelected, onSelect, isRoundTrip }: { flight: Flight, isSelected?: boolean, onSelect?: () => void, isRoundTrip?: boolean }) {
+function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }: { flight: Flight, isSelected?: boolean, onSelect?: () => void, isRoundTrip?: boolean, displayPrice?: number }) {
   const navigate = useNavigate();
   const depTime = new Date(flight.departureTime);
   const arrTime = new Date(flight.arrivalTime);
@@ -907,7 +875,8 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip }: { flight: Fli
 
         {/* Price & Action */}
         <div className="text-right flex flex-col items-end">
-          <p className="font-black text-[17px] text-gray-900">₹ {flight.price.toLocaleString('en-IN')}</p>
+          <p className="font-black text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
+          {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
           <p className="text-[10px] text-gray-500 mb-2">/adult</p>
           <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center mt-1 ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
             {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}

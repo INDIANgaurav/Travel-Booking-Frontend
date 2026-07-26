@@ -3,6 +3,7 @@ import { MapPin, Building2, Star, Edit, Trash2, Clock, CheckCircle2, XCircle } f
 import TopNavbar from '../../../components/layout/TopNavbar';
 import EditPropertyModal from './EditPropertyModal';
 import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 interface Property {
   _id: string;
@@ -45,7 +46,7 @@ export default function PropertiesPage() {
       if (response.data) {
         setProperties(properties.filter(p => p._id !== id));
       } else {
-        alert('Failed to delete property');
+        toast.error('Failed to delete property');
       }
     } catch (error) {
       console.error('Error deleting property:', error);

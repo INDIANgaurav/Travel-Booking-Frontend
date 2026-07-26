@@ -11,12 +11,17 @@ export default function AdminAgents() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', companyName: '', password: '' });
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ name: '', phone: '', companyName: '' });
+  const [selectedDocsAgent, setSelectedDocsAgent] = useState<any | null>(null);
 
   const fetchAgents = async () => {
     try {
       const { data } = await api.get('/api/admin/users');
       // Filter only agents
-      const agentUsers = data.filter((u: any) => u.role === 'AGENT');
+      const agentUsers = data.filter((u: any) => u.role === 'TRAVEL_AGENT');
       setAgents(agentUsers);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -30,14 +35,14 @@ export default function AdminAgents() {
     fetchAgents();
   }, []);
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     try {
-      await api.put(`/api/admin/agents/${id}/approve`);
-      toast.success('Agent approved successfully');
-      setAgents(agents.map((a: any) => a._id === id ? { ...a, isApproved: true } : a));
+      await api.put(`/api/admin/agents/${id}/approve`, { status });
+      toast.success(`Agent ${status.toLowerCase()} successfully`);
+      setAgents(agents.map((a: any) => a._id === id ? { ...a, agentStatus: status, isApproved: status === 'APPROVED' } : a));
     } catch (error) {
-      console.error('Error approving agent:', error);
-      toast.error('Failed to approve agent');
+      console.error(`Error updating agent status:`, error);
+      toast.error(`Failed to update agent status`);
     }
   };
 
@@ -51,6 +56,36 @@ export default function AdminAgents() {
         console.error('Error deleting agent:', error);
         toast.error('Failed to delete agent');
       }
+    }
+  };
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      await api.put(`/api/admin/users/${id}`, { isActive: !currentStatus });
+      toast.success(`Agent ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      setAgents(agents.map((a: any) => a._id === id ? { ...a, isActive: !currentStatus } : a));
+    } catch (error) {
+      toast.error('Failed to update agent status');
+    }
+  };
+
+  const startEdit = (agent: any) => {
+    setEditingId(agent._id);
+    setEditData({ name: agent.name, phone: agent.phone || '', companyName: agent.companyName || '' });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
+    try {
+      await api.put(`/api/admin/users/${editingId}`, editData);
+      toast.success('Agent updated successfully');
+      setIsEditModalOpen(false);
+      setEditingId(null);
+      fetchAgents();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update agent');
     }
   };
 
@@ -118,6 +153,7 @@ export default function AdminAgents() {
               <tr>
                 <th className="px-6 py-4 rounded-tl-2xl">Name</th>
                 <th className="px-6 py-4">Contact</th>
+                <th className="px-6 py-4">Company</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Joined Date</th>
                 <th className="px-6 py-4 rounded-tr-2xl text-right">Actions</th>
@@ -126,7 +162,7 @@ export default function AdminAgents() {
             <tbody className="divide-y divide-gray-100/80">
               {filteredAgents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">No agents found.</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">No agents found.</td>
                 </tr>
               ) : (
                 filteredAgents.map((agent: any) => (
@@ -140,39 +176,91 @@ export default function AdminAgents() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-800">{agent.email}</span>
-                        <span className="text-xs text-gray-500 mt-0.5">{agent.phone || '-'}</span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-800">{agent.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span>{agent.phone || 'No phone'}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      {agent.companyName ? (
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-800">{agent.companyName}</span>
+                          {agent.companyRole && <span className="text-xs text-gray-500">{agent.companyRole}</span>}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">Not specified</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${
-                        agent.isApproved ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        agent.agentStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border border-green-200' : 
+                        agent.agentStatus === 'REJECTED' ? 'bg-red-100 text-red-700 border border-red-200' :
+                        'bg-amber-100 text-amber-700 border border-amber-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          agent.isApproved ? 'bg-green-500' : 'bg-yellow-500'
+                          agent.agentStatus === 'APPROVED' ? 'bg-green-500' : 
+                          agent.agentStatus === 'REJECTED' ? 'bg-red-500' :
+                          'bg-amber-500'
                         }`}></span>
-                        {agent.isApproved ? 'APPROVED' : 'PENDING'}
+                        {agent.agentStatus || 'PENDING_APPROVAL'}
                       </span>
+                      {agent.isActive === false && (
+                        <span className="ml-2 px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200 text-xs font-bold">
+                          INACTIVE
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-600">
                       {new Date(agent.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        {!agent.isApproved && (
+                      <div className="flex justify-end gap-2 items-center">
+                        {(agent.panCardImage || agent.idProofImage || agent.gstImage || agent.officeAddress) && (
                           <button 
-                            onClick={() => handleApprove(agent._id)}
-                            className="flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-green-200"
+                            onClick={() => setSelectedDocsAgent(agent)}
+                            className="flex items-center gap-1 bg-purple-50 text-purple-700 hover:bg-purple-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-purple-200"
+                            title="View Verification Documents"
                           >
-                            <CheckCircle size={14} /> Approve
+                            Docs
                           </button>
                         )}
+                        {(agent.agentStatus !== 'APPROVED') && (
+                          <>
+                            <button 
+                              onClick={() => handleApprove(agent._id, 'APPROVED')}
+                              className="flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-green-200"
+                            >
+                              <CheckCircle size={14} /> Approve
+                            </button>
+                            <button 
+                              onClick={() => handleApprove(agent._id, 'REJECTED')}
+                              className="flex items-center gap-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-red-200"
+                            >
+                              <X size={14} /> Reject
+                            </button>
+                          </>
+                        )}
+                        <button 
+                          onClick={() => handleToggleActive(agent._id, agent.isActive !== false)}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${agent.isActive !== false ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200' : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'}`}
+                        >
+                          {agent.isActive !== false ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button 
+                          onClick={() => startEdit(agent)}
+                          className="flex items-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-blue-200"
+                        >
+                          Edit
+                        </button>
                         <button 
                           onClick={() => handleDelete(agent._id)}
-                          className="flex items-center gap-1 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-red-200"
+                          className="flex items-center gap-1 bg-gray-50 text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-gray-200"
                         >
-                          <Trash2 size={14} /> Delete
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -236,6 +324,153 @@ export default function AdminAgents() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Agent Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-black text-gray-900">Edit Agent</h2>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Full Name</label>
+                <input required type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Company Name</label>
+                <input required type="text" value={editData.companyName} onChange={(e) => setEditData({...editData, companyName: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Phone Number</label>
+                <input required type="tel" value={editData.phone} onChange={(e) => setEditData({...editData, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Verification Documents Modal */}
+      {selectedDocsAgent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
+              <div>
+                <h2 className="text-xl font-black text-gray-900">Agent Documents & Verification</h2>
+                <p className="text-xs text-gray-500 font-semibold">{selectedDocsAgent.companyName} ({selectedDocsAgent.name})</p>
+              </div>
+              <button 
+                onClick={() => setSelectedDocsAgent(null)}
+                className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              <div className="grid grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div>
+                  <span className="block text-gray-400 font-bold uppercase text-[10px]">Office Address</span>
+                  <span className="font-bold text-gray-800">{selectedDocsAgent.officeAddress || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-400 font-bold uppercase text-[10px]">Location</span>
+                  <span className="font-bold text-gray-800">{selectedDocsAgent.city || ''}, {selectedDocsAgent.state || ''} - {selectedDocsAgent.pincode || ''}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-400 font-bold uppercase text-[10px]">PAN Number</span>
+                  <span className="font-bold text-gray-800 uppercase">{selectedDocsAgent.panNumber || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-400 font-bold uppercase text-[10px]">GST Number</span>
+                  <span className="font-bold text-gray-800 uppercase">{selectedDocsAgent.gstn || 'N/A'}</span>
+                </div>
+              </div>
+
+              {/* PAN Card Copy */}
+              <div>
+                <h4 className="font-bold text-gray-800 mb-2">PAN Card Copy ({selectedDocsAgent.panNumber || 'N/A'})</h4>
+                {selectedDocsAgent.panCardImage ? (
+                  selectedDocsAgent.panCardImage.startsWith('data:image') || selectedDocsAgent.panCardImage.startsWith('http') ? (
+                    <img src={selectedDocsAgent.panCardImage} alt="PAN Card" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
+                  ) : (
+                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.panCardImage}</div>
+                  )
+                ) : (
+                  <p className="text-gray-400 italic">No PAN Image Uploaded</p>
+                )}
+              </div>
+
+              {/* ID / Address Proof Copy */}
+              <div>
+                <h4 className="font-bold text-gray-800 mb-2">Address / Identity Proof ({selectedDocsAgent.idProofType || 'Identity Proof'})</h4>
+                {selectedDocsAgent.idProofImage ? (
+                  selectedDocsAgent.idProofImage.startsWith('data:image') || selectedDocsAgent.idProofImage.startsWith('http') ? (
+                    <img src={selectedDocsAgent.idProofImage} alt="Identity Proof" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
+                  ) : (
+                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.idProofImage}</div>
+                  )
+                ) : (
+                  <p className="text-gray-400 italic">No Identity Proof Image Uploaded</p>
+                )}
+              </div>
+
+              {/* GST Copy */}
+              {selectedDocsAgent.gstImage && (
+                <div>
+                  <h4 className="font-bold text-gray-800 mb-2">GST Copy ({selectedDocsAgent.gstn})</h4>
+                  {selectedDocsAgent.gstImage.startsWith('data:image') || selectedDocsAgent.gstImage.startsWith('http') ? (
+                    <img src={selectedDocsAgent.gstImage} alt="GST Copy" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
+                  ) : (
+                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.gstImage}</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+              <button 
+                onClick={() => setSelectedDocsAgent(null)}
+                className="px-5 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { handleApprove(selectedDocsAgent._id, 'REJECTED'); setSelectedDocsAgent(null); }}
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+                >
+                  Reject Agent
+                </button>
+                <button 
+                  onClick={() => { handleApprove(selectedDocsAgent._id, 'APPROVED'); setSelectedDocsAgent(null); }}
+                  className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+                >
+                  Approve Agent
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

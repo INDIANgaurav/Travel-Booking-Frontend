@@ -46,7 +46,7 @@ export default function HotelBookingSuccess() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 flex justify-between items-center">
             <div className="text-white font-black text-2xl tracking-tighter">
-              Travel<span className="text-[#ff9e00]">Go</span>
+              Trippe<span className="text-[#ff9e00]">Chalo</span>
             </div>
             <div className="text-right text-white">
               <p className="text-xs font-bold uppercase tracking-wider opacity-80">Booking Status</p>

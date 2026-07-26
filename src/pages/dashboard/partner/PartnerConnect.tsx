@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, CheckCircle2, ChevronRight, UploadCloud } from 'lucide-react';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 export default function PartnerConnect() {
   const navigate = useNavigate();
@@ -63,14 +64,14 @@ export default function PartnerConnect() {
       const response = await api.post('/api/hotels/register', data);
 
       if (response.data) {
-        alert('Property registered successfully!');
+        toast.success('Property registered successfully!');
         navigate('/');
       } else {
-        alert('Registration failed');
+        toast.error('Registration failed');
       }
     } catch (error) {
       console.error('Registration failed:', error);
-      alert('Failed to register property.');
+      toast.error('Failed to register property.');
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ export default function PartnerConnect() {
       <TopNavbar forceWhite={true} />
       
       <div className="flex flex-1 pt-16">
-        {/* Left Panel - Branding (Similar to MMT Connect) */}
+        {/* Left Panel - Branding */}
         <div className="hidden lg:flex flex-col justify-between w-[45%] bg-gradient-to-br from-indigo-900 via-blue-900 to-blue-800 text-white p-12 relative overflow-hidden">
           {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent bg-[length:20px_20px]"></div>

@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { selectIsAuthenticated, selectCurrentUser } from './store/authSlice'
+import { selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding } from './store/authSlice'
 
 // Pages
 import LandingPage from './pages/public/LandingPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import FlightTicket from './pages/dashboard/user/FlightTicket'
+import FlightInvoice from './pages/dashboard/user/FlightInvoice'
 import PlaceholderPage from './pages/dashboard/user/PlaceholderPage'
 import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
 
@@ -22,6 +23,32 @@ import HotelSearchResults from './pages/public/HotelSearchResults'
 import HotelDetailsPage from './pages/public/HotelDetailsPage'
 import HotelCheckout from './pages/public/HotelCheckout'
 import HotelBookingSuccess from './pages/public/HotelBookingSuccess'
+import PendingApprovalPage from './pages/public/PendingApprovalPage'
+import InactiveAccountPage from './pages/public/InactiveAccountPage'
+import AgentSignUpPage from './pages/public/AgentSignUpPage'
+import RetailAgentLoginPage from './pages/public/RetailAgentLoginPage'
+import B2BAgentHomePage from './pages/public/B2BAgentHomePage'
+import B2BAgentCheckout from './pages/public/B2BAgentCheckout'
+import B2BAgentDashboard from './pages/public/B2BAgentDashboard'
+import B2BBankDetails from './pages/public/B2BBankDetails'
+import B2BPaxCalendar from './pages/public/B2BPaxCalendar'
+import B2BInvoice from './pages/public/B2BInvoice'
+import B2BCreditNote from './pages/public/B2BCreditNote'
+import B2BDebitNote from './pages/public/B2BDebitNote'
+import B2BGstInvoice from './pages/public/B2BGstInvoice'
+import B2BOfflineBooking from './pages/public/B2BOfflineBooking'
+import B2BMarkup from './pages/public/B2BMarkup'
+import B2BAccountStatement from './pages/public/B2BAccountStatement'
+import B2BBookingStatus from './pages/public/B2BBookingStatus'
+import B2BManageBooking from './pages/public/B2BManageBooking'
+import B2BDashboardLayout from './layouts/B2BDashboardLayout'
+import SupplierLoginPage from './pages/public/SupplierLoginPage'
+import SupplierDashboardLayout from './layouts/SupplierDashboardLayout'
+import SupplierDashboard from './pages/supplier/SupplierDashboard'
+import SeriesFareManager from './pages/supplier/SeriesFareManager'
+import SupplierUserManagement from './pages/supplier/SupplierUserManagement'
+import SupplierBookingHistory from './pages/supplier/SupplierBookingHistory'
+import SupplierQueueHistory from './pages/supplier/SupplierQueueHistory'
 
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
@@ -39,21 +66,28 @@ import SubAdminLayout from './layouts/SubAdminLayout'
 import AgentLayout from './layouts/AgentLayout'
 import AgentDashboard from './pages/dashboard/agent/AgentDashboard'
 import { Toaster } from 'react-hot-toast'
+import AgentOnboardingModal from './components/agent/AgentOnboardingModal'
 
 function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
+  const showAgentOnboarding = useSelector(selectShowAgentOnboarding)
 
   const getRedirectPath = (role?: string) => {
     if (role === 'SUPER_ADMIN') return '/admin';
     if (role === 'SUB_ADMIN') return '/sub-admin';
-    if (role === 'AGENT') return '/agent-portal';
+    if (role === 'TRAVEL_AGENT') return '/agent-portal/dashboard';
+    if (role === 'SUPPLIER_AGENT' || role === 'SELLER') return '/supplier-portal/dashboard';
     return '/';
   };
 
   // A simple wrapper to protect routes
   const ProtectedRoute = ({ children, allowedRoles }: { children?: React.ReactNode, allowedRoles?: string[] }) => {
     if (!isAuthenticated) return <Navigate to="/" replace />
+    if (user && user.isActive === false) return <Navigate to="/inactive-account" replace />
+    if (user && user.role === 'TRAVEL_AGENT' && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
+      return <Navigate to="/pending-approval" replace />
+    }
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
       return <Navigate to={getRedirectPath(user.role)} replace /> // Prevent redirect loop
     }
@@ -63,6 +97,7 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
+      <AgentOnboardingModal isOpen={showAgentOnboarding} />
       <Routes>
         {/* Partner Routes */}
         <Route path="/partner/connect" element={<PartnerConnect />} />
@@ -70,13 +105,55 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/flights/search" element={<FlightSearchResults />} />
+        <Route path="/flights/booking" element={<FlightBookingPage />} />
         <Route path="/hotels/search" element={<HotelSearchResults />} />
+        <Route path="/hotels/details" element={<HotelDetailsPage />} />
         <Route path="/hotels/checkout" element={<HotelCheckout />} />
-        <Route path="/hotels/booking-success" element={<HotelBookingSuccess />} />
-        <Route path="/hotels/:id" element={<HotelDetailsPage />} />
-        <Route path="/flights/book" element={<FlightBookingPage />} />
+        <Route path="/hotels/success" element={<HotelBookingSuccess />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/reset-password/:resettoken" element={<ResetPasswordPage />} />
+        <Route path="/partner-connect" element={<PartnerConnect />} />
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
+        <Route path="/inactive-account" element={<InactiveAccountPage />} />
+
+        {/* New Agent Sign Up, Agent Login, Agent B2B Engine & Supplier Login Public Routes */}
+        <Route path="/b2b/signup" element={<AgentSignUpPage />} />
+        <Route path="/b2b/login" element={<RetailAgentLoginPage />} />
+        <Route path="/b2b/home" element={<B2BAgentHomePage />} />
+        <Route path="/b2b/checkout" element={<B2BAgentCheckout />} />
+        
+        {/* B2B Inner Tools Route */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT']} />}>
+          <Route element={<B2BDashboardLayout />}>
+            <Route path="/b2b/dashboard" element={<B2BAgentDashboard />} />
+            <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
+            <Route path="/b2b/booking-status" element={<B2BBookingStatus />} />
+            <Route path="/b2b/manage-booking" element={<B2BManageBooking />} />
+            <Route path="/b2b/bank-details" element={<B2BBankDetails />} />
+            <Route path="/b2b/pax-calendar" element={<B2BPaxCalendar />} />
+            <Route path="/b2b/invoice" element={<B2BInvoice />} />
+            <Route path="/b2b/invoice/:id" element={<FlightInvoice />} />
+            <Route path="/b2b/credit-note" element={<B2BCreditNote />} />
+            <Route path="/b2b/debit-note" element={<B2BDebitNote />} />
+            <Route path="/b2b/gst-invoice" element={<B2BGstInvoice />} />
+            <Route path="/b2b/offline-booking" element={<B2BOfflineBooking />} />
+            <Route path="/b2b/markup" element={<B2BMarkup />} />
+          </Route>
+        </Route>
+
+        <Route path="/supplier/login" element={<SupplierLoginPage />} />
+
+        {/* Supplier Portal Routes (New Real Agent / Supplier UI) */}
+        <Route path="/supplier-portal" element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT', 'TRAVEL_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
+          <Route element={<SupplierDashboardLayout />}>
+            <Route index element={<Navigate to="/supplier-portal/dashboard" replace />} />
+            <Route path="dashboard" element={<SupplierDashboard />} />
+            <Route path="series-fare" element={<SeriesFareManager />} />
+            <Route path="users" element={<SupplierUserManagement />} />
+            <Route path="history" element={<SupplierBookingHistory />} />
+            <Route path="series-queue" element={<SupplierQueueHistory />} />
+          </Route>
+        </Route>
 
         {/* Protected User Routes */}
         <Route 
@@ -94,14 +171,19 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="properties" element={<PropertiesPage />} />
-          <Route path="invoice/:id" element={<FlightTicket />} />
+          <Route path="ticket/:id" element={<FlightTicket />} />
+          <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>
 
         {/* Agent Routes */}
-        <Route path="/agent-portal" element={<ProtectedRoute allowedRoles={['AGENT']} />}>
+        <Route path="/agent-portal" element={<ProtectedRoute allowedRoles={['TRAVEL_AGENT']} />}>
           <Route element={<AgentLayout />}>
             <Route index element={<Navigate to="/agent-portal/dashboard" replace />} />
             <Route path="dashboard" element={<AgentDashboard />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="bookings" element={<BookingsPage mode="MYBIZ" />} />
+            <Route path="ticket/:id" element={<FlightTicket />} />
+            <Route path="invoice/:id" element={<FlightInvoice />} />
             {/* Additional agent routes can be added here */}
             <Route path="*" element={<div className="p-8">Agent Page Coming Soon</div>} />
           </Route>
@@ -156,7 +238,8 @@ function App() {
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="settings" element={<AdminSettings />} />
-          <Route path="invoice/:id" element={<FlightTicket />} />
+          <Route path="ticket/:id" element={<FlightTicket />} />
+          <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>
       </Routes>
     </BrowserRouter>

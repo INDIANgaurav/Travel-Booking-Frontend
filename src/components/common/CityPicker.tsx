@@ -20,6 +20,11 @@ const POPULAR_CITIES: City[] = [
   { code: 'DXB', name: 'Dubai', airport: 'Dubai International Airport', country: 'UAE' },
   { code: 'BKK', name: 'Bangkok', airport: 'Suvarnabhumi Airport', country: 'Thailand' },
   { code: 'LHR', name: 'London', airport: 'Heathrow Airport', country: 'UK' },
+  { code: 'SYD', name: 'Sydney', airport: 'Kingsford Smith Airport', country: 'Australia' },
+  { code: 'BNE', name: 'Brisbane', airport: 'Brisbane Airport', country: 'Australia' },
+  { code: 'AKL', name: 'Auckland', airport: 'Auckland Airport', country: 'New Zealand' },
+  { code: 'DPS', name: 'Bali', airport: 'Ngurah Rai International Airport', country: 'Indonesia' },
+  { code: 'SIN', name: 'Singapore', airport: 'Changi Airport', country: 'Singapore' },
   { code: 'HR', name: 'Haryana', airport: 'Chandigarh Airport', country: 'India' },
   { code: 'PNQ', name: 'Pune', airport: 'Pune International Airport', country: 'India' },
   { code: 'JAI', name: 'Jaipur', airport: 'Jaipur International Airport', country: 'India' }

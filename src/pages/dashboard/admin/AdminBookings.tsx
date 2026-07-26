@@ -92,15 +92,15 @@ export default function AdminBookings() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50/80 text-gray-700 uppercase font-bold text-xs border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 rounded-tl-2xl">Booking ID</th>
-                <th className="px-6 py-4">User</th>
-                <th className="px-6 py-4">Route / Item</th>
-                <th className="px-6 py-4">Amount</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4 rounded-tr-2xl">Action</th>
+            <thead className="border-b border-gray-100">
+              <tr className="text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                <th className="px-6 py-4 rounded-tl-2xl whitespace-nowrap">Booking ID</th>
+                <th className="px-6 py-4 whitespace-nowrap">User</th>
+                <th className="px-6 py-4 whitespace-nowrap">Route / Item</th>
+                <th className="px-6 py-4 whitespace-nowrap">Amount</th>
+                <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 whitespace-nowrap">Date</th>
+                <th className="px-6 py-4 rounded-tr-2xl whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100/80">
@@ -111,26 +111,26 @@ export default function AdminBookings() {
               ) : (
                 filteredBookings.map((booking: any) => (
                   <tr key={booking._id} className="hover:bg-blue-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100 uppercase">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded border border-blue-100 uppercase inline-block">
                       {booking.bookingId || booking._id.slice(-8)}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col">
                       <span className="font-semibold text-gray-900">{booking.user?.name || 'Unknown User'}</span>
                       <span className="text-xs text-gray-500">{booking.user?.email || '-'}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-medium text-gray-700 bg-gray-50 px-2 py-1 rounded">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-medium text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded inline-block">
                       {booking.details?.from && booking.details?.to 
                         ? `${booking.details.from} → ${booking.details.to}` 
                         : (booking.details?.destination || 'N/A')}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-gray-900 text-base">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-bold text-gray-900 text-base inline-block">
                       ₹ {booking.totalAmount?.toLocaleString() || '0'}
                     </span>
                   </td>
@@ -148,19 +148,39 @@ export default function AdminBookings() {
                       {booking.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-600">
+                  <td className="px-6 py-4 font-medium text-gray-600 whitespace-nowrap">
                     {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? (
-                      <a 
-                        href={`/admin/invoice/${booking._id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                      >
-                        Ticket
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={`/admin/ticket/${booking._id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                        >
+                          Ticket
+                        </a>
+                        <a 
+                          href={`/admin/invoice/${booking._id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                        >
+                          Invoice
+                        </a>
+                        {booking.type === 'FLIGHT' && booking.status === 'CONFIRMED' && (
+                          <button 
+                            onClick={() => {
+                              window.open('https://www.google.com/search?q=web+check+in+' + booking.details?.airline, '_blank');
+                            }}
+                            className="inline-flex items-center gap-1 bg-white border border-green-200 hover:border-green-300 hover:bg-green-50 text-green-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                          >
+                            Web Check-in
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-xs text-gray-400 font-medium">Pending</span>
                     )}
