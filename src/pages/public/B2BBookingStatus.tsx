@@ -16,13 +16,16 @@ const B2BBookingStatus: React.FC = () => {
   const handleGetHistory = async () => {
     try {
       setLoading(true);
-      // Currently mocking the API call. You can connect this to a real endpoint later.
-      // const res = await api.get(`/api/bookings/status?type=${productType}&from=${fromDate}&to=${toDate}`);
-      // setRecords(res.data);
-      setTimeout(() => {
-        setRecords([]); // Mock empty response
-        setLoading(false);
-      }, 500);
+      const res = await api.get('/api/manage-bookings', {
+        params: {
+          product: productType,
+          status: flightType,
+          fromDate,
+          toDate
+        }
+      });
+      setRecords(res.data?.data || []);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching history:', error);
       setLoading(false);
@@ -54,17 +57,19 @@ const B2BBookingStatus: React.FC = () => {
           {productType === 'Flight' && (
             <div className="flex flex-col gap-2 w-48">
               <label className="text-xs font-bold text-[#0c1a40]">Flight Types</label>
-              <Dropdown 
-                options={[
-                  { value: 'ONLINE', label: 'ONLINE' },
-                  { value: 'OFFLINE', label: 'OFFLINE' },
-                  { value: 'TO RESCHEDULE', label: 'TO RESCHEDULE' },
-                  { value: 'TO CANCEL', label: 'TO CANCEL' }
-                ]}
-                value={flightType}
-                onChange={setFlightType}
-                placeholder="Select Status"
-              />
+              <div className="h-[42px]">
+                <Dropdown 
+                  options={[
+                    { value: 'ONLINE', label: 'ONLINE' },
+                    { value: 'OFFLINE', label: 'OFFLINE' },
+                    { value: 'TO RESCHEDULE', label: 'TO RESCHEDULE' },
+                    { value: 'TO CANCEL', label: 'TO CANCEL' }
+                  ]}
+                  value={flightType}
+                  onChange={setFlightType}
+                  placeholder="Select Status"
+                />
+              </div>
             </div>
           )}
 
@@ -126,9 +131,26 @@ const B2BBookingStatus: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  records.map((r, i) => (
-                    <tr key={i} className="hover:bg-blue-50/50 transition">
-                      {/* Mapping logic here once backend is connected */}
+                  records.map((r: any, i: number) => (
+                    <tr key={r._id || i} className="hover:bg-blue-50/50 transition">
+                      <td className="px-6 py-4">{i + 1}</td>
+                      <td className="px-6 py-4 text-blue-600 font-bold">{r.bookingId}</td>
+                      <td className="px-6 py-4">{new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider ${
+                          r.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                          r.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-black">₹ {r.totalAmount?.toLocaleString('en-IN') || 0}</td>
+                      <td className="px-6 py-4">
+                        <button className="text-blue-600 hover:text-blue-800 font-bold underline transition">
+                          View
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}

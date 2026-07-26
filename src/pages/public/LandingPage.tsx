@@ -40,6 +40,13 @@ export default function LandingPage() {
   const user = useSelector(selectCurrentUser);
   const agentMode = useSelector(selectAgentBookingMode);
 
+  // Redirect B2B agents away from consumer landing page
+  useEffect(() => {
+    if (isAuthenticated && user && (user.role === 'TRAVEL_AGENT' || user.role === 'B2B_AGENT' || user.role === 'AGENT')) {
+      navigate('/b2b/home', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const formattedTab = tabParam ? tabParam.charAt(0).toUpperCase() + tabParam.slice(1).toLowerCase() : 'Flights';

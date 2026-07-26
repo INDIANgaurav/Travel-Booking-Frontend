@@ -65,10 +65,10 @@ export default function AgentHotelSearchResults(props: any) {
       <div className="bg-white border-b border-gray-200 py-2 px-8 z-30 relative">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition">
+            <button onClick={() => navigate('/b2b/home')} className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition">
               <ArrowLeft size={20} />
             </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/b2b/home')}>
               <div className="bg-orange-500 p-1.5 rounded text-white">
                 <Building2 size={24} />
               </div>

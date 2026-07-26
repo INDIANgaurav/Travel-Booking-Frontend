@@ -9,6 +9,8 @@ import DOBCalendar from '../../components/ui/DOBCalendar';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import api from '../../services/api';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 const POPULAR_CITIES = [
   { code: 'DEL', name: 'DELHI', airport: 'Indira Gandhi International Airport' },
@@ -88,6 +90,34 @@ const B2BAgentHomePage: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  
+  const [generatingCert, setGeneratingCert] = useState(false);
+  const certificateRef = useRef<HTMLDivElement>(null);
+
+  const downloadCertificate = async () => {
+    if (!certificateRef.current) return;
+    setGeneratingCert(true);
+    try {
+      const element = certificateRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2, // High resolution canvas
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${agentCode}_Certificate.pdf`);
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    } finally {
+      setGeneratingCert(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -218,7 +248,7 @@ const B2BAgentHomePage: React.FC = () => {
       <header className="bg-white border-b border-gray-200 px-8 py-2.5 flex justify-between items-center shadow-sm sticky top-0 z-40">
         {/* Logo & Category Navigation */}
         <div className="flex items-center gap-10">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/b2b/home')}>
             <div className="flex items-center justify-center">
               <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
             </div>
@@ -278,20 +308,25 @@ const B2BAgentHomePage: React.FC = () => {
                 <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 -ml-16">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
-                    { label: 'Account Statement', path: '#' },
-                    { label: 'Booking Status', path: '#' },
-                    { label: 'Manage Booking', path: '#' },
+                    { label: 'Account Statement', path: '/b2b/account-statement' },
+                    { label: 'Booking Status', path: '/b2b/booking-status' },
+                    { label: 'Manage Booking', path: '/b2b/manage-booking' },
                     { label: 'Agent Certificate', path: '#' }
                   ].map((item, index) => (
                     <button 
                       key={index}
                       onClick={() => {
-                        setShowMoreMenu(false);
-                        if (item.path !== '#') navigate(item.path);
+                        if (item.label === 'Agent Certificate') {
+                          downloadCertificate();
+                        } else {
+                          setShowMoreMenu(false);
+                          if (item.path !== '#') navigate(item.path);
+                        }
                       }}
+                      disabled={item.label === 'Agent Certificate' && generatingCert}
                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 transition"
                     >
-                      {item.label}
+                      {item.label === 'Agent Certificate' && generatingCert ? 'Generating...' : item.label}
                     </button>
                   ))}
                 </div>
@@ -476,6 +511,104 @@ const B2BAgentHomePage: React.FC = () => {
       <section className="bg-amber-400 py-2 text-center text-xs font-bold text-gray-900">
         Get Best Deals on Flights... Book Your Tickets... Get Best Rates
       </section>
+
+      {/* Hidden Certificate Template for PDF Generation */}
+      <div className="absolute left-[-9999px] top-[-9999px]">
+        <div 
+          ref={certificateRef} 
+          className="w-[1123px] h-[794px] bg-white relative p-12 flex flex-col items-center text-center overflow-hidden border-[16px]"
+          style={{ 
+            backgroundColor: '#ffffff', 
+            borderColor: '#ffffff', 
+            fontFamily: 'Arial, sans-serif'
+          }}
+        >
+          {/* Watermark Logo (Left side) */}
+          <div 
+            className="absolute top-1/2 left-[50px] -translate-y-1/2 select-none pointer-events-none font-black leading-none whitespace-nowrap -rotate-90 flex items-center"
+            style={{ color: '#0b1031', opacity: 0.04, fontSize: '100px', letterSpacing: '8px' }}
+          >
+            TRIPPECHALO
+          </div>
+          
+          <div 
+            className="flex w-full h-full p-8 flex-col items-center justify-between relative z-10"
+            style={{ boxSizing: 'border-box', backgroundColor: '#ffffff', border: '12px solid #0f172a', outline: '4px solid #cbd5e1', outlineOffset: '-24px' }}
+          >
+            {/* Elegant Top Section */}
+            <div className="flex flex-col items-center w-full" style={{ paddingTop: '10px' }}>
+              <h1 style={{ color: '#0f172a', fontFamily: "'Georgia', serif", fontSize: '48px', marginBottom: '10px', letterSpacing: '4px', textTransform: 'uppercase' }}>
+                Certificate of Recognition
+              </h1>
+              
+              <div style={{ width: '100px', height: '2px', backgroundColor: '#eab308', margin: '15px 0' }}></div>
+
+              <h2 style={{ color: '#eab308', fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '6px', marginBottom: '30px' }}>
+                Active Partner
+              </h2>
+
+              <p style={{ color: '#64748b', fontSize: '18px', fontStyle: 'italic', marginBottom: '15px', fontFamily: "'Georgia', serif" }}>
+                This is to proudly certify that
+              </p>
+              
+              <h3 style={{ color: '#0f172a', fontSize: '42px', fontWeight: 'bold', margin: '0 0 10px 0', textTransform: 'uppercase', fontFamily: "'Georgia', serif" }}>
+                {agentName}
+              </h3>
+
+              {(user?.address || user?.city) ? (
+                <p style={{ color: '#475569', fontSize: '16px', margin: '0 0 10px 0' }}>
+                  Located at: {[user?.address, user?.city, user?.state].filter(Boolean).join(', ')}
+                </p>
+              ) : (
+                <div style={{ height: '24px', marginBottom: '10px' }}></div>
+              )}
+              
+              <p style={{ color: '#475569', fontSize: '16px', margin: '0 0 20px 0' }}>
+                Agent ID: <span style={{ color: '#0f172a', fontWeight: 'bold' }}>{agentCode}</span>
+              </p>
+
+              <p style={{ color: '#64748b', fontSize: '18px', fontStyle: 'italic', marginBottom: '10px', fontFamily: "'Georgia', serif", maxWidth: '700px', lineHeight: '1.6' }}>
+                has been officially registered and verified as an Authorised Channel Partner with TrippeChalo Pvt. Ltd. , committed to delivering excellence in travel services.
+              </p>
+            </div>
+
+            {/* Elegant Bottom Row */}
+            <div className="w-full flex justify-between items-end px-24 pb-4">
+              <div className="flex flex-col items-center" style={{ width: '200px' }}>
+                <div style={{ borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '10px', width: '100%', textAlign: 'center' }}>
+                   <div style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", color: '#0f172a', fontSize: '32px' }}>Director Signature</div>
+                </div>
+                <p style={{ color: '#0f172a', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Director</p>
+                <p style={{ color: '#64748b', fontSize: '12px' }}>TrippeChalo Pvt. Ltd. </p>
+              </div>
+
+              {/* Minimalist Seal */}
+              <div className="flex items-center gap-4">
+                 <div style={{
+                   width: '80px', height: '80px',
+                   borderRadius: '50%',
+                   border: '2px solid #eab308',
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   backgroundColor: '#fffbeb'
+                 }}>
+                   <span style={{ color: '#eab308', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'center', letterSpacing: '2px' }}>
+                     Official<br/>Partner
+                   </span>
+                 </div>
+              </div>
+
+              <div className="flex flex-col items-center" style={{ width: '220px' }}>
+                <div style={{ borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '10px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                  <img src="/tg-favicon.svg" alt="TrippeChalo" style={{ width: '32px', height: '32px' }} crossOrigin="anonymous" />
+                  <span style={{ color: '#0f172a', fontSize: '24px', fontWeight: '900', letterSpacing: '1px' }}>TRIPPE<span style={{ color: '#2563eb' }}>CHALO</span></span>
+                </div>
+                <p style={{ color: '#0f172a', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Date Issued</p>
+                <p style={{ color: '#64748b', fontSize: '12px' }}>{new Date().toLocaleDateString('en-GB')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
