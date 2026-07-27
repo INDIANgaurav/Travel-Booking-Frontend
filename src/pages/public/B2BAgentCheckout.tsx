@@ -1,32 +1,177 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plane, ChevronUp, Clock, Info, X } from 'lucide-react';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
+import DOBCalendar from '../../components/ui/DOBCalendar';
+import Dropdown from '../../components/ui/Dropdown';
+export interface Passenger {
+  type: 'ADULT' | 'CHILD' | 'INFANT';
+  title: string;
+  firstName: string;
+  lastName: string;
+  nationality: string;
+  dob?: string;
+  needSeparateSeat?: boolean;
+}
 
 const B2BAgentCheckout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(16 * 60 + 3); // 16m 3s
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [showErrors, setShowErrors] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showBaseFareDetails, setShowBaseFareDetails] = useState(false);
   const [showTaxesDetails, setShowTaxesDetails] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('Agency Account');
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (document.getElementById('razorpay-script')) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.id = 'razorpay-script';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Extract flight and fare details from router state
+  const flight = location.state?.flight;
+  const fareType = location.state?.fareType || 'Coupon fares';
+  const adults = location.state?.adults || 1;
+  const childrenCount = location.state?.children || 0;
+  const infants = location.state?.infants || 0;
+
+  const [passengers, setPassengers] = useState<Passenger[]>(() => {
+    const p: Passenger[] = [];
+    for (let i = 0; i < adults; i++) p.push({ type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'INDIA' });
+    for (let i = 0; i < childrenCount; i++) p.push({ type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '' });
+    for (let i = 0; i < infants; i++) p.push({ type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '', needSeparateSeat: false });
+    return p;
+  });
+
+  const handlePassengerChange = (index: number, field: keyof Passenger, value: any) => {
+    const updated = [...passengers];
+    updated[index] = { ...updated[index], [field]: value };
+    setPassengers(updated);
+  };
 
   const handleContinue = () => {
-    if (!firstName || !lastName || mobile.length !== 10 || !email.includes('@')) {
+    const hasChildOrInfant = passengers.some(p => p.type === 'CHILD' || p.type === 'INFANT');
+    const hasAdult = passengers.some(p => p.type === 'ADULT');
+
+    if (hasChildOrInfant && !hasAdult) {
+      toast.error('At least one adult is required when travelling with children or infants');
+      return;
+    }
+
+    const isValid = passengers.every(p => {
+      const hasName = p.title !== '' && p.firstName && p.lastName;
+      if (p.type === 'CHILD' || p.type === 'INFANT') {
+        return hasName && p.dob;
+      }
+      return hasName;
+    }) && mobile.length === 10 && email.includes('@');
+
+    if (!isValid) {
       setShowErrors(true);
       return;
     }
     setCurrentStep(3);
   };
 
-  // Extract flight and fare details from router state
-  const flight = location.state?.flight;
-  const fareType = location.state?.fareType || 'Coupon fares';
+  const handleConfirmBooking = async () => {
+    try {
+      setIsBooking(true);
+
+      if (paymentMethod !== 'Agency Account') {
+        const scriptLoaded = await loadRazorpayScript();
+        if (!scriptLoaded) {
+          toast.error('Razorpay SDK failed to load. Are you online?');
+          setIsBooking(false);
+          return;
+        }
+      }
+
+      const { data } = await api.post('/api/bookings/flight', {
+        totalAmount: totalFare,
+        date: flight.departureTime,
+        bookingMode: paymentMethod === 'Agency Account' ? 'MYBIZ' : 'PERSONAL',
+        details: {
+          flight_keys: [flight._id],
+          passengers: passengers.map(p => ({
+            name: `${p.firstName} ${p.lastName}`,
+            type: p.type,
+            title: p.title,
+            gender: p.title === 'Mr' || p.title === 'Mstr' ? 'Male' : 'Female',
+            dob: p.dob,
+            needsSeat: p.needSeparateSeat
+          })),
+          contactDetails: { email, phone: mobile },
+          ...(flight.nexus_query && {
+            nexus_query: flight.nexus_query,
+            currency: 'INR',
+            total_price: flight.price
+          })
+        }
+      });
+      
+      if (paymentMethod === 'Agency Account') {
+        toast.success('Booking Created successfully!');
+        navigate('/b2b/booking-status', { state: { booking: data.booking } });
+      } else {
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
+          amount: data.amount,
+          currency: data.currency,
+          name: 'Travel Booking App',
+          description: 'B2B Flight Booking',
+          order_id: data.orderId,
+          handler: async function (response: any) {
+            try {
+              await api.post('/api/bookings/payment/verify', {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              });
+              
+              toast.success('Payment successful! Booking confirmed.');
+              navigate('/b2b/booking-status', { state: { booking: data.booking } });
+            } catch (error) {
+              toast.error('Payment verification failed.');
+            }
+          },
+          prefill: {
+            name: passengers[0]?.firstName || 'B2B Agent',
+            email: email || 'agent@example.com',
+            contact: mobile || '9999999999'
+          },
+          theme: {
+            color: '#2563eb'
+          }
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.on('payment.failed', function(response: any) {
+           toast.error(response.error.description);
+        });
+        paymentObject.open();
+      }
+    } catch (e: any) {
+      toast.error('Failed to create booking');
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   // If no flight selected, bounce back to home
   useEffect(() => {
@@ -47,10 +192,33 @@ const B2BAgentCheckout: React.FC = () => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  // Pricing calculations
-  const totalFare = flight.price;
-  const taxesAndFees = Math.round(totalFare * 0.15); // 15% estimated taxes
-  const totalBaseFare = totalFare - taxesAndFees;
+  // Pricing calculations based on dynamically added passengers
+  const adultCount = passengers.filter(p => p.type === 'ADULT').length;
+  const childCount = passengers.filter(p => p.type === 'CHILD').length;
+  const infantWithSeatCount = passengers.filter(p => p.type === 'INFANT' && p.needSeparateSeat).length;
+  const infantNoSeatCount = passengers.filter(p => p.type === 'INFANT' && !p.needSeparateSeat).length;
+
+  const basePricePerPax = flight.price;
+  const taxPerFullPax = Math.round(basePricePerPax * 0.15); // 15% estimated taxes
+  const baseFarePerFullPax = basePricePerPax - taxPerFullPax;
+
+  const infantFlatTotal = 2000;
+  const infantTax = 0; // Flat fare, no tax on infant without seat
+  const infantBase = infantFlatTotal;
+
+  const totalBaseFare = 
+    (adultCount * baseFarePerFullPax) + 
+    (childCount * baseFarePerFullPax) + 
+    (infantWithSeatCount * baseFarePerFullPax) + 
+    (infantNoSeatCount * infantBase);
+
+  const taxesAndFees = 
+    (adultCount * taxPerFullPax) + 
+    (childCount * taxPerFullPax) + 
+    (infantWithSeatCount * taxPerFullPax) + 
+    (infantNoSeatCount * infantTax);
+
+  const totalFare = totalBaseFare + taxesAndFees;
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] font-sans pb-24 text-[#0c1a40]">
@@ -209,34 +377,117 @@ const B2BAgentCheckout: React.FC = () => {
                 </div>
                 
                 <p className="text-[10px] text-gray-500 mb-4">(Name must be entered as per government valid ID Proof)</p>
-                <h4 className="text-xs font-black text-[#0c1a40] mb-4">ADULT 1: (12 + YRS) ▾</h4>
+                <div className="space-y-6">
+                  {passengers.map((p, idx) => (
+                    <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-100 relative">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-xs font-black text-[#0c1a40] uppercase">{p.type} {idx + 1} ▾</h4>
+                        {passengers.length > 1 && (
+                          <button 
+                            onClick={() => setPassengers(passengers.filter((_, i) => i !== idx))} 
+                            className="text-red-500 hover:text-red-700 font-bold text-[10px] uppercase border border-red-200 px-2 py-1 rounded bg-red-50"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Title</label>
+                          <div className={showErrors && !p.title ? "rounded-lg ring-1 ring-red-500" : ""}>
+                            <Dropdown
+                              value={p.title}
+                              onChange={(val) => handlePassengerChange(idx, 'title', val)}
+                              options={[
+                                { value: '', label: 'Select' },
+                                { value: 'Mr', label: 'Mr' },
+                                { value: 'Ms', label: 'Ms' },
+                                { value: 'Mrs', label: 'Mrs' },
+                                { value: 'Mstr', label: 'Mstr' },
+                                { value: 'Miss', label: 'Miss' }
+                              ]}
+                              placeholder="Select"
+                            />
+                          </div>
+                          {showErrors && !p.title && <div className="text-[9px] text-red-500 mt-1">Required</div>}
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">First Name</label>
+                          <input type="text" placeholder="FIRST NAME" value={p.firstName} onChange={(e) => handlePassengerChange(idx, 'firstName', e.target.value)} className={`w-full border ${showErrors && !p.firstName ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-xs font-semibold outline-none placeholder-gray-300 text-[#0c1a40]`} />
+                          {showErrors && !p.firstName && <div className="text-[9px] text-red-500 mt-1">Required</div>}
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Last Name</label>
+                          <input type="text" placeholder="LAST NAME" value={p.lastName} onChange={(e) => handlePassengerChange(idx, 'lastName', e.target.value)} className={`w-full border ${showErrors && !p.lastName ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-xs font-semibold outline-none placeholder-gray-300 text-[#0c1a40]`} />
+                          {showErrors && !p.lastName && <div className="text-[9px] text-red-500 mt-1">Required</div>}
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Nationality</label>
+                          <Dropdown
+                            value={p.nationality}
+                            onChange={(val) => handlePassengerChange(idx, 'nationality', val)}
+                            options={[{ value: 'INDIA', label: 'INDIA' }]}
+                            placeholder="Select"
+                          />
+                        </div>
 
-                <div className="grid grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Title</label>
-                    <select className="w-full border border-gray-300 rounded px-3 py-2 text-xs font-semibold outline-none text-[#0c1a40]">
-                      <option>Mr</option>
-                      <option>Ms</option>
-                      <option>Mrs</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">First Name</label>
-                    <input type="text" placeholder="FIRST NAME" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`w-full border ${showErrors && !firstName ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-xs font-semibold outline-none placeholder-gray-300 text-[#0c1a40]`} />
-                    {showErrors && !firstName && <div className="text-[9px] text-red-500 mt-1">Required</div>}
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Last Name</label>
-                    <input type="text" placeholder="LAST NAME" value={lastName} onChange={(e) => setLastName(e.target.value)} className={`w-full border ${showErrors && !lastName ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2 text-xs font-semibold outline-none placeholder-gray-300 text-[#0c1a40]`} />
-                    {showErrors && !lastName && <div className="text-[9px] text-red-500 mt-1">Required</div>}
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Nationality</label>
-                    <select className="w-full border border-gray-300 rounded px-3 py-2 text-xs font-semibold outline-none text-[#0c1a40]">
-                      <option>INDIA</option>
-                    </select>
-                  </div>
+                        {(p.type === 'CHILD' || p.type === 'INFANT') && (
+                          <div className="relative">
+                            <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Date of Birth</label>
+                            <div className={`h-[34px] w-full border ${showErrors && !p.dob ? 'border-red-500' : 'border-gray-300'} rounded bg-white relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent [&>div>div:first-child]:py-0 [&>div>div:first-child]:px-3`}>
+                              <DOBCalendar 
+                                value={p.dob || ''} 
+                                onChange={(val) => handlePassengerChange(idx, 'dob', val)} 
+                                placeholder="Select DOB"
+                              />
+                            </div>
+                            {showErrors && !p.dob && <div className="text-[9px] text-red-500 mt-1">Required</div>}
+                          </div>
+                        )}
+                        
+                        {p.type === 'INFANT' && (
+                          <div className="col-span-2 flex items-center mt-6">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0c1a40]">
+                              <input type="checkbox" checked={!!p.needSeparateSeat} onChange={(e) => handlePassengerChange(idx, 'needSeparateSeat', e.target.checked)} className="rounded" />
+                              Need a separate seat? (Full Fare Applicable)
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Dynamic Passenger Add Buttons */}
+                <div className="flex gap-4 mt-6 border-t border-gray-100 pt-6">
+                  {passengers.length < (flight.availableSeats || 9) ? (
+                    <>
+                      <button 
+                        onClick={() => setPassengers([...passengers, { type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'INDIA' }])}
+                        className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
+                      >
+                        + Add Adult
+                      </button>
+                      <button 
+                        onClick={() => setPassengers([...passengers, { type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '' }])}
+                        className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
+                      >
+                        + Add Child
+                      </button>
+                      <button 
+                        onClick={() => setPassengers([...passengers, { type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '', needSeparateSeat: false }])}
+                        className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
+                      >
+                        + Add Infant
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full text-center text-xs font-bold text-red-500 py-2">
+                      Maximum {flight.availableSeats || 9} passengers allowed for this flight.
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               <div className="relative border-b border-gray-100 pb-8 pt-4">
@@ -346,16 +597,19 @@ const B2BAgentCheckout: React.FC = () => {
               <div className="flex gap-6">
                 {/* Left Side: Payment Options */}
                 <div className="w-[35%] space-y-3">
-                   {['Credit Card', 'Net Banking', 'UPI', 'Debit Card'].map(method => (
-                     <div key={method} className="border border-gray-200 rounded-full px-4 py-2 flex items-center gap-3 cursor-pointer hover:bg-gray-50">
-                       <input type="radio" name="paymentMethod" disabled className="w-3 h-3" />
-                       <span className="text-xs font-bold text-[#0c1a40]">{method}</span>
-                     </div>
-                   ))}
-                   <div className="border border-blue-300 bg-[#e0effe] rounded-full px-4 py-2 flex items-center gap-3 cursor-pointer">
-                     <input type="radio" name="paymentMethod" checked readOnly className="w-3 h-3 text-blue-600" />
-                     <span className="text-xs font-bold text-[#0c1a40]">Agency Account</span>
-                   </div>
+                   {['Credit Card', 'Net Banking', 'UPI', 'Debit Card', 'Agency Account'].map(method => {
+                     const isSelected = paymentMethod === method;
+                     return (
+                       <div 
+                         key={method} 
+                         onClick={() => setPaymentMethod(method)}
+                         className={`border rounded-full px-4 py-2 flex items-center gap-3 cursor-pointer transition ${isSelected ? 'border-blue-300 bg-[#e0effe]' : 'border-gray-200 hover:bg-gray-50'}`}
+                       >
+                         <input type="radio" name="paymentMethod" checked={isSelected} readOnly className={`w-3 h-3 ${isSelected ? 'accent-blue-600' : ''}`} />
+                         <span className="text-xs font-bold text-[#0c1a40]">{method}</span>
+                       </div>
+                     );
+                   })}
                 </div>
 
                 {/* Right Side: Form */}
@@ -402,10 +656,30 @@ const B2BAgentCheckout: React.FC = () => {
                 </div>
                 {showBaseFareDetails && (
                   <div className="mt-2 pl-2 space-y-1 text-[10px] text-gray-600">
-                    <div className="flex justify-between">
-                      <span>Adult(s) (1 X ₹{(totalBaseFare).toLocaleString('en-IN')})</span>
-                      <span>₹{(totalBaseFare).toLocaleString('en-IN')}.00</span>
-                    </div>
+                    {adultCount > 0 && (
+                      <div className="flex justify-between">
+                        <span>{adultCount} Adult(s) ({adultCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
+                        <span>₹{(adultCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      </div>
+                    )}
+                    {childCount > 0 && (
+                      <div className="flex justify-between mt-1">
+                        <span>{childCount} Child(ren) ({childCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
+                        <span>₹{(childCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      </div>
+                    )}
+                    {infantWithSeatCount > 0 && (
+                      <div className="flex justify-between mt-1 text-purple-600">
+                        <span>{infantWithSeatCount} Infant(s) w/ Seat ({infantWithSeatCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
+                        <span>₹{(infantWithSeatCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      </div>
+                    )}
+                    {infantNoSeatCount > 0 && (
+                      <div className="flex justify-between mt-1 text-blue-600">
+                        <span>{infantNoSeatCount} Infant(s) ({infantNoSeatCount} X ₹{(infantBase).toLocaleString('en-IN')})</span>
+                        <span>₹{(infantNoSeatCount * infantBase).toLocaleString('en-IN')}.00</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -527,14 +801,18 @@ const B2BAgentCheckout: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-t border-gray-100">
-                          <td className="px-4 py-4 text-xs font-bold text-[#0c1a40] uppercase">
-                            MR {firstName || 'GAURAV'} {lastName || 'PARASAR'}
-                          </td>
-                          <td className="px-4 py-4 text-xs font-semibold text-[#0c1a40] text-center">Male</td>
-                          <td className="px-4 py-4 text-xs font-semibold text-[#0c1a40] text-center">ADULT</td>
-                          <td className="px-4 py-4 text-xs text-center text-emerald-500 font-bold">✓</td>
-                        </tr>
+                        {passengers.map((p, idx) => (
+                          <tr key={idx} className="border-t border-gray-100">
+                            <td className="px-4 py-4 text-xs font-bold text-[#0c1a40] uppercase">
+                              {p.title} {p.firstName} {p.lastName}
+                            </td>
+                            <td className="px-4 py-4 text-xs font-semibold text-[#0c1a40] text-center">
+                              {p.title === 'Mr' || p.title === 'Mstr' ? 'Male' : 'Female'}
+                            </td>
+                            <td className="px-4 py-4 text-xs font-semibold text-[#0c1a40] text-center">{p.type}</td>
+                            <td className="px-4 py-4 text-xs text-center text-emerald-500 font-bold">✓</td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
@@ -631,8 +909,12 @@ const B2BAgentCheckout: React.FC = () => {
               <div className="text-sm font-black text-[#0c1a40]">
                 Total Payable <span className="text-emerald-500 text-lg ml-1">₹{(totalFare).toLocaleString('en-IN')}.00</span>
               </div>
-              <button className="bg-[#6c74a0] hover:bg-[#5b638a] text-white font-bold text-sm px-8 py-3 rounded-full shadow transition">
-                Book Ticket
+              <button 
+                onClick={handleConfirmBooking}
+                disabled={isBooking}
+                className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-8 py-3 rounded-full shadow transition disabled:opacity-50"
+              >
+                {isBooking ? 'Processing...' : 'Book Ticket'}
               </button>
             </div>
           </div>

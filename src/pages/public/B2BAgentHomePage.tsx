@@ -5,70 +5,94 @@ import type { RootState } from '../../store/store';
 import { logout } from '../../store/authSlice';
 import { ChevronDown, Check, Plane, Users, ArrowRightLeft, Calendar, FileText, Download, Briefcase, RefreshCw, X, Shield, Clock, TrendingUp, Building2, ShieldCheck, CreditCard, Compass, ArrowLeftRight, Search, LogOut, MoreHorizontal } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
-import DOBCalendar from '../../components/ui/DOBCalendar';
+import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import api from '../../services/api';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-const POPULAR_CITIES = [
-  { code: 'DEL', name: 'DELHI', airport: 'Indira Gandhi International Airport' },
-  { code: 'BOM', name: 'MUMBAI', airport: 'Chhatrapati Shivaji Airport' },
-  { code: 'GOI', name: 'GOA', airport: 'Dabolim Airport' },
-  { code: 'HYD', name: 'HYDERABAD', airport: 'Begumpet Airport' },
-  { code: 'BLR', name: 'BENGALURU', airport: 'Kempegowda International Airport' },
-  { code: 'CCU', name: 'KOLKATA', airport: 'Netaji Subhash Chandra Bose' },
-  { code: 'MAA', name: 'CHENNAI', airport: 'Chennai International Airport' }
+const FALLBACK_CITIES = [
+  { code: 'DEL', name: 'DELHI', airport: 'Indira Gandhi International Airport', country: 'India' },
+  { code: 'BOM', name: 'MUMBAI', airport: 'Chhatrapati Shivaji Airport', country: 'India' },
+  { code: 'GOI', name: 'GOA', airport: 'Dabolim Airport', country: 'India' },
+  { code: 'HYD', name: 'HYDERABAD', airport: 'Begumpet Airport', country: 'India' },
+  { code: 'BLR', name: 'BENGALURU', airport: 'Kempegowda International Airport', country: 'India' },
+  { code: 'CCU', name: 'KOLKATA', airport: 'Netaji Subhash Chandra Bose', country: 'India' },
+  { code: 'MAA', name: 'CHENNAI', airport: 'Chennai International Airport', country: 'India' }
 ];
 
 const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [cities, setCities] = React.useState<any[]>(FALLBACK_CITIES);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    api.get('/api/searches/cities').then(res => {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setCities(res.data);
+      }
+    }).catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchQuery('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedCity = POPULAR_CITIES.find(c => c.code === value);
+  const selectedCity = cities.find(c => c.code === value);
   const displayValue = selectedCity ? `${selectedCity.name.charAt(0) + selectedCity.name.slice(1).toLowerCase()} (${selectedCity.code})` : value;
+
+  const filteredCities = searchQuery
+    ? cities.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.airport && c.airport.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (c.country && c.country.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : cities;
 
   return (
     <div className="relative w-full h-full flex items-center" ref={dropdownRef}>
       <input
         type="text"
-        value={displayValue}
+        value={isOpen ? searchQuery : displayValue}
         onChange={(e) => {
-          onChange(e.target.value.toUpperCase());
-          setIsOpen(true);
+          setSearchQuery(e.target.value);
+          if (!isOpen) setIsOpen(true);
         }}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => { setIsOpen(true); setSearchQuery(''); }}
         placeholder={placeholder}
         className="w-full text-sm font-bold text-[#0c1a40] bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal h-full"
       />
       {isOpen && (
         <div className="absolute top-[calc(100%+10px)] left-0 z-[60] bg-white border border-gray-200 rounded-xl shadow-2xl w-[320px] max-h-[300px] overflow-y-auto animate-in fade-in zoom-in duration-200">
-          <div className="text-[10px] text-gray-500 font-bold px-3 py-2 uppercase tracking-wider bg-gray-50/80 sticky top-0 border-b border-gray-100 backdrop-blur-sm">Popular Cities</div>
+          <div className="text-[10px] text-gray-500 font-bold px-3 py-2 uppercase tracking-wider bg-gray-50/80 sticky top-0 border-b border-gray-100 backdrop-blur-sm">{searchQuery ? 'Search Results' : 'Popular Cities'}</div>
           <div className="py-1">
-            {POPULAR_CITIES.map(city => (
-              <div 
-                key={city.code}
-                onClick={() => { onChange(city.code); setIsOpen(false); }}
-                className="flex justify-between items-center px-4 py-2.5 hover:bg-[#1d2757] cursor-pointer group transition-colors border-b border-gray-50 last:border-0"
-              >
-                <div>
-                  <div className="font-bold text-[13px] text-gray-900 group-hover:text-white leading-tight capitalize">{city.name.toLowerCase()}</div>
-                  <div className="text-[10px] text-gray-500 group-hover:text-gray-300 flex items-center gap-1 mt-0.5"><Plane size={10} className="transform rotate-45"/> {city.airport}</div>
+            {filteredCities.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-gray-500 text-center">No cities found</div>
+            ) : (
+              filteredCities.map(city => (
+                <div 
+                  key={city.code}
+                  onClick={() => { onChange(city.code); setIsOpen(false); setSearchQuery(''); }}
+                  className="flex justify-between items-center px-4 py-2.5 hover:bg-[#1d2757] cursor-pointer group transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <div>
+                    <div className="font-bold text-[13px] text-gray-900 group-hover:text-white leading-tight capitalize">{city.name.toLowerCase()}</div>
+                    <div className="text-[10px] text-gray-500 group-hover:text-gray-300 flex items-center gap-1 mt-0.5"><Plane size={10} className="transform rotate-45"/> {city.airport}</div>
+                  </div>
+                  <div className="bg-gray-100 text-gray-600 group-hover:bg-white/20 group-hover:text-white text-[10px] px-2 py-0.5 rounded font-bold">{city.code}</div>
                 </div>
-                <div className="bg-gray-100 text-gray-600 group-hover:bg-white/20 group-hover:text-white text-[10px] px-2 py-0.5 rounded font-bold">{city.code}</div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -148,6 +172,7 @@ const B2BAgentHomePage: React.FC = () => {
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [cabinClass, setCabinClass] = useState('Economy');
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   
   // Special Fares
   const [specialFare, setSpecialFare] = useState('EXTRA SAVINGS');
@@ -440,21 +465,31 @@ const B2BAgentHomePage: React.FC = () => {
             </div>
 
             {/* Departure Date */}
-            <div className="flex-1 h-full border-r border-gray-100 relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
-              <DOBCalendar
-                value={date}
-                onChange={setDate}
-                placeholder="Departure Date"
-              />
+            <div 
+              className="flex-1 h-full border-r border-gray-100 relative flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50"
+              onClick={() => setIsDatePickerOpen(true)}
+            >
+              <Calendar size={18} className="text-gray-400" />
+              <div className="flex-1">
+                <span className="text-[13px] text-gray-700 block mt-1">
+                  {date ? format(new Date(date), 'dd MMM, yyyy') : 'Select Date'}
+                </span>
+              </div>
             </div>
 
             {/* Return Date */}
-            <div className={`flex-1 h-full border-r border-gray-100 relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent ${tripType !== 'Return' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : 'bg-transparent'}`}>
-              <DOBCalendar
-                value={returnDate}
-                onChange={setReturnDate}
-                placeholder="Return Date"
-              />
+            <div 
+              className={`flex-1 h-full border-r border-gray-100 flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50 ${tripType !== 'Return' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : ''}`}
+              onClick={() => {
+                if (tripType === 'Return') setIsDatePickerOpen(true);
+              }}
+            >
+              <Calendar size={18} className="text-gray-400" />
+              <div className="flex-1">
+                <span className="text-[13px] text-gray-300 block mt-1">
+                  {returnDate && tripType === 'Return' ? format(new Date(returnDate), 'dd MMM, yyyy') : 'Return Date'}
+                </span>
+              </div>
             </div>
 
             {/* Travellers & Class */}
@@ -480,6 +515,27 @@ const B2BAgentHomePage: React.FC = () => {
               <Search size={16} />
               <span>Search</span>
             </button>
+
+            {/* Calendar Popover */}
+            {isDatePickerOpen && (
+              <div className="absolute top-[100%] left-[30%] z-50">
+                <DualMonthCalendar 
+                  checkIn={date ? new Date(date) : null} 
+                  checkOut={returnDate && tripType === 'Return' ? new Date(returnDate) : null}
+                  onDateChange={(type, selectedDate) => {
+                    if (type === 'checkIn') {
+                      setDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
+                    } else {
+                      setReturnDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
+                    }
+                  }}
+                  onClose={() => setIsDatePickerOpen(false)}
+                  origin={from}
+                  destination={to}
+                  isOneWay={tripType !== 'Return'}
+                />
+              </div>
+            )}
           </div>
 
           {/* Special Fares Row */}

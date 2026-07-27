@@ -12,12 +12,25 @@ interface DOBCalendarProps {
 
 export default function DOBCalendar({ value, onChange, minDate, maxDate, placeholder = 'dd-mm-yyyy' }: DOBCalendarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(value ? parseISO(value) : (maxDate || new Date()));
+  
+  const parseValue = (val: string | Date | undefined) => {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+    try {
+      return parseISO(val as string);
+    } catch {
+      return null;
+    }
+  };
+
+  const selectedDate = parseValue(value);
+  const initialMonth = selectedDate || (maxDate || new Date());
+
+  const [currentMonth, setCurrentMonth] = useState(initialMonth);
   const [isYearOpen, setIsYearOpen] = useState(false);
   const [isMonthOpen, setIsMonthOpen] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const selectedDate = value ? parseISO(value) : null;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -46,18 +46,25 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
     if (type === 'hotel') {
       api.get('/api/hotels/cities').then(res => {
         if (res.data && Array.isArray(res.data)) {
-          // Merge backend dynamic cities with POPULAR_CITIES and remove duplicates
           const dynamicCities = res.data;
-          
-          // Combine both, but filter out from POPULAR_CITIES if the code already exists in dynamicCities
           const mergedCities = [
             ...dynamicCities,
             ...POPULAR_CITIES.filter(pc => !dynamicCities.some((dc: any) => dc.code === pc.code))
           ];
-          
           setAvailableCities(mergedCities);
         }
-      }).catch(err => console.error("Failed to fetch cities", err));
+      }).catch(err => console.error("Failed to fetch hotel cities", err));
+    } else {
+      // Flight cities
+      api.get('/api/searches/cities').then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          // If the backend returns a full list, we just use it.
+          // Fallback to POPULAR_CITIES if backend fails or returns empty.
+          if (res.data.length > 0) {
+            setAvailableCities(res.data);
+          }
+        }
+      }).catch(err => console.error("Failed to fetch flight cities", err));
     }
   }, [type]);
 

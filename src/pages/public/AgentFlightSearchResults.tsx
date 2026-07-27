@@ -8,6 +8,8 @@ import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
 import CityPicker from '../../components/common/CityPicker';
 import TripTypePicker from '../../components/common/TripTypePicker';
+import { format } from 'date-fns';
+
 interface Flight {
   _id: string;
   airline: string;
@@ -413,7 +415,7 @@ export default function AgentFlightSearchResults(props: any) {
                   
                   const flightToBook = { ...moreFaresFlight, price: finalPrice };
                   setSelectedOutbound(flightToBook);
-                  navigate('/b2b/checkout', { state: { flight: flightToBook, fareType: selectedFareType } });
+                  navigate('/b2b/checkout', { state: { flight: flightToBook, fareType: selectedFareType, adults, children, infants } });
                 }}
                 className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-10 py-3 rounded-full transition-all shadow-md"
               >
@@ -428,10 +430,10 @@ export default function AgentFlightSearchResults(props: any) {
       <div className="bg-white border-b border-gray-200 py-2.5 px-8 z-50 relative shadow-sm">
         <div className="max-w-[1240px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button onClick={() => navigate('/b2b/home')} className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition">
+            <button onClick={() => setHasSearched(false)} className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition">
               <ArrowLeft size={20} />
             </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/b2b/home')}>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setHasSearched(false)}>
               <div className="flex items-center justify-center">
                 <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-9 h-9" crossOrigin="anonymous" />
               </div>
@@ -551,7 +553,14 @@ export default function AgentFlightSearchResults(props: any) {
                 </div>
               )}
             </div>
-            <span className="text-gray-400 font-bold">➔</span>
+            <span 
+              className="text-gray-400 font-bold cursor-pointer hover:text-white transition"
+              onClick={() => {
+                const temp = from;
+                setFrom(to);
+                setTo(temp);
+              }}
+            >➔</span>
             <div className="relative group/to" onClick={(e) => { e.stopPropagation(); setIsToPickerOpen(!isToPickerOpen); }}>
               <p className="text-gray-400 text-[10px] uppercase font-semibold">To</p>
               <p className="font-bold text-sm text-white cursor-pointer hover:text-blue-400 transition">{to}</p>
@@ -579,7 +588,7 @@ export default function AgentFlightSearchResults(props: any) {
                       const d = new Date(date);
                       d.setDate(d.getDate() - 1);
                       if (d >= new Date(new Date().setHours(0,0,0,0))) {
-                        setDate(d);
+                        setDate(format(d, 'yyyy-MM-dd'));
                       }
                     }}
                     className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white/10 transition"
@@ -594,19 +603,20 @@ export default function AgentFlightSearchResults(props: any) {
                     {isDatePickerOpen && (
                       <div className="absolute top-[120%] left-1/2 -translate-x-1/2 z-[100] shadow-2xl" onClick={e => e.stopPropagation()}>
                         <DualMonthCalendar 
-                          checkIn={date} 
-                          checkOut={returnDate}
+                          checkIn={date ? new Date(date) : null} 
+                          checkOut={returnDate ? new Date(returnDate) : null}
                           onDateChange={(type, d) => {
                             if (type === 'checkIn') {
-                              setDate(d);
+                              setDate(d ? format(d, 'yyyy-MM-dd') : '');
                               setIsDatePickerOpen(false);
                             } else {
-                              setReturnDate(d);
+                              setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
                             }
                           }}
                           onClose={() => setIsDatePickerOpen(false)}
                           origin={from}
                           destination={to}
+                          isOneWay={tripType !== 'Return'}
                         />
                       </div>
                     )}
@@ -617,7 +627,7 @@ export default function AgentFlightSearchResults(props: any) {
                       e.stopPropagation();
                       const d = new Date(date);
                       d.setDate(d.getDate() + 1);
-                      setDate(d);
+                      setDate(format(d, 'yyyy-MM-dd'));
                     }}
                     className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white/10 transition"
                   >

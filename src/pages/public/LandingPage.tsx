@@ -121,12 +121,17 @@ export default function LandingPage() {
       .catch((err) => console.error("Error fetching destinations:", err));
   }, []);
 
+  const getLocalISO = (d: Date | null) => {
+    if (!d) return '';
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
+  };
+
   const handleSearch = () => {
     if (activeTab === 'Hotels') {
       const query = new URLSearchParams({
         city: searchTo, // We can use 'searchTo' state as the destination city
-        checkIn: departureDate ? departureDate.toISOString() : '',
-        checkOut: returnDate ? returnDate.toISOString() : ''
+        checkIn: getLocalISO(departureDate),
+        checkOut: getLocalISO(returnDate)
       }).toString();
       navigate(`/hotels/search?${query}`);
       return;
@@ -136,8 +141,8 @@ export default function LandingPage() {
       tab: activeTab,
       from: searchFrom,
       to: searchTo,
-      date: departureDate ? departureDate.toISOString() : '',
-      returnDate: returnDate ? returnDate.toISOString() : '',
+      date: getLocalISO(departureDate),
+      returnDate: getLocalISO(returnDate),
       tripType: tripType,
       adults: adults.toString(),
       children: children.toString(),

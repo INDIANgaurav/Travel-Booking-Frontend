@@ -15,6 +15,12 @@ interface CustomCalendarProps {
 
 const priceCache: Record<string, Record<string, number>> = {};
 
+const HOLIDAYS: Record<string, { name: string; color: string }> = {
+  '15-08': { name: 'Independence Day', color: '#008cff' },
+  '02-10': { name: 'Gandhi Jayanti', color: '#46c491' },
+  '25-12': { name: 'Christmas', color: '#ff4f4f' },
+};
+
 export default function CustomCalendar({ startDate, endDate, isOneWay, onChange, onClose, origin, destination }: CustomCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
@@ -89,6 +95,8 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
           {days.map((day, idx) => {
             const dateNum = day.getDate();
             const dateStr = format(day, 'yyyy-MM-dd');
+            const holidayKey = format(day, 'dd-MM');
+            const holiday = HOLIDAYS[holidayKey];
             const dynamicPrice = prices[dateStr];
             const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
             
@@ -101,6 +109,10 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
             let textClass = "text-gray-900";
             let priceClass = "text-gray-500";
             let roundingClass = "rounded-md";
+
+            const isAvailableUnknownPrice = dynamicPrice !== undefined && Number(dynamicPrice) === -1;
+            const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) !== -1;
+            const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
 
             if (isPast) {
               bgClass = "bg-white";
@@ -115,19 +127,42 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
               bgClass = "bg-blue-50";
               textClass = "text-gray-900";
               roundingClass = "rounded-none";
+            } else if (isAvailable) {
+              bgClass = "bg-green-50 hover:bg-green-100 border border-green-200";
+              textClass = "text-green-700";
+              priceClass = "text-green-700";
             }
 
             return (
               <div 
                 key={day.toString()} 
                 onClick={() => !isPast && onDateClick(day)}
-                className={`flex flex-col items-center justify-center h-14 cursor-pointer transition-colors ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+                className={`flex flex-col items-center justify-center h-14 cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
               >
+                {holiday && !isPast && (
+                  <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
+                    {format(day, 'dd MMM')} <br/>
+                    <span className="font-bold text-yellow-300">{holiday.name}</span>
+                  </div>
+                )}
+                
                 <span className={`text-sm ${textClass}`}>{dateNum}</span>
                 {!isPast && (
-                  <span className={`text-[9px] font-bold mt-1 ${priceClass}`}>
-                    {dynamicPrice ? `₹${Math.round(dynamicPrice).toLocaleString('en-IN')}` : (loadingPrices ? '...' : '')}
-                  </span>
+                  <div className="flex flex-col items-center mt-1 leading-none">
+                    {hasKnownPrice ? (
+                      <span className={`text-[9px] font-bold ${priceClass}`}>
+                        {Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
+                      </span>
+                    ) : loadingPrices ? (
+                      <span className={`text-[9px] font-bold ${priceClass}`}>...</span>
+                    ) : null}
+                    
+                    {holiday && (
+                      <span className="text-[7px] font-bold truncate text-center w-[90%] mt-[1px]" style={{ color: holiday.color }}>
+                        {holiday.name.substring(0, 5)}...
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             );

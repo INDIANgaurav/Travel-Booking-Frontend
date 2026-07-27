@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import { ChevronDown, Check, Plane, Building2, User, ArrowLeft } from 'lucide-react';
@@ -533,7 +534,9 @@ export default function FlightSearchResults() {
                           <p className={`font-bold text-[13px] ${isSelected ? 'text-blue-600' : 'text-gray-900'}`}>
                             {d.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
                           </p>
-                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>₹ 6,662</p>
+                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
+                            {isSelected && cheapestFlight ? `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')}` : '--'}
+                          </p>
                         </div>
                       );
                     })}
@@ -691,10 +694,13 @@ export default function FlightSearchResults() {
             {(
               (tripType === 'Round Trip' && selectedOutbound && selectedReturn) ||
               (tripType === 'One Way' && selectedOutbound)
-            ) && (
-              <div className="sticky bottom-0 bg-[#001736] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] z-50 rounded-t-lg flex items-center justify-between mt-4">
-                
-                <div className="flex gap-4 flex-1 pl-2">
+            ) ? createPortal(
+              <div className="fixed bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
+                <div className="max-w-[1200px] mx-auto flex gap-6">
+                  <div className="w-[240px] shrink-0 hidden md:block"></div>
+                  <div className="flex-1 bg-[#001736] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] rounded-t-lg flex items-center justify-between pointer-events-auto border-t border-blue-900">
+                    
+                    <div className="flex gap-4 flex-1 pl-2">
                   
                   <div className={`flex-1 flex gap-4 ${tripType === 'Round Trip' ? 'pr-6 border-r border-gray-700' : ''}`}>
                     <div>
@@ -761,12 +767,14 @@ export default function FlightSearchResults() {
                     <button 
                       className="bg-white hover:bg-gray-100 text-blue-500 font-bold py-1.5 px-6 rounded text-sm transition"
                     >
-                      LOCK PRICE
                     </button>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>,
+          document.body
+        ) : null}
           </div>
         </div>
       )}

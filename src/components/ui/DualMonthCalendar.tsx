@@ -24,6 +24,7 @@ interface DualMonthCalendarProps {
   onClose?: () => void;
   origin?: string;
   destination?: string;
+  isOneWay?: boolean;
 }
 
 const HOLIDAYS: Record<string, { name: string; color: string }> = {
@@ -32,7 +33,7 @@ const HOLIDAYS: Record<string, { name: string; color: string }> = {
   '25-12': { name: 'Christmas', color: '#ff4f4f' },
 };
 
-export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onClose, origin, destination }: DualMonthCalendarProps) {
+export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onClose, origin, destination, isOneWay }: DualMonthCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
@@ -45,7 +46,7 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
         .then(res => {
           setPrices(res.data);
         })
-        .catch(err => console.error("Error fetching calendar prices:", err))
+        .catch(err => console.error("[DualMonthCalendar] Error fetching calendar prices:", err))
         .finally(() => setLoadingPrices(false));
     }
   }, [origin, destination]);
@@ -55,6 +56,13 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
 
   const onDateClick = (day: Date) => {
     if (isBefore(day, today)) return; // Disable past dates
+
+    if (isOneWay) {
+      onDateChange('checkIn', day);
+      onDateChange('checkOut', null as any);
+      if (onClose) setTimeout(onClose, 300);
+      return;
+    }
 
     if (!checkIn) {
       onDateChange('checkIn', day);
@@ -98,6 +106,12 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
         const holidayKey = format(day, 'dd-MM');
         const holiday = HOLIDAYS[holidayKey];
 
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const priceForDay = prices[dateStr];
+        const isAvailableUnknownPrice = priceForDay !== undefined && Number(priceForDay) === -1;
+        const hasKnownPrice = priceForDay !== undefined && Number(priceForDay) !== -1;
+        const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
+
         days.push(
           <div
             key={day.toString()}
@@ -105,10 +119,11 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
               relative flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 cursor-pointer transition-colors group/day
               ${!isSameMonth(day, monthStart) ? 'invisible' : ''}
               ${isPast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 font-bold hover:bg-gray-100'}
-              ${isSelectedCheckIn || isSelectedCheckOut ? '!bg-blue-600 !text-white rounded-md' : ''}
+              ${isSelectedCheckIn || isSelectedCheckOut ? '!bg-blue-600 !text-white rounded-md z-10' : ''}
               ${isSelectedRange ? '!bg-blue-50' : ''}
               ${isSelectedCheckIn && checkOut ? 'rounded-r-none' : ''}
               ${isSelectedCheckOut && checkIn ? 'rounded-l-none' : ''}
+              ${isAvailable && !isSelectedCheckIn && !isSelectedCheckOut ? 'bg-green-50 hover:bg-green-100 border border-green-200 rounded-md text-green-700' : ''}
             `}
             onClick={() => !isPast && onDateClick(cloneDay)}
           >
@@ -121,19 +136,23 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
               </div>
             )}
             
-            {/* Holiday Text or Price */}
+            {/* Holiday Text and Price */}
             {!isPast && isSameMonth(day, monthStart) && !isSelectedCheckIn && !isSelectedCheckOut && (
-              holiday ? (
-                <span className="text-[7px] font-bold absolute bottom-0.5 truncate w-[90%] text-center leading-none" style={{ color: holiday.color }}>
-                  {holiday.name.substring(0, 5)}...
-                </span>
-              ) : (
-                <span className="text-[8px] text-gray-500 font-medium absolute bottom-0.5 leading-none">
-                  {prices[format(day, 'yyyy-MM-dd')] 
-                    ? `₹${Math.round(prices[format(day, 'yyyy-MM-dd')])}` 
-                    : (loadingPrices ? '...' : '')}
-                </span>
-              )
+              <div className="absolute bottom-0.5 w-[90%] flex flex-col items-center justify-end leading-none">
+                {hasKnownPrice ? (
+                  <span className="text-[8px] font-medium text-gray-700">
+                    {Math.round(Number(priceForDay)).toLocaleString('en-IN')}
+                  </span>
+                ) : loadingPrices ? (
+                  <span className="text-[8px] font-medium text-gray-400">...</span>
+                ) : null}
+                
+                {holiday && (
+                  <span className="text-[7px] font-bold truncate text-center w-full mt-[1px]" style={{ color: holiday.color }}>
+                    {holiday.name.substring(0, 5)}...
+                  </span>
+                )}
+              </div>
             )}
           </div>
         );
