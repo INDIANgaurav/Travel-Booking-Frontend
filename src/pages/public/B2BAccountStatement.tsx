@@ -46,7 +46,8 @@ const B2BAccountStatement: React.FC = () => {
     try {
       setLoading(true);
       const querySearch = overrideSearch !== undefined ? overrideSearch : search;
-      const res = await api.get(`/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}`);
+      // Append fromDate and toDate to the query string
+      const res = await api.get(`/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}&fromDate=${fromDate}&toDate=${toDate}`);
       setData(res.data.data);
       setTotalRecords(res.data.totalRecords);
       setTotalPages(res.data.totalPages);
