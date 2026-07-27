@@ -46,7 +46,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
   return (
     <>
       <nav 
-        className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 border-b ${navBgClass}`}
+        className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 border-b print:hidden ${navBgClass}`}
       >
         <div className={`${portalMode ? 'w-full' : 'max-w-[1200px] mx-auto'} px-6 flex justify-between items-center`}>
           
