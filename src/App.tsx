@@ -24,6 +24,7 @@ import HotelDetailsPage from './pages/public/HotelDetailsPage'
 import HotelCheckout from './pages/public/HotelCheckout'
 import HotelBookingSuccess from './pages/public/HotelBookingSuccess'
 import PendingApprovalPage from './pages/public/PendingApprovalPage'
+import FeatureComingSoonPage from './pages/public/FeatureComingSoonPage'
 import InactiveAccountPage from './pages/public/InactiveAccountPage'
 import AgentSignUpPage from './pages/public/AgentSignUpPage'
 import RetailAgentLoginPage from './pages/public/RetailAgentLoginPage'
@@ -117,6 +118,7 @@ function App() {
         <Route path="/inactive-account" element={<InactiveAccountPage />} />
 
         {/* New Agent Sign Up, Agent Login, Agent B2B Engine & Supplier Login Public Routes */}
+        <Route path="/b2b/coming-soon" element={<FeatureComingSoonPage />} />
         <Route path="/b2b/signup" element={<AgentSignUpPage />} />
         <Route path="/b2b/login" element={<RetailAgentLoginPage />} />
         <Route path="/b2b/home" element={<B2BAgentHomePage />} />

@@ -4,14 +4,27 @@ import type { RootState } from '../../store/store';
 import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import ETicketModal from '../../components/bookings/ETicketModal';
+import { Download, ChevronDown } from 'lucide-react';
 
 const B2BBookingStatus: React.FC = () => {
+  // Dynamic dates: from 30 days ago to today
+  const today = new Date();
+  const past30 = new Date();
+  past30.setDate(today.getDate() - 30);
+  
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
   const [productType, setProductType] = useState('Flight');
   const [flightType, setFlightType] = useState('ONLINE');
-  const [fromDate, setFromDate] = useState('2026-07-02');
-  const [toDate, setToDate] = useState('2026-07-24');
+  const [fromDate, setFromDate] = useState(formatDate(past30));
+  const [toDate, setToDate] = useState(formatDate(today));
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [downloadingState, setDownloadingState] = useState<{ booking: any, type: 'ticket' | 'invoice' | 'both' } | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const handleGetHistory = async () => {
     try {
@@ -21,16 +34,23 @@ const B2BBookingStatus: React.FC = () => {
           product: productType,
           status: flightType,
           fromDate,
-          toDate
+          toDate,
+          searchType: 'SEARCH BY DATE'
         }
       });
       setRecords(res.data?.data || []);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching history:', error);
+    } finally {
       setLoading(false);
     }
   };
+
+  // Auto-load history on component mount
+  React.useEffect(() => {
+    handleGetHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex-1 w-full bg-[#f8f9fc] p-6 text-[#0c1a40] min-h-screen">
@@ -147,9 +167,48 @@ const B2BBookingStatus: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 font-black">₹ {r.totalAmount?.toLocaleString('en-IN') || 0}</td>
                       <td className="px-6 py-4">
-                        <button className="text-blue-600 hover:text-blue-800 font-bold underline transition">
-                          View
-                        </button>
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => setSelectedBooking(r)}
+                            className="text-blue-600 hover:text-blue-800 font-bold underline transition"
+                          >
+                            View
+                          </button>
+                          
+                          <div className="relative">
+                            <button 
+                              onClick={() => setActiveDropdown(activeDropdown === r._id ? null : r._id)}
+                              className="flex items-center gap-1 text-gray-600 hover:text-gray-900 font-semibold transition"
+                            >
+                              <Download size={14} />
+                              Download
+                              <ChevronDown size={14} />
+                            </button>
+                            
+                            {activeDropdown === r._id && (
+                              <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 text-xs font-semibold flex flex-col">
+                                <button 
+                                  onClick={() => { setDownloadingState({ booking: r, type: 'ticket' }); setActiveDropdown(null); }}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
+                                >
+                                  E-Ticket
+                                </button>
+                                <button 
+                                  onClick={() => { setDownloadingState({ booking: r, type: 'invoice' }); setActiveDropdown(null); }}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
+                                >
+                                  Invoice
+                                </button>
+                                <button 
+                                  onClick={() => { setDownloadingState({ booking: r, type: 'both' }); setActiveDropdown(null); }}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700"
+                                >
+                                  Both
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -160,6 +219,26 @@ const B2BBookingStatus: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Visible Modal for Viewing */}
+      {selectedBooking && (
+        <ETicketModal 
+          booking={selectedBooking} 
+          onClose={() => setSelectedBooking(null)} 
+        />
+      )}
+
+      {/* Hidden Modal for Auto Downloading */}
+      {downloadingState && (
+        <div style={{ position: 'fixed', top: '-10000px', left: '-10000px', opacity: 0, pointerEvents: 'none' }}>
+          <ETicketModal 
+            booking={downloadingState.booking} 
+            onClose={() => setDownloadingState(null)} 
+            autoDownload={downloadingState.type}
+            onAutoDownloadComplete={() => setDownloadingState(null)}
+          />
+        </div>
+      )}
     </div>
   );
 };

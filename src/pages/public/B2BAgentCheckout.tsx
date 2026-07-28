@@ -5,6 +5,9 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import Dropdown from '../../components/ui/Dropdown';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/authSlice';
+
 export interface Passenger {
   type: 'ADULT' | 'CHILD' | 'INFANT';
   title: string;
@@ -22,7 +25,9 @@ const B2BAgentCheckout: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
+  const [fillMyContact, setFillMyContact] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const user = useSelector(selectCurrentUser);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showBaseFareDetails, setShowBaseFareDetails] = useState(false);
   const [showTaxesDetails, setShowTaxesDetails] = useState(false);
@@ -74,6 +79,42 @@ const B2BAgentCheckout: React.FC = () => {
       return;
     }
 
+    let ageError = '';
+    const isAgeValid = passengers.every(p => {
+      if ((p.type === 'CHILD' || p.type === 'INFANT') && p.dob) {
+        const flightDate = new Date(flight.departureTime);
+        const dobDate = new Date(p.dob);
+        let age = flightDate.getFullYear() - dobDate.getFullYear();
+        const m = flightDate.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && flightDate.getDate() < dobDate.getDate())) {
+          age--;
+        }
+
+        if (p.type === 'CHILD') {
+          if (age < 2) {
+            ageError = `Child ${p.firstName} must be at least 2 years old at time of travel.`;
+            return false;
+          }
+          if (age >= 12) {
+            ageError = `Child ${p.firstName} must be under 12 years old. Book as Adult instead.`;
+            return false;
+          }
+        }
+        if (p.type === 'INFANT') {
+          if (age >= 2) {
+            ageError = `Infant ${p.firstName} must be under 2 years old. Book as Child instead.`;
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
+    if (!isAgeValid) {
+      toast.error(ageError);
+      return;
+    }
+
     const isValid = passengers.every(p => {
       const hasName = p.title !== '' && p.firstName && p.lastName;
       if (p.type === 'CHILD' || p.type === 'INFANT') {
@@ -120,8 +161,15 @@ const B2BAgentCheckout: React.FC = () => {
           ...(flight.nexus_query && {
             nexus_query: flight.nexus_query,
             currency: 'INR',
-            total_price: flight.price
-          })
+            total_price: flight.nexus_total_price || flight.price // Send exact Nexus price back!
+          }),
+          airline: flight.airline,
+          flightNo: flight.flightNumber,
+          from: flight.origin,
+          to: flight.destination,
+          arrivalTime: flight.arrivalTime,
+          duration: flight.duration,
+          stops: flight.stops
         }
       });
       
@@ -198,13 +246,31 @@ const B2BAgentCheckout: React.FC = () => {
   const infantWithSeatCount = passengers.filter(p => p.type === 'INFANT' && p.needSeparateSeat).length;
   const infantNoSeatCount = passengers.filter(p => p.type === 'INFANT' && !p.needSeparateSeat).length;
 
-  const basePricePerPax = flight.price;
-  const taxPerFullPax = Math.round(basePricePerPax * 0.15); // 15% estimated taxes
-  const baseFarePerFullPax = basePricePerPax - taxPerFullPax;
+  let baseFarePerFullPax = 0;
+  let taxPerFullPax = 0;
+  let infantBase = 0;
+  let infantTax = 0;
 
-  const infantFlatTotal = 2000;
-  const infantTax = 0; // Flat fare, no tax on infant without seat
-  const infantBase = infantFlatTotal;
+  if (flight.nexus_query) {
+    // For Nexus, flight.price is the TOTAL fare for ALL passengers searched.
+    const fullPaxCount = adultCount + childCount + infantWithSeatCount;
+    infantBase = infantNoSeatCount > 0 ? 2000 : 0;
+    infantTax = 0;
+    
+    // Calculate what the per-passenger full fare is, subtracting infant base
+    const remainingTotal = flight.price - (infantNoSeatCount * infantBase);
+    const perPaxTotal = fullPaxCount > 0 ? remainingTotal / fullPaxCount : remainingTotal;
+    
+    taxPerFullPax = Math.round(perPaxTotal * 0.15);
+    baseFarePerFullPax = Math.round(perPaxTotal - taxPerFullPax);
+  } else {
+    // Regular flow, flight.price is PER ADULT
+    const basePricePerPax = flight.price;
+    taxPerFullPax = Math.round(basePricePerPax * 0.15);
+    baseFarePerFullPax = basePricePerPax - taxPerFullPax;
+    infantBase = 2000;
+    infantTax = 0;
+  }
 
   const totalBaseFare = 
     (adultCount * baseFarePerFullPax) + 
@@ -218,7 +284,8 @@ const B2BAgentCheckout: React.FC = () => {
     (infantWithSeatCount * taxPerFullPax) + 
     (infantNoSeatCount * infantTax);
 
-  const totalFare = totalBaseFare + taxesAndFees;
+  // For Nexus, ensure total matches exact flight.price despite any rounding
+  const totalFare = flight.nexus_query ? flight.price : totalBaseFare + taxesAndFees;
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] font-sans pb-24 text-[#0c1a40]">
@@ -398,14 +465,20 @@ const B2BAgentCheckout: React.FC = () => {
                             <Dropdown
                               value={p.title}
                               onChange={(val) => handlePassengerChange(idx, 'title', val)}
-                              options={[
-                                { value: '', label: 'Select' },
-                                { value: 'Mr', label: 'Mr' },
-                                { value: 'Ms', label: 'Ms' },
-                                { value: 'Mrs', label: 'Mrs' },
-                                { value: 'Mstr', label: 'Mstr' },
-                                { value: 'Miss', label: 'Miss' }
-                              ]}
+                              options={
+                                p.type === 'ADULT' 
+                                  ? [
+                                      { value: '', label: 'Select' },
+                                      { value: 'Mr', label: 'Mr' },
+                                      { value: 'Ms', label: 'Ms' },
+                                      { value: 'Mrs', label: 'Mrs' }
+                                    ]
+                                  : [
+                                      { value: '', label: 'Select' },
+                                      { value: 'Mstr', label: 'Mstr' },
+                                      { value: 'Miss', label: 'Miss' }
+                                    ]
+                              }
                               placeholder="Select"
                             />
                           </div>
@@ -426,7 +499,15 @@ const B2BAgentCheckout: React.FC = () => {
                           <Dropdown
                             value={p.nationality}
                             onChange={(val) => handlePassengerChange(idx, 'nationality', val)}
-                            options={[{ value: 'INDIA', label: 'INDIA' }]}
+                            options={[
+                              { value: 'INDIA', label: 'India' },
+                              { value: 'USA', label: 'United States' },
+                              { value: 'UK', label: 'United Kingdom' },
+                              { value: 'UAE', label: 'UAE' },
+                              { value: 'CANADA', label: 'Canada' },
+                              { value: 'AUSTRALIA', label: 'Australia' },
+                              { value: 'OTHER', label: 'Other' }
+                            ]}
                             placeholder="Select"
                           />
                         </div>
@@ -434,14 +515,44 @@ const B2BAgentCheckout: React.FC = () => {
                         {(p.type === 'CHILD' || p.type === 'INFANT') && (
                           <div className="relative">
                             <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Date of Birth</label>
-                            <div className={`h-[34px] w-full border ${showErrors && !p.dob ? 'border-red-500' : 'border-gray-300'} rounded bg-white relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent [&>div>div:first-child]:py-0 [&>div>div:first-child]:px-3`}>
-                              <DOBCalendar 
-                                value={p.dob || ''} 
-                                onChange={(val) => handlePassengerChange(idx, 'dob', val)} 
-                                placeholder="Select DOB"
-                              />
-                            </div>
-                            {showErrors && !p.dob && <div className="text-[9px] text-red-500 mt-1">Required</div>}
+                            {(() => {
+                              let ageErrorMsg = '';
+                              if (p.dob) {
+                                const flightDate = new Date(flight.departureTime);
+                                const dobDate = new Date(p.dob);
+                                let age = flightDate.getFullYear() - dobDate.getFullYear();
+                                const m = flightDate.getMonth() - dobDate.getMonth();
+                                if (m < 0 || (m === 0 && flightDate.getDate() < dobDate.getDate())) {
+                                  age--;
+                                }
+                                if (p.type === 'CHILD') {
+                                  if (age < 2) ageErrorMsg = 'Must be at least 2 yrs (Book as Infant)';
+                                  else if (age >= 12) ageErrorMsg = 'Must be under 12 yrs (Book as Adult)';
+                                }
+                                if (p.type === 'INFANT' && age >= 2) {
+                                  ageErrorMsg = 'Must be under 2 yrs (Book as Child)';
+                                }
+                              }
+                              
+                              const isError = (showErrors && !p.dob) || ageErrorMsg;
+
+                              return (
+                                <>
+                                  <div className={`h-[34px] w-full border ${isError ? 'border-red-500' : 'border-gray-300'} rounded bg-white relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent [&>div>div:first-child]:py-0 [&>div>div:first-child]:px-3`}>
+                                    <DOBCalendar 
+                                      value={p.dob || ''} 
+                                      onChange={(val) => handlePassengerChange(idx, 'dob', val)} 
+                                      placeholder="Select DOB"
+                                    />
+                                  </div>
+                                  {isError && (
+                                    <div className="text-[9px] text-red-500 mt-1 font-bold">
+                                      {ageErrorMsg || 'Required'}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                         
@@ -498,7 +609,22 @@ const B2BAgentCheckout: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                   <p className="text-[10px] text-gray-500">(Your ticket and flight info will be sent here)</p>
                   <label className="flex items-center gap-2 text-[10px] text-gray-600 cursor-pointer">
-                    <input type="checkbox" className="rounded" /> Fill My Contact
+                    <input 
+                      type="checkbox" 
+                      className="rounded" 
+                      checked={fillMyContact}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFillMyContact(checked);
+                        if (checked && user) {
+                          setMobile(user.phone || '');
+                          setEmail(user.email || '');
+                        } else {
+                          setMobile('');
+                          setEmail('');
+                        }
+                      }}
+                    /> Fill My Contact
                   </label>
                 </div>
 

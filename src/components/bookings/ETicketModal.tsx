@@ -1,20 +1,70 @@
-import React, { useRef } from 'react';
-import { X, Printer } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
+import React, { useRef, useState, useEffect } from 'react';
+import { X, Download, Plane } from 'lucide-react';
 import Barcode from 'react-barcode';
+import * as htmlToImage from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import toast from 'react-hot-toast';
 
 interface ETicketModalProps {
   booking: any;
   onClose: () => void;
+  autoDownload?: 'ticket' | 'invoice' | 'both' | null;
+  onAutoDownloadComplete?: () => void;
 }
 
-export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
-  const componentRef = useRef(null);
+export default function ETicketModal({ booking, onClose, autoDownload, onAutoDownloadComplete }: ETicketModalProps) {
+  const componentRef = useRef<HTMLDivElement>(null);
+  const [viewType, setViewType] = useState<'ticket' | 'invoice'>('ticket');
   
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: `Ticket_${booking?.bookingId}`,
-  });
+  const handleDownloadPDF = async (type: 'ticket' | 'invoice' = viewType) => {
+    const element = componentRef.current;
+    if (!element) return;
+    
+    const toastId = toast.loading(`Generating ${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF...`);
+    
+    try {
+      const canvas = await htmlToImage.toCanvas(element, { pixelRatio: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${type === 'ticket' ? 'Ticket' : 'Invoice'}_${booking?.bookingId}.pdf`);
+      
+      toast.success(`${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF downloaded successfully!`, { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF', { id: toastId });
+    }
+  };
+
+  const hasAutoDownloaded = useRef(false);
+  
+  useEffect(() => {
+    if (!autoDownload || hasAutoDownloaded.current) return;
+    
+    const runAutoDownload = async () => {
+      hasAutoDownloaded.current = true;
+      if (autoDownload === 'ticket' || autoDownload === 'both') {
+        setViewType('ticket');
+        await new Promise(res => setTimeout(res, 500)); // wait for render
+        await handleDownloadPDF('ticket');
+      }
+      
+      if (autoDownload === 'invoice' || autoDownload === 'both') {
+        setViewType('invoice');
+        await new Promise(res => setTimeout(res, 500)); // wait for render
+        await handleDownloadPDF('invoice');
+      }
+      
+      if (onAutoDownloadComplete) {
+        onAutoDownloadComplete();
+      }
+    };
+    
+    runAutoDownload();
+  }, [autoDownload, booking, onAutoDownloadComplete]);
 
   if (!booking) return null;
 
@@ -22,21 +72,32 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
     ? booking.details.passengers 
     : [{ name: booking.user?.name || 'PASSENGER', type: 'Adult' }];
     
-  const flightNo = `IX-1617`; // mock or from booking.details
-  const airline = booking.details?.airline || 'Air India Express';
-  const pnr = booking.details?.pnr || booking.bookingId?.slice(-6).toUpperCase() || 'G347MF';
+  const nexusData = booking.nexusData || booking.details?.nexus_response?._data;
+  
+  const flight = nexusData?.booking_items?.[0]?.flight;
+  const leg = flight?.legs?.[0];
+  
+  const flightNo = leg ? `${leg.airline} ${leg.flight_number}` : booking.details?.flightNo || `IX-1617`;
+  const airline = leg?.airline_name || booking.details?.airline || 'Air India Express';
+  const cabinClass = flight?.cabin_class?.toUpperCase() || 'ECONOMY';
+
+  const pnr = nexusData?.booking_reference || booking.details?.pnr || booking.bookingId;
+  const displayPnr = pnr?.length > 8 ? pnr.substring(0, 6).toUpperCase() : pnr;
+  const agentRef = nexusData?.agent_reference || booking.bookingId || 'N/A';
   
   const getAirportCode = (city: string) => city ? city.substring(0, 3).toUpperCase() : 'XXX';
-  const originCode = getAirportCode(booking.details?.from);
-  const destCode = getAirportCode(booking.details?.to);
-  const travelDate = booking.details?.date ? new Date(booking.details.date) : new Date(booking.createdAt);
+  const originCode = leg?.origin || getAirportCode(booking.details?.from);
+  const destCode = leg?.destination || getAirportCode(booking.details?.to);
+  const travelDate = nexusData?.travel_date ? new Date(nexusData.travel_date) : (booking.details?.date ? new Date(booking.details.date) : new Date(booking.createdAt));
   const dateStr = travelDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const depTime = '13:50'; // Mock based on screenshot
-  const arrTime = '15:50'; // Mock
+  
+  const depTime = leg?.departure_time ? new Date(leg.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : (booking.details?.date ? new Date(booking.details.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '13:50');
+  const arrTime = leg?.arrival_time ? new Date(leg.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : (booking.details?.arrivalTime ? new Date(booking.details.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '15:50');
+  
+  const handBaggage = flight?.cabin_baggage || '7kg (1 piece)';
+  const checkinBaggage = flight?.checkin_baggage || '15kg (1 piece)';
   
   const issueDate = new Date(booking.createdAt);
-
-  const agencyName = booking.user?.role === 'TRAVEL_AGENT' ? (booking.user?.name?.toUpperCase() || 'TRAVEL AGENT') : 'TRIPPECHALO INDIA PVT LTD';
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center py-6 px-4 z-50 overflow-hidden">
@@ -53,22 +114,123 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-100 flex justify-center w-full">
           
           {/* Printable Area */}
-          <div ref={componentRef} className="bg-white w-full max-w-[820px] shadow-sm border border-gray-300 p-6 md:p-8 text-black font-sans print:shadow-none print:border-none box-border my-auto">
+          <div ref={componentRef} className="bg-white w-full max-w-[820px] shadow-sm border border-gray-300 p-6 md:p-8 text-black font-sans box-border my-auto">
             
-            <style>{`
-              @media print {
-                @page { size: auto; margin: 10mm; }
-                * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-              }
-            `}</style>
-
-            {/* Ticket Header */}
+            {/* Ticket/Invoice Header */}
             <div className="text-center mb-6">
-              <h1 className="text-lg font-bold tracking-widest uppercase">TICKET CONFIRMATION</h1>
+              <h1 className="text-lg font-bold tracking-widest uppercase">
+                {viewType === 'ticket' ? 'E-Ticket / Reservation Voucher' : 'TAX INVOICE'}
+              </h1>
               <div className="border-b border-gray-300 w-full mt-2"></div>
             </div>
 
-            <div className="flex justify-between items-start mb-6 text-[11px] leading-relaxed gap-4">
+            {viewType === 'invoice' ? (
+              <div className="w-full text-black">
+                <div className="grid grid-cols-2 gap-4 mb-4 text-[13px]">
+                  <div>
+                    <p className="font-bold text-lg mb-6 tracking-widest uppercase">{airline}</p>
+                    
+                    <p className="text-gray-500 mb-0.5">Agency Booking ID</p>
+                    <p className="font-bold">{agentRef}</p>
+      
+                    <p className="text-gray-500 mt-4 mb-0.5">Booking Reference</p>
+                    <p className="font-bold">{displayPnr}</p>
+                    
+                    <p className="text-gray-500 mt-4 mb-0.5">Issue Date</p>
+                    <p className="font-bold">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB')}</p>
+                  </div>
+                  <div className="flex justify-end items-start pr-4">
+                    <div className="w-32 h-32 border border-gray-200 rounded p-1">
+                      <Barcode value={displayPnr} width={1.5} height={40} displayValue={false} />
+                      <div className="text-center text-xs mt-1 font-bold">{displayPnr}</div>
+                    </div>
+                  </div>
+                </div>
+      
+                <div className="border-t border-dashed border-gray-300 my-6"></div>
+      
+                {/* Customer & Booked By */}
+                <div className="flex justify-between text-[11px] mb-6 pr-16">
+                  <div>
+                    <p className="text-gray-500 mb-0.5">Customer Name</p>
+                    <p className="font-bold text-[13px]">{passengers[0]?.name || passengers[0]?.firstName || booking.user?.name}</p>
+                    <p className="text-gray-500 mt-2 mb-0.5">Booked By</p>
+                    <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
+                  </div>
+                  <div className="text-right text-[11px] text-gray-700">
+                    <p className="font-bold text-gray-900 mb-1 uppercase">TRIPPECHALO INDIA PRIVATE LIMITED</p>
+                    <p>First Floor, D 42, Greater Noida Expressway</p>
+                    <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
+                    <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
+                    <p>Phone: +91 95559 34205</p>
+                    <p>Email: trippechaloindia@gmail.com</p>
+                  </div>
+                </div>
+
+                {/* Flight Table */}
+                <div className="border border-black rounded-[4px] overflow-hidden mb-8">
+                  <div className="flex justify-between items-center p-3 border-b border-black bg-white">
+                    <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({dateStr.toUpperCase()})</p>
+                    <p className="text-[12px] text-gray-700">{flightNo}</p>
+                  </div>
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-white border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
+                        <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
+                        <th className="px-3 py-2 font-normal text-gray-600 w-1/6">Seat No.</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {passengers.map((pax: any, i: number) => {
+                        const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
+                        const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                        return (
+                          <tr key={i} className="border-b border-gray-100 last:border-b-0">
+                            <td className="px-3 py-3 font-bold text-[13px] uppercase">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
+                            <td className="px-3 py-3 text-gray-600">{tktNo}</td>
+                            <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Payment Details */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-blue-600 mb-2 uppercase">Payment Details</h3>
+                  <table className="w-full text-left text-[11px] border border-gray-300">
+                    <thead className="bg-gray-100 border-b border-gray-300">
+                      <tr>
+                        <th className="p-2 text-gray-700">Description</th>
+                        <th className="p-2 text-gray-700 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-200">
+                        <td className="p-2">Base Fare</td>
+                        <td className="p-2 text-right">₹ {(booking.totalAmount * 0.6).toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="p-2">Taxes and Fees</td>
+                        <td className="p-2 text-right">₹ {(booking.totalAmount * 0.4).toFixed(2)}</td>
+                      </tr>
+                      <tr className="bg-gray-50 font-bold">
+                        <td className="p-2 text-lg">Total Gross Fare</td>
+                        <td className="p-2 text-right text-lg text-blue-700">₹ {booking.totalAmount.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="text-[10px] text-gray-500 mt-8 pt-4 border-t border-gray-200 text-center">
+                  <p>This is a computer generated invoice and does not require a physical signature.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-start mb-6 text-[11px] leading-relaxed gap-4">
               {/* Left: Agency Details */}
               <div className="w-1/3">
                 <p className="font-bold text-[13px] uppercase mb-1">TRIPPECHALO INDIA PRIVATE LIMITED</p>
@@ -82,18 +244,15 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
               {/* Center: Airline & PNR */}
               <div className="w-1/3 flex flex-col items-center justify-center pt-2">
                 <p className="font-semibold text-gray-800">{airline}</p>
-                <div className="text-orange-500 font-bold text-4xl my-1">X</div>
-                <p className="font-black text-2xl tracking-widest">{pnr}</p>
-                <p className="text-gray-600">Airline PNR</p>
+                <div className="text-blue-500 my-1"><Plane size={32} /></div>
+                <h1 className="text-3xl font-black tracking-wider text-black mt-2">{displayPnr}</h1>
+                <p className="text-[12px] text-gray-500 mt-1">Booking Reference</p>
               </div>
 
               {/* Right: Meta & Barcode */}
               <div className="w-1/3 text-right">
-                <p>Reference Number: <span className="font-bold">{booking.bookingId}</span></p>
+                <p>Agency Booking ID: <span className="font-bold">{agentRef}</span></p>
                 <p>Issued On: <span className="font-bold">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB')}</span></p>
-                <div className="mt-2 flex justify-end">
-                  <Barcode value={pnr} height={40} width={1.5} displayValue={false} margin={0} background="transparent" />
-                </div>
               </div>
             </div>
 
@@ -119,10 +278,10 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
                   <tr>
                     <td className="p-3 align-top">
                       <div className="flex gap-2 items-start">
-                        <div className="text-orange-500 font-bold text-xl leading-none">X</div>
+                        <div className="text-blue-500 font-bold text-xl leading-none"><Plane size={18} /></div>
                         <div>
                           <p className="font-bold">{flightNo}</p>
-                          <p className="font-bold">ECONOMY</p>
+                          <p className="font-bold">{cabinClass}</p>
                           <p className="text-gray-600">Aircraft Type-32Y</p>
                           <p className="text-gray-600">Refundable</p>
                         </div>
@@ -131,17 +290,17 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
                     <td className="p-3 align-top">
                       <p className="font-bold uppercase text-[12px]">{booking.details?.from} ({originCode})</p>
                       <p className="font-bold">{depTime} <span className="font-normal text-gray-600">{dateStr}</span></p>
-                      <p className="text-gray-600">Terminal 1</p>
+                      <p className="text-gray-600">{leg?.origin_terminal ? `Terminal ${leg.origin_terminal}` : ''}</p>
                     </td>
                     <td className="p-3 align-top">
                       <p className="font-bold uppercase text-[12px]">{booking.details?.to} ({destCode})</p>
                       <p className="font-bold">{arrTime} <span className="font-normal text-gray-600">{dateStr}</span></p>
                     </td>
                     <td className="p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
-                      02:00 / Non-Stop
+                      {flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'} / {flight?.legs?.length > 1 ? `${flight.legs.length - 1} Stop(s)` : 'Non-Stop'}
                     </td>
                     <td className="p-3 align-top border-l border-gray-200 font-medium">
-                      Confirmed
+                      {booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}
                     </td>
                   </tr>
                 </tbody>
@@ -157,24 +316,22 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
               <table className="w-full text-left text-[11px] table-fixed">
                 <thead className="border-b border-gray-200 bg-white">
                   <tr>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-1/4 border-r border-gray-200">Ticket No.</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-1/2 border-r border-gray-200">Passenger / Baggage Details</th>
+                    <th className="py-2 px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>
+                    <th className="py-2 px-3 font-normal text-gray-500 w-[55%] border-r border-gray-200">Passenger / Baggage Details</th>
                     <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] border-r border-gray-200">Seat</th>
                     <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {passengers.map((pax: any, i: number) => {
-                    const tktNo = `${pnr}${i}`;
+                    const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
+                    const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
                     const seatNo = booking.details?.seats?.[i] || pax.seat || 'Unassigned';
                     const paxType = pax.type || pax.passengerType || (pax.name?.toLowerCase().includes('child') ? 'Child' : pax.name?.toLowerCase().includes('infant') ? 'Infant' : 'Adult');
                     return (
                       <tr key={i}>
                         <td className="py-3 px-3 align-top border-r border-gray-200 overflow-hidden">
                           <p className="mb-1 font-bold">{tktNo}</p>
-                          <div className="max-w-full overflow-hidden">
-                            <Barcode value={tktNo} height={20} width={0.8} displayValue={false} margin={0} background="transparent" />
-                          </div>
                         </td>
                         <td className="py-3 px-3 align-top border-r border-gray-200">
                           <p className="font-bold text-[12px] uppercase">
@@ -199,32 +356,10 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
                 </tbody>
               </table>
             </div>
-
-            {/* Payment Details */}
-            <div className="border-t-2 border-gray-300">
-              <div className="bg-gray-200 px-3 py-1.5 text-[10px] font-bold uppercase">
-                Payment Details
-              </div>
-              <table className="w-full text-[11px] text-gray-700 bg-white">
-                <tbody>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1.5 px-2">Base Fare</td>
-                    <td className="py-1.5 px-2 text-right">₹ {(booking.totalAmount * 0.6).toFixed(2)}</td>
-                  </tr>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1.5 px-2">Taxes and Fees</td>
-                    <td className="py-1.5 px-2 text-right">₹ {(booking.totalAmount * 0.4).toFixed(2)}</td>
-                  </tr>
-                  <tr className="bg-gray-50 font-bold text-gray-900 border-t-2 border-gray-200">
-                    <td className="py-1.5 px-2">Gross Fare</td>
-                    <td className="py-1.5 px-2 text-right">₹ {booking.totalAmount.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
             {/* End of Content Box */}
             </div>
+            </>
+            )}
 
             <div className="text-[10px] text-gray-500 mt-4 text-center">
               <p className="font-bold mb-1">IMPORTANT INFORMATION</p>
@@ -237,18 +372,25 @@ export default function ETicketModal({ booking, onClose }: ETicketModalProps) {
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="bg-white px-6 py-4 rounded-b-lg border-t border-gray-200 flex justify-between shrink-0 print:hidden">
+        <div className="bg-gray-100 px-6 py-4 rounded-b-lg flex justify-end gap-3 shrink-0 print:hidden">
           <button 
-            onClick={(e) => { e.preventDefault(); onClose(); }}
-            className="bg-[#0b1031] text-white px-8 py-2 rounded font-bold shadow-md hover:bg-[#1a235c] transition"
+            onClick={(e) => { e.preventDefault(); setViewType(viewType === 'ticket' ? 'invoice' : 'ticket'); }}
+            className="px-6 py-2.5 rounded-lg font-medium text-blue-600 bg-white border border-blue-600 hover:bg-blue-50 transition mr-auto"
           >
-            Back
+            {viewType === 'ticket' ? 'View Invoice' : 'View Ticket'}
           </button>
           <button 
-            onClick={(e) => { e.preventDefault(); handlePrint(); }}
-            className="bg-[#0b1031] text-white px-8 py-2 rounded font-bold shadow-md hover:bg-[#1a235c] transition flex items-center gap-2"
+            onClick={(e) => { e.preventDefault(); onClose(); }}
+            className="px-6 py-2.5 rounded-lg font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition"
           >
-            Print
+            Cancel
+          </button>
+          <button 
+            onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }}
+            className="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <Download size={18} />
+            Download {viewType === 'ticket' ? 'Ticket' : 'Invoice'}
           </button>
         </div>
       </div>

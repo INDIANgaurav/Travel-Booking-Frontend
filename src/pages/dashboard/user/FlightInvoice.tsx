@@ -53,16 +53,23 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
     ? booking.details.passengers 
     : [{ name: booking.user?.name || 'PASSENGER' }];
     
-  const flightNo = `FL-${Math.floor(Math.random() * 900) + 100}`;
-  const gate = `D${Math.floor(Math.random() * 40) + 1}`;
+  const nexusData = booking.details?.nexus_response?._data;
+  const flight = nexusData?.booking_items?.[0]?.flight;
+  const leg = flight?.legs?.[0];
+  
+  const flightNo = leg ? `${leg.airline} ${leg.flight_number}` : `FL-${Math.floor(Math.random() * 900) + 100}`;
+  const airlineName = booking.details?.airline || leg?.airline || 'JAPCGH';
   
   // Create a 3-letter code from city name (mock logic)
   const getAirportCode = (city: string) => city ? city.substring(0, 3).toUpperCase() : 'XXX';
-  const originCode = booking.type === 'FLIGHT' ? getAirportCode(booking.details?.from) : '';
-  const destCode = booking.type === 'FLIGHT' ? getAirportCode(booking.details?.to) : '';
+  const originCode = booking.type === 'FLIGHT' ? (leg?.origin || getAirportCode(booking.details?.from)) : '';
+  const destCode = booking.type === 'FLIGHT' ? (leg?.destination || getAirportCode(booking.details?.to)) : '';
   const dateStr = new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const depTime = booking.details?.date ? new Date(booking.details.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '19:30';
-  const pnr = booking.details?.pnr || booking.bookingId;
+  const travelDateStr = nexusData?.travel_date ? new Date(nexusData.travel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : dateStr;
+  
+  const pnr = nexusData?.booking_reference || booking.details?.pnr || booking.bookingId;
+  const displayPnr = pnr?.length > 8 ? pnr.substring(0, 6).toUpperCase() : pnr;
+  const agentRef = nexusData?.agent_reference || booking.bookingId;
 
   const handleWebCheckIn = () => {
     toast.success('Redirecting to Airline Web Check-in portal...');
@@ -185,17 +192,20 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
         <div className="w-full max-w-4xl bg-white p-8 shadow-lg print:shadow-none print:p-0 rounded-sm text-black">
           <div className="grid grid-cols-2 gap-4 mb-4 text-[13px]">
             <div>
-              <p className="font-bold text-lg mb-6 tracking-widest">{booking.details?.airline ? booking.details.airline.substring(0, 6).toUpperCase() : 'JAPCGH'}</p>
+              <p className="font-bold text-lg mb-6 tracking-widest">{airlineName}</p>
               
-              <p className="text-gray-500 mb-0.5">System ID</p>
-              <p className="font-bold">{booking.bookingId}</p>
+              <p className="text-gray-500 mb-0.5">Agency Booking ID</p>
+              <p className="font-bold">{agentRef}</p>
+
+              <p className="text-gray-500 mt-4 mb-0.5">Booking Reference</p>
+              <p className="font-bold">{displayPnr}</p>
               
               <p className="text-gray-500 mt-4 mb-0.5">Issue Date</p>
               <p className="font-bold">{dateStr}</p>
             </div>
             <div className="flex justify-end items-start pr-4">
-              <div className="w-32 h-32">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}`} alt="QR" className="w-full h-full mix-blend-multiply" />
+              <div className="w-32 h-32 border border-gray-200 rounded p-1">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(displayPnr)}`} alt="QR" className="w-full h-full mix-blend-multiply" />
               </div>
             </div>
           </div>
@@ -223,27 +233,29 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
           {/* Flight Table */}
           <div className="border border-black rounded-[4px] overflow-hidden mb-8">
             <div className="flex justify-between items-center p-3 border-b border-black bg-white">
-              <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({booking.date ? new Date(booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase() : dateStr.toUpperCase()})</p>
+              <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({travelDateStr.toUpperCase()})</p>
               <p className="text-[12px] text-gray-700">{flightNo}</p>
             </div>
             <table className="w-full text-left text-[11px]">
               <thead>
                 <tr>
                   <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
-                  <th className="px-3 py-2 font-normal text-gray-600 w-1/4">Ticket No.</th>
                   <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
                   <th className="px-3 py-2 font-normal text-gray-600 w-1/6">Seat No.</th>
                 </tr>
               </thead>
               <tbody>
-                {passengers.map((pax: any, i: number) => (
-                  <tr key={i}>
-                    <td className="px-3 py-3 font-bold text-[13px]">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
-                    <td className="px-3 py-3 text-gray-600">N5U7MC</td>
-                    <td className="px-3 py-3 text-gray-600">N5U7MC</td>
-                    <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
-                  </tr>
-                ))}
+                {passengers.map((pax: any, i: number) => {
+                  const paxConfirmation = nexusData?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
+                  const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                  return (
+                    <tr key={i}>
+                      <td className="px-3 py-3 font-bold text-[13px]">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
+                      <td className="px-3 py-3 text-gray-600">{tktNo}</td>
+                      <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

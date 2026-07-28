@@ -7,6 +7,7 @@ import { ChevronDown, Check, Plane, Users, ArrowRightLeft, Calendar, FileText, D
 import Dropdown from '../../components/ui/Dropdown';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
+import TravellerPicker from '../../components/common/TravellerPicker';
 import api from '../../services/api';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -173,6 +174,7 @@ const B2BAgentHomePage: React.FC = () => {
   const [infants, setInfants] = useState(0);
   const [cabinClass, setCabinClass] = useState('Economy');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   
   // Special Fares
   const [specialFare, setSpecialFare] = useState('EXTRA SAVINGS');
@@ -291,28 +293,28 @@ const B2BAgentHomePage: React.FC = () => {
               <span>Flight</span>
             </div>
 
-            <div className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
               <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
                 <Building2 size={16} />
               </div>
               <span>Hotel & Villas</span>
             </div>
 
-            <div className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
               <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
                 <ShieldCheck size={16} />
               </div>
               <span>Insurance</span>
             </div>
 
-            <div className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
               <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
                 <CreditCard size={16} />
               </div>
               <span>Visa</span>
             </div>
 
-            <div className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
               <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
                 <Compass size={16} />
               </div>
@@ -493,17 +495,17 @@ const B2BAgentHomePage: React.FC = () => {
             </div>
 
             {/* Travellers & Class */}
-            <div className="flex-[1.2] flex items-center gap-3 px-6 h-full">
+            <div 
+              className="flex-[1.2] flex items-center gap-3 px-6 h-full cursor-pointer hover:bg-gray-50"
+              onClick={() => setIsTravellerPickerOpen(true)}
+            >
               <Users size={18} className="text-[#0b1031]" />
-              <Dropdown
-                value={cabinClass}
-                onChange={setCabinClass}
-                options={[
-                  { value: 'Economy', label: '1 PAX, ECONOMY' },
-                  { value: 'Premium Economy', label: '2 PAX, PREMIUM' },
-                  { value: 'Business', label: '1 PAX, BUSINESS' }
-                ]}
-              />
+              <div className="flex-1">
+                <div className="text-[13px] text-gray-700 font-medium">
+                  {adults + children + infants} PAX, {cabinClass.split('/')[0]}
+                </div>
+              </div>
+              <ChevronDown size={14} className="text-gray-400" />
             </div>
 
             {/* Search Button */}
@@ -533,6 +535,22 @@ const B2BAgentHomePage: React.FC = () => {
                   origin={from}
                   destination={to}
                   isOneWay={tripType !== 'Return'}
+                />
+              </div>
+            )}
+
+            {/* Traveller Popover */}
+            {isTravellerPickerOpen && (
+              <div className="absolute top-[80px] right-[5%] z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <TravellerPicker 
+                  adults={adults} 
+                  children={children} 
+                  infants={infants} 
+                  cabinClass={cabinClass}
+                  onChange={(a, c, i, cb) => {
+                    setAdults(a); setChildren(c); setInfants(i); setCabinClass(cb);
+                  }}
+                  onClose={() => setIsTravellerPickerOpen(false)} 
                 />
               </div>
             )}

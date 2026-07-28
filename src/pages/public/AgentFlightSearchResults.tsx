@@ -754,7 +754,7 @@ export default function AgentFlightSearchResults(props: any) {
                          </button>
 
                          <button 
-                           onClick={() => { setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: flight, fareType: 'INSTANT FARE' } }) }} 
+                           onClick={() => { setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: flight, fareType: 'INSTANT FARE', adults, children, infants } }) }} 
                            className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold px-6 py-1.5 rounded-full text-xs transition shadow-sm"
                          >
                            Book

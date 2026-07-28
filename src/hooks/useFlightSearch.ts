@@ -102,7 +102,7 @@ export function useFlightSearch() {
       const qInfants = useUrlParams ? parseInt(searchParams.get('infants') || '0') : infants;
       const qPassengers = qAdults + qChildren + qInfants;
 
-      let baseParams = `cabinClass=${encodeURIComponent(qCabinClass)}&passengers=${qPassengers}`;
+      let baseParams = `cabinClass=${encodeURIComponent(qCabinClass)}&passengers=${qPassengers}&adults=${qAdults}&children=${qChildren}&infants=${qInfants}`;
       if (nonStopFilter) baseParams += `&stops=0`;
       if (morningFilter) baseParams += `&morningDeparture=true`;
 
