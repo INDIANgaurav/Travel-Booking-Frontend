@@ -137,6 +137,16 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
                   </div>
                 </Link>
               </>
+            ) : user?.role === 'B2B_AGENT' || user?.role === 'SUPPLIER_AGENT' ? (
+              <>
+                <Link to="/b2b/home" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
+                  <Briefcase size={20} />
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold">B2B Dashboard</span>
+                    <span className="text-[10px] opacity-70">Manage your business</span>
+                  </div>
+                </Link>
+              </>
             ) : (
               <>
                 {/* List Your Property */}
