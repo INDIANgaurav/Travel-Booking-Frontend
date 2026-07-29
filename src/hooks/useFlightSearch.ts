@@ -18,6 +18,13 @@ export interface Flight {
   durationMinutes: number;
   price: number;
   stops: number;
+  adultPrice?: number;
+  childPrice?: number;
+  infantPrice?: number;
+  nexus_total_price?: number;
+  nexus_query?: any;
+  isSeriesFare?: boolean;
+  agentCommission?: number;
 }
 
 export const CITIES: Record<string, string> = {
