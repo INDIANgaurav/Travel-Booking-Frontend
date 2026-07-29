@@ -68,7 +68,7 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
   const travelDateStr = nexusData?.travel_date ? new Date(nexusData.travel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : dateStr;
   
   const pnr = nexusData?.booking_reference || booking.details?.pnr || booking.bookingId;
-  const displayPnr = pnr?.length > 8 ? pnr.substring(0, 6).toUpperCase() : pnr;
+  const displayPnr = pnr ? pnr.toUpperCase() : 'N/A';
   const agentRef = nexusData?.agent_reference || booking.bookingId;
 
   const handleWebCheckIn = () => {

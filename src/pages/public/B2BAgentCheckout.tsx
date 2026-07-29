@@ -16,6 +16,8 @@ export interface Passenger {
   nationality: string;
   dob?: string;
   needSeparateSeat?: boolean;
+  passportNumber?: string;
+  passportExpiry?: string;
 }
 
 const B2BAgentCheckout: React.FC = () => {
@@ -56,11 +58,15 @@ const B2BAgentCheckout: React.FC = () => {
   const childrenCount = location.state?.children || 0;
   const infants = location.state?.infants || 0;
 
+  const requireDob = flight?.inputRequirements?.dob?.required;
+  // For International flights, Nexus requires DOB. We'll use this to also ask for Passport.
+  const requirePassport = flight?.inputRequirements?.passport?.required || requireDob;
+
   const [passengers, setPassengers] = useState<Passenger[]>(() => {
     const p: Passenger[] = [];
-    for (let i = 0; i < adults; i++) p.push({ type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'INDIA' });
-    for (let i = 0; i < childrenCount; i++) p.push({ type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '' });
-    for (let i = 0; i < infants; i++) p.push({ type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '', needSeparateSeat: false });
+    for (let i = 0; i < adults; i++) p.push({ type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'IN' });
+    for (let i = 0; i < childrenCount; i++) p.push({ type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'IN', dob: '' });
+    for (let i = 0; i < infants; i++) p.push({ type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'IN', dob: '', needSeparateSeat: false });
     return p;
   });
 
@@ -100,11 +106,10 @@ const B2BAgentCheckout: React.FC = () => {
             return false;
           }
         }
-        if (p.type === 'INFANT') {
-          if (age >= 2) {
-            ageError = `Infant ${p.firstName} must be under 2 years old. Book as Child instead.`;
-            return false;
-          }
+        
+        if (p.type === 'INFANT' && age >= 2) {
+          ageError = `Infant ${p.firstName} must be under 2 years old at time of travel.`;
+          return false;
         }
       }
       return true;
@@ -117,10 +122,11 @@ const B2BAgentCheckout: React.FC = () => {
 
     const isValid = passengers.every(p => {
       const hasName = p.title !== '' && p.firstName && p.lastName;
-      if (p.type === 'CHILD' || p.type === 'INFANT') {
-        return hasName && p.dob;
-      }
-      return hasName;
+      
+      const dobValid = (p.type === 'CHILD' || p.type === 'INFANT' || requireDob) ? !!p.dob : true;
+      const passportValid = requirePassport ? (!!p.passportNumber && !!p.passportExpiry) : true;
+
+      return hasName && dobValid && passportValid;
     }) && mobile.length === 10 && email.includes('@');
 
     if (!isValid) {
@@ -155,6 +161,9 @@ const B2BAgentCheckout: React.FC = () => {
             title: p.title,
             gender: p.title === 'Mr' || p.title === 'Mstr' ? 'Male' : 'Female',
             dob: p.dob,
+            passportNum: p.passportNumber,
+            passportExpiry: p.passportExpiry,
+            nationality: p.nationality,
             needsSeat: p.needSeparateSeat
           })),
           contactDetails: { email, phone: mobile },
@@ -246,46 +255,59 @@ const B2BAgentCheckout: React.FC = () => {
   const infantWithSeatCount = passengers.filter(p => p.type === 'INFANT' && p.needSeparateSeat).length;
   const infantNoSeatCount = passengers.filter(p => p.type === 'INFANT' && !p.needSeparateSeat).length;
 
-  let baseFarePerFullPax = 0;
-  let taxPerFullPax = 0;
+  let adultBase = 0;
+  let adultTax = 0;
+  let childBase = 0;
+  let childTax = 0;
   let infantBase = 0;
   let infantTax = 0;
 
-  if (flight.nexus_query) {
-    // For Nexus, flight.price is the TOTAL fare for ALL passengers searched.
+  if (flight.nexus_query && flight.adultPrice !== undefined) {
+    // Exact dynamic pricing from API
+    adultTax = Math.round(flight.adultPrice * 0.15);
+    adultBase = flight.adultPrice - adultTax;
+    
+    const cPrice = flight.childPrice !== undefined ? flight.childPrice : flight.adultPrice;
+    childTax = Math.round(cPrice * 0.15);
+    childBase = cPrice - childTax;
+
+    const iPrice = flight.infantPrice !== undefined ? flight.infantPrice : 2000;
+    infantTax = 0;
+    infantBase = iPrice;
+  } else if (flight.nexus_query) {
+    // Fallback logic for Nexus flights without explicit split
     const fullPaxCount = adultCount + childCount + infantWithSeatCount;
     infantBase = infantNoSeatCount > 0 ? 2000 : 0;
     infantTax = 0;
     
-    // Calculate what the per-passenger full fare is, subtracting infant base
     const remainingTotal = flight.price - (infantNoSeatCount * infantBase);
     const perPaxTotal = fullPaxCount > 0 ? remainingTotal / fullPaxCount : remainingTotal;
     
-    taxPerFullPax = Math.round(perPaxTotal * 0.15);
-    baseFarePerFullPax = Math.round(perPaxTotal - taxPerFullPax);
+    adultTax = childTax = Math.round(perPaxTotal * 0.15);
+    adultBase = childBase = Math.round(perPaxTotal - adultTax);
   } else {
     // Regular flow, flight.price is PER ADULT
     const basePricePerPax = flight.price;
-    taxPerFullPax = Math.round(basePricePerPax * 0.15);
-    baseFarePerFullPax = basePricePerPax - taxPerFullPax;
+    adultTax = childTax = Math.round(basePricePerPax * 0.15);
+    adultBase = childBase = basePricePerPax - adultTax;
     infantBase = 2000;
     infantTax = 0;
   }
 
   const totalBaseFare = 
-    (adultCount * baseFarePerFullPax) + 
-    (childCount * baseFarePerFullPax) + 
-    (infantWithSeatCount * baseFarePerFullPax) + 
+    (adultCount * adultBase) + 
+    (childCount * childBase) + 
+    (infantWithSeatCount * childBase) + 
     (infantNoSeatCount * infantBase);
 
   const taxesAndFees = 
-    (adultCount * taxPerFullPax) + 
-    (childCount * taxPerFullPax) + 
-    (infantWithSeatCount * taxPerFullPax) + 
+    (adultCount * adultTax) + 
+    (childCount * childTax) + 
+    (infantWithSeatCount * childTax) + 
     (infantNoSeatCount * infantTax);
 
-  // For Nexus, ensure total matches exact flight.price despite any rounding
-  const totalFare = flight.nexus_query ? flight.price : totalBaseFare + taxesAndFees;
+  // Use the exact calculated total
+  const totalFare = totalBaseFare + taxesAndFees;
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] font-sans pb-24 text-[#0c1a40]">
@@ -500,19 +522,19 @@ const B2BAgentCheckout: React.FC = () => {
                             value={p.nationality}
                             onChange={(val) => handlePassengerChange(idx, 'nationality', val)}
                             options={[
-                              { value: 'INDIA', label: 'India' },
-                              { value: 'USA', label: 'United States' },
-                              { value: 'UK', label: 'United Kingdom' },
-                              { value: 'UAE', label: 'UAE' },
-                              { value: 'CANADA', label: 'Canada' },
-                              { value: 'AUSTRALIA', label: 'Australia' },
-                              { value: 'OTHER', label: 'Other' }
+                              { value: 'IN', label: 'India' },
+                              { value: 'US', label: 'United States' },
+                              { value: 'GB', label: 'United Kingdom' },
+                              { value: 'AE', label: 'UAE' },
+                              { value: 'CA', label: 'Canada' },
+                              { value: 'AU', label: 'Australia' },
+                              { value: 'OT', label: 'Other' }
                             ]}
                             placeholder="Select"
                           />
                         </div>
 
-                        {(p.type === 'CHILD' || p.type === 'INFANT') && (
+                        {(p.type === 'CHILD' || p.type === 'INFANT' || flight?.inputRequirements?.dob?.required) && (
                           <div className="relative">
                             <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Date of Birth</label>
                             {(() => {
@@ -556,8 +578,36 @@ const B2BAgentCheckout: React.FC = () => {
                           </div>
                         )}
                         
+                        {requirePassport && (
+                          <>
+                            <div className="relative">
+                              <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Passport Number</label>
+                              <input 
+                                type="text" 
+                                value={p.passportNumber || ''} 
+                                onChange={(e) => handlePassengerChange(idx, 'passportNumber', e.target.value.toUpperCase())}
+                                className={`w-full border ${showErrors && !p.passportNumber ? 'border-red-500' : 'border-gray-300'} rounded px-3 h-[34px] text-[11px] font-bold outline-none uppercase placeholder:normal-case`}
+                                placeholder="Enter Passport No"
+                              />
+                              {showErrors && !p.passportNumber && <div className="text-[9px] text-red-500 mt-1 font-bold">Required</div>}
+                            </div>
+                            <div className="relative">
+                              <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Passport Expiry</label>
+                              <div className={`h-[34px] w-full border ${showErrors && !p.passportExpiry ? 'border-red-500' : 'border-gray-300'} rounded bg-white relative [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent [&>div>div:first-child]:py-0 [&>div>div:first-child]:px-3`}>
+                                <DOBCalendar 
+                                  value={p.passportExpiry || ''} 
+                                  onChange={(val) => handlePassengerChange(idx, 'passportExpiry', val)} 
+                                  placeholder="Expiry Date"
+                                  initialDate={new Date(new Date().setFullYear(new Date().getFullYear() + 10))}
+                                />
+                              </div>
+                              {showErrors && !p.passportExpiry && <div className="text-[9px] text-red-500 mt-1 font-bold">Required</div>}
+                            </div>
+                          </>
+                        )}
+                        
                         {p.type === 'INFANT' && (
-                          <div className="col-span-2 flex items-center mt-6">
+                          <div className={`${requirePassport ? 'col-span-3' : 'col-span-2'} flex items-center mt-6`}>
                             <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0c1a40]">
                               <input type="checkbox" checked={!!p.needSeparateSeat} onChange={(e) => handlePassengerChange(idx, 'needSeparateSeat', e.target.checked)} className="rounded" />
                               Need a separate seat? (Full Fare Applicable)
@@ -574,19 +624,19 @@ const B2BAgentCheckout: React.FC = () => {
                   {passengers.length < (flight.availableSeats || 9) ? (
                     <>
                       <button 
-                        onClick={() => setPassengers([...passengers, { type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'INDIA' }])}
+                        onClick={() => setPassengers([...passengers, { type: 'ADULT', title: '', firstName: '', lastName: '', nationality: 'IN' }])}
                         className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
                       >
                         + Add Adult
                       </button>
                       <button 
-                        onClick={() => setPassengers([...passengers, { type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '' }])}
+                        onClick={() => setPassengers([...passengers, { type: 'CHILD', title: '', firstName: '', lastName: '', nationality: 'IN', dob: '' }])}
                         className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
                       >
                         + Add Child
                       </button>
                       <button 
-                        onClick={() => setPassengers([...passengers, { type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'INDIA', dob: '', needSeparateSeat: false }])}
+                        onClick={() => setPassengers([...passengers, { type: 'INFANT', title: '', firstName: '', lastName: '', nationality: 'IN', dob: '', needSeparateSeat: false }])}
                         className="flex-1 border border-[#0b1031] text-[#0b1031] font-bold text-[10px] uppercase py-2.5 rounded hover:bg-gray-50 transition"
                       >
                         + Add Infant
@@ -783,21 +833,21 @@ const B2BAgentCheckout: React.FC = () => {
                 {showBaseFareDetails && (
                   <div className="mt-2 pl-2 space-y-1 text-[10px] text-gray-600">
                     {adultCount > 0 && (
-                      <div className="flex justify-between">
-                        <span>{adultCount} Adult(s) ({adultCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
-                        <span>₹{(adultCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      <div className="flex justify-between mt-1 text-blue-600">
+                        <span>{adultCount} Adult(s) ({adultCount} X ₹{(adultBase).toLocaleString('en-IN')})</span>
+                        <span>₹{(adultCount * (adultBase)).toLocaleString('en-IN')}.00</span>
                       </div>
                     )}
                     {childCount > 0 && (
-                      <div className="flex justify-between mt-1">
-                        <span>{childCount} Child(ren) ({childCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
-                        <span>₹{(childCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      <div className="flex justify-between mt-1 text-blue-600">
+                        <span>{childCount} Child(ren) ({childCount} X ₹{(childBase).toLocaleString('en-IN')})</span>
+                        <span>₹{(childCount * (childBase)).toLocaleString('en-IN')}.00</span>
                       </div>
                     )}
                     {infantWithSeatCount > 0 && (
-                      <div className="flex justify-between mt-1 text-purple-600">
-                        <span>{infantWithSeatCount} Infant(s) w/ Seat ({infantWithSeatCount} X ₹{(baseFarePerFullPax).toLocaleString('en-IN')})</span>
-                        <span>₹{(infantWithSeatCount * baseFarePerFullPax).toLocaleString('en-IN')}.00</span>
+                      <div className="flex justify-between mt-1 text-blue-600">
+                        <span>{infantWithSeatCount} Infant(s) w/ Seat ({infantWithSeatCount} X ₹{(childBase).toLocaleString('en-IN')})</span>
+                        <span>₹{(infantWithSeatCount * (childBase)).toLocaleString('en-IN')}.00</span>
                       </div>
                     )}
                     {infantNoSeatCount > 0 && (

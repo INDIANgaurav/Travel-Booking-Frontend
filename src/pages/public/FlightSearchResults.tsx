@@ -29,6 +29,13 @@ interface Flight {
   durationMinutes: number;
   price: number;
   stops: number;
+  adultPrice?: number;
+  childPrice?: number;
+  infantPrice?: number;
+  nexus_total_price?: number;
+  nexus_query?: any;
+  isSeriesFare?: boolean;
+  agentCommission?: number;
 }
 
 const CITIES: Record<string, string> = {
@@ -85,6 +92,7 @@ export default function FlightSearchResults() {
   } = flightSearchState;
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [showFareSummaryModal, setShowFareSummaryModal] = useState(false);
 
   // Picker States
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -748,7 +756,7 @@ export default function FlightSearchResults() {
                       <p className="font-black text-[22px]">₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}</p>
                     </div>
                     <p className="text-[10px] text-gray-400">/adult</p>
-                    <p className="text-[10px] text-gray-300 mt-1 leading-tight">Flat 12% OFF using FLYMON<br/>code | Flat Rs. 585 OFF using<br/>BREAKFREE code<br/><span className="text-blue-400 cursor-pointer">Fare Details</span></p>
+                    <p className="text-[10px] text-gray-300 mt-1 leading-tight">Flat 12% OFF using FLYMON<br/>code | Flat Rs. 585 OFF using<br/>BREAKFREE code<br/><span className="text-blue-400 cursor-pointer hover:underline" onClick={() => setShowFareSummaryModal(true)}>Fare Details</span></p>
                   </div>
                   <div className="flex flex-col gap-2">
                     <button 
@@ -764,10 +772,6 @@ export default function FlightSearchResults() {
                     >
                       BOOK NOW
                     </button>
-                    <button 
-                      className="bg-white hover:bg-gray-100 text-blue-500 font-bold py-1.5 px-6 rounded text-sm transition"
-                    >
-                    </button>
                   </div>
                 </div>
               </div>
@@ -775,6 +779,59 @@ export default function FlightSearchResults() {
           </div>,
           document.body
         ) : null}
+
+        {/* Fare Summary Modal */}
+        {showFareSummaryModal && (selectedOutbound || selectedReturn) && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowFareSummaryModal(false)}>
+            <div 
+              className="bg-white rounded-lg w-full max-w-sm overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-black text-gray-900 text-lg">Fare Summary</h3>
+                <button onClick={() => setShowFareSummaryModal(false)} className="text-gray-500 hover:text-gray-700 font-bold text-xl">✕</button>
+              </div>
+              <div className="p-4">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-gray-100">
+                    {selectedOutbound?.adultPrice ? (
+                      <>
+                        <tr className="py-2">
+                          <td className="py-3 font-bold text-gray-600">Adult Fare ({adults} x {Math.round(selectedOutbound.adultPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
+                          <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.adultPrice * adults * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
+                        </tr>
+                        {children > 0 && selectedOutbound.childPrice ? (
+                          <tr className="py-2">
+                            <td className="py-3 font-bold text-gray-600">Child Fare ({children} x {Math.round(selectedOutbound.childPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
+                            <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.childPrice * children * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
+                          </tr>
+                        ) : null}
+                        {infants > 0 && selectedOutbound.infantPrice ? (
+                          <tr className="py-2">
+                            <td className="py-3 font-bold text-gray-600">Infant Fare ({infants} x {Math.round(selectedOutbound.infantPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
+                            <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.infantPrice * infants * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
+                          </tr>
+                        ) : null}
+                      </>
+                    ) : (
+                      <tr className="py-2">
+                        <td className="py-3 font-bold text-gray-600">Total Pax Fare</td>
+                        <td className="py-3 text-right font-black text-gray-900">₹ {getDisplayPrice(selectedOutbound?.price || 0).toLocaleString('en-IN')}</td>
+                      </tr>
+                    )}
+                    <tr className="bg-gray-50">
+                      <td className="py-4 font-black text-gray-900 text-base">Total Amount</td>
+                      <td className="py-4 text-right font-black text-blue-600 text-lg">
+                        ₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
           </div>
         </div>
       )}
@@ -801,7 +858,7 @@ export default function FlightSearchResults() {
                 <img src={showFlightDetails.airlineLogo} alt="" className="w-12 h-12 object-contain" />
                 <div>
                   <p className="font-black text-gray-900 text-xl">{showFlightDetails.airline}</p>
-                  <p className="text-sm font-medium text-gray-500">{showFlightDetails.flightNumber} • Economy</p>
+                  <p className="text-sm font-medium text-gray-500">{showFlightDetails.flightNumber} • {(showFlightDetails as any).cabinClass || cabinClass.split('/')[0]}</p>
                 </div>
               </div>
               

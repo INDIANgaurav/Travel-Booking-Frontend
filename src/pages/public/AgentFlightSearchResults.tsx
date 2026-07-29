@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plane, Building2, Shield, CreditCard, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plane, Building2, Shield, CreditCard, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAgentBookingMode, logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -26,6 +26,13 @@ interface Flight {
   stops: number;
   isSeriesFare?: boolean;
   agentCommission?: number;
+  seatsAvailable?: number;
+  adultPrice?: number;
+  childPrice?: number;
+  infantPrice?: number;
+  checkinBaggage?: string;
+  cabinBaggage?: string;
+  cabinClass?: string;
 }
 
 export default function AgentFlightSearchResults(props: any) {
@@ -79,6 +86,7 @@ export default function AgentFlightSearchResults(props: any) {
   const [expandedFlightId, setExpandedFlightId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('FLIGHT DETAIL');
   const [showFareRulesForFlight, setShowFareRulesForFlight] = useState<Flight | null>(null);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollCarousel = (direction: 'left' | 'right') => {
@@ -534,122 +542,45 @@ export default function AgentFlightSearchResults(props: any) {
         </div>
       </div>
       
-      {/* Search Header Bar (Matching Reference Screenshot 4) */}
-      <div className="bg-[#0b1031] text-white py-3.5 px-8 sticky top-0 z-40 shadow-md">
+      {/* Search Header Bar (Summary View) */}
+      <div className="bg-[#0b1031] text-white py-3 px-8 sticky top-0 z-40 shadow-md">
         <div className="max-w-[1240px] mx-auto flex items-center justify-between text-xs">
           
           <div className="flex items-center gap-8">
-            <div className="relative group/from" onClick={(e) => { e.stopPropagation(); setIsFromPickerOpen(!isFromPickerOpen); }}>
-              <p className="text-gray-400 text-[10px] uppercase font-semibold">From</p>
-              <p className="font-bold text-sm text-white cursor-pointer hover:text-blue-400 transition">{from}</p>
-              {isFromPickerOpen && (
-                <div className="absolute top-[120%] left-0 z-[100] shadow-2xl" onClick={e => e.stopPropagation()}>
-                  <CityPicker 
-                    type="flight" 
-                    value={from}
-                    onChange={(code: string) => { setFrom(code); setIsFromPickerOpen(false); }} 
-                    onClose={() => setIsFromPickerOpen(false)} 
-                  />
-                </div>
-              )}
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">From</span>
+              <span className="font-bold text-[15px] leading-tight">{from}</span>
             </div>
-            <span 
-              className="text-gray-400 font-bold cursor-pointer hover:text-white transition"
-              onClick={() => {
-                const temp = from;
-                setFrom(to);
-                setTo(temp);
-              }}
-            >➔</span>
-            <div className="relative group/to" onClick={(e) => { e.stopPropagation(); setIsToPickerOpen(!isToPickerOpen); }}>
-              <p className="text-gray-400 text-[10px] uppercase font-semibold">To</p>
-              <p className="font-bold text-sm text-white cursor-pointer hover:text-blue-400 transition">{to}</p>
-              {isToPickerOpen && (
-                <div className="absolute top-[120%] left-0 z-[100] shadow-2xl" onClick={e => e.stopPropagation()}>
-                  <CityPicker 
-                    type="flight" 
-                    value={to}
-                    onChange={(code: string) => { setTo(code); setIsToPickerOpen(false); }} 
-                    onClose={() => setIsToPickerOpen(false)} 
-                  />
-                </div>
-              )}
+            <span className="text-gray-400 font-bold text-lg">➔</span>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">To</span>
+              <span className="font-bold text-[15px] leading-tight">{to}</span>
             </div>
 
-            <div className="h-6 w-px bg-white/20" />
+            <div className="h-8 w-px bg-white/20" />
 
-            <div className="flex items-center gap-3">
-              <div>
-                <p className="text-gray-400 text-[10px] uppercase font-semibold text-center mb-1">Departure Date</p>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const d = new Date(date);
-                      d.setDate(d.getDate() - 1);
-                      if (d >= new Date(new Date().setHours(0,0,0,0))) {
-                        setDate(format(d, 'yyyy-MM-dd'));
-                      }
-                    }}
-                    className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white/10 transition"
-                  >
-                    <ChevronLeft size={12} />
-                  </button>
-                  
-                  <div className="relative group/date" onClick={(e) => { e.stopPropagation(); setIsDatePickerOpen(!isDatePickerOpen); }}>
-                    <p className="font-bold text-white cursor-pointer hover:text-blue-400 transition">{new Date(date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                    
-                    {/* Floating DualMonthCalendar */}
-                    {isDatePickerOpen && (
-                      <div className="absolute top-[120%] left-1/2 -translate-x-1/2 z-[100] shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <DualMonthCalendar 
-                          checkIn={date ? new Date(date) : null} 
-                          checkOut={returnDate ? new Date(returnDate) : null}
-                          onDateChange={(type, d) => {
-                            if (type === 'checkIn') {
-                              setDate(d ? format(d, 'yyyy-MM-dd') : '');
-                              setIsDatePickerOpen(false);
-                            } else {
-                              setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
-                            }
-                          }}
-                          onClose={() => setIsDatePickerOpen(false)}
-                          origin={from}
-                          destination={to}
-                          isOneWay={tripType !== 'Return'}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const d = new Date(date);
-                      d.setDate(d.getDate() + 1);
-                      setDate(format(d, 'yyyy-MM-dd'));
-                    }}
-                    className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white/10 transition"
-                  >
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
-              </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Departure Date</span>
+              <span className="font-bold text-[15px] leading-tight">
+                {new Date(date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
             </div>
 
-            <div className="h-6 w-px bg-white/20" />
+            <div className="h-8 w-px bg-white/20" />
 
-            <div>
-              <p className="text-gray-400 text-[10px] uppercase font-semibold">Travellers & Class</p>
-              <p className="font-bold text-white">{adults + children + infants} PAX, {cabinClass.split('/')[0]}</p>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Travellers & Class</span>
+              <span className="font-bold text-[15px] leading-tight">
+                {adults + children + infants} PAX, {cabinClass.split('/')[0]}
+              </span>
             </div>
           </div>
 
           <button 
-            onClick={(e) => { e.stopPropagation(); closeAllPickers(); setHasSearched(false); }} 
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full text-xs transition uppercase shadow-md"
+            onClick={() => setIsSearchModalOpen(true)} 
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-8 rounded-full text-xs transition uppercase shadow-md border border-blue-500"
           >
-            Search
+            Modify
           </button>
         </div>
       </div>
@@ -766,11 +697,17 @@ export default function AgentFlightSearchResults(props: any) {
                    {/* Tags Bar matching Screenshot 4 */}
                    <div className="bg-gray-50/80 px-5 py-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold">
                      <div className="flex items-center gap-2 flex-wrap">
-                       <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">7 Seat(s)</span>
+                       {flight.seatsAvailable !== undefined ? (
+                         <span className={`px-2 py-0.5 rounded ${flight.seatsAvailable < 10 ? 'bg-red-600 text-white font-black shadow-sm animate-pulse' : 'bg-emerald-100 text-emerald-800'}`}>
+                           {flight.seatsAvailable} Seat(s) Left
+                         </span>
+                       ) : (
+               <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Available</span>
+                       )}
                        <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded">! Paid Meals</span>
                        <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">ADT: 15 Kg / 7 Kg</span>
                        <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded uppercase">INSTANT FARE</span>
-                       <span className="text-blue-700">Class: RI</span>
+                       <span className="text-blue-700 font-bold uppercase">Class: {flight.cabinClass || 'Economy'}</span>
                      </div>
                      <div className="flex items-center gap-4 text-[#0c1a40]">
                        <span className="cursor-pointer hover:underline" onClick={() => setShowFareRulesForFlight(flight)}>Fare Rules</span>
@@ -785,7 +722,13 @@ export default function AgentFlightSearchResults(props: any) {
 
                    {/* Flight Details Accordion (Matching Screenshot 3) */}
                    {expandedFlightId === flight._id && (
-                     <div className="border-t border-gray-200 bg-white animate-in slide-in-from-top-2 fade-in duration-200">
+                     <div 
+                       className="border-t border-gray-300 bg-white animate-in slide-in-from-top-2 fade-in duration-200"
+                       style={{ 
+                         backgroundImage: agentCode ? `url("data:image/svg+xml,%3Csvg width='200' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext transform='rotate(-20 100 100)' x='50' y='100' font-size='20' font-family='Arial' font-weight='bold' fill='rgba(0,0,0,0.08)'%3E${agentCode}%3C/text%3E%3C/svg%3E")` : 'none',
+                         backgroundRepeat: 'repeat' 
+                       }}
+                     >
                        <div className="flex border-b border-gray-200 px-5">
                          {['FLIGHT DETAIL', 'FARE BREAKUP', 'BAGGAGE'].map(tab => (
                            <button 
@@ -804,7 +747,7 @@ export default function AgentFlightSearchResults(props: any) {
                              <div className="flex justify-between items-center mb-6">
                                <div>
                                  <h3 className="text-sm font-black text-[#0c1a40]">{flight.departureCity} ({flight.departureAirportCode}) - {flight.arrivalCity} ({flight.arrivalAirportCode})</h3>
-                                 <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">ECONOMY - RI (INSTANT FARE)</p>
+                                 <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">ECONOMY - {flight.cabinClass || 'RI'} (INSTANT FARE)</p>
                                </div>
                                <span className="text-[10px] text-gray-500 font-bold">Partially Refundable</span>
                              </div>
@@ -843,8 +786,55 @@ export default function AgentFlightSearchResults(props: any) {
                              </div>
                            </div>
                          )}
-                         {activeTab === 'FARE BREAKUP' && <div className="text-sm font-bold text-gray-500 text-center py-4">Fare breakup details will be displayed here.</div>}
-                         {activeTab === 'BAGGAGE' && <div className="text-sm font-bold text-gray-500 text-center py-4">Baggage details will be displayed here.</div>}
+                         {activeTab === 'FARE BREAKUP' && (
+                           <div className="p-4">
+                             <table className="w-full text-sm">
+                               <tbody className="divide-y divide-gray-300">
+                                 {flight.adultPrice ? (
+                                   <>
+                                     <tr className="py-2">
+                                       <td className="py-3 font-bold text-gray-500">Adult Fare ({adults} x {Math.round(flight.adultPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                                       <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.adultPrice * adults * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                                     </tr>
+                                     {children > 0 && flight.childPrice ? (
+                                       <tr className="py-2">
+                                         <td className="py-3 font-bold text-gray-500">Child Fare ({children} x {Math.round(flight.childPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                                         <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.childPrice * children * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                                       </tr>
+                                     ) : null}
+                                     {infants > 0 && flight.infantPrice ? (
+                                       <tr className="py-2">
+                                         <td className="py-3 font-bold text-gray-500">Infant Fare ({infants} x {Math.round(flight.infantPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                                         <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.infantPrice * infants * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                                       </tr>
+                                     ) : null}
+                                   </>
+                                 ) : (
+                                   <tr className="py-2">
+                                     <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
+                                     <td className="py-3 text-right font-black text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                                   </tr>
+                                 )}
+                                 <tr className="bg-gray-50">
+                                   <td className="py-3 px-1 font-black text-[#0c1a40]">Total Fare</td>
+                                   <td className="py-3 px-1 text-right font-black text-blue-600 text-lg">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                                 </tr>
+                               </tbody>
+                             </table>
+                           </div>
+                         )}
+                         {activeTab === 'BAGGAGE' && (
+                           <div className="p-6 space-y-4">
+                             <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                               <span className="font-bold text-gray-500 text-sm">Check-in Baggage</span>
+                               <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.checkinBaggage || '15 KG'}</span>
+                             </div>
+                             <div className="flex justify-between items-center pb-1">
+                               <span className="font-bold text-gray-500 text-sm">Cabin Baggage</span>
+                               <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.cabinBaggage || '7 KG'}</span>
+                             </div>
+                           </div>
+                         )}
                        </div>
                      </div>
                    )}
@@ -934,6 +924,241 @@ export default function AgentFlightSearchResults(props: any) {
           </div>
         </div>
       )}
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-start justify-center p-4 pt-[10vh] overflow-y-auto" onClick={() => setIsSearchModalOpen(false)}>
+          <div 
+            className="bg-white rounded-2xl w-full max-w-[1050px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200" 
+            onClick={(e) => { e.stopPropagation(); closeAllPickers(); }}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+              <h2 className="text-lg font-black text-[#0c1a40]">Modify Search</h2>
+              <button 
+                onClick={() => setIsSearchModalOpen(false)}
+                className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-gray-600 transition-colors"
+              >
+                <X size={16} strokeWidth={3} />
+              </button>
+            </div>
+
+            <div className="p-8">
+              {/* Flight Types */}
+              <div className="flex flex-wrap items-center gap-6 mb-6">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="radio" name="tripType" checked={tripType === 'One Way'} onChange={() => setTripType('One Way')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-[13px] font-bold transition-colors ${tripType === 'One Way' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>One Way</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="radio" name="tripType" checked={tripType === 'Round Trip'} onChange={() => setTripType('Round Trip')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-[13px] font-bold transition-colors ${tripType === 'Round Trip' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Round Trip</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input type="radio" name="tripType" checked={tripType === 'Multi City'} onChange={() => setTripType('Multi City')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-[13px] font-bold transition-colors ${tripType === 'Multi City' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Multi City</span>
+                </label>
+              </div>
+
+              {/* Main Inputs Box */}
+              <div className="flex flex-col lg:flex-row border border-gray-300 rounded-lg overflow-visible lg:h-[110px] relative hover:border-gray-400 transition-colors">
+                
+                {/* FROM */}
+                <div 
+                  className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                  onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsFromPickerOpen(true); }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">From</span>
+                  </div>
+                  <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    {from}
+                  </div>
+                  
+                  {isFromPickerOpen && (
+                    <div className="absolute top-[100%] left-0 z-[110]" onClick={e => e.stopPropagation()}>
+                      <CityPicker value={from} onChange={(c) => { setFrom(c); setIsFromPickerOpen(false); }} onClose={() => setIsFromPickerOpen(false)} title="FROM" />
+                    </div>
+                  )}
+                  
+                  {/* Swap Button */}
+                  <div 
+                    className="absolute right-8 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const temp = from;
+                      setFrom(to);
+                      setTo(temp);
+                    }}
+                  >
+                    <ArrowRightLeft size={14} className="text-blue-600 transform lg:rotate-0 rotate-90" />
+                  </div>
+                </div>
+
+                {/* TO */}
+                <div 
+                  className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                  onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">To</span>
+                  </div>
+                  <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    {to}
+                  </div>
+
+                  {isToPickerOpen && (
+                    <div className="absolute top-[100%] left-0 z-[110]" onClick={e => e.stopPropagation()}>
+                      <CityPicker value={to} onChange={(c) => { setTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="TO" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Departure Date */}
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                  <div 
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Departure</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    {date ? (
+                      <>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(new Date(date), 'd')}</h3>
+                          <span className="text-xl font-bold text-gray-900">{format(new Date(date), "MMM''yy")}</span>
+                        </div>
+                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(new Date(date), 'EEEE')}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
+                    )}
+                  </div>
+
+                  <div 
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    {returnDate ? (
+                      <>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(new Date(returnDate), 'd')}</h3>
+                          <span className="text-xl font-bold text-gray-900">{format(new Date(returnDate), "MMM''yy")}</span>
+                        </div>
+                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(new Date(returnDate), 'EEEE')}</p>
+                      </>
+                    ) : (
+                      <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Tap to add a return date for bigger discounts</p>
+                    )}
+
+                    {isDatePickerOpen && (
+                      <div className="absolute top-[100%] left-[-100px] z-[110]" onClick={e => e.stopPropagation()}>
+                        <DualMonthCalendar 
+                          checkIn={date ? new Date(date) : null} 
+                          checkOut={returnDate ? new Date(returnDate) : null}
+                          onDateChange={(type, d) => {
+                            if (type === 'checkIn') {
+                              setDate(d ? format(d, 'yyyy-MM-dd') : '');
+                              setIsDatePickerOpen(false);
+                            } else {
+                              setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
+                            }
+                          }}
+                          onClose={() => setIsDatePickerOpen(false)}
+                          origin={from}
+                          destination={to}
+                          isOneWay={tripType !== 'Return'}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Travellers */}
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                  <div 
+                    className="w-full sm:flex-1 lg:w-[120px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(!isTravellerPickerOpen); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Travellers</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <h3 className="text-[40px] leading-none font-black text-gray-900">{adults + children + infants}</h3>
+                    </div>
+                    <p className="text-[12px] text-gray-700 font-bold mt-1 flex items-center gap-2.5">
+                      <span className="flex items-center gap-0.5" title="Adults"><User size={14} className="text-gray-900" /> {adults}</span>
+                      <span className="flex items-center gap-0.5" title="Children"><Smile size={14} className="text-gray-900" /> {children}</span>
+                      <span className="flex items-center gap-0.5" title="Infants"><Baby size={14} className="text-gray-900" /> {infants}</span>
+                    </p>
+                  </div>
+
+                  {isTravellerPickerOpen && (
+                    <div className="absolute top-[100%] right-0 z-[110]" onClick={e => e.stopPropagation()}>
+                      <TravellerPicker 
+                        adults={adults}
+                        children={children}
+                        infants={infants}
+                        cabinClass={cabinClass}
+                        onChange={(a, c, i, cabin) => {
+                          setAdults(a);
+                          setChildren(c);
+                          setInfants(i);
+                          setCabinClass(cabin);
+                        }}
+                        onClose={() => setIsTravellerPickerOpen(false)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Cabin Class */}
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                  <div 
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
+                      <ChevronDown size={16} className="text-blue-600" />
+                    </div>
+                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight">
+                      {cabinClass}
+                    </p>
+                  </div>
+                  {isCabinPickerOpen && (
+                    <div className="absolute top-[100%] right-0 z-[110]" onClick={e => e.stopPropagation()}>
+                      <CabinClassPicker cabinClass={cabinClass} onChange={(c) => { setCabinClass(c); setIsCabinPickerOpen(false); }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end mt-8">
+                <button 
+                  onClick={() => {
+                    setIsSearchModalOpen(false);
+                    handleSearch();
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black text-base py-3 px-12 rounded-xl transition shadow-lg flex items-center gap-2"
+                >
+                  <Search size={20} />
+                  UPDATE SEARCH
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

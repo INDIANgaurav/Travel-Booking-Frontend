@@ -54,7 +54,7 @@ const initialState: AuthState = {
   user: loadUserFromStorage(),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
-  agentBookingMode: (localStorage.getItem('agentBookingMode') as 'PERSONAL' | 'MYBIZ') || 'MYBIZ',
+  agentBookingMode: (localStorage.getItem('agentBookingMode') as 'PERSONAL' | 'MYBIZ') || 'PERSONAL',
   showAgentOnboarding: false,
 };
 
@@ -76,8 +76,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.agentBookingMode = 'PERSONAL';
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('agentBookingMode');
     },
     updateProfileData: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {

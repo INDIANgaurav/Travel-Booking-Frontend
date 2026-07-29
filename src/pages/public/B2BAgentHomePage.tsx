@@ -160,30 +160,44 @@ const B2BAgentHomePage: React.FC = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    sessionStorage.removeItem('b2bSearchState');
     navigate('/b2b/login');
   };
   
   // Search Form State
-  const [tripType, setTripType] = useState('OneWay');
-  const [from, setFrom] = useState('DEL');
-  const [to, setTo] = useState('HYD');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [returnDate, setReturnDate] = useState('');
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [cabinClass, setCabinClass] = useState('Economy');
+  const getSavedState = () => {
+    try {
+      const saved = sessionStorage.getItem('b2bSearchState');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  };
+  const savedState = getSavedState();
+  const [tripType, setTripType] = useState(savedState.tripType || 'OneWay');
+  const [from, setFrom] = useState(savedState.from || 'DEL');
+  const [to, setTo] = useState(savedState.to || 'HYD');
+  const [date, setDate] = useState(savedState.date || format(new Date(), 'yyyy-MM-dd'));
+  const [returnDate, setReturnDate] = useState(savedState.returnDate || '');
+  const [adults, setAdults] = useState(savedState.adults !== undefined ? savedState.adults : 1);
+  const [children, setChildren] = useState(savedState.children || 0);
+  const [infants, setInfants] = useState(savedState.infants || 0);
+  const [cabinClass, setCabinClass] = useState(savedState.cabinClass || 'Economy');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   
   // Special Fares
-  const [specialFare, setSpecialFare] = useState('EXTRA SAVINGS');
-  const [preferredAirline, setPreferredAirline] = useState('All');
+  const [specialFare, setSpecialFare] = useState(savedState.specialFare || 'EXTRA SAVINGS');
+  const [preferredAirline, setPreferredAirline] = useState(savedState.preferredAirline || 'All');
 
   // Search state
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(savedState.hasSearched || false);
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
+
+  useEffect(() => {
+    sessionStorage.setItem('b2bSearchState', JSON.stringify({
+      tripType, from, to, date, returnDate, adults, children, infants, cabinClass, specialFare, preferredAirline, hasSearched
+    }));
+  }, [tripType, from, to, date, returnDate, adults, children, infants, cabinClass, specialFare, preferredAirline, hasSearched]);
 
   const handleSearch = async () => {
     setHasSearched(true);

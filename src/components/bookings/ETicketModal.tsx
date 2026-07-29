@@ -82,7 +82,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
   const cabinClass = flight?.cabin_class?.toUpperCase() || 'ECONOMY';
 
   const pnr = nexusData?.booking_reference || booking.details?.pnr || booking.bookingId;
-  const displayPnr = pnr?.length > 8 ? pnr.substring(0, 6).toUpperCase() : pnr;
+  const displayPnr = pnr ? pnr.toUpperCase() : 'N/A';
   const agentRef = nexusData?.agent_reference || booking.bookingId || 'N/A';
   
   const getAirportCode = (city: string) => city ? city.substring(0, 3).toUpperCase() : 'XXX';

@@ -7,10 +7,11 @@ interface DOBCalendarProps {
   onChange: (date: string) => void;
   minDate?: Date;
   maxDate?: Date;
+  initialDate?: Date;
   placeholder?: string;
 }
 
-export default function DOBCalendar({ value, onChange, minDate, maxDate, placeholder = 'dd-mm-yyyy' }: DOBCalendarProps) {
+export default function DOBCalendar({ value, onChange, minDate, maxDate, initialDate, placeholder = 'dd-mm-yyyy' }: DOBCalendarProps) {
   const [isOpen, setIsOpen] = useState(false);
   
   const parseValue = (val: string | Date | undefined) => {
@@ -24,7 +25,7 @@ export default function DOBCalendar({ value, onChange, minDate, maxDate, placeho
   };
 
   const selectedDate = parseValue(value);
-  const initialMonth = selectedDate || (maxDate || new Date());
+  const initialMonth = selectedDate || (initialDate || (maxDate || new Date()));
 
   const [currentMonth, setCurrentMonth] = useState(initialMonth);
   const [isYearOpen, setIsYearOpen] = useState(false);
