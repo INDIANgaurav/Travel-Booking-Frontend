@@ -6,6 +6,7 @@ import { selectIsAuthenticated, selectCurrentUser, selectAgentBookingMode } from
 import api from '../../services/api';
 import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
+import ChatBot from '../../components/common/ChatBot';
 
 
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -855,6 +856,8 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* AI Chat Bot */}
+      <ChatBot />
     </div>
   );
 }

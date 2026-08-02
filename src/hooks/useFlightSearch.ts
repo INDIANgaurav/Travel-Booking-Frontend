@@ -127,7 +127,11 @@ export function useFlightSearch() {
       if (qTripType === 'Round Trip' && qReturnDate) {
         const retRes = await api.get(`/api/searches/flights?from=${qTo}&to=${qFrom}&date=${getLocalISO(qReturnDate)}&${baseParams}`);
         setReturnFlights(retRes.data);
-        if (retRes.data.length > 0) setSelectedReturn(retRes.data[0]);
+        if (retRes.data.length > 0) {
+          setSelectedReturn(retRes.data[0]);
+        } else {
+          setSelectedReturn(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching flights:", error);

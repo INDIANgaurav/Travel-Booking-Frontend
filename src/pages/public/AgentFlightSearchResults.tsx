@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Plane, Building2, Shield, CreditCard, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAgentBookingMode, logout } from '../../store/authSlice';
@@ -133,7 +134,242 @@ export default function AgentFlightSearchResults(props: any) {
     props.navigate('/b2b/login');
   };
 
+  const renderFlightCard = (flight: Flight, isReturn = false) => {
+    const isSelected = isReturn ? selectedReturn?._id === flight._id : selectedOutbound?._id === flight._id;
+    return (
+      <div 
+        key={flight._id} 
+        className={`bg-white rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.06)] hover:shadow-lg transition-all border ${isSelected ? 'border-blue-600 ring-2 ring-blue-600' : 'border-gray-100'} overflow-hidden relative ${tripType === 'Round Trip' ? 'cursor-pointer' : ''}`}
+        onClick={() => {
+           if (tripType === 'Round Trip') {
+             if (isReturn) setSelectedReturn(flight);
+             else setSelectedOutbound(flight);
+           }
+        }}
+        style={{
+          backgroundImage: agentCode ? `url("data:image/svg+xml,%3Csvg width='200' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext transform='rotate(-20 100 100)' x='50' y='100' font-size='20' font-family='Arial' font-weight='bold' fill='rgba(0,0,0,0.08)'%3E${agentCode}%3C/text%3E%3C/svg%3E")` : 'none',
+          backgroundRepeat: 'repeat',
+          backgroundPosition: 'center center'
+        }}
+      >
+        <div className={`p-5 flex ${tripType === 'Round Trip' ? 'flex-col gap-4' : 'items-center justify-between'} relative z-10`}>
+           <div className={`flex items-center gap-3 ${tripType === 'Round Trip' ? 'w-full' : 'w-[22%]'}`}>
+             <img src={flight.airlineLogo} alt={flight.airline} className="w-8 h-8 object-contain" />
+             <div>
+               <p className="font-black text-gray-900 text-sm">{flight.airline}</p>
+               <p className="text-[11px] text-gray-500 font-bold">{flight.flightNumber}</p>
+             </div>
+           </div>
+           
+           <div className={`flex items-center justify-between ${tripType === 'Round Trip' ? 'w-full' : 'gap-6 w-[42%] text-center'}`}>
+             <div className="text-left">
+               <p className="font-black text-lg text-gray-900">{formatTime(flight.departureTime)}</p>
+               <p className="text-[10px] text-gray-500 font-semibold">{flight.departureCity} ({flight.departureAirportCode})</p>
+             </div>
+             
+             <div className="flex-1 flex flex-col items-center">
+               <p className="text-[10px] font-bold text-gray-500 mb-1">{formatDuration(flight.durationMinutes)}</p>
+               <div className="w-full h-[2px] bg-gray-300 relative flex items-center justify-center">
+                 <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+               </div>
+               <p className="text-[10px] text-gray-500 mt-1 font-semibold">{flight.stops === 0 ? 'Non-Stop' : `${flight.stops} stop`}</p>
+             </div>
+
+             <div className="text-right">
+               <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
+               <p className="text-[10px] text-gray-500 font-semibold">{flight.arrivalCity} ({flight.arrivalAirportCode})</p>
+             </div>
+           </div>
+
+           <div className={`flex ${tripType === 'Round Trip' ? 'w-full items-center justify-between border-t border-gray-100 pt-3 mt-1' : 'w-[32%] flex-col items-end gap-2'}`}>
+             <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-0.5' : 'items-end gap-0.5'}`}>
+               <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
+               {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
+                 <span className="text-[9px] font-bold text-gray-500 uppercase">(Includes ₹ {flight.agentCommission} Taxes)</span>
+               )}
+             </div>
+             
+             <div className="flex items-center gap-2">
+               <button 
+                 onClick={(e) => { e.stopPropagation(); setMoreFaresFlight(flight); }}
+                 className="border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold px-4 py-1.5 rounded-full text-xs transition"
+               >
+                 + More Fares
+               </button>
+
+               {tripType !== 'Round Trip' && (
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: flight, fareType: 'INSTANT FARE', adults, children, infants } }) }} 
+                   className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold px-6 py-1.5 rounded-full text-xs transition shadow-sm"
+                 >
+                   Book
+                 </button>
+               )}
+             </div>
+           </div>
+        </div>
+
+        {/* Tags Bar */}
+        <div className="bg-gray-50/80 px-5 py-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold">
+          <div className="flex items-center gap-2 flex-wrap">
+            {flight.seatsAvailable !== undefined ? (
+              <span className={`px-2 py-0.5 rounded ${flight.seatsAvailable < 10 ? 'bg-red-600 text-white font-black shadow-sm animate-pulse' : 'bg-emerald-100 text-emerald-800'}`}>
+                {flight.seatsAvailable} Seat(s) Left
+              </span>
+            ) : (
+              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Available</span>
+            )}
+            <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded">! Paid Meals</span>
+            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">ADT: 15 Kg / 7 Kg</span>
+            <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded uppercase">INSTANT FARE</span>
+            <span className="text-blue-700 font-bold uppercase">Class: {flight.cabinClass || 'Economy'}</span>
+          </div>
+          <div className="flex items-center gap-4 text-[#0c1a40]">
+            <span 
+              className="cursor-pointer text-[11px] font-bold hover:text-blue-600 hover:underline transition-colors" 
+              onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(flight); }}
+            >
+              Fare Rules
+            </span>
+            <button 
+              className="cursor-pointer text-[11px] font-black border border-gray-300 px-4 py-1.5 rounded flex items-center gap-1 hover:bg-gray-50 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setExpandedFlightId(expandedFlightId === flight._id ? null : flight._id); }}
+            >
+              Flight Details
+              <span className={`transition-transform duration-200 ${expandedFlightId === flight._id ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Flight Details Accordion */}
+        {expandedFlightId === flight._id && (
+          <div 
+            className="border-t border-gray-300 bg-white animate-in slide-in-from-top-2 fade-in duration-200"
+            style={{ 
+              backgroundImage: agentCode ? `url("data:image/svg+xml,%3Csvg width='200' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext transform='rotate(-20 100 100)' x='50' y='100' font-size='20' font-family='Arial' font-weight='bold' fill='rgba(0,0,0,0.08)'%3E${agentCode}%3C/text%3E%3C/svg%3E")` : 'none',
+              backgroundRepeat: 'repeat' 
+            }}
+          >
+            <div className="flex border-b border-gray-200 px-5">
+              {['FLIGHT DETAIL', 'FARE BREAKUP', 'BAGGAGE'].map(tab => (
+                <button 
+                  key={tab}
+                  onClick={(e) => { e.stopPropagation(); setActiveTab(tab); }}
+                  className={`px-4 py-3 text-xs font-black transition-colors border-b-2 ${activeTab === tab ? 'border-[#0c1a40] text-[#0c1a40]' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            
+            <div className="p-6">
+              {activeTab === 'FLIGHT DETAIL' && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="text-sm font-black text-[#0c1a40]">{flight.departureCity} ({flight.departureAirportCode}) - {flight.arrivalCity} ({flight.arrivalAirportCode})</h3>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">ECONOMY - {flight.cabinClass || 'RI'} (INSTANT FARE)</p>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-bold">Partially Refundable</span>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="bg-white p-2 rounded shadow-sm border border-gray-100">
+                        <img src={flight.airlineLogo} alt={flight.airline} className="w-10 h-10 object-contain" />
+                      </div>
+                      <div>
+                        <p className="font-black text-sm text-[#0c1a40]">{flight.airline}</p>
+                        <p className="text-[11px] text-gray-500 font-semibold">{flight.flightNumber}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-8 flex-[2] justify-center text-[#0c1a40]">
+                      <div className="text-right">
+                        <p className="font-black text-xl">{formatTime(flight.departureTime)}</p>
+                        <p className="text-xs font-bold mt-0.5">{flight.departureAirportCode}</p>
+                        <p className="text-[10px] text-gray-500">{new Date(flight.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</p>
+                      </div>
+
+                      <div className="flex flex-col items-center min-w-[120px]">
+                        <p className="text-[10px] text-gray-400 font-bold mb-1">{formatDuration(flight.durationMinutes)}</p>
+                        <div className="w-full flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full border-2 border-blue-200 bg-white" />
+                          <div className="flex-1 h-px bg-gray-300" />
+                          <div className="w-2 h-2 rounded-full border-2 border-blue-200 bg-white" />
+                        </div>
+                      </div>
+
+                      <div className="text-left">
+                        <p className="font-black text-xl">{formatTime(flight.arrivalTime)}</p>
+                        <p className="text-xs font-bold mt-0.5">{flight.arrivalAirportCode}</p>
+                        <p className="text-[10px] text-gray-500">{new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</p>
+                        <p className="text-[9px] text-gray-400 mt-1">Terminal: 1</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1" />
+                  </div>
+                </div>
+              )}
+              {activeTab === 'FARE BREAKUP' && (
+                <div className="p-4">
+                  <table className="w-full text-sm">
+                    <tbody className="divide-y divide-gray-300">
+                      {flight.adultPrice ? (
+                        <>
+                          <tr className="py-2">
+                            <td className="py-3 font-bold text-gray-500">Adult Fare ({adults} x {Math.round(flight.adultPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                            <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.adultPrice * adults * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                          </tr>
+                          {children > 0 && flight.childPrice ? (
+                            <tr className="py-2">
+                              <td className="py-3 font-bold text-gray-500">Child Fare ({children} x {Math.round(flight.childPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.childPrice * children * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                            </tr>
+                          ) : null}
+                          {infants > 0 && flight.infantPrice ? (
+                            <tr className="py-2">
+                              <td className="py-3 font-bold text-gray-500">Infant Fare ({infants} x {Math.round(flight.infantPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
+                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.infantPrice * infants * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                            </tr>
+                          ) : null}
+                        </>
+                      ) : (
+                        <tr className="py-2">
+                          <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
+                          <td className="py-3 text-right font-black text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                        </tr>
+                      )}
+                      <tr className="bg-gray-50">
+                        <td className="py-3 px-1 font-black text-[#0c1a40]">Total Fare</td>
+                        <td className="py-3 px-1 text-right font-black text-blue-600 text-lg">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {activeTab === 'BAGGAGE' && (
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <span className="font-bold text-gray-500 text-sm">Check-in Baggage</span>
+                    <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.checkinBaggage || '15 KG'}</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-1">
+                    <span className="font-bold text-gray-500 text-sm">Cabin Baggage</span>
+                    <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.cabinBaggage || '7 KG'}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
+    <>
     <div className="min-h-screen bg-[#f4f4f4] font-sans pb-20" onClick={closeAllPickers}>
       
       {/* 4-Step Searching Loader Modal (Matching Screenshot 3) */}
@@ -566,6 +802,18 @@ export default function AgentFlightSearchResults(props: any) {
               </span>
             </div>
 
+            {tripType === 'Round Trip' && returnDate && (
+              <>
+                <div className="h-8 w-px bg-white/20" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Return Date</span>
+                  <span className="font-bold text-[15px] leading-tight">
+                    {new Date(returnDate).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+              </>
+            )}
+
             <div className="h-8 w-px bg-white/20" />
 
             <div className="flex flex-col">
@@ -606,244 +854,66 @@ export default function AgentFlightSearchResults(props: any) {
 
         {/* Main Flight Cards Content */}
         <div className="flex-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-base font-black text-[#0c1a40]">
-              Found {sortedOutboundFlights.length} Flights From {from} to {to}
-            </h2>
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-600">
-              {sortedOutboundFlights && sortedOutboundFlights.length > 0 && (
-                <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
-                  Cheapest ₹ {Math.min(...sortedOutboundFlights.map((f: any) => f.price)).toLocaleString('en-IN')}
-                </span>
-              )}
-              {sortedOutboundFlights && sortedOutboundFlights.filter((f: any) => f.stops === 0).length > 0 && (
-                <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200">
-                  Non-Stop ₹ {Math.min(...sortedOutboundFlights.filter((f: any) => f.stops === 0).map((f: any) => f.price)).toLocaleString('en-IN')}
-                </span>
-              )}
+          {tripType === 'Round Trip' ? (
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Outbound List */}
+              <div className="flex-1 space-y-4">
+                <h3 className="text-sm font-black text-[#0c1a40] uppercase mb-2 border-b border-gray-200 pb-2 flex items-center justify-between">
+                  <span>Departure Flights</span>
+                  <span className="text-xs text-gray-500 font-medium">{from} → {to}</span>
+                </h3>
+                {sortedOutboundFlights && sortedOutboundFlights.length > 0 ? (
+                  sortedOutboundFlights.map((flight: any, idx: number) => (
+                    <React.Fragment key={flight._id || idx}>
+                      {renderFlightCard(flight, false)}
+                    </React.Fragment>
+                  ))
+                ) : !loading ? (
+                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No outbound flights found.</p></div>
+                ) : null}
+              </div>
+              
+              {/* Return List */}
+              <div className="flex-1 space-y-4">
+                <h3 className="text-sm font-black text-[#0c1a40] uppercase mb-2 border-b border-gray-200 pb-2 flex items-center justify-between">
+                  <span>Return Flights</span>
+                  <span className="text-xs text-gray-500 font-medium">{to} → {from}</span>
+                </h3>
+                {returnFlights && returnFlights.length > 0 ? (
+                  returnFlights.map((flight: any, idx: number) => (
+                    <React.Fragment key={flight._id || idx}>
+                      {renderFlightCard(flight, true)}
+                    </React.Fragment>
+                  ))
+                ) : !loading ? (
+                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No return flights found.</p></div>
+                ) : null}
+              </div>
             </div>
-          </div>
-
-          {/* Flights List */}
-          <div className="space-y-4">
-            {sortedOutboundFlights.length === 0 ? (
-               <div className="p-8 text-center text-gray-500 font-bold bg-white rounded-xl border border-gray-200">No flights available.</div>
-            ) : (
-               sortedOutboundFlights.map((flight: Flight) => (
-                 <div 
-                  key={flight._id} 
-                  className="bg-white rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.06)] hover:shadow-lg transition-all border border-gray-100 overflow-hidden relative"
-                  style={{
-                    backgroundImage: agentCode ? `url("data:image/svg+xml,%3Csvg width='200' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext transform='rotate(-20 100 100)' x='50' y='100' font-size='20' font-family='Arial' font-weight='bold' fill='rgba(0,0,0,0.08)'%3E${agentCode}%3C/text%3E%3C/svg%3E")` : 'none',
-                    backgroundRepeat: 'repeat',
-                    backgroundPosition: 'center center'
-                  }}
-                >
-                  <div className="p-5 flex items-center justify-between relative z-10">
-                     <div className="flex items-center gap-3 w-[22%]">
-                       <img src={flight.airlineLogo} alt={flight.airline} className="w-8 h-8 object-contain" />
-                       <div>
-                         <p className="font-black text-gray-900 text-sm">{flight.airline}</p>
-                         <p className="text-[11px] text-gray-500 font-bold">{flight.flightNumber}</p>
-                       </div>
-                     </div>
-                     
-                     <div className="flex items-center gap-6 w-[42%] text-center">
-                       <div className="text-left">
-                         <p className="font-black text-lg text-gray-900">{formatTime(flight.departureTime)}</p>
-                         <p className="text-[10px] text-gray-500 font-semibold">{flight.departureCity} (DEL)</p>
-                       </div>
-                       
-                       <div className="flex-1 flex flex-col items-center">
-                         <p className="text-[10px] font-bold text-gray-500 mb-1">{formatDuration(flight.durationMinutes)}</p>
-                         <div className="w-full h-[2px] bg-gray-300 relative flex items-center justify-center">
-                           <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                         </div>
-                         <p className="text-[10px] text-gray-500 mt-1 font-semibold">{flight.stops === 0 ? 'Non-Stop' : `${flight.stops} stop`}</p>
-                       </div>
-
-                       <div className="text-right">
-                         <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
-                         <p className="text-[10px] text-gray-500 font-semibold">{flight.arrivalCity} (BOM)</p>
-                       </div>
-                     </div>
-
-                     <div className="w-[32%] flex flex-col items-end gap-2">
-                       <div className="flex flex-col items-end gap-0.5">
-                         <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
-                         {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
-                           <span className="text-[9px] font-bold text-gray-500 uppercase">(Includes ₹ {flight.agentCommission} Taxes)</span>
-                         )}
-                       </div>
-                       
-                       <div className="flex items-center gap-2">
-                         <button 
-                           onClick={() => setMoreFaresFlight(flight)}
-                           className="border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold px-4 py-1.5 rounded-full text-xs transition"
-                         >
-                           + More Fares
-                         </button>
-
-                         <button 
-                           onClick={() => { setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: flight, fareType: 'INSTANT FARE', adults, children, infants } }) }} 
-                           className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold px-6 py-1.5 rounded-full text-xs transition shadow-sm"
-                         >
-                           Book
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-
-                   {/* Tags Bar matching Screenshot 4 */}
-                   <div className="bg-gray-50/80 px-5 py-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold">
-                     <div className="flex items-center gap-2 flex-wrap">
-                       {flight.seatsAvailable !== undefined ? (
-                         <span className={`px-2 py-0.5 rounded ${flight.seatsAvailable < 10 ? 'bg-red-600 text-white font-black shadow-sm animate-pulse' : 'bg-emerald-100 text-emerald-800'}`}>
-                           {flight.seatsAvailable} Seat(s) Left
-                         </span>
-                       ) : (
-               <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Available</span>
-                       )}
-                       <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded">! Paid Meals</span>
-                       <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">ADT: 15 Kg / 7 Kg</span>
-                       <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded uppercase">INSTANT FARE</span>
-                       <span className="text-blue-700 font-bold uppercase">Class: {flight.cabinClass || 'Economy'}</span>
-                     </div>
-                     <div className="flex items-center gap-4 text-[#0c1a40]">
-                       <span className="cursor-pointer hover:underline" onClick={() => setShowFareRulesForFlight(flight)}>Fare Rules</span>
-                       <div 
-                         className="cursor-pointer font-black border border-[#0c1a40] px-2 py-0.5 rounded hover:bg-[#0c1a40] hover:text-white transition-colors"
-                         onClick={() => setExpandedFlightId(expandedFlightId === flight._id ? null : flight._id)}
-                       >
-                         Flight Details {expandedFlightId === flight._id ? '▲' : '▼'}
-                       </div>
-                     </div>
-                   </div>
-
-                   {/* Flight Details Accordion (Matching Screenshot 3) */}
-                   {expandedFlightId === flight._id && (
-                     <div 
-                       className="border-t border-gray-300 bg-white animate-in slide-in-from-top-2 fade-in duration-200"
-                       style={{ 
-                         backgroundImage: agentCode ? `url("data:image/svg+xml,%3Csvg width='200' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext transform='rotate(-20 100 100)' x='50' y='100' font-size='20' font-family='Arial' font-weight='bold' fill='rgba(0,0,0,0.08)'%3E${agentCode}%3C/text%3E%3C/svg%3E")` : 'none',
-                         backgroundRepeat: 'repeat' 
-                       }}
-                     >
-                       <div className="flex border-b border-gray-200 px-5">
-                         {['FLIGHT DETAIL', 'FARE BREAKUP', 'BAGGAGE'].map(tab => (
-                           <button 
-                             key={tab}
-                             onClick={() => setActiveTab(tab)}
-                             className={`px-4 py-3 text-xs font-black transition-colors border-b-2 ${activeTab === tab ? 'border-[#0c1a40] text-[#0c1a40]' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
-                           >
-                             {tab}
-                           </button>
-                         ))}
-                       </div>
-                       
-                       <div className="p-6">
-                         {activeTab === 'FLIGHT DETAIL' && (
-                           <div>
-                             <div className="flex justify-between items-center mb-6">
-                               <div>
-                                 <h3 className="text-sm font-black text-[#0c1a40]">{flight.departureCity} ({flight.departureAirportCode}) - {flight.arrivalCity} ({flight.arrivalAirportCode})</h3>
-                                 <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">ECONOMY - {flight.cabinClass || 'RI'} (INSTANT FARE)</p>
-                               </div>
-                               <span className="text-[10px] text-gray-500 font-bold">Partially Refundable</span>
-                             </div>
-
-                             <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-4 w-[25%]">
-                                 <img src={flight.airlineLogo} alt={flight.airline} className="w-10 h-10 object-contain" />
-                                 <div className="text-center">
-                                   <p className="font-black text-sm text-[#0c1a40]">{flight.flightNumber}</p>
-                                   <p className="text-[10px] text-gray-500 font-semibold">{flight.airline}</p>
-                                 </div>
-                               </div>
-
-                               <div className="flex items-center gap-6 w-[50%] justify-center text-[#0c1a40]">
-                                 <div className="text-center">
-                                   <p className="font-black text-lg">{formatTime(flight.departureTime)}</p>
-                                   <p className="text-[10px] font-bold">{flight.departureAirportCode} {new Date(flight.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
-                                 </div>
-
-                                 <div className="flex flex-col items-center flex-1">
-                                   <div className="w-full flex items-center gap-2">
-                                     <div className="w-1.5 h-1.5 rounded-full border border-gray-400" />
-                                     <div className="flex-1 h-px bg-gray-300" />
-                                     <div className="w-1.5 h-1.5 rounded-full border border-gray-400" />
-                                   </div>
-                                 </div>
-
-                                 <div className="text-center">
-                                   <p className="font-black text-lg">{formatTime(flight.arrivalTime)}</p>
-                                   <p className="text-[10px] font-bold">{flight.arrivalAirportCode} {new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
-                                   <p className="text-[9px] text-gray-500 mt-0.5">Terminal: 1</p>
-                                 </div>
-                               </div>
-                               
-                               <div className="w-[25%]" />
-                             </div>
-                           </div>
-                         )}
-                         {activeTab === 'FARE BREAKUP' && (
-                           <div className="p-4">
-                             <table className="w-full text-sm">
-                               <tbody className="divide-y divide-gray-300">
-                                 {flight.adultPrice ? (
-                                   <>
-                                     <tr className="py-2">
-                                       <td className="py-3 font-bold text-gray-500">Adult Fare ({adults} x {Math.round(flight.adultPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                                       <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.adultPrice * adults * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
-                                     </tr>
-                                     {children > 0 && flight.childPrice ? (
-                                       <tr className="py-2">
-                                         <td className="py-3 font-bold text-gray-500">Child Fare ({children} x {Math.round(flight.childPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                                         <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.childPrice * children * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
-                                       </tr>
-                                     ) : null}
-                                     {infants > 0 && flight.infantPrice ? (
-                                       <tr className="py-2">
-                                         <td className="py-3 font-bold text-gray-500">Infant Fare ({infants} x {Math.round(flight.infantPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                                         <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.infantPrice * infants * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
-                                       </tr>
-                                     ) : null}
-                                   </>
-                                 ) : (
-                                   <tr className="py-2">
-                                     <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
-                                     <td className="py-3 text-right font-black text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
-                                   </tr>
-                                 )}
-                                 <tr className="bg-gray-50">
-                                   <td className="py-3 px-1 font-black text-[#0c1a40]">Total Fare</td>
-                                   <td className="py-3 px-1 text-right font-black text-blue-600 text-lg">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
-                                 </tr>
-                               </tbody>
-                             </table>
-                           </div>
-                         )}
-                         {activeTab === 'BAGGAGE' && (
-                           <div className="p-6 space-y-4">
-                             <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                               <span className="font-bold text-gray-500 text-sm">Check-in Baggage</span>
-                               <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.checkinBaggage || '15 KG'}</span>
-                             </div>
-                             <div className="flex justify-between items-center pb-1">
-                               <span className="font-bold text-gray-500 text-sm">Cabin Baggage</span>
-                               <span className="font-black text-[#0c1a40] bg-blue-50 px-3 py-1 rounded-full text-xs">{flight.cabinBaggage || '7 KG'}</span>
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   )}
-                 </div>
-               ))
-            )}
-          </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedOutboundFlights && sortedOutboundFlights.length > 0 ? (
+                sortedOutboundFlights.map((flight: any, idx: number) => (
+                  <React.Fragment key={flight._id || idx}>
+                    {renderFlightCard(flight, false)}
+                  </React.Fragment>
+                ))
+              ) : !loading ? (
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">No flights found</h3>
+                  <p className="text-gray-500">Try adjusting your dates or filters to find more options.</p>
+                </div>
+              ) : null}
+            </div>
+          )}
+          
+          {loading && (
+             <div className="text-center py-12">
+               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+               <p className="text-[#0c1a40] font-black mt-4 uppercase tracking-widest text-xs">Searching best deals...</p>
+             </div>
+          )}
         </div>
-
       </div>
 
       {/* Fare Rules Modal (Matching Screenshot 4) */}
@@ -1034,6 +1104,24 @@ export default function AgentFlightSearchResults(props: any) {
                     ) : (
                       <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
                     )}
+                    {activeDatePicker === 'depart' && (
+                      <div className="absolute top-[100%] left-0 z-[110]" onClick={e => e.stopPropagation()}>
+                        <DualMonthCalendar 
+                          checkIn={date ? new Date(date) : null} 
+                          checkOut={null}
+                          onDateChange={(type, d) => {
+                            if (type === 'checkIn' && d) {
+                              setDate(format(d, 'yyyy-MM-dd'));
+                              setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
+                            }
+                          }}
+                          onClose={() => setActiveDatePicker(null)}
+                          origin={from}
+                          destination={to}
+                          isOneWay={true}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div 
@@ -1056,30 +1144,16 @@ export default function AgentFlightSearchResults(props: any) {
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Tap to add a return date for bigger discounts</p>
                     )}
 
-                    {activeDatePicker === 'depart' && (
-                      <div className="absolute top-[100%] left-[-100px] z-[110]" onClick={e => e.stopPropagation()}>
-                        <DualMonthCalendar 
-                          checkIn={date ? new Date(date) : null} 
-                          checkOut={null}
-                          onDateChange={(type, d) => {
-                            setDate(d ? format(d, 'yyyy-MM-dd') : '');
-                            setActiveDatePicker(tripType === 'Return' ? 'return' : null);
-                          }}
-                          onClose={() => setActiveDatePicker(null)}
-                          origin={from}
-                          destination={to}
-                          isOneWay={true}
-                        />
-                      </div>
-                    )}
                     {activeDatePicker === 'return' && (
                       <div className="absolute top-[100%] left-0 z-[110]" onClick={e => e.stopPropagation()}>
                         <DualMonthCalendar 
                           checkIn={returnDate ? new Date(returnDate) : null} 
                           checkOut={null}
                           onDateChange={(type, d) => {
-                            setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
-                            setActiveDatePicker(null);
+                            if (type === 'checkIn' && d) {
+                              setReturnDate(format(d, 'yyyy-MM-dd'));
+                              setActiveDatePicker(null);
+                            }
                           }}
                           onClose={() => setActiveDatePicker(null)}
                           origin={to}
@@ -1172,6 +1246,68 @@ export default function AgentFlightSearchResults(props: any) {
       )}
 
     </div>
+
+      {/* Sticky Footer for Selection */}
+      {tripType === 'Round Trip' && selectedOutbound && selectedReturn && createPortal(
+        <div className="fixed bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
+          <div className="max-w-[1240px] mx-auto flex gap-6 px-4">
+            <div className="w-[260px] shrink-0 hidden md:block"></div>
+            <div className="flex-1 bg-[#0b1031] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] rounded-t-lg flex items-center justify-between pointer-events-auto border-t border-blue-900">
+              
+              <div className="flex gap-4 flex-1 pl-2">
+                <div className="flex-1 flex items-center gap-4 pr-6 border-r border-gray-700">
+                  <img src={selectedOutbound.airlineLogo} alt="" className="w-8 h-8 object-contain bg-white rounded-md p-1 shrink-0" />
+                  <div className="flex flex-col justify-center flex-1">
+                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Departure • {selectedOutbound.airline}</p>
+                    <div className="flex items-center gap-2 text-white">
+                      <span className="font-black text-[15px]">{new Date(selectedOutbound.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                      <span className="text-gray-500 text-xs">→</span>
+                      <span className="font-black text-[15px]">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-black text-lg text-white">₹ {getDisplayPrice(selectedOutbound.price).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {selectedReturn && (
+                  <div className="flex-1 flex items-center gap-4 pr-6 border-r border-gray-700">
+                    <img src={selectedReturn.airlineLogo} alt="" className="w-8 h-8 object-contain bg-white rounded-md p-1 shrink-0" />
+                    <div className="flex flex-col justify-center flex-1">
+                      <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Return • {selectedReturn.airline}</p>
+                      <div className="flex items-center gap-2 text-white">
+                        <span className="font-black text-[15px]">{new Date(selectedReturn.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                        <span className="text-gray-500 text-xs">→</span>
+                        <span className="font-black text-[15px]">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-black text-lg text-white">₹ {getDisplayPrice(selectedReturn.price).toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-6 pr-2">
+                <div className="text-right flex flex-col justify-center">
+                  <p className="font-black text-[22px] text-white leading-none">₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}</p>
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Total Fare</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    navigate('/b2b/checkout', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 px-8 rounded-lg text-sm transition uppercase shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
+                >
+                  BOOK NOW
+                </button>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      , document.body)}
+    </>
   );
 }
 

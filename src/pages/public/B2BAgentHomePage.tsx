@@ -192,6 +192,12 @@ const B2BAgentHomePage: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(savedState.hasSearched || false);
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
+  const [returnFlightsData, setReturnFlightsData] = useState<any[]>([]);
+  const [selectedOutbound, setSelectedOutbound] = useState<any>(null);
+  const [selectedReturn, setSelectedReturn] = useState<any>(null);
+  const [nonStopFilter, setNonStopFilter] = useState(false);
+  const [morningFilter, setMorningFilter] = useState(false);
+  const [sortBy, setSortBy] = useState('CHEAPEST');
 
   useEffect(() => {
     sessionStorage.setItem('b2bSearchState', JSON.stringify({
@@ -202,8 +208,11 @@ const B2BAgentHomePage: React.FC = () => {
   const handleSearch = async () => {
     setHasSearched(true);
     setLoading(true);
+    setSelectedOutbound(null);
+    setSelectedReturn(null);
 
     try {
+      // Outbound flights
       const response = await api.get('/api/searches/flights', {
         params: {
           from,
@@ -217,11 +226,45 @@ const B2BAgentHomePage: React.FC = () => {
           passengers: adults + children + infants
         }
       });
+      const flightsData = response.data || [];
+      setFlights(flightsData);
       
-      setFlights(response.data || []);
+      if (tripType === 'Round Trip' && flightsData.length > 0) {
+        setSelectedOutbound(flightsData[0]);
+      }
+
+      // Return flights (swap from/to, use returnDate)
+      if (tripType === 'Round Trip' && returnDate) {
+        try {
+          const returnResponse = await api.get('/api/searches/flights', {
+            params: {
+              from: to,
+              to: from,
+              date: returnDate,
+              adults,
+              children,
+              infants,
+              cabinClass,
+              tripType,
+              passengers: adults + children + infants
+            }
+          });
+          const retFlightsData = returnResponse.data || [];
+          setReturnFlightsData(retFlightsData);
+          if (retFlightsData.length > 0) {
+            setSelectedReturn(retFlightsData[0]);
+          }
+        } catch (e) {
+          console.error("Error fetching return flights:", e);
+          setReturnFlightsData([]);
+        }
+      } else {
+        setReturnFlightsData([]);
+      }
     } catch (e) {
       console.error("Error fetching flights:", e);
       setFlights([]);
+      setReturnFlightsData([]);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -256,25 +299,25 @@ const B2BAgentHomePage: React.FC = () => {
         setInfants={setInfants}
         cabinClass={cabinClass}
         setCabinClass={setCabinClass}
-        nonStopFilter={false}
-        setNonStopFilter={() => {}}
-        morningFilter={false}
-        setMorningFilter={() => {}}
-        sortBy="CHEAPEST"
-        setSortBy={() => {}}
+        nonStopFilter={nonStopFilter}
+        setNonStopFilter={setNonStopFilter}
+        morningFilter={morningFilter}
+        setMorningFilter={setMorningFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
         outboundFlights={flights}
-        returnFlights={[]}
+        returnFlights={returnFlightsData}
         loading={loading}
-        selectedOutbound={null}
-        setSelectedOutbound={() => {}}
-        selectedReturn={null}
-        setSelectedReturn={() => {}}
+        selectedOutbound={selectedOutbound}
+        setSelectedOutbound={setSelectedOutbound}
+        selectedReturn={selectedReturn}
+        setSelectedReturn={setSelectedReturn}
         showFlightDetails={false}
         setShowFlightDetails={() => {}}
         sortedOutboundFlights={flights}
         setHasSearched={setHasSearched}
         cheapestFlight={flights[0]}
-        nonStopFlight={flights[0]}
+        nonStopFlight={flights.find((f: any) => f.stops === 0) || flights[0]}
         preferFlight={null}
         handleSearch={handleSearch}
         getDisplayPrice={(p: number) => p}
@@ -426,7 +469,7 @@ const B2BAgentHomePage: React.FC = () => {
           
           {/* Trip Type Tabs */}
           <div className="flex items-center gap-2 text-sm font-bold">
-            {['OneWay', 'Return', 'Multi City'].map(t => (
+            {['OneWay', 'Round Trip', 'Multi City'].map(t => (
               <label 
                 key={t} 
                 onClick={() => setTripType(t)}
@@ -495,15 +538,15 @@ const B2BAgentHomePage: React.FC = () => {
 
             {/* Return Date */}
             <div 
-              className={`flex-1 h-full border-r border-gray-100 flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50 ${tripType !== 'Return' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : ''}`}
+              className={`flex-1 h-full border-r border-gray-100 flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50 ${tripType !== 'Round Trip' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : ''}`}
               onClick={() => {
-                if (tripType === 'Return') setActiveDatePicker('return');
+                if (tripType === 'Round Trip') setActiveDatePicker('return');
               }}
             >
               <Calendar size={18} className="text-gray-400" />
               <div className="flex-1">
                 <span className="text-[13px] text-gray-300 block mt-1">
-                  {returnDate && tripType === 'Return' ? format(new Date(returnDate), 'dd MMM, yyyy') : 'Return Date'}
+                  {returnDate && tripType === 'Round Trip' ? format(new Date(returnDate), 'dd MMM, yyyy') : 'Return Date'}
                 </span>
               </div>
             </div>
@@ -539,8 +582,10 @@ const B2BAgentHomePage: React.FC = () => {
                   checkIn={date ? new Date(date) : null} 
                   checkOut={null}
                   onDateChange={(type, selectedDate) => {
-                    setDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
-                    setActiveDatePicker(tripType === 'Return' ? 'return' : null);
+                    if (type === 'checkIn' && selectedDate) {
+                      setDate(format(selectedDate, 'yyyy-MM-dd'));
+                      setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
+                    }
                   }}
                   onClose={() => setActiveDatePicker(null)}
                   origin={from}
@@ -552,11 +597,13 @@ const B2BAgentHomePage: React.FC = () => {
             {activeDatePicker === 'return' && (
               <div className="absolute top-[100%] left-[40%] z-50">
                 <DualMonthCalendar 
-                  checkIn={returnDate && tripType === 'Return' ? new Date(returnDate) : null}
+                  checkIn={returnDate && tripType === 'Round Trip' ? new Date(returnDate) : null}
                   checkOut={null}
                   onDateChange={(type, selectedDate) => {
-                    setReturnDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
-                    setActiveDatePicker(null);
+                    if (type === 'checkIn' && selectedDate) {
+                      setReturnDate(format(selectedDate, 'yyyy-MM-dd'));
+                      setActiveDatePicker(null);
+                    }
                   }}
                   onClose={() => setActiveDatePicker(null)}
                   origin={to}
