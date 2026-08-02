@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import toast from 'react-hot-toast';
 import { Plane, Building2, Shield, CreditCard, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAgentBookingMode, logout } from '../../store/authSlice';
@@ -693,15 +694,15 @@ export default function AgentFlightSearchResults(props: any) {
               <Plane size={20} />
               <span className="text-[10px] font-bold mt-1">Flights</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/?tab=Hotels')}>
+            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
               <Building2 size={20} />
               <span className="text-[10px] font-bold mt-1">Hotel & Villas</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/?tab=Villas & Homestays')}>
+            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
               <Shield size={20} />
               <span className="text-[10px] font-bold mt-1">Insurance</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/?tab=Cabs')}>
+            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
               <CreditCard size={20} />
               <span className="text-[10px] font-bold mt-1">Visa</span>
             </div>
@@ -720,16 +721,20 @@ export default function AgentFlightSearchResults(props: any) {
                 <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
-                    { label: 'Account Statement', path: '#' },
-                    { label: 'Booking Status', path: '#' },
-                    { label: 'Manage Booking', path: '#' },
+                    { label: 'Account Statement', path: '/b2b/account-statement' },
+                    { label: 'Booking Status', path: '/b2b/booking-status' },
+                    { label: 'Manage Booking', path: '/b2b/manage-booking' },
                     { label: 'Agent Certificate', path: '#' }
                   ].map((item, index) => (
                     <button 
                       key={index}
                       onClick={() => {
                         setShowMoreMenu(false);
-                        if (item.path !== '#') props.navigate(item.path);
+                        if (item.path !== '#') {
+                          navigate(item.path);
+                        } else {
+                          toast.error('This feature is coming soon!');
+                        }
                       }}
                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 transition"
                     >

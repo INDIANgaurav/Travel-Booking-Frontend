@@ -172,7 +172,7 @@ const B2BAgentHomePage: React.FC = () => {
     } catch { return {}; }
   };
   const savedState = getSavedState();
-  const [tripType, setTripType] = useState(savedState.tripType || 'OneWay');
+  const [tripType, setTripType] = useState('OneWay');
   const [from, setFrom] = useState(savedState.from || 'DEL');
   const [to, setTo] = useState(savedState.to || 'HYD');
   const [date, setDate] = useState(savedState.date || format(new Date(), 'yyyy-MM-dd'));
