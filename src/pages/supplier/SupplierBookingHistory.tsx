@@ -5,6 +5,7 @@ import type { RootState } from '../../store/store';
 import Dropdown from '../../components/ui/Dropdown';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import ETicketModal from '../../components/bookings/ETicketModal';
 
 interface BookingRecord {
   _id: string;
@@ -53,6 +54,23 @@ const SupplierBookingHistory: React.FC = () => {
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  
+  const [ticketModalBooking, setTicketModalBooking] = useState<any | null>(null);
+
+  const [availableAirlines, setAvailableAirlines] = useState<{value: string, label: string}[]>([
+    { value: 'Select Airline', label: 'Select Airline' }
+  ]);
+
+  React.useEffect(() => {
+    // Fetch series fares to extract unique airlines for the filter
+    api.get('/api/series-fare').then(res => {
+      if (Array.isArray(res.data)) {
+        const uniqueAirlines = Array.from(new Set(res.data.map(f => f.airline))).filter(Boolean) as string[];
+        const options = uniqueAirlines.map(a => ({ value: a, label: a }));
+        setAvailableAirlines([{ value: 'Select Airline', label: 'Select Airline' }, ...options]);
+      }
+    }).catch(err => console.error("Error fetching airlines for filter", err));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,14 +154,7 @@ const SupplierBookingHistory: React.FC = () => {
               <Dropdown
                 value={airline}
                 onChange={setAirline}
-                options={[
-                  { value: 'Select Airline', label: 'Select Airline' },
-                  { value: 'Akasa', label: 'Akasa Air' },
-                  { value: 'IndiGo', label: 'IndiGo' },
-                  { value: 'Air India', label: 'Air India' },
-                  { value: 'SpiceJet', label: 'SpiceJet' },
-                  { value: 'Vistara', label: 'Vistara' }
-                ]}
+                options={availableAirlines}
               />
             </div>
 
@@ -282,6 +293,7 @@ const SupplierBookingHistory: React.FC = () => {
                     <th className="p-3 text-right">AMOUNT</th>
                     <th className="p-3 text-center">SEAT</th>
                     <th className="p-3 text-center">STATUS</th>
+                    <th className="p-3 text-center">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -320,6 +332,14 @@ const SupplierBookingHistory: React.FC = () => {
                             {b.status}
                           </span>
                         </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => setTicketModalBooking(b)}
+                            className="bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold px-3 py-1.5 rounded text-xs border border-blue-200 transition-colors"
+                          >
+                            View
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -340,6 +360,14 @@ const SupplierBookingHistory: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Ticket Modal */}
+      {ticketModalBooking && (
+        <ETicketModal 
+          booking={ticketModalBooking} 
+          onClose={() => setTicketModalBooking(null)} 
+        />
       )}
     </div>
   );

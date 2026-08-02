@@ -126,44 +126,53 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
 
             {viewType === 'invoice' ? (
               <div className="w-full text-black">
-                <div className="grid grid-cols-2 gap-4 mb-4 text-[13px]">
-                  <div>
-                    <p className="font-bold text-lg mb-6 tracking-widest uppercase">{airline}</p>
+                <div className="flex justify-between items-start mb-4 text-[13px]">
+                  <div className="w-1/2">
+                    <p className="font-bold text-xl mb-6 tracking-widest uppercase text-blue-900">{airline}</p>
                     
-                    <p className="text-gray-500 mb-0.5">Agency Booking ID</p>
-                    <p className="font-bold">{agentRef}</p>
-      
-                    <p className="text-gray-500 mt-4 mb-0.5">Booking Reference</p>
-                    <p className="font-bold">{displayPnr}</p>
-                    
-                    <p className="text-gray-500 mt-4 mb-0.5">Issue Date</p>
-                    <p className="font-bold">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB')}</p>
+                    <div className="flex flex-col space-y-4">
+                      <div>
+                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Agency Booking ID</p>
+                        <p className="font-bold text-gray-900">{agentRef}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Booking Reference</p>
+                        <p className="font-bold text-gray-900">{displayPnr}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Issue Date</p>
+                        <p className="font-bold text-gray-900">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-end items-start pr-4">
-                    <div className="w-32 h-32 border border-gray-200 rounded p-1">
-                      <Barcode value={displayPnr} width={1.5} height={40} displayValue={false} />
-                      <div className="text-center text-xs mt-1 font-bold">{displayPnr}</div>
+                  
+                  <div className="w-1/2 flex flex-col items-end text-right">
+                    <div className="mb-4 text-[11px] text-gray-700">
+                      <p className="font-bold text-gray-900 mb-1 uppercase text-[12px]">TRIPPECHALO INDIA PRIVATE LIMITED</p>
+                      <p>First Floor, D 42, Greater Noida Expressway</p>
+                      <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
+                      <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
+                      <p>Phone: +91 95559 34205</p>
+                      <p>Email: trippechaloindia@gmail.com</p>
+                    </div>
+                    <div className="border border-gray-200 rounded p-2 bg-white shadow-sm inline-block">
+                      <Barcode value={displayPnr} width={1.5} height={30} displayValue={false} margin={0} />
+                      <div className="text-center text-[11px] mt-1 font-bold tracking-widest uppercase">{displayPnr}</div>
                     </div>
                   </div>
                 </div>
       
-                <div className="border-t border-dashed border-gray-300 my-6"></div>
+                <div className="border-t-2 border-gray-200 my-6"></div>
       
                 {/* Customer & Booked By */}
-                <div className="flex justify-between text-[11px] mb-6 pr-16">
+                <div className="flex justify-between text-[11px] mb-6">
                   <div>
-                    <p className="text-gray-500 mb-0.5">Customer Name</p>
+                    <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Customer Name</p>
                     <p className="font-bold text-[13px]">{passengers[0]?.name || passengers[0]?.firstName || booking.user?.name}</p>
-                    <p className="text-gray-500 mt-2 mb-0.5">Booked By</p>
-                    <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
                   </div>
-                  <div className="text-right text-[11px] text-gray-700">
-                    <p className="font-bold text-gray-900 mb-1 uppercase">TRIPPECHALO INDIA PRIVATE LIMITED</p>
-                    <p>First Floor, D 42, Greater Noida Expressway</p>
-                    <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
-                    <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
-                    <p>Phone: +91 95559 34205</p>
-                    <p>Email: trippechaloindia@gmail.com</p>
+                  <div className="text-right">
+                    <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Booked By</p>
+                    <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
                   </div>
                 </div>
 

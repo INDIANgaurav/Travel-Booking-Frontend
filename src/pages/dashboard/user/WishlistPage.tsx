@@ -8,8 +8,6 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f7eefe] to-[#f4f7fa] font-sans pb-20 relative overflow-hidden">
-      <TopNavbar />
-      
       {/* Dashed Background Pattern */}
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#c2cce2 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
       <svg className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-30" preserveAspectRatio="none">
@@ -77,7 +75,7 @@ export default function WishlistPage() {
             {/* Right Polaroid */}
             <div className="absolute right-[10%] transform rotate-6 hover:rotate-0 hover:z-20 transition-all duration-300">
               <div className="bg-white p-2 pb-6 rounded-lg shadow-xl border border-gray-100 relative">
-                <img src="https://images.unsplash.com/photo-1542382103-67c762551cf1?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80" alt="Desert" className="w-[160px] h-[160px] object-cover rounded" />
+                <img src="https://images.unsplash.com/photo-1547234935-8027b2046120?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80" alt="Desert" className="w-[160px] h-[160px] object-cover rounded" />
                 
                 {/* Vote Tooltip */}
                 <div className="absolute -bottom-6 -right-8">

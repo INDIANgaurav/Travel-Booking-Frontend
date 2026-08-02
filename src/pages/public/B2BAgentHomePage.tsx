@@ -181,7 +181,7 @@ const B2BAgentHomePage: React.FC = () => {
   const [children, setChildren] = useState(savedState.children || 0);
   const [infants, setInfants] = useState(savedState.infants || 0);
   const [cabinClass, setCabinClass] = useState(savedState.cabinClass || 'Economy');
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [activeDatePicker, setActiveDatePicker] = useState<'depart' | 'return' | null>(null);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   
   // Special Fares
@@ -483,7 +483,7 @@ const B2BAgentHomePage: React.FC = () => {
             {/* Departure Date */}
             <div 
               className="flex-1 h-full border-r border-gray-100 relative flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50"
-              onClick={() => setIsDatePickerOpen(true)}
+              onClick={() => setActiveDatePicker('depart')}
             >
               <Calendar size={18} className="text-gray-400" />
               <div className="flex-1">
@@ -497,7 +497,7 @@ const B2BAgentHomePage: React.FC = () => {
             <div 
               className={`flex-1 h-full border-r border-gray-100 flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50 ${tripType !== 'Return' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : ''}`}
               onClick={() => {
-                if (tripType === 'Return') setIsDatePickerOpen(true);
+                if (tripType === 'Return') setActiveDatePicker('return');
               }}
             >
               <Calendar size={18} className="text-gray-400" />
@@ -533,22 +533,35 @@ const B2BAgentHomePage: React.FC = () => {
             </button>
 
             {/* Calendar Popover */}
-            {isDatePickerOpen && (
+            {activeDatePicker === 'depart' && (
               <div className="absolute top-[100%] left-[30%] z-50">
                 <DualMonthCalendar 
                   checkIn={date ? new Date(date) : null} 
-                  checkOut={returnDate && tripType === 'Return' ? new Date(returnDate) : null}
+                  checkOut={null}
                   onDateChange={(type, selectedDate) => {
-                    if (type === 'checkIn') {
-                      setDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
-                    } else {
-                      setReturnDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
-                    }
+                    setDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
+                    setActiveDatePicker(tripType === 'Return' ? 'return' : null);
                   }}
-                  onClose={() => setIsDatePickerOpen(false)}
+                  onClose={() => setActiveDatePicker(null)}
                   origin={from}
                   destination={to}
-                  isOneWay={tripType !== 'Return'}
+                  isOneWay={true}
+                />
+              </div>
+            )}
+            {activeDatePicker === 'return' && (
+              <div className="absolute top-[100%] left-[40%] z-50">
+                <DualMonthCalendar 
+                  checkIn={returnDate && tripType === 'Return' ? new Date(returnDate) : null}
+                  checkOut={null}
+                  onDateChange={(type, selectedDate) => {
+                    setReturnDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '');
+                    setActiveDatePicker(null);
+                  }}
+                  onClose={() => setActiveDatePicker(null)}
+                  origin={to}
+                  destination={from}
+                  isOneWay={true}
                 />
               </div>
             )}

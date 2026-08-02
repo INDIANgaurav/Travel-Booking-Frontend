@@ -95,7 +95,7 @@ export default function FlightSearchResults() {
   const [showFareSummaryModal, setShowFareSummaryModal] = useState(false);
 
   // Picker States
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [activeDatePicker, setActiveDatePicker] = useState<'depart' | 'return' | null>(null);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   const [isCabinPickerOpen, setIsCabinPickerOpen] = useState(false);
   const [isFromPickerOpen, setIsFromPickerOpen] = useState(false);
@@ -113,7 +113,7 @@ export default function FlightSearchResults() {
   };
 
   const closeAllPickers = () => {
-    setIsDatePickerOpen(false);
+    setActiveDatePicker(null);
     setIsTravellerPickerOpen(false);
     setIsCabinPickerOpen(false);
     setIsFromPickerOpen(false);
@@ -277,7 +277,7 @@ export default function FlightSearchResults() {
 
             <div 
               className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
             >
               <span className="text-[10px] text-gray-500 font-bold uppercase">Depart</span>
               <span className="text-sm font-bold text-gray-900 truncate">{formatDate(date)}</span>
@@ -285,7 +285,7 @@ export default function FlightSearchResults() {
 
             <div 
               className={`flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32 relative ${tripType === 'One Way' ? 'opacity-50' : ''}`}
-              onClick={(e) => { e.stopPropagation(); if (tripType !== 'Round Trip') setTripType('Round Trip'); closeAllPickers(); setIsDatePickerOpen(true); }}
+              onClick={(e) => { e.stopPropagation(); if (tripType !== 'Round Trip') setTripType('Round Trip'); closeAllPickers(); setActiveDatePicker('return'); }}
             >
               <span className="text-[10px] text-gray-500 font-bold uppercase">Return</span>
               <span className="text-sm font-bold text-gray-900 truncate">{tripType === 'Round Trip' ? formatDate(returnDate) : 'Tap to add'}</span>
@@ -337,21 +337,36 @@ export default function FlightSearchResults() {
             </div>
           )}
 
-          {isDatePickerOpen && (
-            <div className="absolute top-[60px] left-[30%] z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white">
+          {activeDatePicker === 'depart' && (
+            <div className="absolute top-[60px] left-[30%] z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white" onClick={e => e.stopPropagation()}>
               <CustomCalendar 
                 startDate={date}
-                endDate={tripType === 'Round Trip' ? returnDate : null}
-                isOneWay={tripType === 'One Way'}
-                onChange={(start, end) => {
+                endDate={null}
+                isOneWay={true}
+                onChange={(start) => {
                   if (start) setDate(start);
-                  if (end) setReturnDate(end);
-                  if (tripType === 'One Way' && start) setIsDatePickerOpen(false);
-                  if (tripType === 'Round Trip' && start && end) setIsDatePickerOpen(false);
+                  setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
                 }} 
-                onClose={() => setIsDatePickerOpen(false)}
+                onClose={() => setActiveDatePicker(null)}
                 origin={from}
                 destination={to}
+              />
+            </div>
+          )}
+          {activeDatePicker === 'return' && (
+            <div className="absolute top-[60px] left-[40%] z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white" onClick={e => e.stopPropagation()}>
+              <CustomCalendar 
+                startDate={returnDate}
+                endDate={null}
+                minDate={date}
+                isOneWay={true}
+                onChange={(start) => {
+                  if (start) setReturnDate(start);
+                  setActiveDatePicker(null);
+                }} 
+                onClose={() => setActiveDatePicker(null)}
+                origin={to}
+                destination={from}
               />
             </div>
           )}

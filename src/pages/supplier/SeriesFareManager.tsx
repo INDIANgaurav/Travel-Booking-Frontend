@@ -5,6 +5,7 @@ import type { RootState } from '../../store/store';
 import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import CityPicker from '../../components/common/CityPicker';
 import toast from 'react-hot-toast';
 
 interface ISeriesFare {
@@ -29,16 +30,6 @@ interface ISeriesFare {
   status: 'Active' | 'Inactive' | 'SoldOut';
 }
 
-const POPULAR_CITIES = [
-  { code: 'DEL', name: 'DELHI', airport: 'Indira Gandhi International Airport' },
-  { code: 'BOM', name: 'MUMBAI', airport: 'Chhatrapati Shivaji Airport' },
-  { code: 'GOI', name: 'GOA', airport: 'Dabolim Airport' },
-  { code: 'HYD', name: 'HYDERABAD', airport: 'Begumpet Airport' },
-  { code: 'BLR', name: 'BENGALURU', airport: 'Kempegowda International Airport' },
-  { code: 'CCU', name: 'KOLKATA', airport: 'Netaji Subhash Chandra Bose' },
-  { code: 'MAA', name: 'CHENNAI', airport: 'Chennai International Airport' }
-];
-
 const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -53,37 +44,25 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedCity = POPULAR_CITIES.find(c => c.code === value);
-  const displayValue = selectedCity ? `${selectedCity.name} (${selectedCity.code})` : value;
-
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <input
-        type="text"
-        value={displayValue}
-        onChange={(e) => onChange(e.target.value.toUpperCase())}
-        onFocus={() => setIsOpen(true)}
-        placeholder={placeholder}
-        className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-      />
+      <div
+        onClick={() => setIsOpen(true)}
+        className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white font-bold uppercase cursor-pointer min-h-[34px] flex items-center"
+      >
+        {value || placeholder}
+      </div>
       {isOpen && (
-        <div className="absolute top-[100%] mt-1 left-0 z-[60] bg-white border border-gray-200 rounded-lg shadow-xl w-[320px] max-h-[300px] overflow-y-auto animate-in fade-in zoom-in duration-200">
-          <div className="text-[10px] text-gray-500 font-bold px-3 py-2 uppercase tracking-wider bg-gray-50/80 sticky top-0 border-b border-gray-100">Popular Cities</div>
-          <div className="py-1">
-            {POPULAR_CITIES.map(city => (
-              <div 
-                key={city.code}
-                onClick={() => { onChange(city.code); setIsOpen(false); }}
-                className="flex justify-between items-center px-4 py-2 hover:bg-[#1d2757] cursor-pointer group transition-colors border-b border-gray-50 last:border-0"
-              >
-                <div>
-                  <div className="font-bold text-[13px] text-gray-900 group-hover:text-white leading-tight">{city.name}</div>
-                  <div className="text-[10px] text-gray-500 group-hover:text-gray-300 flex items-center gap-1 mt-0.5"><Plane size={10} className="transform rotate-45"/> {city.airport}</div>
-                </div>
-                <div className="bg-gray-500/10 text-gray-600 group-hover:bg-white/20 group-hover:text-white text-[10px] px-2 py-0.5 rounded font-bold">{city.code}</div>
-              </div>
-            ))}
-          </div>
+        <div className="absolute top-[100%] mt-1 left-0 z-[60]">
+          <CityPicker 
+            value={value} 
+            onChange={(code) => {
+              onChange(code);
+              setIsOpen(false);
+            }} 
+            onClose={() => setIsOpen(false)} 
+            title="SELECT CITY" 
+          />
         </div>
       )}
     </div>

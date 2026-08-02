@@ -47,7 +47,7 @@ export default function AgentFlightSearchResults(props: any) {
     handleSearch, getDisplayPrice, navigate, setHasSearched
   } = props;
 
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [activeDatePicker, setActiveDatePicker] = useState<'depart' | 'return' | null>(null);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   const [isCabinPickerOpen, setIsCabinPickerOpen] = useState(false);
   const [isFromPickerOpen, setIsFromPickerOpen] = useState(false);
@@ -55,7 +55,7 @@ export default function AgentFlightSearchResults(props: any) {
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
 
   const closeAllPickers = () => {
-    setIsDatePickerOpen(false);
+    setActiveDatePicker(null);
     setIsTravellerPickerOpen(false);
     setIsCabinPickerOpen(false);
     setIsFromPickerOpen(false);
@@ -1017,7 +1017,7 @@ export default function AgentFlightSearchResults(props: any) {
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Departure</span>
@@ -1038,7 +1038,7 @@ export default function AgentFlightSearchResults(props: any) {
 
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('return'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
@@ -1056,23 +1056,35 @@ export default function AgentFlightSearchResults(props: any) {
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Tap to add a return date for bigger discounts</p>
                     )}
 
-                    {isDatePickerOpen && (
+                    {activeDatePicker === 'depart' && (
                       <div className="absolute top-[100%] left-[-100px] z-[110]" onClick={e => e.stopPropagation()}>
                         <DualMonthCalendar 
                           checkIn={date ? new Date(date) : null} 
-                          checkOut={returnDate ? new Date(returnDate) : null}
+                          checkOut={null}
                           onDateChange={(type, d) => {
-                            if (type === 'checkIn') {
-                              setDate(d ? format(d, 'yyyy-MM-dd') : '');
-                              setIsDatePickerOpen(false);
-                            } else {
-                              setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
-                            }
+                            setDate(d ? format(d, 'yyyy-MM-dd') : '');
+                            setActiveDatePicker(tripType === 'Return' ? 'return' : null);
                           }}
-                          onClose={() => setIsDatePickerOpen(false)}
+                          onClose={() => setActiveDatePicker(null)}
                           origin={from}
                           destination={to}
-                          isOneWay={tripType !== 'Return'}
+                          isOneWay={true}
+                        />
+                      </div>
+                    )}
+                    {activeDatePicker === 'return' && (
+                      <div className="absolute top-[100%] left-0 z-[110]" onClick={e => e.stopPropagation()}>
+                        <DualMonthCalendar 
+                          checkIn={returnDate ? new Date(returnDate) : null} 
+                          checkOut={null}
+                          onDateChange={(type, d) => {
+                            setReturnDate(d ? format(d, 'yyyy-MM-dd') : '');
+                            setActiveDatePicker(null);
+                          }}
+                          onClose={() => setActiveDatePicker(null)}
+                          origin={to}
+                          destination={from}
+                          isOneWay={true}
                         />
                       </div>
                     )}

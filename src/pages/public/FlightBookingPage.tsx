@@ -28,8 +28,12 @@ export default function FlightBookingPage() {
   for (let i = 0; i < initialInfants; i++) initialPassengers.push({ title: '', firstName: '', lastName: '', type: 'Infant', nationality: 'IN' });
   const [passengers, setPassengers] = useState<any[]>(initialPassengers);
 
-  const requireDob = selectedOutbound?.inputRequirements?.dob?.required;
-  const requirePassport = selectedOutbound?.inputRequirements?.passport?.required || requireDob;
+  // List of major Indian airport codes to determine domestic vs international
+  const indianAirports = new Set(['DEL','BOM','NMI','BLR','MAA','CCU','HYD','AMD','PNQ','GOI','GOX','COK','TRV','CCJ','JAI','ATQ','LKO','BBI','PAT','GAU','IXB','IXZ','IXC','SXR','VNS','BHO','IDR','NAG','RPR','BDQ','STV']);
+  const isInternational = selectedOutbound && (!indianAirports.has(selectedOutbound.departureAirportCode) || !indianAirports.has(selectedOutbound.arrivalAirportCode));
+
+  const requireDob = selectedOutbound?.inputRequirements?.dob?.required || isInternational;
+  const requirePassport = selectedOutbound?.inputRequirements?.passport?.required || requireDob || isInternational;
   const [showErrors, setShowErrors] = useState(false);
 
   const adultsCount = passengers.filter(p => p.type === 'Adult').length;
@@ -41,10 +45,6 @@ export default function FlightBookingPage() {
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // List of major Indian airport codes to determine domestic vs international
-  const indianAirports = new Set(['DEL','BOM','NMI','BLR','MAA','CCU','HYD','AMD','PNQ','GOI','GOX','COK','TRV','CCJ','JAI','ATQ','LKO','BBI','PAT','GAU','IXB','IXZ','IXC','SXR','VNS','BHO','IDR','NAG','RPR','BDQ','STV']);
-  const isInternational = selectedOutbound && (!indianAirports.has(selectedOutbound.departureAirportCode) || !indianAirports.has(selectedOutbound.arrivalAirportCode));
 
   // Fare summary states
   const [showBaseFare, setShowBaseFare] = useState(false);
@@ -412,7 +412,7 @@ export default function FlightBookingPage() {
                           />
                         </div>
 
-                        {(p.type.toUpperCase() === 'CHILD' || p.type.toUpperCase() === 'INFANT' || selectedOutbound?.inputRequirements?.dob?.required) && (
+                        {(p.type.toUpperCase() === 'CHILD' || p.type.toUpperCase() === 'INFANT' || requireDob) && (
                           <div className="relative">
                             <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Date of Birth</label>
                             {(() => {

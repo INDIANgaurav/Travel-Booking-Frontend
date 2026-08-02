@@ -179,7 +179,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
 
                 {/* Wishlist */}
                 {isAuthenticated ? (
-                  <Link to="/wishlist" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
+                  <Link to="/dashboard/wishlist" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
                     <Heart size={20} className="text-[#ff4f4f] fill-[#ff4f4f]" />
                     <div className="flex flex-col">
                       <span className="text-[11px] font-bold">Wishlist</span>

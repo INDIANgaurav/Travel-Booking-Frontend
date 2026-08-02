@@ -7,6 +7,7 @@ import api from '../../services/api';
 import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
 
+
 import CustomCalendar from '../../components/common/CustomCalendar';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
@@ -65,7 +66,7 @@ export default function LandingPage() {
   const [returnDate, setReturnDate] = useState<Date | null>(null);
   
   // Pickers state
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [activeDatePicker, setActiveDatePicker] = useState<'depart' | 'return' | null>(null);
   const [isTravellerPickerOpen, setIsTravellerPickerOpen] = useState(false);
   const [isCabinPickerOpen, setIsCabinPickerOpen] = useState(false);
   const [isBookingForOpen, setIsBookingForOpen] = useState(false);
@@ -96,7 +97,7 @@ export default function LandingPage() {
   }, [returnDate, departureDate]);
 
   const closeAllPickers = () => {
-    setIsDatePickerOpen(false);
+    setActiveDatePicker(null);
     setIsTravellerPickerOpen(false);
     setIsCabinPickerOpen(false);
     setIsBookingForOpen(false);
@@ -164,20 +165,47 @@ export default function LandingPage() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
+      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 overflow-hidden ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
         
         {/* Dynamic Background Elements */}
         {!(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') && (
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center"></div>
-            {/* subtle dark overlay to ensure text readability */}
-            <div className="absolute inset-0 bg-black/20"></div>
+          <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">
+            {/* Main Image with slow zoom effect */}
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center opacity-80" style={{ animation: 'zoomInOut 30s infinite alternate ease-in-out' }}></div>
+            
+            {/* Rich Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-transparent to-gray-50"></div>
+            
+            {/* Decorative Floating Glowing Orbs */}
+            <div className="absolute top-[15%] left-[10%] w-64 h-64 bg-blue-400/20 rounded-full blur-[80px]"></div>
+            <div className="absolute top-[30%] right-[10%] w-80 h-80 bg-purple-500/20 rounded-full blur-[100px]"></div>
+            
+            {/* Extra inline style for the subtle zoom animation */}
+            <style>{`
+              @keyframes zoomInOut {
+                0% { transform: scale(1); }
+                100% { transform: scale(1.1); }
+              }
+              @keyframes fadeInUp {
+                0% { opacity: 0; transform: translateY(20px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+            `}</style>
           </div>
         )}
 
         {/* Search Widget Container */}
-        <div className={`mx-auto w-full px-4 relative z-10 -mt-20 transition-all duration-300 ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'max-w-[1200px]' : 'max-w-[1050px]'}`} onClick={closeAllPickers}>
+        <div className={`mx-auto w-full px-4 relative z-10 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
           
+          {/* Welcome Headline */}
+          {!(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') && (
+            <div className="text-center mb-6 lg:mb-8 animate-[fadeInUp_1s_ease-out]">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tight drop-shadow-2xl">
+                Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">Dream Vacation</span>
+              </h1>
+            </div>
+          )}
+
           {/* Top Tabs Pill */}
           <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
             {[
@@ -282,7 +310,7 @@ export default function LandingPage() {
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Departure</span>
@@ -303,7 +331,7 @@ export default function LandingPage() {
 
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsDatePickerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('return'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
@@ -329,16 +357,37 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                  {isDatePickerOpen && (
+                  {activeDatePicker === 'depart' && (
                     <div className="absolute top-[100%] left-[-100px] z-50" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={departureDate} 
-                        endDate={returnDate}
-                        isOneWay={tripType === 'One Way'}
-                        onChange={(start, end) => { setDepartureDate(start); setReturnDate(end); }}
-                        onClose={() => setIsDatePickerOpen(false)}
+                        endDate={null}
+                        isOneWay={true}
+                        onChange={(start) => { 
+                          if (start) setDepartureDate(start); 
+                          setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
+                        }}
+                        onClose={() => setActiveDatePicker(null)}
                         origin={searchFrom}
                         destination={searchTo}
+                      />
+                    </div>
+                  )}
+
+                  {activeDatePicker === 'return' && (
+                    <div className="absolute top-[100%] left-[-100px] z-50" onClick={e => e.stopPropagation()}>
+                      <CustomCalendar 
+                        startDate={returnDate} 
+                        endDate={null}
+                        minDate={departureDate}
+                        isOneWay={true}
+                        onChange={(start) => { 
+                          if (start) setReturnDate(start); 
+                          setActiveDatePicker(null);
+                        }}
+                        onClose={() => setActiveDatePicker(null)}
+                        origin={searchTo}
+                        destination={searchFrom}
                       />
                     </div>
                   )}
@@ -537,7 +586,7 @@ export default function LandingPage() {
                   {/* Check-In */}
                   <div 
                     className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={() => { setIsDatePickerOpen(true); }}
+                    onClick={() => { setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-In</span>
@@ -559,7 +608,7 @@ export default function LandingPage() {
                   {/* Check-Out */}
                   <div 
                     className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { setIsDatePickerOpen(true); }}
+                    onClick={() => { setActiveDatePicker('return'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-Out</span>
@@ -577,16 +626,21 @@ export default function LandingPage() {
                       <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Select checkout date</p>
                     )}
 
-                    {isDatePickerOpen && (
+                    {(activeDatePicker === 'depart' || activeDatePicker === 'return') && (
                       <div className="absolute top-[100%] left-[-200px] z-50">
                         <DualMonthCalendar 
                           checkIn={departureDate} 
                           checkOut={returnDate}
                           onDateChange={(type, date) => {
-                            if (type === 'checkIn') setDepartureDate(date);
-                            else setReturnDate(date);
+                            if (type === 'checkIn') {
+                              setDepartureDate(date);
+                              setActiveDatePicker('return');
+                            } else {
+                              setReturnDate(date);
+                              setActiveDatePicker(null);
+                            }
                           }}
-                          onClose={() => setIsDatePickerOpen(false)}
+                          onClose={() => setActiveDatePicker(null)}
                           origin={searchFrom}
                           destination={searchTo}
                         />
@@ -634,7 +688,12 @@ export default function LandingPage() {
           
           {/* Explore More Strip */}
           <div className="text-center mt-12 mb-6">
-            <button className="flex items-center gap-1 mx-auto text-white font-bold hover:text-blue-200 transition">
+            <button 
+              onClick={() => {
+                document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center gap-1 mx-auto text-white font-bold hover:text-blue-200 transition"
+            >
               <ChevronDown size={16} /> Explore More <ChevronDown size={16} />
             </button>
           </div>
@@ -751,9 +810,11 @@ export default function LandingPage() {
         </div>
       </div>
 
+
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 text-sm">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+
           <div>
             <div className="flex items-center gap-2 mb-4 text-white">
               <Plane size={24} className="text-blue-500" />

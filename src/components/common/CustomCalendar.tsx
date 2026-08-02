@@ -6,6 +6,7 @@ import api from '../../services/api';
 interface CustomCalendarProps {
   startDate: Date | null;
   endDate: Date | null;
+  minDate?: Date | null;
   isOneWay?: boolean;
   onChange: (start: Date | null, end: Date | null) => void;
   onClose: () => void;
@@ -21,7 +22,7 @@ const HOLIDAYS: Record<string, { name: string; color: string }> = {
   '25-12': { name: 'Christmas', color: '#ff4f4f' },
 };
 
-export default function CustomCalendar({ startDate, endDate, isOneWay, onChange, onClose, origin, destination }: CustomCalendarProps) {
+export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, onChange, onClose, origin, destination }: CustomCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const cacheKey = `${origin}-${destination}`;
@@ -50,7 +51,8 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   const onDateClick = (day: Date) => {
-    if (isBefore(startOfDay(day), startOfDay(new Date()))) return; // Prevent past dates
+    const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
+    if (isBefore(startOfDay(day), minD)) return; // Prevent past dates
 
     if (isOneWay) {
       onChange(day, null);
@@ -98,7 +100,9 @@ export default function CustomCalendar({ startDate, endDate, isOneWay, onChange,
             const holidayKey = format(day, 'dd-MM');
             const holiday = HOLIDAYS[holidayKey];
             const dynamicPrice = prices[dateStr];
-            const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
+            
+            const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
+            const isPast = isBefore(startOfDay(day), minD);
             
             const isSelectedStart = startDate && isSameDay(day, startDate);
             const isSelectedEnd = endDate && isSameDay(day, endDate);
