@@ -10,11 +10,11 @@ interface Message {
 }
 
 const QUICK_REPLIES = [
-  '✈️ Book a Flight',
-  '🏨 Find Hotels',
-  '❌ Cancel Booking',
-  '💰 Check Refund Status',
-  '📞 Talk to Agent',
+  'Book a Flight',
+  'Find Hotels',
+  'Cancel Booking',
+  'Check Refund Status',
+  'Talk to Agent',
 ];
 
 export default function ChatBot() {
@@ -22,7 +22,7 @@ export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hi! 👋 I'm **TrippeChalo AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
+      text: "Hi! I'm **TrippeChalo AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
       sender: 'bot',
       timestamp: new Date(),
     },
@@ -136,7 +136,7 @@ export default function ChatBot() {
         {/* Tooltip */}
         {!isOpen && (
           <div className="absolute bottom-full right-0 mb-3 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-lg pointer-events-none">
-            Chat with AI Assistant ✨
+            Chat with AI Assistant
             <div className="absolute top-full right-5 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-gray-900" />
           </div>
         )}
@@ -261,7 +261,7 @@ export default function ChatBot() {
 
           {/* Powered by footer */}
           <div className="bg-gray-50 border-t border-gray-100 text-center py-1.5 shrink-0">
-            <span className="text-[9px] text-gray-400 font-medium tracking-wide">Powered by TrippeChalo AI ✨</span>
+            <span className="text-[9px] text-gray-400 font-medium tracking-wide">Powered by TrippeChalo AI</span>
           </div>
         </div>
       )}
