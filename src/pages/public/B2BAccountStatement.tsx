@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import api from '../../services/api';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const ALL_COLUMNS = [
   'User Name', 'Reference No.', 'PNR', 'Product Name', 'Description', 'Passenger Name', 'Mobile Number',
@@ -26,8 +27,8 @@ const B2BAccountStatement: React.FC = () => {
   const [selectedColumns, setSelectedColumns] = useState<string[]>(DEFAULT_SELECTED);
   const [search, setSearch] = useState('');
   
-  const [fromDate, setFromDate] = useState('2026-06-25');
-  const [toDate, setToDate] = useState('2026-07-25');
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
   const [month, setMonth] = useState('July');
   const [year, setYear] = useState('2026');
 

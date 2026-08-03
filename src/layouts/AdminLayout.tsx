@@ -33,6 +33,7 @@ export default function AdminLayout() {
         { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
         { name: 'Sub-Admins', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
         { name: 'Agents', path: '/admin/agents', icon: <Briefcase size={20} /> },
+        { name: 'B2B Requests', path: '/admin/b2b-requests', icon: <PackageOpen size={20} /> },
         { name: 'Bookings', path: '/admin/bookings', icon: <CreditCard size={20} /> },
       ]
     },

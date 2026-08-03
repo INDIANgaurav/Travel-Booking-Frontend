@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import api from '../../services/api';
 import { format, getDaysInMonth, startOfMonth, getDay } from 'date-fns';
@@ -28,6 +29,7 @@ interface PaxRecord {
   passengerName: string;
   route: string;
   pnr: string;
+  rawPnr?: string;
   bookingId: string;
 }
 
@@ -37,16 +39,16 @@ const B2BPaxCalendar: React.FC = () => {
   const [bookingsByDay, setBookingsByDay] = useState<Record<number, PaxRecord[]>>({});
   const [loading, setLoading] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const fetchPaxData = async () => {
     setLoading(true);
     try {
-      // Calculate start and end of selected month
       const month = parseInt(selectedMonth);
       const year = parseInt(selectedYear);
       
       const startDate = new Date(year, month, 1);
-      const endDate = new Date(year, month + 1, 0); // last day of month
+      const endDate = new Date(year, month + 1, 0);
 
       const res = await api.get('/api/manage-bookings', {
         params: {
@@ -57,28 +59,43 @@ const B2BPaxCalendar: React.FC = () => {
       });
 
       const records = res.data?.data || [];
-      
       const grouped: Record<number, PaxRecord[]> = {};
       let total = 0;
 
       records.forEach((booking: any) => {
-        // Find the travel date from details
-        // The booking.date is often the travel date in 'YYYY-MM-DD' format
         if (booking.date && booking.status !== 'CANCELLED') {
           const travelDate = new Date(booking.date);
           
-          // Only process if it matches selected month/year
           if (travelDate.getMonth() === month && travelDate.getFullYear() === year) {
             const day = travelDate.getDate();
             if (!grouped[day]) grouped[day] = [];
 
             const passengers = booking.details?.passengers || [];
             
-            passengers.forEach((pax: any) => {
+            passengers.forEach((pax: any, i: number) => {
+              const from = booking.details?.from || booking.details?.nexus_query?.legs?.[0]?.src;
+              const to = booking.details?.to || booking.details?.nexus_query?.legs?.[0]?.dst;
+              const routeStr = from && to ? `${from} - ${to}` : 'Route N/A';
+              
+              // Try to find the real PNR in nexus_response confirmations
+              let realPnr = null;
+              try {
+                const confirmations = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations;
+                if (confirmations && confirmations.length > i) {
+                   realPnr = confirmations[i].pnr;
+                } else if (confirmations && confirmations.length > 0) {
+                   realPnr = confirmations[0].pnr;
+                }
+              } catch(e) {}
+
+              const rawPnr = realPnr || booking.details?.pnr || booking.bookingId || 'PENDING';
+              const displayPnr = rawPnr.length > 10 ? `Ref: ${rawPnr.substring(0, 8)}...` : rawPnr;
+
               grouped[day].push({
-                passengerName: `${pax.name}`,
-                route: `${booking.details?.from || ''} - ${booking.details?.to || ''}`,
-                pnr: booking.details?.pnr || 'PENDING',
+                passengerName: pax.name || 'Unknown',
+                route: routeStr,
+                pnr: displayPnr,
+                rawPnr: rawPnr,
                 bookingId: booking.bookingId
               });
               total++;
@@ -98,7 +115,7 @@ const B2BPaxCalendar: React.FC = () => {
 
   useEffect(() => {
     fetchPaxData();
-  }, []); // Initial load
+  }, []);
 
   const handlePrevMonth = () => {
     let m = parseInt(selectedMonth);
@@ -111,7 +128,6 @@ const B2BPaxCalendar: React.FC = () => {
     }
     setSelectedMonth(m.toString());
     setSelectedYear(y.toString());
-    // Note: User needs to click fetch or we can auto-fetch
   };
 
   const handleNextMonth = () => {
@@ -131,10 +147,8 @@ const B2BPaxCalendar: React.FC = () => {
   const year = parseInt(selectedYear);
   const daysInMonth = getDaysInMonth(new Date(year, month));
   
-  // getDay returns 0 for Sun, 1 for Mon, etc.
-  // We want MON=0, TUE=1, WED=2... SUN=6
   let startingDay = getDay(startOfMonth(new Date(year, month))) - 1;
-  if (startingDay === -1) startingDay = 6; // Sunday
+  if (startingDay === -1) startingDay = 6;
 
   const totalCells = Math.ceil((daysInMonth + startingDay) / 7) * 7;
   const calendarCells = Array.from({ length: totalCells }, (_, i) => {
@@ -144,7 +158,7 @@ const B2BPaxCalendar: React.FC = () => {
   });
 
   return (
-    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40]">
+    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40] relative">
       <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         
         {/* Header */}
@@ -212,9 +226,10 @@ const B2BPaxCalendar: React.FC = () => {
 
                 return (
                   <div 
-                    key={index} 
+                    key={index}
+                    onClick={() => hasBookings && day && setSelectedDay(day)}
                     className={`min-h-[140px] border border-gray-100 rounded-lg p-2 transition-colors flex flex-col ${
-                      day ? 'hover:border-blue-200 hover:shadow-sm bg-white' : 'bg-gray-50/50'
+                      day ? (hasBookings ? 'cursor-pointer hover:border-blue-400 hover:shadow-md bg-white' : 'bg-white hover:bg-gray-50') : 'bg-gray-50/50'
                     }`}
                   >
                     {day && (
@@ -252,8 +267,75 @@ const B2BPaxCalendar: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
+
+      {/* Details Modal */}
+      {selectedDay && bookingsByDay[selectedDay] && (
+        <div 
+          className="fixed inset-0 bg-[#0c1a40]/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col"
+            style={{ animation: 'chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-[#0b1031] to-[#1a237e] rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-lg">
+                  {selectedDay}
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white leading-tight">
+                    Passenger Manifest
+                  </h3>
+                  <p className="text-blue-200 text-xs font-medium">
+                    {months.find(m => m.value === selectedMonth)?.label} {selectedYear} • {bookingsByDay[selectedDay].length} Passengers
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedDay(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto bg-gray-50 flex-1 rounded-b-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {bookingsByDay[selectedDay].map((pax, i) => (
+                  <div key={i} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group relative">
+                    <div className="absolute top-4 right-4 bg-blue-50 text-blue-700 text-[10px] font-black px-2.5 py-1 rounded-full border border-blue-100">
+                      PAX {i + 1}
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Passenger Name</div>
+                      <div className="text-sm font-black text-[#0c1a40] uppercase">{pax.passengerName}</div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                      <div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Route</div>
+                        <div className="text-xs font-bold text-gray-800 bg-gray-50 px-2 py-1 rounded inline-block">{pax.route}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">PNR / Ref</div>
+                        <div className="text-[11px] font-black text-[#0c1a40] break-all bg-gray-50 px-2 py-1 rounded inline-block w-full">
+                          {pax.rawPnr || pax.pnr}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

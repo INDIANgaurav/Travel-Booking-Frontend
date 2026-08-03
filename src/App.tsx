@@ -61,6 +61,7 @@ import AdminFinance from './pages/dashboard/admin/AdminFinance'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
 import AdminSettings from './pages/dashboard/admin/AdminSettings'
 import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
+import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
 import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 
 import SubAdminLayout from './layouts/SubAdminLayout'
@@ -127,19 +128,20 @@ function App() {
         {/* B2B Inner Tools Route */}
         <Route element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT']} />}>
           <Route element={<B2BDashboardLayout />}>
-            <Route path="/b2b/dashboard" element={<B2BAgentDashboard />} />
-            <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
-            <Route path="/b2b/booking-status" element={<B2BBookingStatus />} />
-            <Route path="/b2b/manage-booking" element={<B2BManageBooking />} />
-            <Route path="/b2b/bank-details" element={<B2BBankDetails />} />
-            <Route path="/b2b/pax-calendar" element={<B2BPaxCalendar />} />
-            <Route path="/b2b/invoice" element={<B2BInvoice />} />
-            <Route path="/b2b/invoice/:id" element={<FlightInvoice />} />
-            <Route path="/b2b/credit-note" element={<B2BCreditNote />} />
-            <Route path="/b2b/debit-note" element={<B2BDebitNote />} />
-            <Route path="/b2b/gst-invoice" element={<B2BGstInvoice />} />
-            <Route path="/b2b/offline-booking" element={<B2BOfflineBooking />} />
-            <Route path="/b2b/markup" element={<B2BMarkup />} />
+            <Route path="/b2b/dashboard" element={<B2BAgentDashboard />}>
+              <Route path="account-statement" element={<B2BAccountStatement />} />
+              <Route path="booking-status" element={<B2BBookingStatus />} />
+              <Route path="manage-booking" element={<B2BManageBooking />} />
+              <Route path="bank-details" element={<B2BBankDetails />} />
+              <Route path="pax-calendar" element={<B2BPaxCalendar />} />
+              <Route path="invoice" element={<B2BInvoice />} />
+              <Route path="invoice/:id" element={<FlightInvoice />} />
+              <Route path="credit-note" element={<B2BCreditNote />} />
+              <Route path="debit-note" element={<B2BDebitNote />} />
+              <Route path="gst-invoice" element={<B2BGstInvoice />} />
+              <Route path="offline-booking" element={<B2BOfflineBooking />} />
+              <Route path="markup" element={<B2BMarkup />} />
+            </Route>
           </Route>
         </Route>
 
@@ -235,6 +237,7 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="sub-admins" element={<AdminSubAdmins />} />
           <Route path="agents" element={<AdminAgents />} />
+          <Route path="b2b-requests" element={<AdminB2BRequests />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="finance" element={<AdminFinance />} />
           <Route path="inventory" element={<AdminInventory />} />

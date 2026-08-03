@@ -5,6 +5,7 @@ import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import { Plane, Building2, ShieldCheck, Compass } from 'lucide-react';
 import FlightInvoice from '../dashboard/user/FlightInvoice';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const B2BManageBooking: React.FC = () => {
   const navigate = useNavigate();
@@ -12,8 +13,8 @@ const B2BManageBooking: React.FC = () => {
   const [searchTab, setSearchTab] = useState('SEARCH BY DATE');
   const [statusType, setStatusType] = useState('LIVE BOOKING');
   
-  const [fromDate, setFromDate] = useState('2026-07-01');
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
   
   const [month, setMonth] = useState('July');
   const [year, setYear] = useState('2026');

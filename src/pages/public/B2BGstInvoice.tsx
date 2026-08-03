@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const months = [
   { value: 'January', label: 'January' },
@@ -25,10 +27,44 @@ const years = [
 
 const B2BGstInvoice: React.FC = () => {
   const [activeTab, setActiveTab] = useState('GST INPUT INVOICE');
-  const [month, setMonth] = useState('June');
-  const [year, setYear] = useState('2026');
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+  const currentYearStr = new Date().getFullYear().toString();
+  const [month, setMonth] = useState(currentMonthName);
+  const [year, setYear] = useState(currentYearStr);
   const [billNumber, setBillNumber] = useState('');
   const [billDate, setBillDate] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!billNumber || !billDate) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await api.post('/api/gst-invoices', {
+        month,
+        year,
+        billNumber,
+        billDate,
+        taxableValue: 62,
+        sgst: 0,
+        cgst: 0,
+        igst: 11,
+        invoiceValue: 11,
+        totalAmount: 73
+      });
+      toast.success('GST Invoice submitted successfully!');
+      setBillNumber('');
+      setBillDate('');
+    } catch (error) {
+      console.error('Error submitting GST invoice:', error);
+      toast.error('Failed to submit GST invoice.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40]">
@@ -83,7 +119,7 @@ const B2BGstInvoice: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-amber-500 mb-1">GST Description</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">Commission for the Month of 6-2026</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{`Commission for the Month of ${months.findIndex(m => m.value === month) + 1}-${year}`}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-amber-500 mb-1">GST SAC</p>
@@ -127,7 +163,7 @@ const B2BGstInvoice: React.FC = () => {
                     type="text" 
                     value={billNumber}
                     onChange={(e) => setBillNumber(e.target.value)}
-                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-500"
+                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-500 font-bold"
                   />
                 </div>
                 <div className="w-[200px]">
@@ -135,14 +171,18 @@ const B2BGstInvoice: React.FC = () => {
                   <DOBCalendar 
                     value={billDate}
                     onChange={setBillDate}
-                    placeholder="dd/mm/yyyy"
+                    placeholder="dd-mm-yyyy"
                   />
                 </div>
               </div>
 
               <div className="flex justify-center pb-8">
-                <button className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition">
-                  Submit
+                <button 
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition disabled:opacity-50"
+                >
+                  {loading ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
 
@@ -150,7 +190,7 @@ const B2BGstInvoice: React.FC = () => {
           )}
 
           {activeTab === 'UPLOAD GST INVOICE FILE' && (
-            <div className="p-8 h-[300px] flex items-center justify-center">
+            <div className="p-8 h-[300px] flex flex-col items-center justify-center gap-4">
               <p className="text-gray-400 font-semibold">Upload functionality coming soon.</p>
             </div>
           )}

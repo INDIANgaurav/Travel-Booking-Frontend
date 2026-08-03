@@ -6,19 +6,14 @@ import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import ETicketModal from '../../components/bookings/ETicketModal';
 import { Download, ChevronDown } from 'lucide-react';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const B2BBookingStatus: React.FC = () => {
-  // Dynamic dates: from 30 days ago to today
-  const today = new Date();
-  const past30 = new Date();
-  past30.setDate(today.getDate() - 30);
-  
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
   const [productType, setProductType] = useState('Flight');
   const [flightType, setFlightType] = useState('ONLINE');
-  const [fromDate, setFromDate] = useState(formatDate(past30));
-  const [toDate, setToDate] = useState(formatDate(today));
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   

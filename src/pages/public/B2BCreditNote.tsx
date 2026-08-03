@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -13,20 +14,18 @@ const products = [
 
 const B2BCreditNote: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState('airline');
-  const [fromDate, setFromDate] = useState('2026-07-24');
-  const [toDate, setToDate] = useState('2026-07-24');
-  const [records, setRecords] = useState<any[]>([]);
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  
+  const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchCreditNotes();
-  }, []);
-
-  const fetchCreditNotes = async () => {
+  const fetchNotes = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/api/credit-notes');
-      setRecords(data);
+      const res = await api.get('/api/credit-notes');
+      setNotes(res.data);
     } catch (error) {
       console.error('Error fetching credit notes:', error);
     } finally {
@@ -34,19 +33,25 @@ const B2BCreditNote: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
   const handleSubmit = async () => {
     try {
-      setLoading(true);
+      setSubmitting(true);
       await api.post('/api/credit-notes', {
         product: selectedProduct,
         fromDate,
-        toDate,
+        toDate
       });
-      fetchCreditNotes();
+      toast.success('Credit note requested successfully!');
+      fetchNotes();
     } catch (error) {
-      toast.error('Failed to request credit note');
+      console.error('Error submitting credit note:', error);
+      toast.error('Failed to request credit note.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -56,7 +61,7 @@ const B2BCreditNote: React.FC = () => {
         
         {/* Header Title Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
-          <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">CREDIT NOTE</h2>
+          <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">CREDIT NOTES</h2>
         </div>
 
         {/* Filter Form Panel */}
@@ -91,51 +96,55 @@ const B2BCreditNote: React.FC = () => {
 
           <button 
             onClick={handleSubmit}
-            disabled={loading}
-            className="bg-[#0b1031] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[42px] min-w-[120px]"
+            disabled={submitting}
+            className="bg-[#0b1031] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[42px] min-w-[120px] disabled:opacity-50"
           >
-            {loading ? 'Submitting...' : 'Submit'}
+            {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
 
         {/* Results Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-[300px]">
           <div className="border-b border-gray-100 px-6 py-4">
-            <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">CREDIT NOTE</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">CREDIT NOTES RECORD</h2>
           </div>
           
-          <div className="flex-1 flex flex-col p-8">
-            {records.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-[#0c1a40] whitespace-nowrap">
-                  <thead className="bg-[#72b0ff] text-white text-xs uppercase font-bold tracking-wider">
-                    <tr>
-                      <th className="px-6 py-4 rounded-tl-lg">DATE</th>
-                      <th className="px-6 py-4">PRODUCT</th>
-                      <th className="px-6 py-4">FROM</th>
-                      <th className="px-6 py-4">TO</th>
-                      <th className="px-6 py-4 rounded-tr-lg">STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100 font-semibold text-xs text-gray-700 border border-gray-100">
-                    {records.map((r, i) => (
-                      <tr key={i} className="hover:bg-blue-50/50 transition">
-                        <td className="px-6 py-5">{new Date(r.createdAt).toLocaleDateString()}</td>
-                        <td className="px-6 py-5 uppercase">{r.product}</td>
-                        <td className="px-6 py-5">{r.fromDate}</td>
-                        <td className="px-6 py-5">{r.toDate}</td>
-                        <td className="px-6 py-5 text-amber-600">{r.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <p className="text-amber-500 font-bold text-sm">No Records Found Yet...!</p>
-              </div>
-            )}
-          </div>
+          {loading ? (
+             <div className="flex-1 flex items-center justify-center p-8 text-gray-500 font-bold">Loading...</div>
+          ) : notes.length === 0 ? (
+             <div className="flex-1 flex items-center justify-center p-8">
+               <p className="text-amber-600 font-bold text-sm">No Records Found Yet...!</p>
+             </div>
+          ) : (
+             <div className="overflow-x-auto">
+               <table className="w-full text-left text-xs whitespace-nowrap">
+                 <thead className="bg-[#f8f9fc] text-[#0c1a40] font-bold uppercase tracking-wider">
+                   <tr>
+                     <th className="px-6 py-4">Product</th>
+                     <th className="px-6 py-4">From Date</th>
+                     <th className="px-6 py-4">To Date</th>
+                     <th className="px-6 py-4">Requested At</th>
+                     <th className="px-6 py-4">Status</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-gray-100 font-semibold text-gray-600">
+                   {notes.map((note: any, i) => (
+                     <tr key={i} className="hover:bg-blue-50/50 transition">
+                       <td className="px-6 py-4 uppercase">{note.product}</td>
+                       <td className="px-6 py-4">{note.fromDate}</td>
+                       <td className="px-6 py-4">{note.toDate}</td>
+                       <td className="px-6 py-4">{note.createdAt ? format(new Date(note.createdAt), 'dd MMM yyyy, HH:mm') : ''}</td>
+                       <td className="px-6 py-4">
+                         <span className="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                           {note.status || 'PENDING'}
+                         </span>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+          )}
         </div>
 
       </div>

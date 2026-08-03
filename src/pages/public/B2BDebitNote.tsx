@@ -3,6 +3,7 @@ import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const products = [
   { value: 'airline', label: 'Airline' },
@@ -13,8 +14,8 @@ const products = [
 
 const B2BDebitNote: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState('airline');
-  const [fromDate, setFromDate] = useState('2026-07-24');
-  const [toDate, setToDate] = useState('2026-07-24');
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 

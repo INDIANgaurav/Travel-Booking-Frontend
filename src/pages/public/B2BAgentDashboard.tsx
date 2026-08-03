@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Plane, Building2, ShieldCheck, CreditCard, Compass, MoreHorizontal, LogOut, Home, Calendar, Receipt, CreditCard as CreditCardIcon, FileText, FileSpreadsheet, Phone, BadgePercent, Pencil } from 'lucide-react';
 import type { RootState } from '../../store/store';
@@ -20,7 +20,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <Home size={20} />,
       bgColor: 'bg-emerald-50',
       iconBg: 'bg-emerald-500',
-      path: '/b2b/bank-details'
+      path: '/b2b/dashboard/bank-details'
     },
     {
       title: 'Pax Calendar',
@@ -28,7 +28,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <Calendar size={20} />,
       bgColor: 'bg-blue-50',
       iconBg: 'bg-blue-500',
-      path: '/b2b/pax-calendar'
+      path: '/b2b/dashboard/pax-calendar'
     },
     {
       title: 'Invoice',
@@ -36,7 +36,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <Receipt size={20} />,
       bgColor: 'bg-amber-50',
       iconBg: 'bg-amber-500',
-      path: '/b2b/invoice'
+      path: '/b2b/dashboard/invoice'
     },
     {
       title: 'Credit Notes',
@@ -44,7 +44,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <CreditCardIcon size={20} />,
       bgColor: 'bg-purple-50',
       iconBg: 'bg-purple-500',
-      path: '/b2b/credit-note'
+      path: '/b2b/dashboard/credit-note'
     },
     {
       title: 'Debit Note',
@@ -52,7 +52,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <FileText size={20} />,
       bgColor: 'bg-orange-50',
       iconBg: 'bg-orange-500',
-      path: '/b2b/debit-note'
+      path: '/b2b/dashboard/debit-note'
     },
     {
       title: 'GST Invoice',
@@ -60,7 +60,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <FileSpreadsheet size={20} />,
       bgColor: 'bg-pink-50',
       iconBg: 'bg-pink-500',
-      path: '/b2b/gst-invoice'
+      path: '/b2b/dashboard/gst-invoice'
     },
     {
       title: 'Offline Booking',
@@ -68,7 +68,7 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <Phone size={20} />,
       bgColor: 'bg-indigo-50',
       iconBg: 'bg-indigo-500',
-      path: '/b2b/offline-booking'
+      path: '/b2b/dashboard/offline-booking'
     },
     {
       title: 'AgentMarkup',
@@ -76,18 +76,23 @@ const B2BAgentDashboard: React.FC = () => {
       icon: <BadgePercent size={20} />,
       bgColor: 'bg-lime-50',
       iconBg: 'bg-lime-500',
-      path: '/b2b/markup'
+      path: '/b2b/dashboard/markup'
     }
   ];
+
+  const location = useLocation();
+  const isHome = location.pathname === '/b2b/dashboard' || location.pathname === '/b2b/dashboard/';
 
   return (
     <main className="flex-1 w-full px-4 md:px-8 lg:px-12 xl:px-16 py-10">
       
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-[32px] font-black text-[#0c1a40] mb-1">Welcome back, {agentName}</h1>
-        <p className="text-[13px] text-gray-500 font-semibold">Quick access to your B2B tools - {agentCode}.</p>
-      </div>
+      {isHome ? (
+        <>
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-[32px] font-black text-[#0c1a40] mb-1">Welcome back, {agentName}</h1>
+            <p className="text-[13px] text-gray-500 font-semibold">Quick access to your B2B tools - {agentCode}.</p>
+          </div>
 
       {/* Dashboard Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
@@ -114,6 +119,36 @@ const B2BAgentDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+        </>
+      ) : (
+        <>
+          {/* Compact Horizontal Tabs for Sub-pages */}
+          <div className="mb-6 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {dashboardCards.map((card, index) => {
+              const isActive = location.pathname.startsWith(card.path);
+              return (
+                <button
+                  key={index}
+                  onClick={() => card.path !== '#' && navigate(card.path)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                    isActive 
+                      ? 'bg-[#0b1031] text-white shadow-md' 
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`${isActive ? 'text-white' : 'text-gray-500'}`}>
+                     {React.cloneElement(card.icon as React.ReactElement<any>, { size: 14 })}
+                  </span>
+                  {card.title}
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Sub-page Content */}
+          <Outlet />
+        </>
+      )}
 
     </main>
   );

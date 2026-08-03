@@ -139,9 +139,9 @@ const B2BDashboardLayout: React.FC = () => {
                 <div className="absolute top-full mt-2 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
-                    { label: 'Account Statement', path: '/b2b/account-statement' },
-                    { label: 'Booking Status', path: '/b2b/booking-status' },
-                    { label: 'Manage Booking', path: '/b2b/manage-booking' },
+                    { label: 'Account Statement', path: '/b2b/dashboard/account-statement' },
+                    { label: 'Booking Status', path: '/b2b/dashboard/booking-status' },
+                    { label: 'Manage Booking', path: '/b2b/dashboard/manage-booking' },
                     { label: 'Agent Certificate', path: '#' }
                   ].map((item, index) => (
                     <button 
