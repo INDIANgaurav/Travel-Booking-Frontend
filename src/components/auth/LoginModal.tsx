@@ -10,7 +10,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [accountType, setAccountType] = useState<'USER' | 'TRAVEL_AGENT'>('USER');
+
 
   if (!isOpen) return null;
 
@@ -23,7 +23,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       />
       
       {/* Modal Container */}
-      <div className="relative z-10 w-[850px] h-[500px] bg-white rounded-2xl shadow-2xl flex animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-[95%] max-w-[850px] h-[90vh] md:h-[500px] bg-white rounded-2xl shadow-2xl flex animate-in zoom-in-95 duration-200">
         
         {/* Close Button - Absolutely positioned outside the modal visually */}
         <button 
@@ -36,7 +36,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {/* Inner wrapper for overflow hidden */}
         <div className="w-full h-full flex overflow-hidden rounded-2xl">
           {/* Left Side - Promo Image */}
-          <div className="w-[45%] relative">
+          <div className="hidden md:block w-[45%] relative">
             <img 
               src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop" 
               alt="Promo" 
@@ -69,23 +69,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </div>
 
         {/* Right Side - Forms */}
-        <div className="w-[55%] bg-white p-8 relative flex flex-col">
+        <div className="w-full md:w-[55%] bg-white p-6 md:p-8 relative flex flex-col">
           
-          {/* Top Tabs */}
-          <div className="flex rounded-full border border-gray-200 p-1 mb-8 shadow-sm">
-            <button 
-              onClick={() => setAccountType('USER')}
-              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'USER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-            >
-              TRAVELLER
-            </button>
-            <button 
-              onClick={() => setAccountType('TRAVEL_AGENT')}
-              className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${accountType === 'TRAVEL_AGENT' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-800'}`}
-            >
-              TRAVEL AGENT
-            </button>
-          </div>
+          {/* Top Tabs Removed */}
 
           {!isLogin && (
             <button 
@@ -98,9 +84,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
           <div className={`flex-1 overflow-y-auto custom-scrollbar px-1 ${!isLogin ? 'mt-6' : ''}`}>
             {isLogin ? (
-              <LoginForm role={accountType} onToggleMode={() => setIsLogin(false)} />
+              <LoginForm 
+                onSuccess={onClose} 
+                onToggleMode={() => setIsLogin(false)} 
+              />
             ) : (
-              <RegisterForm role={accountType} onToggleMode={() => setIsLogin(true)} />
+              <RegisterForm 
+                onToggleMode={() => setIsLogin(true)} 
+              />
             )}
           </div>
 

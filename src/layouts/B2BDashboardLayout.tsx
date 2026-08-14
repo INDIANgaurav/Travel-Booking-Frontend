@@ -139,9 +139,9 @@ const B2BDashboardLayout: React.FC = () => {
                 <div className="absolute top-full mt-2 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
-                    { label: 'Account Statement', path: '/b2b/dashboard/account-statement' },
-                    { label: 'Booking Status', path: '/b2b/dashboard/booking-status' },
-                    { label: 'Manage Booking', path: '/b2b/dashboard/manage-booking' },
+                    { label: 'Account Statement', path: '/b2b/account-statement' },
+                    { label: 'Booking Status', path: '/b2b/booking-status' },
+                    { label: 'Manage Booking', path: '/b2b/manage-booking' },
                     { label: 'Agent Certificate', path: '#' }
                   ].map((item, index) => (
                     <button 
@@ -172,9 +172,12 @@ const B2BDashboardLayout: React.FC = () => {
             <span>Call Us: +91 9826262121</span>
           </div>
 
-          <div className="bg-white text-[#0c1a40] text-xs font-black px-4 py-2 rounded-full border border-gray-200">
+          <button 
+            onClick={() => navigate('/b2b/dashboard/wallet')}
+            className="bg-white hover:bg-gray-50 transition-colors cursor-pointer text-[#0c1a40] text-xs font-black px-4 py-2 rounded-full border border-gray-200"
+          >
             Balance
-          </div>
+          </button>
 
           <div className="relative" ref={profileRef}>
             <div 
@@ -196,6 +199,13 @@ const B2BDashboardLayout: React.FC = () => {
                   <p className="text-xs font-bold text-[#0c1a40] truncate">{agentName}</p>
                   <p className="text-[10px] text-gray-500 truncate">{loggedInUser?.email}</p>
                 </div>
+                <button 
+                  onClick={() => navigate('/b2b/profile')}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 flex items-center gap-2 transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>My Profile</span>
+                </button>
                 <button 
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"

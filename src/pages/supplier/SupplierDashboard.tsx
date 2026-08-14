@@ -127,15 +127,17 @@ const SupplierDashboard: React.FC = () => {
           </div>
 
           {/* Card 2: Booking Value */}
-          <div className="bg-white border-l-4 border-l-emerald-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-3">
-              <DollarSign size={20} />
+          {user?.role !== 'SUPPLIER_STAFF' && (
+            <div className="bg-white border-l-4 border-l-emerald-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-3">
+                <DollarSign size={20} />
+              </div>
+              <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Booking value</span>
+              <span className="text-2xl font-black text-gray-900 mt-1 block">
+                ₹{(summary?.bookingValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </span>
             </div>
-            <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Booking value</span>
-            <span className="text-2xl font-black text-gray-900 mt-1 block">
-              ₹{(summary?.bookingValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </span>
-          </div>
+          )}
 
           {/* Card 3: Cancellation Count */}
           <div className="bg-white border-l-4 border-l-amber-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
@@ -147,15 +149,17 @@ const SupplierDashboard: React.FC = () => {
           </div>
 
           {/* Card 4: Cancellation Value */}
-          <div className="bg-white border-l-4 border-l-pink-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 bg-pink-50 text-pink-600 rounded-lg flex items-center justify-center mb-3">
-              <TrendingDown size={20} />
+          {user?.role !== 'SUPPLIER_STAFF' && (
+            <div className="bg-white border-l-4 border-l-pink-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 bg-pink-50 text-pink-600 rounded-lg flex items-center justify-center mb-3">
+                <TrendingDown size={20} />
+              </div>
+              <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Cancellation value</span>
+              <span className="text-2xl font-black text-gray-900 mt-1 block">
+                ₹{(summary?.cancellationValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </span>
             </div>
-            <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Cancellation value</span>
-            <span className="text-2xl font-black text-gray-900 mt-1 block">
-              ₹{(summary?.cancellationValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </span>
-          </div>
+          )}
         </div>
       </div>
     </div>

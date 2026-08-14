@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Tag, History, Layers, User, LogOut, Phone, Mail } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,9 +9,15 @@ const SupplierDashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
 
-  const handleLogout = () => {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const confirmLogout = () => {
     dispatch(logout());
     navigate('/supplier/login');
+  };
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -45,7 +51,7 @@ const SupplierDashboardLayout: React.FC = () => {
             </div>
             <div>
               <span className="block text-[10px] text-gray-400 font-bold uppercase">Welcome:</span>
-              <span className="font-bold text-gray-900 uppercase text-xs">{currentUser?.companyName || (currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName || ''}`.trim() : currentUser?.name) || 'TRAVEL_AGENT'}</span>
+              <span className="font-bold text-gray-900 uppercase text-xs">{currentUser?.name || (currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName || ''}`.trim() : currentUser?.companyName) || 'B2B_AGENT'}</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -84,17 +90,19 @@ const SupplierDashboardLayout: React.FC = () => {
           <span>SERIES FARE</span>
         </NavLink>
 
-        <NavLink 
-          to="/supplier-portal/users"
-          className={({ isActive }) => 
-            `px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all border-b-2 ${
-              isActive ? 'text-[#1d6aa3] border-[#1d6aa3] bg-[#f0f7ff]' : 'text-gray-700 border-transparent hover:text-[#1d6aa3] hover:bg-gray-100'
-            }`
-          }
-        >
-          <Users size={16} />
-          <span>USER MANAGEMENT</span>
-        </NavLink>
+        {currentUser?.role !== 'SUPPLIER_STAFF' && (
+          <NavLink 
+            to="/supplier-portal/users"
+            className={({ isActive }) => 
+              `px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all border-b-2 ${
+                isActive ? 'text-[#1d6aa3] border-[#1d6aa3] bg-[#f0f7ff]' : 'text-gray-700 border-transparent hover:text-[#1d6aa3] hover:bg-gray-100'
+              }`
+            }
+          >
+            <Users size={16} />
+            <span>USER MANAGEMENT</span>
+          </NavLink>
+        )}
 
         <NavLink 
           to="/supplier-portal/history"
@@ -130,6 +138,32 @@ const SupplierDashboardLayout: React.FC = () => {
       <footer className="bg-white border-t border-gray-200 py-3 text-center text-xs text-gray-500">
         © 2026 TrippeChalo. All rights reserved. Supplier Portal V2.0
       </footer>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-in-up">
+            <h3 className="text-xl font-black text-gray-900 mb-2">Confirm Logout</h3>
+            <p className="text-sm text-gray-600 font-medium mb-6">Are you sure you want to securely log out of the Supplier Portal?</p>
+            
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => setShowLogoutModal(false)}
+                className="px-5 py-2 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmLogout}
+                className="px-5 py-2 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-md transition flex items-center gap-2"
+              >
+                <LogOut size={16} /> Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
@@ -34,6 +34,39 @@ const B2BGstInvoice: React.FC = () => {
   const [billNumber, setBillNumber] = useState('');
   const [billDate, setBillDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+
+  // Dynamic GST Data
+  const [gstData, setGstData] = useState({
+    taxableValue: 0,
+    sgst: 0,
+    cgst: 0,
+    igst: 0,
+    totalAmount: 0
+  });
+
+  useEffect(() => {
+    const fetchGstData = async () => {
+      try {
+        setFetching(true);
+        const res = await api.get(`/api/gst-invoices/calculate?month=${month}&year=${year}`);
+        if (res.data) {
+          setGstData({
+            taxableValue: res.data.taxableValue || 0,
+            sgst: res.data.sgst || 0,
+            cgst: res.data.cgst || 0,
+            igst: res.data.igst || 0,
+            totalAmount: res.data.totalAmount || 0
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching GST data:', error);
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchGstData();
+  }, [month, year]);
 
   const handleSubmit = async () => {
     if (!billNumber || !billDate) {
@@ -48,12 +81,12 @@ const B2BGstInvoice: React.FC = () => {
         year,
         billNumber,
         billDate,
-        taxableValue: 62,
-        sgst: 0,
-        cgst: 0,
-        igst: 11,
-        invoiceValue: 11,
-        totalAmount: 73
+        taxableValue: gstData.taxableValue,
+        sgst: gstData.sgst,
+        cgst: gstData.cgst,
+        igst: gstData.igst,
+        invoiceValue: gstData.igst + gstData.cgst + gstData.sgst,
+        totalAmount: gstData.totalAmount
       });
       toast.success('GST Invoice submitted successfully!');
       setBillNumber('');
@@ -110,48 +143,53 @@ const B2BGstInvoice: React.FC = () => {
               {/* GST Info Details row */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 border-b border-gray-50 pb-8">
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">Travelopedia GST Number</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">TrippeChalo GST Number</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">18AAJCT4798C1ZW</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">Agent GST Number</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">Agent GST Number</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">—</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">GST Description</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">GST Description</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">{`Commission for the Month of ${months.findIndex(m => m.value === month) + 1}-${year}`}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">GST SAC</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">GST SAC</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">998551</p>
                 </div>
               </div>
 
               {/* Amounts row */}
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-6 mb-8 border-b border-gray-50 pb-8">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-6 mb-8 border-b border-gray-50 pb-8 relative">
+                {fetching && (
+                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                    <span className="text-xs font-bold text-gray-500 animate-pulse">Calculating...</span>
+                  </div>
+                )}
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">Taxable Value</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">62</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">Taxable Value</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.taxableValue}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">SGST(9%)</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">0</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">SGST(9%)</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.sgst}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">CGST(9%)</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">0</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">CGST(9%)</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.cgst}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">IGST(18%)</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">11</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">IGST(18%)</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.igst}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">Invoice Value</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">11</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">Invoice Value</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.igst + gstData.cgst + gstData.sgst}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-amber-500 mb-1">Total Amount</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">73</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">Total Amount</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{gstData.totalAmount}</p>
                 </div>
               </div>
 

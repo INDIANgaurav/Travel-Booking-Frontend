@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { Plane, Building2, Shield, CreditCard, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Smile, Baby, ArrowRightLeft } from 'lucide-react';
+import { Plane, Building2, Shield, ShieldCheck, CreditCard, Compass, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Users, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setAgentBookingMode, logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -671,54 +671,71 @@ export default function AgentFlightSearchResults(props: any) {
         </div>
       )}
       
-      {/* Custom B2B White Header (Matching Reference Screenshot 2 & 4) */}
-      <div className="bg-white border-b border-gray-200 py-2.5 px-8 z-50 relative shadow-sm">
-        <div className="max-w-[1240px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <button onClick={() => setHasSearched(false)} className="p-2 rounded-full hover:bg-gray-100 text-gray-700 transition">
+      {/* B2B Header Bar (Matching Reference Screenshot 2) */}
+      <header className="bg-white border-b border-gray-200 px-8 py-2.5 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        {/* Logo & Category Navigation */}
+        <div className="flex items-center gap-10">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setHasSearched(false); navigate('/b2b/home'); }}>
+            <button onClick={(e) => { e.stopPropagation(); setHasSearched(false); }} className="mr-2 p-2 rounded-full hover:bg-gray-100 text-gray-700 transition hidden md:block">
               <ArrowLeft size={20} />
             </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setHasSearched(false)}>
-              <div className="flex items-center justify-center">
-                <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-9 h-9" crossOrigin="anonymous" />
-              </div>
-              <div>
-                <span className="text-xl font-black tracking-tight text-[#0c1a40]">TRIPPE<span className="text-blue-600">CHALO</span></span>
-                <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-widest -mt-1">B2B Agent Engine</span>
-              </div>
+            <div className="flex items-center justify-center">
+              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
+            </div>
+            <div>
+              <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+              <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-widest -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-center cursor-pointer text-blue-600">
-              <Plane size={20} />
-              <span className="text-[10px] font-bold mt-1">Flights</span>
+          <nav className="hidden lg:flex items-center gap-8 text-xs font-bold text-gray-700">
+            <div className="flex flex-col items-center gap-1 cursor-pointer text-blue-600 border-b-2 border-blue-600 pb-1">
+              <div className="w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center">
+                <Plane size={16} />
+              </div>
+              <span>Flight</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
-              <Building2 size={20} />
-              <span className="text-[10px] font-bold mt-1">Hotel & Villas</span>
+
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Building2 size={16} />
+              </div>
+              <span>Hotel & Villas</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
-              <Shield size={20} />
-              <span className="text-[10px] font-bold mt-1">Insurance</span>
+
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                <ShieldCheck size={16} />
+              </div>
+              <span>Insurance</span>
             </div>
-            <div className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" onClick={() => navigate('/b2b/coming-soon')}>
-              <CreditCard size={20} />
-              <span className="text-[10px] font-bold mt-1">Visa</span>
+
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                <CreditCard size={16} />
+              </div>
+              <span>Visa</span>
             </div>
-            
-            <div className="relative flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition" ref={moreRef}>
+
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
+              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Compass size={16} />
+              </div>
+              <span>UMRAH Packages</span>
+            </div>
+
+            <div className="relative flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition" ref={moreRef}>
               <div 
-                className={`flex flex-col items-center justify-center p-1 rounded-md ${showMoreMenu ? 'text-gray-900 border border-gray-900' : 'border border-transparent'}`}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center border ${showMoreMenu ? 'border-gray-900 border-2' : 'border-transparent'}`}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
               >
-                <MoreHorizontal size={20} />
-                <span className="text-[10px] font-bold mt-1">More</span>
+                <MoreHorizontal size={16} />
               </div>
+              <span onClick={() => setShowMoreMenu(!showMoreMenu)}>More</span>
 
               {/* More Dropdown */}
               {showMoreMenu && (
-                <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2">
+                <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 -ml-16">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
                     { label: 'Account Statement', path: '/b2b/account-statement' },
@@ -729,11 +746,12 @@ export default function AgentFlightSearchResults(props: any) {
                     <button 
                       key={index}
                       onClick={() => {
-                        setShowMoreMenu(false);
-                        if (item.path !== '#') {
-                          navigate(item.path);
+                        if (item.label === 'Agent Certificate') {
+                          // Ignore for now in this view or add toast
+                          toast.error('Certificate can be downloaded from Home Page.');
                         } else {
-                          toast.error('This feature is coming soon!');
+                          setShowMoreMenu(false);
+                          if (item.path !== '#') navigate(item.path);
                         }
                       }}
                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 transition"
@@ -744,44 +762,62 @@ export default function AgentFlightSearchResults(props: any) {
                 </div>
               )}
             </div>
+          </nav>
+        </div>
+
+        {/* Right Contacts & Agent Balance Profile */}
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-bold text-amber-900">
+            <span>Call Us: +91 9555934205</span>
           </div>
 
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-gray-700">
-               <span className="text-xs font-bold text-gray-900">Balance: ₹ {agentBalance.toLocaleString('en-IN')}</span>
-             </div>
-             
-             <div className="relative" ref={profileRef}>
-               <div 
-                 className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition"
-                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-               >
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs uppercase">
-                    {agentInitial}
-                  </div>
-                  <span className="text-xs font-bold text-[#0c1a40]">{agentName} ({agentCode})</span>
-               </div>
-               
-               {/* Profile Dropdown */}
-               {showProfileMenu && (
-                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100 z-50">
-                   <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                     <p className="text-xs font-bold text-[#0c1a40] truncate">{agentName}</p>
-                     <p className="text-[10px] text-gray-500 truncate">{loggedInUser?.email}</p>
-                   </div>
-                   <button 
-                     onClick={handleLogout}
-                     className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
-                   >
-                     <LogOut size={14} />
-                     <span>Logout</span>
-                   </button>
-                 </div>
-               )}
-             </div>
+          <button 
+            onClick={() => navigate('/b2b/dashboard/wallet')}
+            className="bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer text-xs font-black px-4 py-2 rounded-full border border-gray-200"
+          >
+            Balance: ₹ {agentBalance.toLocaleString('en-IN')}
+          </button>
+
+          <div className="relative" ref={profileRef}>
+            <div 
+              className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <div className="w-7 h-7 rounded-full bg-[#0b1031] text-white flex items-center justify-center font-bold text-xs">
+                {agentInitial}
+              </div>
+              <div className="text-left leading-tight">
+                <span className="block text-xs font-black text-[#0c1a40]">{agentName}</span>
+                <span className="block text-[9px] text-gray-500 font-bold uppercase">({agentCode})</span>
+              </div>
+            </div>
+
+            {/* Profile Dropdown */}
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100 z-50">
+                <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                  <p className="text-xs font-bold text-[#0c1a40] truncate">{agentName}</p>
+                  <p className="text-[10px] text-gray-500 truncate">{loggedInUser?.email}</p>
+                </div>
+                <button 
+                  onClick={() => navigate('/b2b/profile')}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 flex items-center gap-2 transition"
+                >
+                  <Users size={14} />
+                  <span>My Profile</span>
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </header>
       
       {/* Search Header Bar (Summary View) */}
       <div className="bg-[#0b1031] text-white py-3 px-8 sticky top-0 z-40 shadow-md">
@@ -1131,7 +1167,14 @@ export default function AgentFlightSearchResults(props: any) {
 
                   <div 
                     className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('return'); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      closeAllPickers(); 
+                      if (tripType === 'One Way') {
+                        setTripType('Round Trip');
+                      }
+                      setActiveDatePicker('return'); 
+                    }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>

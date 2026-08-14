@@ -102,7 +102,7 @@ export default function FlightSearchResults() {
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
 
-  const isAgent = user && ['TRAVEL_AGENT', 'AGENT', 'B2B_AGENT', 'SUPPLIER_AGENT'].includes(user.role);
+  const isAgent = user && ['B2B_AGENT', 'AGENT', 'B2B_AGENT', 'SUPPLIER_AGENT'].includes(user.role);
 
   if (isAgent || isAgentDiscount) {
     return <AgentFlightSearchResults {...flightSearchState} />;
@@ -156,7 +156,7 @@ export default function FlightSearchResults() {
               </span>
             </Link>
 
-            {user?.role === 'TRAVEL_AGENT' && (
+            {user?.role === 'B2B_AGENT' && (
               <div className="ml-4 flex items-center p-1 rounded-full bg-gray-100 transition-colors">
                 <button 
                   onClick={() => dispatch(setAgentBookingMode('PERSONAL'))}
@@ -217,7 +217,7 @@ export default function FlightSearchResults() {
                       <Link to="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
                     </>
                   )}
-                  {(user?.role === 'TRAVEL_AGENT' || user?.role === 'AGENT' || user?.role === 'B2B_AGENT' || user?.role === 'SUPPLIER_AGENT') && (
+                  {(user?.role === 'SUPPLIER_AGENT') && (
                     <Link to="/b2b/home" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">B2B Dashboard</Link>
                   )}
                   {(user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (

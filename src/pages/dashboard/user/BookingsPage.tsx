@@ -27,7 +27,7 @@ export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
   const fetchBookings = async () => {
     try {
       const { data } = await api.get('/api/bookings/my-bookings');
-      setBookings(data);
+      setBookings(data.bookings || data || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {
@@ -235,7 +235,7 @@ export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
                           </button>
                           <button 
                             onClick={() => {
-                              const basePath = user?.role === 'TRAVEL_AGENT' ? '/agent-portal' : user?.role === 'SUPER_ADMIN' ? '/admin' : user?.role === 'SUB_ADMIN' ? '/sub-admin' : '/dashboard';
+                              const basePath = user?.role === 'B2B_AGENT' ? '/agent-portal' : user?.role === 'SUPER_ADMIN' ? '/admin' : user?.role === 'SUB_ADMIN' ? '/sub-admin' : '/dashboard';
                               navigate(`${basePath}/invoice/${booking._id}`);
                             }}
                             className="flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition-colors"

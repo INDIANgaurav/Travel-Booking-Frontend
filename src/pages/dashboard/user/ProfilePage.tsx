@@ -145,23 +145,21 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans pb-20 relative">
-      <TopNavbar forceWhite={true} />
 
-      {/* Fixed Background Header */}
-      <div className="fixed top-0 left-0 w-full h-[320px] bg-[url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center z-0">
-        {/* Subtle pattern or overlay could go here */}
-        <div className="absolute inset-0 bg-black/40 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
+      {/* Background Header */}
+      <div className="absolute top-0 left-0 w-full h-[220px] bg-[url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center z-0">
+        <div className="absolute inset-0 bg-black/20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#F2F2F2] to-transparent"></div>
       </div>
       
       {/* Scrollable Content Wrapper */}
-      <div className="relative z-10 w-full pt-28">
+      <div className="relative z-10 w-full pt-[140px]">
         
         {/* User Info Overlay - Scrolls with page */}
-        <div className="max-w-[1200px] mx-auto px-6 flex items-center">
-          <div className="flex items-center gap-6">
+        <div className="max-w-[1200px] mx-auto px-6 flex items-end pb-4">
+          <div className="flex items-end gap-6">
             <div className="relative cursor-pointer group hover:scale-105 transition-transform duration-300">
-              <div className="w-[104px] h-[104px] rounded-full bg-[#11C19F] text-white flex flex-col items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
+              <div className="w-[120px] h-[120px] rounded-full bg-[#11C19F] text-white flex flex-col items-center justify-center shadow-md border-4 border-[#F2F2F2] overflow-hidden relative z-10">
                 {currentUser?.avatar ? (
                   <img 
                     src={currentUser.avatar} 
@@ -179,32 +177,32 @@ export default function ProfilePage() {
                   </>
                 )}
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white border-2 border-transparent shadow-[0_4px_10px_rgba(0,0,0,0.3)] hover:bg-blue-600 transition">
+              <div className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white border-2 border-[#F2F2F2] shadow-sm hover:bg-blue-700 transition z-20">
                 <Pencil size={14} />
               </div>
             </div>
-            <div className="text-white">
-              <h1 className="text-3xl font-black drop-shadow-md flex items-center gap-3">
+            <div className="text-[#0c1a40] mb-2">
+              <h1 className="text-3xl font-black flex items-center gap-3">
                 {profile?.name || 'User'}
-                {currentUser?.role === 'TRAVEL_AGENT' && (
+                {currentUser?.role === 'B2B_AGENT' && (
                   <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${
-                    currentUser.agentStatus === 'APPROVED' ? 'bg-green-500/20 text-green-100 border-green-500/30' :
-                    currentUser.agentStatus === 'REJECTED' ? 'bg-red-500/20 text-red-100 border-red-500/30' :
-                    'bg-yellow-500/30 text-yellow-100 border-yellow-500/40'
+                    currentUser.agentStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border-green-200' :
+                    currentUser.agentStatus === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' :
+                    'bg-yellow-100 text-yellow-700 border-yellow-200'
                   }`}>
                     {currentUser.agentStatus === 'INCOMPLETE' ? 'PENDING' : (currentUser.agentStatus || 'PENDING')} AGENT
                   </span>
                 )}
               </h1>
-              <div className="flex items-center gap-4 mt-2 text-sm font-medium opacity-90 drop-shadow-md">
-                <span className="flex items-center gap-1">📞 {profile?.phone || 'Add Phone'}</span>
-                <span className="flex items-center gap-1">✉️ {profile?.email}</span>
+              <div className="flex items-center gap-4 mt-2 text-sm font-bold text-gray-600">
+                <span className="flex items-center gap-1.5"><Smartphone size={14}/> {profile?.phone || 'Add Phone'}</span>
+                <span className="flex items-center gap-1.5"><User size={14}/> {profile?.email}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content Card - Has a gap (mt-12) from the profile info */}
+        {/* Main Content Card */}
         <div className="max-w-[1200px] mx-auto px-6 mt-12 relative pb-20">
           <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex min-h-[600px] items-start">
           

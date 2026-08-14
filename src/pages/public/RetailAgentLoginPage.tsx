@@ -42,7 +42,7 @@ const RetailAgentLoginPage: React.FC = () => {
       const user = response.data;
 
       // Check if user is an agent or supplier
-      if (user.role !== 'TRAVEL_AGENT' && user.role !== 'SUPPLIER_AGENT' && user.role !== 'SELLER') {
+      if (user.role !== 'B2B_AGENT' && user.role !== 'SUPPLIER_AGENT' && user.role !== 'SELLER') {
         throw new Error('This portal is strictly for B2B Agents. Regular users cannot log in here.');
       }
 
@@ -51,7 +51,7 @@ const RetailAgentLoginPage: React.FC = () => {
       // Redirect to the B2B Agent Search Engine Portal
       navigate('/b2b/home');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -60,15 +60,15 @@ const RetailAgentLoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans text-gray-800 flex flex-col">
       {/* Top Header Bar (Sticky) */}
-      <header className="bg-white border-b border-gray-100 px-6 md:px-12 py-3 flex justify-between items-center shadow-sm sticky top-0 z-50 transition-all">
+      <header className="bg-white border-b border-gray-100 px-3 md:px-12 py-3 flex flex-wrap justify-between items-center shadow-sm sticky top-0 z-50 transition-all gap-y-2">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex items-center justify-center">
-            <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
+            <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8 md:w-10 md:h-10" crossOrigin="anonymous" />
           </div>
           <div>
-            <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
-            <span className="block text-[9px] text-gray-400 font-bold tracking-widest uppercase -mt-1">B2B AGENT ENGINE</span>
+            <span className="text-lg md:text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+            <span className="block text-[8px] md:text-[9px] text-gray-400 font-bold tracking-widest uppercase -mt-1">B2B AGENT ENGINE</span>
           </div>
         </Link>
 
@@ -80,7 +80,7 @@ const RetailAgentLoginPage: React.FC = () => {
         </nav>
 
         {/* Right Contacts & Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
           <div className="hidden lg:flex items-center gap-2">
             <div className="w-8 h-8 bg-amber-400 text-gray-900 rounded-full flex items-center justify-center font-bold">
               <Phone size={16} />
@@ -93,17 +93,18 @@ const RetailAgentLoginPage: React.FC = () => {
 
           <Link
             to="/b2b/signup"
-            className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-xs px-5 py-2.5 rounded-full transition-all shadow-md flex items-center gap-1.5"
+            className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-[10px] md:text-xs px-4 py-2 md:px-5 md:py-2.5 rounded-full transition-all shadow-md flex items-center gap-1.5"
           >
             <span>Register</span>
-            <ArrowRight size={14} />
+            <ArrowRight size={12} className="md:w-3.5 md:h-3.5" />
           </Link>
 
           <Link
             to="/supplier/login"
-            className="border border-gray-300 hover:border-gray-400 text-gray-800 font-bold text-xs px-4 py-2 rounded-full transition-all flex items-center gap-1 bg-white shadow-sm"
+            className="border border-gray-300 hover:border-gray-400 text-gray-800 font-bold text-[10px] md:text-xs px-3 py-2 md:px-4 md:py-2.5 rounded-full transition-all flex items-center gap-1 bg-white shadow-sm"
           >
-            <span>Supplier Login</span>
+            <span className="hidden sm:inline">Supplier Login</span>
+            <span className="sm:hidden">Supplier</span>
             <ExternalLink size={12} />
           </Link>
         </div>
@@ -111,36 +112,36 @@ const RetailAgentLoginPage: React.FC = () => {
 
       {/* Service Category Icons Row */}
       <div className="bg-[#f8fafc] py-3 border-b border-gray-100 z-40 relative">
-        <div className="max-w-4xl mx-auto flex items-center justify-around px-4">
-          <div className="flex flex-col items-center gap-2 group cursor-pointer">
+        <div className="max-w-4xl mx-auto flex items-center justify-start md:justify-around px-4 overflow-x-auto hidden-scrollbar gap-6 md:gap-0 pb-1">
+          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
             <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
               <Plane size={24} />
             </div>
             <span className="text-[11px] font-black text-[#0c1a40]">Flight</span>
           </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer">
+          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
             <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
               <Building2 size={24} />
             </div>
             <span className="text-[11px] font-black text-[#0c1a40]">Hotel & Villas</span>
           </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer">
+          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
             <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
               <ShieldCheck size={24} />
             </div>
             <span className="text-[11px] font-black text-[#0c1a40]">Insurance</span>
           </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer">
+          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
             <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
               <CreditCard size={24} />
             </div>
             <span className="text-[11px] font-black text-[#0c1a40]">Visa</span>
           </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer">
+          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
             <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
               <Compass size={24} />
             </div>
@@ -157,27 +158,30 @@ const RetailAgentLoginPage: React.FC = () => {
             backgroundImage: `linear-gradient(rgba(11, 16, 49, 0.4), rgba(11, 16, 49, 0.7)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80')`
           }}
         >
-          {/* Top Inline Login Bar */}
-          <form onSubmit={handleLogin} className="w-full max-w-2xl bg-white rounded-full p-1.5 shadow-2xl mb-1.5 flex items-center gap-2 text-gray-800 mt-2">
-            <input
-              type="text"
-              placeholder="Enter Mobile Number"
-              value={phoneOrEmail}
-              onChange={(e) => setPhoneOrEmail(e.target.value)}
-              required
-              className="flex-1 text-xs px-6 py-2.5 outline-none font-bold bg-transparent placeholder:text-gray-400 placeholder:font-normal"
-            />
+          {/* Inline Login Form (Stacked on mobile, pill on desktop) */}
+          <form onSubmit={handleLogin} className="w-full max-w-2xl md:bg-white md:rounded-full md:p-1.5 md:shadow-2xl mb-1.5 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2 text-gray-800 mt-2">
             
-            <div className="w-px h-8 bg-gray-200" />
+            <div className="w-full md:flex-1 bg-white rounded-full flex items-center shadow-md md:shadow-none relative">
+              <input
+                type="text"
+                placeholder="Enter Mobile Number or Email"
+                value={phoneOrEmail}
+                onChange={(e) => setPhoneOrEmail(e.target.value)}
+                required
+                className="w-full text-xs px-6 py-3 md:py-2.5 outline-none font-bold bg-transparent placeholder:text-gray-400 placeholder:font-normal rounded-full"
+              />
+            </div>
+            
+            <div className="hidden md:block w-px h-8 bg-gray-200" />
 
-            <div className="flex-1 relative flex items-center">
+            <div className="w-full md:flex-1 relative flex items-center bg-white rounded-full shadow-md md:shadow-none">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full text-xs px-6 py-2.5 outline-none font-bold bg-transparent placeholder:text-gray-400 placeholder:font-normal pr-10"
+                className="w-full text-xs px-6 py-3 md:py-2.5 outline-none font-bold bg-transparent placeholder:text-gray-400 placeholder:font-normal pr-10 rounded-full"
               />
               <button
                 type="button"
@@ -191,7 +195,7 @@ const RetailAgentLoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#0b1031] hover:bg-blue-900 text-white text-sm font-bold px-8 py-2.5 rounded-full transition-all shadow-md flex items-center gap-2 shrink-0 mr-0.5"
+              className="bg-[#0b1031] hover:bg-blue-900 text-white text-sm font-bold px-8 py-3 md:py-2.5 rounded-full transition-all shadow-md flex justify-center items-center gap-2 shrink-0 md:mr-0.5 mt-2 md:mt-0"
             >
               <span>{loading ? 'Wait...' : 'Login'}</span>
             </button>

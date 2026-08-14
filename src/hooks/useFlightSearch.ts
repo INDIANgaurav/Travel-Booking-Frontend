@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectAgentBookingMode } from '../store/authSlice';
@@ -51,7 +51,7 @@ export function useFlightSearch() {
   const user = useSelector(selectCurrentUser);
   const agentMode = useSelector(selectAgentBookingMode);
   
-  const isAgentDiscount = user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ';
+  const isAgentDiscount = user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ';
   const getDisplayPrice = (price: number) => isAgentDiscount ? Math.floor(price * 0.9) : price;
 
   const getLocalISO = (d: Date) => {
@@ -140,13 +140,15 @@ export function useFlightSearch() {
     }
   };
 
-  useEffect(() => {
-    fetchFlights(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    fetchFlights(false);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      fetchFlights(true);
+    } else {
+      fetchFlights(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nonStopFilter, morningFilter]);
 

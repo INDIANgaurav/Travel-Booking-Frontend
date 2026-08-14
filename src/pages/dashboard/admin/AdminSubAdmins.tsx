@@ -13,6 +13,8 @@ export default function AdminSubAdmins() {
   const [subAdmins, setSubAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -28,8 +30,9 @@ export default function AdminSubAdmins() {
 
   const fetchSubAdmins = async () => {
     try {
-      const { data } = await api.get('/api/admin/users?role=SUB_ADMIN');
-      setSubAdmins(data);
+      const { data } = await api.get(`/api/admin/users?role=SUB_ADMIN&page=${page}&limit=10`);
+      setSubAdmins(data.data || (Array.isArray(data) ? data : []));
+      setTotalPages(data.totalPages || 1);
     } catch (error) {
       toast.error('Failed to fetch sub-admins');
     } finally {
@@ -39,7 +42,7 @@ export default function AdminSubAdmins() {
 
   useEffect(() => {
     fetchSubAdmins();
-  }, []);
+  }, [page]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,6 +241,25 @@ export default function AdminSubAdmins() {
           </tbody>
         </table>
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+          <button 
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Previous
+          </button>
+          <span className="text-xs font-semibold text-gray-500">Page {page} of {totalPages}</span>
+          <button 
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Edit SubAdmin Modal */}

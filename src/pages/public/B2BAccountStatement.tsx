@@ -47,8 +47,18 @@ const B2BAccountStatement: React.FC = () => {
     try {
       setLoading(true);
       const querySearch = overrideSearch !== undefined ? overrideSearch : search;
-      // Append fromDate and toDate to the query string
-      const res = await api.get(`/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}&fromDate=${fromDate}&toDate=${toDate}`);
+      let url = `/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}`;
+      
+      if (statementType === 'Date Range Statement') {
+        url += `&fromDate=${fromDate}&toDate=${toDate}`;
+      } else if (statementType === 'Month Wise Statement') {
+        // Just for example, though backend might handle month differently
+        url += `&month=${month}&year=${year}`;
+      } else if (statementType === 'Mini Statement') {
+        url += `&type=mini`;
+      }
+
+      const res = await api.get(url);
       setData(res.data.data);
       setTotalRecords(res.data.totalRecords);
       setTotalPages(res.data.totalPages);
@@ -168,14 +178,12 @@ const B2BAccountStatement: React.FC = () => {
               </>
             )}
 
-            {(statementType === 'Date Range Statement' || statementType === 'Month Wise Statement') && (
-              <button 
-                onClick={() => fetchData()}
-                className="bg-[#0b1031] text-white px-8 h-[42px] rounded-full text-xs font-bold hover:bg-blue-900 transition shadow-md"
-              >
-                Get Statement
-              </button>
-            )}
+            <button 
+              onClick={() => fetchData()}
+              className="bg-[#0b1031] text-white px-8 h-[42px] rounded-full text-xs font-bold hover:bg-blue-900 transition shadow-md"
+            >
+              Get Statement
+            </button>
           </div>
         </div>
 
@@ -299,14 +307,50 @@ const B2BAccountStatement: React.FC = () => {
             </table>
           </div>
           
-          {/* Pagination */}
-          <div className="bg-[#fcfcfc] border-t border-gray-100 px-5 py-3 flex items-center justify-end text-[10px] font-bold text-gray-500">
-             <div className="flex items-center gap-1">
-                <button className="text-gray-400 hover:text-gray-700">◀</button>
-                <div className="w-[400px] h-2.5 bg-gray-300 rounded-full mx-2"></div>
-                <button className="text-gray-400 hover:text-gray-700">▶</button>
-             </div>
-          </div>
+          {/* Pagination Controls */}
+          {data.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
+              <div className="text-xs font-semibold text-gray-500">
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1 || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, idx) => {
+                    const p = idx + 1;
+                    if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => setPage(p)}
+                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    }
+                    if (p === page - 2 || p === page + 2) {
+                      return <span key={p} className="text-gray-400 text-xs">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

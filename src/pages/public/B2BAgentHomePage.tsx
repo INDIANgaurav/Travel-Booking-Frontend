@@ -165,6 +165,19 @@ const B2BAgentHomePage: React.FC = () => {
   };
   
   // Search Form State
+interface RecentSearch {
+  from: string;
+  to: string;
+  date: string;
+  returnDate: string;
+  tripType: string;
+  adults: number;
+  children: number;
+  infants: number;
+  cabinClass: string;
+  timestamp: number;
+}
+
   const getSavedState = () => {
     try {
       const saved = sessionStorage.getItem('b2bSearchState');
@@ -172,6 +185,14 @@ const B2BAgentHomePage: React.FC = () => {
     } catch { return {}; }
   };
   const savedState = getSavedState();
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('b2bRecentSearches');
+      if (saved) setRecentSearches(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
   const [tripType, setTripType] = useState('OneWay');
   const [from, setFrom] = useState(savedState.from || 'DEL');
   const [to, setTo] = useState(savedState.to || 'HYD');
@@ -205,7 +226,25 @@ const B2BAgentHomePage: React.FC = () => {
     }));
   }, [tripType, from, to, date, returnDate, adults, children, infants, cabinClass, specialFare, preferredAirline, hasSearched]);
 
-  const handleSearch = async () => {
+  const handleSearch = async (paramsObj?: RecentSearch) => {
+    const searchFrom = paramsObj?.from || from;
+    const searchTo = paramsObj?.to || to;
+    const searchDate = paramsObj?.date || date;
+    const searchReturnDate = paramsObj?.returnDate !== undefined ? paramsObj.returnDate : returnDate;
+    const searchAdults = paramsObj?.adults !== undefined ? paramsObj.adults : adults;
+    const searchChildren = paramsObj?.children !== undefined ? paramsObj.children : children;
+    const searchInfants = paramsObj?.infants !== undefined ? paramsObj.infants : infants;
+    const searchCabinClass = paramsObj?.cabinClass || cabinClass;
+    const searchTripType = paramsObj?.tripType || tripType;
+
+    // Save to Recent Searches
+    const newSearch: RecentSearch = { from: searchFrom, to: searchTo, date: searchDate, returnDate: searchReturnDate, tripType: searchTripType, adults: searchAdults, children: searchChildren, infants: searchInfants, cabinClass: searchCabinClass, timestamp: Date.now() };
+    const saved = [...recentSearches];
+    const filtered = saved.filter(s => !(s.from === searchFrom && s.to === searchTo && s.date === searchDate && s.tripType === searchTripType));
+    const updated = [newSearch, ...filtered].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('b2bRecentSearches', JSON.stringify(updated));
+
     setHasSearched(true);
     setLoading(true);
     setSelectedOutbound(null);
@@ -215,15 +254,15 @@ const B2BAgentHomePage: React.FC = () => {
       // Outbound flights
       const response = await api.get('/api/searches/flights', {
         params: {
-          from,
-          to,
-          date,
-          adults,
-          children,
-          infants,
-          cabinClass,
-          tripType,
-          passengers: adults + children + infants
+          from: searchFrom,
+          to: searchTo,
+          date: searchDate,
+          adults: searchAdults,
+          children: searchChildren,
+          infants: searchInfants,
+          cabinClass: searchCabinClass,
+          tripType: searchTripType,
+          passengers: searchAdults + searchChildren + searchInfants
         }
       });
       const flightsData = response.data || [];
@@ -234,19 +273,19 @@ const B2BAgentHomePage: React.FC = () => {
       }
 
       // Return flights (swap from/to, use returnDate)
-      if (tripType === 'Round Trip' && returnDate) {
+      if (searchTripType === 'Round Trip' && searchReturnDate) {
         try {
           const returnResponse = await api.get('/api/searches/flights', {
             params: {
-              from: to,
-              to: from,
-              date: returnDate,
-              adults,
-              children,
-              infants,
-              cabinClass,
-              tripType,
-              passengers: adults + children + infants
+              from: searchTo,
+              to: searchFrom,
+              date: searchReturnDate,
+              adults: searchAdults,
+              children: searchChildren,
+              infants: searchInfants,
+              cabinClass: searchCabinClass,
+              tripType: searchTripType,
+              passengers: searchAdults + searchChildren + searchInfants
             }
           });
           const retFlightsData = returnResponse.data || [];
@@ -329,7 +368,7 @@ const B2BAgentHomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f1f5f9] font-sans text-gray-800 flex flex-col">
       {/* B2B Header Bar (Matching Reference Screenshot 2) */}
-      <header className="bg-white border-b border-gray-200 px-8 py-2.5 flex justify-between items-center shadow-sm sticky top-0 z-40">
+      <header className="bg-white border-b border-gray-200 px-8 py-2.5 flex justify-between items-center shadow-sm sticky top-0 z-50">
         {/* Logo & Category Navigation */}
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/b2b/home')}>
@@ -425,9 +464,12 @@ const B2BAgentHomePage: React.FC = () => {
             <span>Call Us: +91 9555934205</span>
           </div>
 
-          <div className="bg-gray-100 text-gray-800 text-xs font-black px-4 py-2 rounded-full border border-gray-200">
+          <button 
+            onClick={() => navigate('/b2b/dashboard/wallet')}
+            className="bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer text-xs font-black px-4 py-2 rounded-full border border-gray-200"
+          >
             Balance: ₹ {agentBalance.toLocaleString('en-IN')}
-          </div>
+          </button>
 
           <div className="relative" ref={profileRef}>
             <div 
@@ -450,6 +492,13 @@ const B2BAgentHomePage: React.FC = () => {
                   <p className="text-xs font-bold text-[#0c1a40] truncate">{agentName}</p>
                   <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
                 </div>
+                <button 
+                  onClick={() => navigate('/b2b/profile')}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 flex items-center gap-2 transition"
+                >
+                  <Users size={14} />
+                  <span>My Profile</span>
+                </button>
                 <button 
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
@@ -568,7 +617,7 @@ const B2BAgentHomePage: React.FC = () => {
             {/* Search Button */}
             <button
               type="button"
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-8 h-[54px] rounded-full transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <Search size={16} />
@@ -630,6 +679,43 @@ const B2BAgentHomePage: React.FC = () => {
             )}
           </div>
 
+          {/* Recent Searches Row */}
+          {recentSearches.length > 0 && (
+            <div className="flex items-center gap-3 pt-4 pb-2 overflow-x-auto hidden-scrollbar">
+              <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap uppercase tracking-wider">Recent:</span>
+              {recentSearches.map((s, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setFrom(s.from);
+                    setTo(s.to);
+                    setDate(s.date);
+                    setReturnDate(s.returnDate);
+                    setTripType(s.tripType);
+                    setAdults(s.adults);
+                    setChildren(s.children);
+                    setInfants(s.infants);
+                    setCabinClass(s.cabinClass);
+                    handleSearch(s);
+                  }}
+                  className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-bold text-[#0c1a40] hover:border-blue-300 hover:bg-blue-50 whitespace-nowrap transition-colors shadow-sm group"
+                >
+                  <span className="text-blue-700">{s.from.split('(')[1]?.replace(')', '') || s.from.substring(0,3)}</span>
+                  {s.tripType === 'Round Trip' ? (
+                    <ArrowLeftRight size={10} className="text-gray-400 group-hover:text-blue-500" />
+                  ) : (
+                    <span className="text-gray-400 group-hover:text-blue-500">→</span>
+                  )}
+                  <span className="text-blue-700">{s.to.split('(')[1]?.replace(')', '') || s.to.substring(0,3)}</span>
+                  <span className="text-gray-300 ml-1">|</span>
+                  <span className="text-gray-600">{s.date ? format(new Date(s.date), 'dd MMM') : ''}</span>
+                  <span className="text-gray-300 ml-1">|</span>
+                  <span className="text-gray-600">{s.adults + s.children + s.infants} PAX</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Special Fares Row */}
           <div className="flex items-center gap-4 text-xs font-bold pt-2">
             <span className="text-[#0c1a40]">Select a special fare</span>
@@ -656,8 +742,19 @@ const B2BAgentHomePage: React.FC = () => {
 
 
       {/* Latest Deals & Offers */}
-      <section className="bg-amber-400 py-2 text-center text-xs font-bold text-gray-900">
-        Get Best Deals on Flights... Book Your Tickets... Get Best Rates
+      <section className="bg-amber-400 py-2 text-xs font-bold text-gray-900 overflow-hidden whitespace-nowrap pause-on-hover cursor-pointer">
+        <div className="animate-marquee inline-block w-max">
+          {[...Array(12)].map((_, i) => (
+            <React.Fragment key={i}>
+              <span className="mx-12">Get Best Deals on Flights</span>
+              <span className="mx-12 text-black/40">•</span>
+              <span className="mx-12">Book Your Tickets</span>
+              <span className="mx-12 text-black/40">•</span>
+              <span className="mx-12">Get Best Rates</span>
+              <span className="mx-12 text-black/40">•</span>
+            </React.Fragment>
+          ))}
+        </div>
       </section>
 
       {/* Hidden Certificate Template for PDF Generation */}

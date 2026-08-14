@@ -24,16 +24,20 @@ const SupplierLoginPage: React.FC = () => {
       const response = await api.post('/api/auth/login', { email, password });
       const user = response.data;
 
-      // Ensure only suppliers can log in here
-      if (user.role !== 'SUPPLIER_AGENT' && user.role !== 'SUPER_ADMIN' && user.role !== 'SUB_ADMIN') {
-        throw new Error('This portal is restricted to Suppliers and Admins only.');
+      // Ensure only suppliers and their staff can log in here
+      if (user.role !== 'SUPPLIER_AGENT' && user.role !== 'SUPPLIER_STAFF') {
+        if (user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN') {
+          throw new Error('Admin login is not allowed in the Supplier Portal. Please use the Admin Portal.');
+        }
+        throw new Error('This portal is restricted to Suppliers and their Staff only.');
       }
 
       // Dispatch credentials and redirect to the Seller / Supplier Portal
       dispatch(setCredentials({ user, token: user.token }));
       navigate('/supplier-portal/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Invalid credentials.');
+      // If it's a manual Error thrown by us, it won't have err.response
+      setError(err.response?.data?.message || err.message || 'Login failed. Invalid credentials.');
     } finally {
       setLoading(false);
     }

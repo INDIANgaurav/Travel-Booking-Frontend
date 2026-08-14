@@ -7,11 +7,10 @@ import { auth } from '../../config/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 interface RegisterFormProps {
-  role: 'USER' | 'TRAVEL_AGENT';
   onToggleMode: () => void;
 }
 
-export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) {
+export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   
@@ -41,21 +40,16 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
 
     try {
       const payload = {
-        name: role === 'USER' ? `${firstName} ${lastName}` : contactPerson,
-        companyName: role === 'TRAVEL_AGENT' ? agencyName : undefined,
+        name: `${firstName} ${lastName}`,
         email,
         phone,
         password,
-        role
+        role: 'USER'
       };
 
       await api.post('/api/auth/register', payload);
       
-      if (role === 'TRAVEL_AGENT') {
-        setSuccessMsg('Your agent account has been created and is pending admin approval. Redirecting...');
-      } else {
-        setSuccessMsg('Account created successfully! Redirecting to login...');
-      }
+      setSuccessMsg('Account created successfully! Redirecting to login...');
       
       // Reset form fields
       setFirstName('');
@@ -68,11 +62,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
       setConfirmPassword('');
       
       setTimeout(() => {
-        if (role === 'TRAVEL_AGENT') {
-          navigate('/pending-approval');
-        } else {
-          onToggleMode();
-        }
+        onToggleMode();
       }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create account.');
@@ -89,13 +79,9 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
       
-      await api.post('/api/auth/google', { token: idToken, role });
+      await api.post('/api/auth/google', { token: idToken, role: 'USER' });
       
-      if (role === 'TRAVEL_AGENT') {
-        setSuccessMsg('Your agent account has been created and is pending admin approval. Redirecting...');
-      } else {
-        setSuccessMsg('Account created successfully! Redirecting to login...');
-      }
+      setSuccessMsg('Account created successfully! Redirecting to login...');
 
       setTimeout(() => {
         onToggleMode();
@@ -112,7 +98,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
     <div className="animate-in slide-in-from-left-4 duration-300">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h2>
       <p className="text-sm text-gray-500 mb-6">
-        {role === 'TRAVEL_AGENT' ? 'Register as a Travel Agent to grow your business' : 'Sign up and start your adventure'}
+        Sign up and start your adventure
       </p>
 
       {error && (
@@ -129,7 +115,7 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
 
       <form onSubmit={handleSubmit} className="space-y-3">
         
-        {role === 'USER' ? (
+
           <div className="flex gap-4">
             <Input 
               label="First Name" 
@@ -148,26 +134,6 @@ export default function RegisterForm({ role, onToggleMode }: RegisterFormProps) 
               icon={<User size={18} />} 
             />
           </div>
-        ) : (
-          <div className="flex gap-4">
-            <Input 
-              label="Agency Name" 
-              placeholder="Agency name" 
-              value={agencyName}
-              onChange={(e) => setAgencyName(e.target.value)}
-              required
-              icon={<User size={18} />} 
-            />
-            <Input 
-              label="Contact Person" 
-              placeholder="Contact name" 
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-              required
-              icon={<User size={18} />} 
-            />
-          </div>
-        )}
 
         <Input 
           label="Email Address" 

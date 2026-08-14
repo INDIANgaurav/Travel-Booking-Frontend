@@ -59,7 +59,7 @@ export default function AdminDashboard() {
         });
 
         // Filter for agents and map them for the chart
-        const agentsList = users.filter((u: any) => u.role?.toUpperCase() === 'TRAVEL_AGENT');
+        const agentsList = users.filter((u: any) => u.role?.toUpperCase() === 'B2B_AGENT');
         if (agentsList.length > 0) {
           const mapped = agentsList.map((a: any) => ({
             name: a.name?.split(' ')[0] || 'Agent', // First name for short labels

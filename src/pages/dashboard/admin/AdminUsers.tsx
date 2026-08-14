@@ -7,12 +7,15 @@ import Loader from '../../../components/common/Loader';
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data } = await api.get('/api/admin/users');
-        setUsers(data);
+        const { data } = await api.get(`/api/admin/users?page=${page}&limit=10`);
+        setUsers(data.data || (Array.isArray(data) ? data : []));
+        setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error('Error fetching users:', error);
         toast.error('Failed to load users');
@@ -21,7 +24,7 @@ export default function AdminUsers() {
       }
     };
     fetchUsers();
-  }, []);
+  }, [page]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) {
@@ -93,12 +96,12 @@ export default function AdminUsers() {
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${
                       user.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                      user.role === 'TRAVEL_AGENT' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                      user.role === 'B2B_AGENT' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
                       'bg-gray-100 text-gray-700 border border-gray-200'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                         user.role === 'SUPER_ADMIN' ? 'bg-purple-500' :
-                        user.role === 'TRAVEL_AGENT' ? 'bg-blue-500' :
+                        user.role === 'B2B_AGENT' ? 'bg-blue-500' :
                         'bg-gray-500'
                       }`}></span>
                       {user.role}
@@ -122,6 +125,25 @@ export default function AdminUsers() {
               ))}
             </tbody>
           </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
+          <button 
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Previous
+          </button>
+          <span className="text-xs font-semibold text-gray-500">Page {page} of {totalPages}</span>
+          <button 
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

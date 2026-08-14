@@ -187,8 +187,8 @@ const B2BMarkup: React.FC = () => {
               <div>
                 <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Value <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input type="number" value={value} onChange={(e) => setValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" placeholder="Value*" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
+                  <input type="number" value={value} onChange={(e) => setValue(e.target.value)} className="w-full h-[38px] pl-3 pr-8 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="Value*" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">%</span>
                 </div>
               </div>
             </div>
@@ -196,11 +196,11 @@ const B2BMarkup: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-[500px]">
               <div>
                 <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Minimum Value <span className="text-red-500">*</span></label>
-                <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" />
+                <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Maximum Value <span className="text-red-500">*</span></label>
-                <input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" />
+                <input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
             </div>
 

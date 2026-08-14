@@ -10,11 +10,11 @@ import { auth } from '../../config/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface LoginFormProps {
-  role: 'USER' | 'TRAVEL_AGENT';
+  onSuccess?: () => void;
   onToggleMode: () => void;
 }
 
-export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
+export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,22 +34,18 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       
       const { token, ...user } = response.data;
       
-      // Block normal users from logging in via the MyBiz tab
-      if (role === 'TRAVEL_AGENT') {
-        if (user.role === 'USER') {
-          throw new Error('Normal users cannot log in from the MyBiz tab. Please use the Personal Account tab.');
-        }
-        if (user.role === 'SUPPLIER_AGENT') {
-          throw new Error('B2B Agents and Suppliers must log in through their dedicated portals.');
-        }
-      }
-      
+      // Cleaned up unused role prop logic
       dispatch(setCredentials({ user, token }));
       
-      // Redirect based on role
       if (user.role === 'USER') navigate('/dashboard');
-      else if (user.role === 'TRAVEL_AGENT') navigate('/agent-portal/dashboard');
-      else if (user.role === 'SUPPLIER_AGENT') navigate('/b2b/home'); // Or /supplier-portal/dashboard
+      else if (user.role === 'SUPER_ADMIN') navigate('/admin');
+      else if (user.role === 'SUB_ADMIN') navigate('/sub-admin');
+      else if (user.role === 'B2B_AGENT') navigate('/agent-portal/dashboard');
+      else if (user.role === 'SUPPLIER_AGENT' || user.role === 'SUPPLIER_STAFF') navigate('/supplier/dashboard');
+      
+      if (onSuccess) {
+        onSuccess();
+      } 
       else navigate('/admin');
       
     } catch (err: any) {
@@ -73,23 +69,20 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
       
-      const response = await api.post('/api/auth/google', { token: idToken, role });
+      const response = await api.post('/api/auth/google', { token: idToken });
       const { token, ...user } = response.data;
-      
-      if (role === 'TRAVEL_AGENT' && user.role === 'USER') {
-        throw new Error('This email is registered as a normal user. Please use a different email for your agent account.');
-      }
-      
-      if (role === 'TRAVEL_AGENT' && user.agentStatus !== 'APPROVED') {
-        throw new Error('Your agent registration is pending approval.');
-      }
       
       dispatch(setCredentials({ user, token }));
       
       if (user.role === 'USER') navigate('/dashboard');
-      else if (user.role === 'SUPPLIER_AGENT') navigate('/b2b/home');
-      else if (user.role === 'TRAVEL_AGENT') navigate('/agent-portal/dashboard');
-      else navigate('/admin');
+      else if (user.role === 'SUPER_ADMIN') navigate('/admin');
+      else if (user.role === 'SUB_ADMIN') navigate('/sub-admin');
+      else if (user.role === 'B2B_AGENT') navigate('/agent-portal/dashboard');
+      else if (user.role === 'SUPPLIER_AGENT' || user.role === 'SUPPLIER_STAFF') navigate('/supplier/dashboard');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
       
     } catch (err: any) {
       if (err.response?.data?.status === 'INACTIVE') {
@@ -108,7 +101,7 @@ export default function LoginForm({ role, onToggleMode }: LoginFormProps) {
     <div className="animate-in slide-in-from-right-4 duration-300">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back!</h2>
       <p className="text-sm text-gray-500 mb-6">
-        {role === 'TRAVEL_AGENT' ? 'Log in to your Travel Agent portal' : 'Log in to your Traveller account'}
+        Log in to your Traveller account
       </p>
 
       {error && (

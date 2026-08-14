@@ -22,13 +22,18 @@ const B2BManageBooking: React.FC = () => {
   const [searchOption, setSearchOption] = useState('RefNo');
   const [searchValue, setSearchValue] = useState('');
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const limit = 10;
+
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [modalView, setModalView] = useState<'summary' | 'invoice'>('summary');
 
-  const handleGetHistory = async () => {
+  const handleGetHistory = async (pageNum = 1) => {
     try {
       setLoading(true);
       setHasSearched(true);
@@ -36,7 +41,9 @@ const B2BManageBooking: React.FC = () => {
       const queryParams = new URLSearchParams({
         product: productType,
         searchType: searchTab,
-        status: statusType
+        status: statusType,
+        page: pageNum.toString(),
+        limit: limit.toString()
       });
 
       if (searchTab === 'SEARCH BY DATE') {
@@ -52,13 +59,23 @@ const B2BManageBooking: React.FC = () => {
 
       const res = await api.get(`/api/manage-bookings?${queryParams.toString()}`);
       setRecords(res.data.data || []);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalRecords(res.data.totalRecords || 0);
+      setPage(pageNum);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching manage bookings:', error);
       setRecords([]);
+      setTotalPages(1);
+      setTotalRecords(0);
       setLoading(false);
     }
   };
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [productType, searchTab, statusType, fromDate, toDate, month, year, searchOption, searchValue]);
 
   return (
     <div className="flex-1 w-full bg-[#ffffff] p-8 text-[#0c1a40] min-h-screen">
@@ -203,7 +220,7 @@ const B2BManageBooking: React.FC = () => {
           )}
 
           <button 
-            onClick={handleGetHistory}
+            onClick={() => handleGetHistory(1)}
             disabled={loading}
             className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[46px]"
           >
@@ -271,6 +288,52 @@ const B2BManageBooking: React.FC = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {records.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
+              <div className="text-xs font-semibold text-gray-500">
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleGetHistory(page - 1)}
+                  disabled={page === 1 || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, idx) => {
+                    const p = idx + 1;
+                    // Show first, last, current, and +/- 1 pages
+                    if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => handleGetHistory(p)}
+                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    }
+                    if (p === page - 2 || p === page + 2) {
+                      return <span key={p} className="text-gray-400 text-xs">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+                <button 
+                  onClick={() => handleGetHistory(page + 1)}
+                  disabled={page === totalPages || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

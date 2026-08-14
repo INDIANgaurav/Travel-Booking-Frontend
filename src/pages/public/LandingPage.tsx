@@ -44,7 +44,7 @@ export default function LandingPage() {
 
   // Redirect B2B agents away from consumer landing page
   useEffect(() => {
-    if (isAuthenticated && user && (user.role === 'TRAVEL_AGENT' || user.role === 'B2B_AGENT' || user.role === 'AGENT')) {
+    if (isAuthenticated && user && (user.role === 'SUPPLIER_AGENT')) {
       navigate('/b2b/home', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
@@ -166,10 +166,10 @@ export default function LandingPage() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 overflow-hidden ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
+      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 overflow-hidden ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
         
         {/* Dynamic Background Elements */}
-        {!(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') && (
+        {!(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') && (
           <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">
             {/* Main Image with slow zoom effect */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center opacity-80" style={{ animation: 'zoomInOut 30s infinite alternate ease-in-out' }}></div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
         <div className={`mx-auto w-full px-4 relative z-10 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
           
           {/* Welcome Headline */}
-          {!(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') && (
+          {!(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') && (
             <div className="text-center mb-6 lg:mb-8 animate-[fadeInUp_1s_ease-out]">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tight drop-shadow-2xl">
                 Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">Dream Vacation</span>
@@ -208,7 +208,7 @@ export default function LandingPage() {
           )}
 
           {/* Top Tabs Pill */}
-          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
+          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-15px] lg:mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
             {[
               {name: 'Flights', icon: Plane}, {name: 'Hotels', icon: Building2}, {name: 'Villas & Homestays', icon: Map},
               {name: 'Holiday Packages', icon: Map}, {name: 'Trains', icon: Plane}, {name: 'Buses', icon: Bus},
@@ -228,12 +228,12 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-14 pb-8 px-8 relative">
+          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-6 lg:pb-8 px-4 lg:px-8 relative">
             
             {activeTab === 'Flights' ? (
               <div className="relative">
                 {/* Flight Types */}
-                <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 relative">
+                <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 lg:mb-6 relative">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input type="radio" name="tripType" checked={tripType === 'One Way'} onChange={() => setTripType('One Way')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
                     <span className={`text-[13px] font-bold transition-colors ${tripType === 'One Way' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>One Way</span>
@@ -263,7 +263,7 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">From</span>
                     </div>
-                    <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    <div className="w-full text-2xl lg:text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchFrom] || searchFrom}
                     </div>
                     <p className="text-[12px] text-gray-500 truncate mt-1">{searchFrom}, Airport</p>
@@ -276,7 +276,7 @@ export default function LandingPage() {
                     
                     {/* Swap Button */}
                     <div 
-                      className="absolute right-8 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition"
+                      className="absolute right-4 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition"
                       onClick={(e) => {
                         e.stopPropagation();
                         const temp = searchFrom;
@@ -296,7 +296,7 @@ export default function LandingPage() {
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">To</span>
                     </div>
-                    <div className="w-full text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    <div className="w-full text-2xl lg:text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchTo] || searchTo}
                     </div>
                     <p className="text-[12px] text-gray-500 truncate mt-1">{searchTo}, Airport</p>
@@ -308,9 +308,9 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                <div className="relative flex flex-row w-full lg:w-auto">
                   <div 
-                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -320,7 +320,7 @@ export default function LandingPage() {
                     {departureDate ? (
                       <>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(departureDate, 'd')}</h3>
+                          <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{format(departureDate, 'd')}</h3>
                           <span className="text-xl font-bold text-gray-900">{format(departureDate, "MMM''yy")}</span>
                         </div>
                         <p className="text-[12px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
@@ -331,8 +331,15 @@ export default function LandingPage() {
                   </div>
 
                   <div 
-                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('return'); }}
+                    className={`flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative ${tripType === 'One Way' ? 'opacity-70 hover:bg-transparent' : ''}`}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      closeAllPickers(); 
+                      if (tripType === 'One Way') {
+                        setTripType('Round Trip');
+                      }
+                      setActiveDatePicker('return'); 
+                    }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
@@ -341,7 +348,7 @@ export default function LandingPage() {
                     {returnDate ? (
                       <>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-[40px] leading-none font-black text-gray-900">{format(returnDate, 'd')}</h3>
+                          <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{format(returnDate, 'd')}</h3>
                           <span className="text-xl font-bold text-gray-900">{format(returnDate, "MMM''yy")}</span>
                         </div>
                         <p className="text-[12px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
@@ -395,8 +402,9 @@ export default function LandingPage() {
                 </div>
 
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                  {/* Travellers */}
                   <div 
-                    className="w-full sm:flex-1 lg:w-[120px] p-3 px-5 border-b sm:border-b-0 sm:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[120px] p-3 px-3 lg:px-5 border-b lg:border-b-0 border-gray-200 lg:border-r cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(!isTravellerPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -404,7 +412,7 @@ export default function LandingPage() {
                       <ChevronDown size={16} className="text-blue-600" />
                     </div>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <h3 className="text-[40px] leading-none font-black text-gray-900">{adults + children + infants}</h3>
+                      <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{adults + children + infants}</h3>
                     </div>
                     <p className="text-[12px] text-gray-700 font-bold mt-1 flex items-center gap-2.5">
                       <span className="flex items-center gap-0.5" title="Adults"><User size={14} className="text-gray-900" /> {adults}</span>
@@ -430,11 +438,10 @@ export default function LandingPage() {
                       />
                     </div>
                   )}
-                </div>
-
-                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                  
+                  {/* Cabin Class */}
                   <div 
-                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
@@ -452,7 +459,7 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                {user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ' && (
+                {user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ' && (
                   <div className="relative flex flex-col sm:flex-row w-full lg:w-[150px] border-t md:border-t-0 md:border-l border-gray-200">
                     <div 
                       className="w-full sm:flex-1 p-3 px-5 cursor-pointer hover:bg-orange-50/30 transition-colors group"
@@ -551,12 +558,19 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Flight Tracker Button */}
-                <div className="mt-5">
+                {/* Flight Tracker Button - Hidden on mobile to save space for Search button */}
+                <div className="mt-5 hidden md:block">
                    <button className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition">
                      <Ticket size={16} className="text-blue-600" />
                      <span className="text-[13px] font-bold text-gray-800">Flight Tracker</span>
                    </button>
+                </div>
+
+                {/* Massive Search Button Overlapping Bottom for Flights */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
+                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                    SEARCH FLIGHTS
+                  </button>
                 </div>
 
               </div>
@@ -677,11 +691,11 @@ export default function LandingPage() {
               </div>
             )}
 
-            {/* Massive Search Button Overlapping Bottom */}
-            {(activeTab === 'Flights' || activeTab === 'Hotels') && (
+            {/* Massive Search Button Overlapping Bottom for Hotels */}
+            {activeTab === 'Hotels' && (
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
-                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl transition-all duration-300 hover:scale-105 ${(user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.4)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)]'}`}>
-                    SEARCH
+                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                    SEARCH HOTELS
                   </button>
                 </div>
             )}
@@ -700,7 +714,7 @@ export default function LandingPage() {
           </div>
 
           {/* Bottom Pill Banners */}
-          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[1100px] gap-6 text-sm hidden-scrollbar">
+          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[1100px] gap-6 text-sm overflow-x-auto hidden-scrollbar">
             <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1 rounded-l-full">
               <Globe size={20} className="text-blue-600" />
               <span className="font-bold text-gray-700">Where2Go</span>
@@ -842,7 +856,7 @@ export default function LandingPage() {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Partner With Us</h4>
             <ul className="space-y-2">
-              <li><button onClick={() => setIsLoginModalOpen(true)} className="hover:text-white transition text-blue-400 font-semibold">Join as Travel Agent</button></li>
+              <li><a href="#" className="hover:text-white transition text-gray-400">Careers</a></li>
               <li><a href="#" className="hover:text-white transition">List your Hotel</a></li>
             </ul>
           </div>

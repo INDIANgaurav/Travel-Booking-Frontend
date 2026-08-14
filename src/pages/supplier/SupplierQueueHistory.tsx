@@ -20,6 +20,11 @@ const SupplierQueueHistory: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Set default dates on mount
   useEffect(() => {
     const today = new Date();
@@ -30,7 +35,7 @@ const SupplierQueueHistory: React.FC = () => {
     setToDate(today.toISOString().split('T')[0]);
   }, []);
 
-  const fetchQueue = async () => {
+  const fetchQueue = async (pageNum = 1) => {
     setLoading(true);
     setSearched(true);
     try {
@@ -39,10 +44,18 @@ const SupplierQueueHistory: React.FC = () => {
       if (toDate) params.append('toDate', toDate);
       if (status !== 'All') params.append('status', status);
       if (searchBy) params.append('refNo', searchBy);
+      params.append('page', pageNum.toString());
+      params.append('limit', limit.toString());
 
       const res = await api.get(`/api/series-fare/queue?${params.toString()}`);
-      setQueue(Array.isArray(res.data) ? res.data : []);
-      if (res.data.length === 0) toast('No queue records found', { icon: 'ℹ️' });
+      
+      const records = res.data.data || (Array.isArray(res.data) ? res.data : []);
+      setQueue(records);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalRecords(res.data.totalRecords || records.length);
+      setPage(pageNum);
+
+      if (records.length === 0) toast('No queue records found', { icon: 'ℹ️' });
     } catch (err) {
       toast.error('Failed to load queue history');
       setQueue([]);
@@ -51,10 +64,14 @@ const SupplierQueueHistory: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchQueue();
+  const handleSubmit = (e?: React.FormEvent, pageNum = 1) => {
+    if (e) e.preventDefault();
+    fetchQueue(pageNum);
   };
+
+  useEffect(() => {
+    setPage(1);
+  }, [fromDate, toDate, status, searchBy, supplier]);
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
@@ -195,7 +212,7 @@ const SupplierQueueHistory: React.FC = () => {
                   const pax = item.details?.passengers?.[0];
                   return (
                     <tr key={item._id} className="hover:bg-blue-50/40 transition-colors border-b border-gray-100">
-                      <td className="p-2.5">{index + 1}</td>
+                      <td className="p-2.5">{((page - 1) * limit) + index + 1}</td>
                       <td className="p-2.5 font-bold text-blue-600">{sf?.sfId || '—'}</td>
                       <td className="p-2.5 font-semibold text-gray-800">{item.bookingId}</td>
                       <td className="p-2.5 font-bold">{item.details?.from || sf?.origin} - {item.details?.to || sf?.destination}</td>
@@ -244,6 +261,57 @@ const SupplierQueueHistory: React.FC = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {queue.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
+            <div className="text-xs font-semibold text-gray-500 flex gap-4">
+              <span>
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
+              </span>
+              <span className="text-gray-300">|</span>
+              <span>
+                Page Total Gross: <span className="text-[#0b1031] font-bold">₹{queue.reduce((sum, item) => sum + (item.totalAmount || 0), 0).toLocaleString('en-IN')}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => handleSubmit(e, page - 1)}
+                disabled={page === 1 || loading}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {[...Array(totalPages)].map((_, idx) => {
+                  const p = idx + 1;
+                  if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                    return (
+                      <button
+                        key={p}
+                        onClick={(e) => handleSubmit(e, p)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }
+                  if (p === page - 2 || p === page + 2) {
+                    return <span key={p} className="text-gray-400 text-xs">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+              <button 
+                onClick={(e) => handleSubmit(e, page + 1)}
+                disabled={page === totalPages || loading}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

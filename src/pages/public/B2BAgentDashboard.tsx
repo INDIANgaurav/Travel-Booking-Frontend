@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Plane, Building2, ShieldCheck, CreditCard, Compass, MoreHorizontal, LogOut, Home, Calendar, Receipt, CreditCard as CreditCardIcon, FileText, FileSpreadsheet, Phone, BadgePercent, Pencil } from 'lucide-react';
+import { Plane, Building2, ShieldCheck, CreditCard, Compass, MoreHorizontal, LogOut, Home, Calendar, Receipt, CreditCard as CreditCardIcon, FileText, FileSpreadsheet, Phone, BadgePercent, Pencil, Wallet } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/authSlice';
 
@@ -21,6 +21,14 @@ const B2BAgentDashboard: React.FC = () => {
       bgColor: 'bg-emerald-50',
       iconBg: 'bg-emerald-500',
       path: '/b2b/dashboard/bank-details'
+    },
+    {
+      title: 'Wallet & Balance',
+      description: 'Manage agency funds and transactions',
+      icon: <Wallet size={20} />,
+      bgColor: 'bg-emerald-50',
+      iconBg: 'bg-emerald-500',
+      path: '/b2b/dashboard/wallet'
     },
     {
       title: 'Pax Calendar',
@@ -137,7 +145,7 @@ const B2BAgentDashboard: React.FC = () => {
                   }`}
                 >
                   <span className={`${isActive ? 'text-white' : 'text-gray-500'}`}>
-                     {React.cloneElement(card.icon as React.ReactElement<any>, { size: 14 })}
+                    {React.cloneElement(card.icon as React.ReactElement<any>, { size: 14 })}
                   </span>
                   {card.title}
                 </button>

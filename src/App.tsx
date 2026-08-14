@@ -12,6 +12,7 @@ import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
 
 import BookingsPage from './pages/dashboard/user/BookingsPage'
 import ProfilePage from './pages/dashboard/user/ProfilePage'
+import WalletPage from './pages/dashboard/user/WalletPage'
 import WishlistPage from './pages/dashboard/user/WishlistPage'
 import PropertiesPage from './pages/dashboard/user/PropertiesPage'
 import FlightSearchResults from './pages/public/FlightSearchResults'
@@ -32,6 +33,7 @@ import B2BAgentHomePage from './pages/public/B2BAgentHomePage'
 import B2BAgentCheckout from './pages/public/B2BAgentCheckout'
 import B2BAgentDashboard from './pages/public/B2BAgentDashboard'
 import B2BBankDetails from './pages/public/B2BBankDetails'
+import B2BWalletPage from './pages/public/B2BWalletPage'
 import B2BPaxCalendar from './pages/public/B2BPaxCalendar'
 import B2BInvoice from './pages/public/B2BInvoice'
 import B2BCreditNote from './pages/public/B2BCreditNote'
@@ -78,8 +80,8 @@ function App() {
   const getRedirectPath = (role?: string) => {
     if (role === 'SUPER_ADMIN') return '/admin';
     if (role === 'SUB_ADMIN') return '/sub-admin';
-    if (role === 'TRAVEL_AGENT') return '/agent-portal/dashboard';
-    if (role === 'SUPPLIER_AGENT' || role === 'SELLER') return '/supplier-portal/dashboard';
+    if (role === 'B2B_AGENT' || role === 'B2B_AGENT' || role === 'SELLER') return '/b2b/home';
+    if (role === 'SUPPLIER_AGENT' || role === 'SUPPLIER_STAFF') return '/supplier-portal/dashboard';
     return '/';
   };
 
@@ -87,7 +89,7 @@ function App() {
   const ProtectedRoute = ({ children, allowedRoles }: { children?: React.ReactNode, allowedRoles?: string[] }) => {
     if (!isAuthenticated) return <Navigate to="/" replace />
     if (user && user.isActive === false) return <Navigate to="/inactive-account" replace />
-    if (user && user.role === 'TRAVEL_AGENT' && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
+    if (user && user.role === 'B2B_AGENT' && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
       return <Navigate to="/pending-approval" replace />
     }
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
@@ -126,13 +128,15 @@ function App() {
         <Route path="/b2b/checkout" element={<B2BAgentCheckout />} />
         
         {/* B2B Inner Tools Route */}
-        <Route element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT']} />}>
+        <Route element={<ProtectedRoute allowedRoles={['B2B_AGENT', 'B2B_AGENT', 'SELLER', 'SUPPLIER_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
           <Route element={<B2BDashboardLayout />}>
+            <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
+            <Route path="/b2b/booking-status" element={<B2BBookingStatus />} />
+            <Route path="/b2b/manage-booking" element={<B2BManageBooking />} />
+            <Route path="/b2b/profile" element={<ProfilePage />} />
             <Route path="/b2b/dashboard" element={<B2BAgentDashboard />}>
-              <Route path="account-statement" element={<B2BAccountStatement />} />
-              <Route path="booking-status" element={<B2BBookingStatus />} />
-              <Route path="manage-booking" element={<B2BManageBooking />} />
               <Route path="bank-details" element={<B2BBankDetails />} />
+              <Route path="wallet" element={<B2BWalletPage />} />
               <Route path="pax-calendar" element={<B2BPaxCalendar />} />
               <Route path="invoice" element={<B2BInvoice />} />
               <Route path="invoice/:id" element={<FlightInvoice />} />
@@ -148,7 +152,7 @@ function App() {
         <Route path="/supplier/login" element={<SupplierLoginPage />} />
 
         {/* Supplier Portal Routes (New Real Agent / Supplier UI) */}
-        <Route path="/supplier-portal" element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT', 'TRAVEL_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
+        <Route path="/supplier-portal" element={<ProtectedRoute allowedRoles={['SUPPLIER_AGENT', 'SUPPLIER_STAFF']} />}>
           <Route element={<SupplierDashboardLayout />}>
             <Route index element={<Navigate to="/supplier-portal/dashboard" replace />} />
             <Route path="dashboard" element={<SupplierDashboard />} />
@@ -173,6 +177,7 @@ function App() {
           <Route path="search" element={<SearchResultsPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="wallet" element={<WalletPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="properties" element={<PropertiesPage />} />
           <Route path="ticket/:id" element={<FlightTicket />} />
@@ -180,7 +185,7 @@ function App() {
         </Route>
 
         {/* Agent Routes */}
-        <Route path="/agent-portal" element={<ProtectedRoute allowedRoles={['TRAVEL_AGENT']} />}>
+        <Route path="/agent-portal" element={<ProtectedRoute allowedRoles={['B2B_AGENT']} />}>
           <Route element={<AgentLayout />}>
             <Route index element={<Navigate to="/agent-portal/dashboard" replace />} />
             <Route path="dashboard" element={<AgentDashboard />} />

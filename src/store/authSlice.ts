@@ -7,7 +7,7 @@ interface User {
   name: string;
   email: string;
   phone?: string;
-  role: 'USER' | 'TRAVEL_AGENT' | 'B2B_AGENT' | 'AGENT' | 'SUPPLIER_AGENT' | 'SUPER_ADMIN' | 'SUB_ADMIN' | 'SUPPLIER_PORTAL_ONLY';
+  role: 'USER' | 'B2B_AGENT' | 'B2B_AGENT' | 'AGENT' | 'SUPPLIER_AGENT' | 'SUPPLIER_STAFF' | 'SUPER_ADMIN' | 'SUB_ADMIN' | 'SUPPLIER_PORTAL_ONLY';
   isApproved?: boolean;
   avatar?: string;
   firstName?: string;

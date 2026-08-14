@@ -129,7 +129,7 @@ export default function HotelCheckout() {
         }
       };
 
-      if (user?.role === 'TRAVEL_AGENT') {
+      if (user?.role === 'B2B_AGENT') {
         (payload as any).bookingMode = agentBookingMode;
       }
 

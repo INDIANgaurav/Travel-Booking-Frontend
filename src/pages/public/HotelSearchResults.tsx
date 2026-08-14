@@ -37,7 +37,7 @@ export default function HotelSearchResults() {
 
   const user = useSelector(selectCurrentUser);
   const agentMode = useSelector(selectAgentBookingMode);
-  const isAgentDiscount = user?.role === 'TRAVEL_AGENT' && agentMode === 'MYBIZ';
+  const isAgentDiscount = user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ';
 
   useEffect(() => {
     fetchHotels();

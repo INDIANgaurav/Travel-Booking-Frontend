@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Shield, UserCheck, X } from 'lucide-react';
+import { Search, Plus, Edit2, Shield, UserCheck, X, Trash, Power } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 interface SupplierUser {
   id: string;
@@ -20,6 +21,15 @@ const SupplierUserManagement: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SupplierUser | null>(null);
+  
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    isDestructive: false,
+    action: () => {}
+  });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -103,6 +113,49 @@ const SupplierUserManagement: React.FC = () => {
     }
   };
 
+  const handleDelete = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Staff Member',
+      message: 'Are you sure you want to permanently delete this staff member? This action cannot be undone.',
+      confirmText: 'Delete',
+      isDestructive: true,
+      action: async () => {
+        try {
+          await api.delete(`/api/users/supplier-staff/${id}`);
+          toast.success('Staff deleted successfully');
+          fetchUsers();
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Failed to delete staff');
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleToggleStatus = (user: SupplierUser) => {
+    const isActivating = user.status !== 'Active';
+    setConfirmModal({
+      isOpen: true,
+      title: isActivating ? 'Activate Staff' : 'Deactivate Staff',
+      message: `Are you sure you want to ${isActivating ? 'activate' : 'deactivate'} this staff member? ${!isActivating ? 'They will lose access to the portal immediately.' : ''}`,
+      confirmText: isActivating ? 'Activate' : 'Deactivate',
+      isDestructive: !isActivating,
+      action: async () => {
+        try {
+          await api.put(`/api/users/supplier-staff/${user.id}`, {
+            isActive: isActivating
+          });
+          toast.success(`Staff ${isActivating ? 'activated' : 'deactivated'} successfully`);
+          fetchUsers();
+        } catch (err: any) {
+          toast.error('Failed to update status');
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
   const filteredUsers = users.filter(u => 
     u.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.emailId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -170,12 +223,27 @@ const SupplierUserManagement: React.FC = () => {
                       {user.role}
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 text-center flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleToggleStatus(user)}
+                      title={user.status === 'Active' ? 'Deactivate Staff' : 'Activate Staff'}
+                      className={`w-7 h-7 text-white rounded-full inline-flex items-center justify-center transition-colors shadow-sm ${user.status === 'Active' ? 'bg-gray-400 hover:bg-gray-500' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                    >
+                      <Power size={13} />
+                    </button>
                     <button 
                       onClick={() => handleOpenEdit(user)}
+                      title="Edit Staff"
                       className="w-7 h-7 bg-amber-500 text-white rounded-full inline-flex items-center justify-center hover:bg-amber-600 transition-colors shadow-sm"
                     >
                       <Edit2 size={13} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(user.id)}
+                      title="Delete Staff"
+                      className="w-7 h-7 bg-red-500 text-white rounded-full inline-flex items-center justify-center hover:bg-red-600 transition-colors shadow-sm"
+                    >
+                      <Trash size={13} />
                     </button>
                   </td>
                 </tr>
@@ -279,6 +347,17 @@ const SupplierUserManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Custom Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        isDestructive={confirmModal.isDestructive}
+        onConfirm={confirmModal.action}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

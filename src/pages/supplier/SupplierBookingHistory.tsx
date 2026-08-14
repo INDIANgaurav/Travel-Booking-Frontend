@@ -55,6 +55,11 @@ const SupplierBookingHistory: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [ticketModalBooking, setTicketModalBooking] = useState<any | null>(null);
 
   const [availableAirlines, setAvailableAirlines] = useState<{value: string, label: string}[]>([
@@ -72,8 +77,8 @@ const SupplierBookingHistory: React.FC = () => {
     }).catch(err => console.error("Error fetching airlines for filter", err));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent, pageNum = 1) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setSearched(true);
     try {
@@ -85,10 +90,18 @@ const SupplierBookingHistory: React.FC = () => {
       params.append('dateType', dateType);
       params.append('fromDate', fromDate);
       params.append('toDate', toDate);
+      params.append('page', pageNum.toString());
+      params.append('limit', limit.toString());
 
       const response = await api.get(`/api/series-fare/booking-history?${params.toString()}`);
-      setBookings(Array.isArray(response.data) ? response.data : []);
-      if (response.data.length === 0) {
+      
+      const records = response.data.data || (Array.isArray(response.data) ? response.data : []);
+      setBookings(records);
+      setTotalPages(response.data.totalPages || 1);
+      setTotalRecords(response.data.totalRecords || records.length);
+      setPage(pageNum);
+
+      if (records.length === 0) {
         toast('No bookings found for the selected filters.', { icon: 'ℹ️' });
       }
     } catch (err) {
@@ -99,6 +112,10 @@ const SupplierBookingHistory: React.FC = () => {
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [refNo, pnrNo, airline, status, dateType, fromDate, toDate, supplier]);
 
   const getStatusStyle = (s: string) => {
     switch (s?.toUpperCase()) {
@@ -252,10 +269,10 @@ const SupplierBookingHistory: React.FC = () => {
         <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
           <div className="bg-[#f8fafc] border-b border-gray-200 px-6 py-3 flex justify-between items-center">
             <h3 className="text-xs font-bold text-[#0b1031] uppercase tracking-wider">
-              Booking Records — {bookings.length} Result{bookings.length !== 1 ? 's' : ''}
+              Booking Records — {totalRecords} Result{totalRecords !== 1 ? 's' : ''}
             </h3>
             <button 
-              onClick={handleSubmit as any}
+              onClick={(e) => handleSubmit(e, page)}
               className={`p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-all cursor-pointer ${loading ? 'animate-spin text-blue-600' : ''}`}
               title="Refresh"
             >
@@ -348,15 +365,54 @@ const SupplierBookingHistory: React.FC = () => {
             </div>
           )}
 
-          {/* Summary Footer */}
+          {/* Pagination Controls */}
           {bookings.length > 0 && (
-            <div className="bg-[#f8fafc] border-t border-gray-200 px-6 py-3 flex justify-between items-center">
-              <span className="text-xs text-gray-500 font-semibold">
-                Total Bookings: <span className="text-[#0b1031] font-bold">{bookings.length}</span>
-              </span>
-              <span className="text-xs text-gray-500 font-semibold">
-                Total Revenue: <span className="text-[#0b1031] font-bold">₹{bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString('en-IN')}</span>
-              </span>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
+              <div className="text-xs font-semibold text-gray-500 flex gap-4">
+                <span>
+                  Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
+                </span>
+                <span className="text-gray-300">|</span>
+                <span>
+                  Page Total Revenue: <span className="text-[#0b1031] font-bold">₹{bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString('en-IN')}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => handleSubmit(e, page - 1)}
+                  disabled={page === 1 || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, idx) => {
+                    const p = idx + 1;
+                    if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                      return (
+                        <button
+                          key={p}
+                          onClick={(e) => handleSubmit(e, p)}
+                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    }
+                    if (p === page - 2 || p === page + 2) {
+                      return <span key={p} className="text-gray-400 text-xs">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+                <button 
+                  onClick={(e) => handleSubmit(e, page + 1)}
+                  disabled={page === totalPages || loading}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
