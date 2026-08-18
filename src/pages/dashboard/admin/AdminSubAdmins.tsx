@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Plus, Users, Trash2, Edit2, Loader2, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../../store/authSlice';
@@ -102,13 +102,13 @@ export default function AdminSubAdmins() {
   };
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <ShieldCheck className="text-blue-600" /> Sub-Admins
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage role-based sub-admins for your organization.</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage role-based sub-admins for your organization.</p>
         </div>
         <button 
           onClick={() => setShowCreateForm(!showCreateForm)}
@@ -140,7 +140,7 @@ export default function AdminSubAdmins() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Temporary Password</label>
-                <input required type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="••••••••" disabled={isCreating} />
+                <input required type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" disabled={isCreating} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
@@ -316,3 +316,4 @@ export default function AdminSubAdmins() {
     </div>
   );
 }
+

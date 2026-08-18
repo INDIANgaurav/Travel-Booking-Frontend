@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import { Search } from 'lucide-react';
@@ -46,11 +46,11 @@ export default function AdminBookings() {
   });
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Bookings</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and track all platform bookings</p>
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900">All Bookings</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage and track all platform bookings</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -65,7 +65,7 @@ export default function AdminBookings() {
       </div>
       
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="flex gap-2">
             {['ALL', 'FLIGHT', 'HOTEL'].map(type => (
               <button 
@@ -139,14 +139,14 @@ export default function AdminBookings() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${
-                      booking.status === 'CONFIRMED' || booking.status === 'Confirmed' ? 'bg-green-100 text-green-700 border border-green-200' :
-                      booking.status === 'PENDING' || booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                      'bg-red-100 text-red-700 border border-red-200'
+                      booking.status === 'CONFIRMED' || booking.status === 'Confirmed' ? 'bg-slate-50 text-slate-700 border border-slate-200' :
+                      booking.status === 'PENDING' || booking.status === 'Pending' ? 'bg-slate-50 text-slate-700 border border-slate-200' :
+                      'bg-slate-50 text-slate-700 border border-slate-200'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                        booking.status === 'CONFIRMED' || booking.status === 'Confirmed' ? 'bg-green-500' :
-                        booking.status === 'PENDING' || booking.status === 'Pending' ? 'bg-yellow-500' :
-                        'bg-red-500'
+                        booking.status === 'CONFIRMED' || booking.status === 'Confirmed' ? 'bg-emerald-500' :
+                        booking.status === 'PENDING' || booking.status === 'Pending' ? 'bg-amber-500' :
+                        'bg-rose-500'
                       }`}></span>
                       {booking.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
@@ -191,10 +191,7 @@ export default function AdminBookings() {
                 </tr>
               )))}
             </tbody>
-          </table>
-        </div>
-        
-        {/* Pagination Controls */}
+          </table></div>{/* Pagination Controls */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
           <button 
             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -216,3 +213,8 @@ export default function AdminBookings() {
     </div>
   );
 }
+
+
+
+
+

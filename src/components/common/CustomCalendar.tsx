@@ -80,97 +80,112 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     const monthEnd = endOfMonth(monthStart);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
-    // Add empty slots for days before the 1st of the month
     const startDayOfWeek = getDay(monthStart);
     const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="h-14"></div>);
+    const totalCells = startDayOfWeek + days.length;
+    const trailingBlanks = Array.from({ length: 42 - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="h-14"></div>);
+    
+    const allCells = [
+      ...blanks,
+      ...days.map((day, idx) => {
+        const dateNum = day.getDate();
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const holidayKey = format(day, 'dd-MM');
+        const holiday = HOLIDAYS[holidayKey];
+        const dynamicPrice = prices[dateStr];
+        
+        const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
+        const isPast = isBefore(startOfDay(day), minD);
+        
+        const isSelectedStart = startDate && isSameDay(day, startDate);
+        const isSelectedEnd = endDate && isSameDay(day, endDate);
+        const isSelected = isSelectedStart || isSelectedEnd;
+        const isBetween = startDate && endDate && isWithinInterval(day, { start: startDate, end: endDate }) && !isSelected;
+
+        let bgClass = "bg-white hover:bg-gray-100";
+        let textClass = "text-gray-900";
+        let priceClass = "text-gray-500";
+        let roundingClass = "rounded-md";
+
+        const isAvailableUnknownPrice = dynamicPrice !== undefined && Number(dynamicPrice) === -1;
+        const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) !== -1;
+        const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
+
+        if (isPast) {
+          bgClass = "bg-white";
+          textClass = "text-gray-300";
+          priceClass = "hidden";
+        } else if (isSelected) {
+          bgClass = "bg-blue-500";
+          textClass = "text-white font-bold";
+          priceClass = "text-blue-100";
+          roundingClass = isSelectedStart && endDate ? "rounded-l-md rounded-r-none" : isSelectedEnd && startDate ? "rounded-r-md rounded-l-none" : "rounded-md";
+        } else if (isBetween) {
+          bgClass = "bg-blue-50";
+          textClass = "text-gray-900";
+          roundingClass = "rounded-none";
+        } else if (isAvailable) {
+          bgClass = "bg-green-50 hover:bg-green-100 border border-green-200";
+          textClass = "text-green-700";
+          priceClass = "text-green-700";
+        }
+
+        return (
+          <div 
+            key={day.toString()} 
+            onClick={() => !isPast && onDateClick(day)}
+            className={`flex flex-col items-center justify-center h-14 w-[calc(100%/7)] cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+          >
+            {holiday && !isPast && (
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
+                {format(day, 'dd MMM')} <br/>
+                <span className="font-bold text-yellow-300">{holiday.name}</span>
+              </div>
+            )}
+            
+            <span className={`text-sm ${textClass}`}>{dateNum}</span>
+            {!isPast && (
+              <div className="flex flex-col items-center mt-1 leading-none">
+                {hasKnownPrice ? (
+                  <span className={`text-[9px] font-bold ${priceClass}`}>
+                    {Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
+                  </span>
+                ) : loadingPrices ? (
+                  <span className={`text-[9px] font-bold ${priceClass}`}>...</span>
+                ) : null}
+                
+                {holiday && (
+                  <span className="text-[7px] font-bold truncate text-center w-[90%] mt-[1px]" style={{ color: holiday.color }}>
+                    {holiday.name.substring(0, 5)}...
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      }),
+      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-[calc(100%/7)] h-14"></div>)
+    ];
+
+    const mappedRows = [];
+    for (let i = 0; i < allCells.length; i += 7) {
+      mappedRows.push(
+        <div key={i} className="flex justify-between w-full mb-1">
+          {allCells.slice(i, i + 7)}
+        </div>
+      );
+    }
 
     return (
       <div className="flex-1 w-full sm:w-1/2 p-4">
         <h3 className="text-center font-bold text-gray-800 text-lg mb-6">
           {format(monthToRender, 'MMMM yyyy')}
         </h3>
-        <div className="grid grid-cols-7 gap-y-2 text-center text-xs font-semibold text-gray-400 mb-2">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d}>{d}</div>)}
+        <div className="flex justify-between text-center text-xs font-semibold text-gray-400 mb-2">
+          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d} className="w-[calc(100%/7)]">{d}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-y-1 gap-x-1">
-          {blanks}
-          {days.map((day, idx) => {
-            const dateNum = day.getDate();
-            const dateStr = format(day, 'yyyy-MM-dd');
-            const holidayKey = format(day, 'dd-MM');
-            const holiday = HOLIDAYS[holidayKey];
-            const dynamicPrice = prices[dateStr];
-            
-            const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
-            const isPast = isBefore(startOfDay(day), minD);
-            
-            const isSelectedStart = startDate && isSameDay(day, startDate);
-            const isSelectedEnd = endDate && isSameDay(day, endDate);
-            const isSelected = isSelectedStart || isSelectedEnd;
-            const isBetween = startDate && endDate && isWithinInterval(day, { start: startDate, end: endDate }) && !isSelected;
-
-            let bgClass = "bg-white hover:bg-gray-100";
-            let textClass = "text-gray-900";
-            let priceClass = "text-gray-500";
-            let roundingClass = "rounded-md";
-
-            const isAvailableUnknownPrice = dynamicPrice !== undefined && Number(dynamicPrice) === -1;
-            const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) !== -1;
-            const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
-
-            if (isPast) {
-              bgClass = "bg-white";
-              textClass = "text-gray-300";
-              priceClass = "hidden";
-            } else if (isSelected) {
-              bgClass = "bg-blue-500";
-              textClass = "text-white font-bold";
-              priceClass = "text-blue-100";
-              roundingClass = isSelectedStart && endDate ? "rounded-l-md rounded-r-none" : isSelectedEnd && startDate ? "rounded-r-md rounded-l-none" : "rounded-md";
-            } else if (isBetween) {
-              bgClass = "bg-blue-50";
-              textClass = "text-gray-900";
-              roundingClass = "rounded-none";
-            } else if (isAvailable) {
-              bgClass = "bg-green-50 hover:bg-green-100 border border-green-200";
-              textClass = "text-green-700";
-              priceClass = "text-green-700";
-            }
-
-            return (
-              <div 
-                key={day.toString()} 
-                onClick={() => !isPast && onDateClick(day)}
-                className={`flex flex-col items-center justify-center h-14 cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
-              >
-                {holiday && !isPast && (
-                  <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
-                    {format(day, 'dd MMM')} <br/>
-                    <span className="font-bold text-yellow-300">{holiday.name}</span>
-                  </div>
-                )}
-                
-                <span className={`text-sm ${textClass}`}>{dateNum}</span>
-                {!isPast && (
-                  <div className="flex flex-col items-center mt-1 leading-none">
-                    {hasKnownPrice ? (
-                      <span className={`text-[9px] font-bold ${priceClass}`}>
-                        {Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
-                      </span>
-                    ) : loadingPrices ? (
-                      <span className={`text-[9px] font-bold ${priceClass}`}>...</span>
-                    ) : null}
-                    
-                    {holiday && (
-                      <span className="text-[7px] font-bold truncate text-center w-[90%] mt-[1px]" style={{ color: holiday.color }}>
-                        {holiday.name.substring(0, 5)}...
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="flex flex-col">
+          {mappedRows}
         </div>
       </div>
     );

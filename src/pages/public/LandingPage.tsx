@@ -166,7 +166,7 @@ export default function LandingPage() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 overflow-hidden ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
+      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
         
         {/* Dynamic Background Elements */}
         {!(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') && (

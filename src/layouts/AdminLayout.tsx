@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,7 +11,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
 
   const handleLogout = () => {
     navigate('/');
@@ -42,6 +42,7 @@ export default function AdminLayout() {
       items: [
         { name: 'Inventory & CMS', path: '/admin/inventory', icon: <PackageOpen size={20} /> },
         { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
+        { name: 'Suppliers', path: '/admin/suppliers', icon: <Globe size={20} /> },
       ]
     },
     {
@@ -54,12 +55,27 @@ export default function AdminLayout() {
 
   return (
     <>
-      <TopNavbar portalMode={true} />
-      <div className="min-h-screen pt-[76px] bg-gray-50 flex overflow-hidden">
+      <TopNavbar portalMode={true} onMenuClick={() => setIsSidebarOpen(true)} />
+      
+      <div className="min-h-screen pt-[76px] bg-slate-50 flex overflow-hidden">
+        
+        {/* Mobile Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-gradient-to-b from-[#1e3a8a] to-[#172554]/50 z-40 md:hidden backdrop-blur-sm"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <div 
-          className={`print:hidden ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl z-20 relative flex-shrink-0 h-[calc(100vh-76px)]`}
+          className={`print:hidden fixed inset-y-0 left-0 z-50 transform ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:relative md:translate-x-0 ${
+            isSidebarOpen ? "w-64" : "w-20"
+          } transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl flex-shrink-0 h-[calc(100vh)] md:h-[calc(100vh-76px)]`}
         >
+
         <div className={`p-4 border-b border-blue-800/50 flex items-center h-20 ${isSidebarOpen ? 'justify-between' : 'justify-center'}`}>
           {isSidebarOpen && (
             <Link to="/admin/dashboard" className="flex flex-col">
@@ -92,10 +108,15 @@ export default function AdminLayout() {
                     <Link
                       key={item.name}
                       to={item.path}
+                      onClick={() => {
+                        if (window.innerWidth < 768) {
+                          setIsSidebarOpen(false);
+                        }
+                      }}
                       className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
                         isActive 
                           ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
-                          : 'text-blue-100 hover:bg-white/5 hover:text-white'
+                          : 'text-blue-100 text-blue-300 hover:bg-white/5 hover:text-white'
                       }`}
                       title={!isSidebarOpen ? item.name : ''}
                     >
@@ -115,10 +136,14 @@ export default function AdminLayout() {
         </nav>
       </div>
 
+      
+      
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-76px)]">
+      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-76px)] overflow-hidden relative">
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-[#F8FAFC] p-4 lg:p-8">
+        <main className="flex-1 overflow-auto bg-slate-50 p-3 lg:p-4">
+
+
           <div className="h-full">
             <Outlet />
           </div>
@@ -128,3 +153,15 @@ export default function AdminLayout() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+

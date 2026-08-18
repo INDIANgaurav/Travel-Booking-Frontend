@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Building2, CheckCircle, XCircle, Search, Trash2, X, AlertTriangle } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
@@ -73,11 +73,11 @@ export default function AdminInventory() {
   });
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Property Inventory & Approvals</h1>
-          <p className="text-sm text-gray-500 mt-1">Review and manage property listings submitted by users.</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Review and manage property listings submitted by users.</p>
         </div>
       </div>
 
@@ -106,8 +106,7 @@ export default function AdminInventory() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto min-w-full"><table className="w-full min-w-[800px] text-left">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
               <tr>
                 <th className="px-6 py-4">Property Details</th>
@@ -247,3 +246,5 @@ export default function AdminInventory() {
     </div>
   );
 }
+
+

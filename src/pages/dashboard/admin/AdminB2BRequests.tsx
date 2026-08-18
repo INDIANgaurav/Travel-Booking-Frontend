@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
@@ -49,11 +49,11 @@ export default function AdminB2BRequests() {
   };
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">B2B Agent Requests</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage all pending requests submitted by agents.</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage all pending requests submitted by agents.</p>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export default function AdminB2BRequests() {
                 onClick={() => setSelectedItem(null)}
                 className="text-white/70 hover:text-white p-2"
               >
-                ✕
+                âœ•
               </button>
             </div>
             <div className="p-6 overflow-y-auto bg-gray-50/50">
@@ -229,3 +229,4 @@ export default function AdminB2BRequests() {
     </div>
   );
 }
+

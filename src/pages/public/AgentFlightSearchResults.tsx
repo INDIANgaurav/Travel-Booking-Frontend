@@ -1039,7 +1039,7 @@ export default function AgentFlightSearchResults(props: any) {
       {isSearchModalOpen && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-start justify-center p-4 pt-[10vh] overflow-y-auto" onClick={() => setIsSearchModalOpen(false)}>
           <div 
-            className="bg-white rounded-2xl w-full max-w-[1050px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200" 
+            className={`bg-white rounded-2xl w-full max-w-[1050px] shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 transition-all ${(activeDatePicker || isFromPickerOpen || isToPickerOpen || isTravellerPickerOpen || isCabinPickerOpen) ? 'mb-[450px]' : 'mb-[10vh]'}`}
             onClick={(e) => { e.stopPropagation(); closeAllPickers(); }}
           >
             {/* Modal Header */}

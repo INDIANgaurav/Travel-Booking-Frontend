@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, CreditCard, TrendingUp, ArrowUpRight, Activity, Globe, Package } from 'lucide-react';
 import api from '../../../services/api';
@@ -208,3 +208,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

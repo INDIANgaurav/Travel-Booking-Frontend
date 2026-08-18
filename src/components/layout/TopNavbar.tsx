@@ -6,11 +6,13 @@ import { selectIsAuthenticated, selectCurrentUser, logout, selectAgentBookingMod
 import LoginModal from '../auth/LoginModal';
 
 interface TopNavbarProps {
+  onMenuClick?: () => void;
+  onProfileClick?: () => void;
   forceWhite?: boolean;
   portalMode?: boolean;
 }
 
-export default function TopNavbar({ forceWhite = false, portalMode = false }: TopNavbarProps) {
+export default function TopNavbar({ forceWhite = false, portalMode = false, onProfileClick, onMenuClick }: TopNavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -53,8 +55,16 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
         <div className={`${portalMode ? 'w-full' : 'max-w-[1200px] mx-auto'} px-6 flex justify-between items-center`}>
           
           {/* Back Button & Logo */}
-          <div className="flex items-center gap-4">
-            {location.pathname !== '/' && (
+          <div className="flex items-center gap-1 md:gap-4">
+            {onMenuClick && (
+              <button 
+                onClick={onMenuClick}
+                className={`md:hidden p-2 -ml-2 mr-1 rounded-full transition ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+              >
+                <Menu size={24} />
+              </button>
+            )}
+            {location.pathname !== '/' && !onMenuClick && (
               <button 
                 onClick={() => navigate(-1)} 
                 className={`p-2 rounded-full transition ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
@@ -213,7 +223,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
                       to="/supplier/login" 
                       className={`text-[9px] lg:text-[11px] font-bold px-2 py-1 lg:px-3 lg:py-1.5 rounded-full transition border ${isDarkText ? 'border-emerald-600 text-emerald-700 hover:bg-emerald-50' : 'border-emerald-400 text-emerald-300 hover:bg-emerald-950/50'}`}
                     >
-                      Supplier Login ↗
+                      Supplier Login â†—
                     </Link>
                   </div>
                 )}
@@ -259,33 +269,33 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
                       <div className="bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] py-2 border border-gray-100 animate-[fadeInUp_0.2s_ease-out]">
                         
                         {/* Mobile User Info */}
-                        <div className="md:hidden px-4 py-3 border-b border-gray-100 bg-gray-50/80 mb-2">
+                        <div className="px-4 py-4 border-b border-gray-100 bg-slate-50 mb-2 rounded-t-xl">
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Logged In As</p>
-                          <p className="text-sm font-black text-gray-900 truncate mt-0.5">{user?.name}</p>
+                          <p className="text-base font-black text-slate-900 truncate mt-1">{user?.name}</p>
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                         </div>
                       {user?.role === 'USER' && (
                         <>
-                          <div onClick={() => { navigate('/dashboard/profile'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                          <div onClick={() => { navigate('/dashboard/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
                           </div>
-                          <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                          <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <CreditCard size={16} /> My Wallet
                           </div>
                         </>
                       )}
                       {(user?.role === 'SUPPLIER_AGENT') && (
-                        <div onClick={() => { navigate('/b2b/home'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                        <div onClick={() => { navigate('/b2b/home'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> B2B Dashboard
                         </div>
                       )}
                       {(user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
-                        <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                        <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Building2 size={16} /> Admin Panel
                         </div>
                       )}
                       {(user?.role === 'SUPPLIER_AGENT' || user?.role === 'SUPPLIER_STAFF' || user?.role === 'SUPPLIER_PORTAL_ONLY') && (
-                        <div onClick={() => { navigate('/supplier-portal/dashboard'); }} className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                        <div onClick={() => { navigate('/supplier-portal/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> Supplier Portal
                         </div>
                       )}
@@ -309,13 +319,14 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
               )}
             </div>
             
-            {/* Mobile Hamburger Toggle */}
-            <button 
-              className={`md:hidden ml-2 p-2 rounded-full transition ${isDarkText ? 'text-[#0c1a40] hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}
-              onClick={() => setIsMobileMenuOpen(true)}
-            >
-              <Menu size={24} />
-            </button>
+            {!portalMode && (
+              <button 
+                className={`md:hidden ml-2 p-2 rounded-full transition ${isDarkText ? "text-[#0c1a40] hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <Menu size={24} />
+              </button>
+            )}
 
           </div>
         </div>
@@ -416,3 +427,9 @@ export default function TopNavbar({ forceWhite = false, portalMode = false }: To
     </>
   );
 }
+
+
+
+
+
+

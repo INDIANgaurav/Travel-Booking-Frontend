@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { DollarSign, ArrowUpRight, TrendingUp, TrendingDown, FileText, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
@@ -77,11 +77,11 @@ export default function AdminFinance() {
   ];
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Financial Hub</h1>
-          <p className="text-sm text-gray-500 mt-1">Track revenue, process refunds, and view service costs.</p>
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900">Financial Hub</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Track revenue, process refunds, and view service costs.</p>
         </div>
         <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
           <FileText size={18} />
@@ -202,3 +202,4 @@ export default function AdminFinance() {
     </div>
   );
 }
+

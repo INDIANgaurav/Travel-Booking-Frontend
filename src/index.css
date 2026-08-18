@@ -1,4 +1,9 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Ubuntu', sans-serif;
+}
+
 
 @layer base {
   body {
@@ -55,3 +60,4 @@
     animation-play-state: paused;
   }
 }
+
