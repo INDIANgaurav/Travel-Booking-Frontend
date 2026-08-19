@@ -144,12 +144,19 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] font-sans pb-20 relative">
+    <div className="min-h-screen font-sans pb-20 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #f6f8fd 0%, #f1f5f9 100%)' }}>
+
+      {/* Decorative Floating Orbs */}
+      <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-400/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute top-[20%] right-[-5%] w-[600px] h-[600px] bg-purple-400/15 rounded-full blur-[140px]" style={{ animation: 'pulse 8s infinite alternate' }}></div>
+        <div className="absolute bottom-[10%] left-[20%] w-[700px] h-[700px] bg-teal-300/15 rounded-full blur-[150px]" style={{ animation: 'pulse 12s infinite alternate' }}></div>
+      </div>
 
       {/* Background Header */}
-      <div className="absolute top-0 left-0 w-full h-[220px] bg-[url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center z-0">
-        <div className="absolute inset-0 bg-black/20 mix-blend-overlay"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#F2F2F2] to-transparent"></div>
+      <div className="absolute top-0 left-0 w-full h-[280px] bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center z-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-indigo-900/40 mix-blend-multiply"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#f1f5f9] via-[#f6f8fd]/80 to-transparent"></div>
       </div>
       
       {/* Scrollable Content Wrapper */}
@@ -204,10 +211,10 @@ export default function ProfilePage() {
 
         {/* Main Content Card */}
         <div className="max-w-[1200px] mx-auto px-6 mt-12 relative pb-20">
-          <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex min-h-[600px] items-start">
+          <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.06)] flex min-h-[600px] items-start overflow-hidden">
           
             {/* Left Sidebar Menu - Sticky */}
-            <div className="w-[280px] border-r border-gray-200 bg-white py-6 flex flex-col sticky top-[80px] h-[calc(100vh-100px)] rounded-tl-xl rounded-bl-xl overflow-y-auto hidden-scrollbar">
+            <div className="w-[280px] border-r border-gray-200/50 bg-white/40 py-6 flex flex-col sticky top-[80px] h-[calc(100vh-100px)] overflow-y-auto hidden-scrollbar">
               <div className="px-6 mb-4">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">MY ACCOUNT</p>
               </div>
@@ -424,6 +431,24 @@ export default function ProfilePage() {
               </div>
             </>
           )}
+
+            {activeTab === 'travellers' && (
+              <div className="flex flex-col items-center justify-center h-full py-24 text-center">
+                <Users size={80} className="text-gray-200 mb-6" />
+                <h2 className="text-3xl font-black text-gray-900 mb-3">Co-Travellers</h2>
+                <p className="text-gray-500 font-medium max-w-md mx-auto mb-8">This feature is currently under development. Soon you'll be able to manage your frequent co-travellers here.</p>
+                <span className="bg-blue-100 text-blue-700 text-sm font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-sm">Coming Soon</span>
+              </div>
+            )}
+
+            {activeTab === 'devices' && (
+              <div className="flex flex-col items-center justify-center h-full py-24 text-center">
+                <Smartphone size={80} className="text-gray-200 mb-6" />
+                <h2 className="text-3xl font-black text-gray-900 mb-3">Logged In Devices</h2>
+                <p className="text-gray-500 font-medium max-w-md mx-auto mb-8">This feature is currently under development. Soon you'll be able to manage your logged-in sessions and devices securely.</p>
+                <span className="bg-blue-100 text-blue-700 text-sm font-black px-6 py-2 rounded-full uppercase tracking-widest shadow-sm">Coming Soon</span>
+              </div>
+            )}
 
             {activeTab === 'properties' && (
               <div>

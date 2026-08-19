@@ -441,14 +441,14 @@ export default function LandingPage() {
                   
                   {/* Cabin Class */}
                   <div 
-                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[170px] p-3 px-3 lg:px-5 border-b lg:border-b-0 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
                       <ChevronDown size={16} className="text-blue-600" />
                     </div>
-                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight">
+                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight truncate" title={cabinClass}>
                       {cabinClass}
                     </p>
                   </div>
@@ -840,29 +840,40 @@ export default function LandingPage() {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Company</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition">Careers</a></li>
-              <li><a href="#" className="hover:text-white transition">Blog</a></li>
+              <li><span className="text-gray-400 font-medium">TrippeChalo India Pvt Ltd</span></li>
+              <li><a href="mailto:trippechaloindia@gmail.com" className="hover:text-white transition">trippechaloindia@gmail.com</a></li>
+              <li><a href="tel:9555934205" className="hover:text-white transition">+91 9555934205</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Quick Links</h4>
+            <ul className="space-y-2">
+              <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition">Book Flights</button></li>
+              {isAuthenticated && user?.role !== 'B2B_AGENT' && (
+                <>
+                  <li><Link to="/dashboard/profile" className="hover:text-white transition">My Profile</Link></li>
+                  <li><Link to="/dashboard/wallet" className="hover:text-white transition">My Wallet</Link></li>
+                </>
+              )}
+              {isAuthenticated && user?.role === 'B2B_AGENT' && (
+                <>
+                  <li><Link to="/b2b/home" className="hover:text-white transition">Agent Portal</Link></li>
+                  <li><Link to="/b2b/profile" className="hover:text-white transition">Agent Profile</Link></li>
+                  <li><Link to="/b2b/dashboard/wallet" className="hover:text-white transition">Agent Wallet</Link></li>
+                </>
+              )}
             </ul>
           </div>
           <div>
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Support</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition">Cancellation Policy</a></li>
-              <li><a href="#" className="hover:text-white transition">Contact Us</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Partner With Us</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition text-gray-400">Careers</a></li>
-              <li><a href="#" className="hover:text-white transition">List your Hotel</a></li>
+              <li><span className="text-gray-400 leading-relaxed block mb-2">For refunds, cancellations or queries, reach out to our 24/7 support or chat with TrippeChalo AI.</span></li>
+              <li><a href="mailto:trippechaloindia@gmail.com" className="text-blue-500 hover:text-blue-400 transition">Email Support</a></li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p>&copy; {new Date().getFullYear()} TrippeChalo Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} TrippeChalo India Pvt Ltd. All rights reserved.</p>
           <div className="flex gap-4 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition">Privacy Policy</a>
             <a href="#" className="hover:text-white transition">Terms of Service</a>

@@ -21,6 +21,7 @@ export default function B2BWalletPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('NB');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
 
@@ -47,6 +48,8 @@ export default function B2BWalletPage() {
       }
     } catch (error) {
       console.error('Failed to fetch wallet', error);
+    } finally {
+      setPageLoading(false);
     }
   };
 
@@ -146,9 +149,13 @@ export default function B2BWalletPage() {
               <Wallet size={120} className="-mr-6 -mt-6" />
             </div>
             <div className="relative z-10">
-              <p className="text-blue-200 font-bold text-sm uppercase tracking-wider mb-2">Available Agency Balance</p>
-              <div className="text-5xl font-black flex items-center gap-2">
-                ₹{walletBalance.toLocaleString('en-IN')}
+              <p className="text-blue-100 font-bold text-sm uppercase tracking-wider mb-2">Available Balance</p>
+              <div className="text-5xl md:text-6xl font-black text-white flex items-center gap-2">
+                {pageLoading ? (
+                  <div className="h-14 w-48 bg-white/20 animate-pulse rounded-lg"></div>
+                ) : (
+                  `₹${walletBalance.toLocaleString('en-IN')}`
+                )}
               </div>
             </div>
             <div className="text-right relative z-10 hidden sm:block">
@@ -259,10 +266,26 @@ export default function B2BWalletPage() {
               Recent Transactions
             </h2>
             
-            <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-200">
-              {transactions.length === 0 ? (
-                <div className="text-center py-10">
-                  <Banknote size={40} className="mx-auto text-gray-300 mb-3" />
+            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+              {pageLoading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 animate-pulse"></div>
+                      <div>
+                        <div className="h-4 w-32 bg-gray-100 animate-pulse rounded mb-2"></div>
+                        <div className="h-3 w-20 bg-gray-100 animate-pulse rounded"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 w-16 bg-gray-100 animate-pulse rounded ml-auto mb-2"></div>
+                      <div className="h-3 w-10 bg-gray-100 animate-pulse rounded ml-auto"></div>
+                    </div>
+                  </div>
+                ))
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-10 md:py-16">
+                  <Banknote size={48} className="mx-auto text-gray-200 mb-4" />
                   <p className="text-gray-500 font-bold">No transactions yet</p>
                 </div>
               ) : (

@@ -223,7 +223,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       to="/supplier/login" 
                       className={`text-[9px] lg:text-[11px] font-bold px-2 py-1 lg:px-3 lg:py-1.5 rounded-full transition border ${isDarkText ? 'border-emerald-600 text-emerald-700 hover:bg-emerald-50' : 'border-emerald-400 text-emerald-300 hover:bg-emerald-950/50'}`}
                     >
-                      Supplier Login â†—
+                      Supplier Login ↗
                     </Link>
                   </div>
                 )}

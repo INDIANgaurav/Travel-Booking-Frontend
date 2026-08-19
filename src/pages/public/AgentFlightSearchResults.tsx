@@ -1255,14 +1255,14 @@ export default function AgentFlightSearchResults(props: any) {
                 {/* Cabin Class */}
                 <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
                   <div 
-                    className="w-full sm:flex-1 lg:w-[150px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[170px] p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
                       <ChevronDown size={16} className="text-blue-600" />
                     </div>
-                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight">
+                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight truncate" title={cabinClass}>
                       {cabinClass}
                     </p>
                   </div>

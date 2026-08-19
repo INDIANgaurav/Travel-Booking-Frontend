@@ -19,20 +19,61 @@ const QUICK_REPLIES = [
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hi! I'm **TrippeChalo AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
+  const STORAGE_KEY = 'trippechalo_chat_state';
+  const EXPIRY_TIME = 60 * 60 * 1000; // 1 hour
+
+  const [sessionId] = useState(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Date.now() - parsed.lastUpdated < EXPIRY_TIME) {
+          return parsed.sessionId;
+        }
+      }
+    } catch (e) {}
+    return `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  });
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Date.now() - parsed.lastUpdated < EXPIRY_TIME && parsed.messages) {
+          return parsed.messages.map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          }));
+        }
+      }
+    } catch (e) {}
+    return [
+      {
+        id: 1,
+        text: "Hi! I'm **TrippeChalo AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
+        sender: 'bot',
+        timestamp: new Date(),
+      },
+    ];
+  });
+
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showPulse, setShowPulse] = useState(true);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+
+  // Save to localStorage whenever messages change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        sessionId,
+        messages,
+        lastUpdated: Date.now()
+      }));
+    } catch (e) {}
+  }, [messages, sessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,7 +91,7 @@ export default function ChatBot() {
   }, [isOpen]);
 
   const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isTyping) return;
 
     const userMsg: Message = {
       id: Date.now(),
@@ -79,7 +120,7 @@ export default function ChatBot() {
     } catch (error: any) {
       const errorReply: Message = {
         id: Date.now() + 1,
-        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏\n\nYou can also reach us at:\n📧 support@trippechalo.com\n📞 1800-123-4567",
+        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏\n\nYou can also reach us at:\n📧 trippechaloindia@gmail.com\n📞 9555934205",
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -118,11 +159,20 @@ export default function ChatBot() {
         aria-label="Open AI Chat Assistant"
       >
         <div className={`relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-[0_8px_30px_rgba(37,99,235,0.45)] flex items-center justify-center transition-all duration-300 hover:shadow-[0_8px_40px_rgba(37,99,235,0.6)] hover:scale-105 ${isOpen ? 'rotate-0' : ''}`}>
-          {isOpen ? (
-            <X size={26} className="text-white transition-transform duration-200" />
-          ) : (
-            <MessageCircle size={26} className="text-white transition-transform duration-200" />
-          )}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <X 
+              size={26} 
+              className={`absolute text-white transition-all duration-300 ease-in-out ${
+                isOpen ? 'rotate-0 opacity-100 scale-100' : 'rotate-90 opacity-0 scale-50'
+              }`} 
+            />
+            <MessageCircle 
+              size={26} 
+              className={`absolute text-white transition-all duration-300 ease-in-out ${
+                isOpen ? '-rotate-90 opacity-0 scale-50' : 'rotate-0 opacity-100 scale-100'
+              }`} 
+            />
+          </div>
           {/* Pulse ring */}
           {showPulse && !isOpen && (
             <>
@@ -158,10 +208,7 @@ export default function ChatBot() {
             </div>
             <div className="flex-1">
               <h3 className="text-white font-bold text-sm tracking-wide">TrippeChalo AI</h3>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-blue-200 text-[11px]">Online • Powered by Gemini AI</span>
-              </div>
+             
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -229,7 +276,12 @@ export default function ChatBot() {
               <button
                 key={reply}
                 onClick={() => handleQuickReply(reply)}
-                className="whitespace-nowrap text-[11px] font-semibold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-colors shrink-0"
+                disabled={isTyping}
+                className={`whitespace-nowrap text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors shrink-0 ${
+                  isTyping
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 hover:border-blue-200'
+                }`}
               >
                 {reply}
               </button>

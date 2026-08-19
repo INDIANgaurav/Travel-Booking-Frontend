@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import { Search, Trash2 } from 'lucide-react';
@@ -13,7 +13,7 @@ export default function AdminUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data } = await api.get(`/api/admin/users?page=${page}&limit=10`);
+        const { data } = await api.get(`/api/admin/users?role=USER&page=${page}&limit=10`);
         setUsers(data.data || (Array.isArray(data) ? data : []));
         setTotalPages(data.totalPages || 1);
       } catch (error) {

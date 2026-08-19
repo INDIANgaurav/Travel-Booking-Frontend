@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DollarSign, ArrowUpRight, TrendingUp, TrendingDown, FileText, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import api from '../../../services/api';
@@ -27,8 +27,10 @@ export default function AdminFinance() {
   useEffect(() => {
     const fetchFinanceData = async () => {
       try {
-        const bookingsRes = await api.get('/api/admin/bookings');
-        const bookings = bookingsRes.data;
+        // Fetch all bookings to calculate total revenue
+        const bookingsRes = await api.get('/api/admin/bookings?limit=100000');
+        // The API returns paginated data: { totalRecords, data: [...] }
+        const bookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : (bookingsRes.data.data || []);
 
         let totalRev = 0;
         let flightRev = 0;
@@ -41,8 +43,8 @@ export default function AdminFinance() {
             if (b.type === 'FLIGHT') flightRev += (b.totalAmount || 0);
             if (b.type === 'HOTEL') hotelRev += (b.totalAmount || 0);
           }
-          if (b.status === 'CANCELLED') {
-            pendingRef += (b.totalAmount || 0); // Assuming full refund for now
+          if (b.status === 'CANCELLED' && b.refundStatus !== 'COMPLETED') {
+            pendingRef += (b.refundAmount !== undefined ? b.refundAmount : (b.totalAmount || 0));
           }
         });
 
