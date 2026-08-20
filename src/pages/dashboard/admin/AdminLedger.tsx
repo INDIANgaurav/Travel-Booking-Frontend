@@ -197,16 +197,16 @@ export default function AdminLedger() {
               <>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold tracking-wide text-gray-600">From Date</span>
-                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative bg-gray-50 flex items-center px-3">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-50 bg-gray-50 flex items-center px-3">
+                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={fromDate} onChange={setFromDate} />
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold tracking-wide text-gray-600">To Date</span>
-                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative bg-gray-50 flex items-center px-3">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-50 bg-gray-50 flex items-center px-3">
+                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={toDate} onChange={setToDate} />
                     </div>
                   </div>

@@ -167,6 +167,7 @@ export default function FlightBookingPage() {
           arrivalTime: selectedOutbound.arrivalTime,
           duration: selectedOutbound.durationMinutes,
           stops: selectedOutbound.stops,
+          isSeriesFare: selectedOutbound.isSeriesFare || false,
           passengers: passengers.map((p: any) => ({
             name: `${p.firstName} ${p.lastName}`,
             type: p.type,
@@ -188,6 +189,11 @@ export default function FlightBookingPage() {
       });
 
       if (paymentMethod === 'WALLET') {
+        if (data.apiFailed) {
+          toast.error(data.message || 'Booking failed. Refund has been initiated.');
+          setIsProcessing(false);
+          return;
+        }
         toast.success('Payment successful! Booking confirmed using Wallet.');
         navigate(`/dashboard/invoice/${data.booking._id}`);
         setIsProcessing(false);

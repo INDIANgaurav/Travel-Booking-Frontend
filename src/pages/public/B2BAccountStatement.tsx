@@ -139,16 +139,16 @@ const B2BAccountStatement: React.FC = () => {
               <>
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">From Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative bg-white flex items-center px-4">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
+                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative z-50 bg-white flex items-center px-4">
+                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={fromDate} onChange={setFromDate} />
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">To Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative bg-white flex items-center px-4">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
+                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative z-50 bg-white flex items-center px-4">
+                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={toDate} onChange={setToDate} />
                     </div>
                   </div>
