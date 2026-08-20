@@ -4,13 +4,18 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
+import DOBCalendar from '../../components/ui/DOBCalendar';
+import { format, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter, startOfMonth, endOfMonth } from 'date-fns';
 
 const SupplierDashboard: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const supplierName = (user as any)?.companyName || user?.name || (user as any)?.firstName || 'Supplier';
+  const supplierId = user?._id;
 
   const [supplierFilter, setSupplierFilter] = useState(supplierName);
-  const [timeFilter, setTimeFilter] = useState('Day');
+  const [fromDate, setFromDate] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [toDate, setToDate] = useState(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  
   const [summary, setSummary] = useState({
     bookingCount: 0,
     bookingValue: 0.00,
@@ -20,11 +25,13 @@ const SupplierDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchSummary();
-  }, [timeFilter, supplierFilter]);
+  }, [supplierFilter]);
 
   const fetchSummary = async () => {
     try {
-      const response = await api.get('/api/series-fare/summary');
+      const filterValue = supplierFilter === 'ALL' || supplierFilter === 'ALL SUPPLIERS' ? 'ALL' : (supplierFilter === supplierName ? supplierId : supplierFilter);
+      const url = `/api/series-fare/summary?timeFilter=Custom&supplierId=${filterValue}&fromDate=${fromDate}&toDate=${toDate}`;
+      const response = await api.get(url);
       if (response.data && typeof response.data.bookingValue === 'number') {
         setSummary(response.data);
       }
@@ -49,69 +56,40 @@ const SupplierDashboard: React.FC = () => {
       </div>
 
       {/* Overall Summary Container */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6 space-y-6">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
         <h3 className="text-sm font-bold text-gray-800">Overall Summary</h3>
 
-        {/* Time Period Tabs */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 pb-4">
-          <button 
-            onClick={() => setTimeFilter('Day')}
-            className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border ${
-              timeFilter === 'Day' 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            Day <span className="block text-[9px] font-normal opacity-90">22 Jul</span>
-          </button>
+        {/* Time Period Selection */}
+        <div className="flex flex-wrap items-end gap-4 border-b border-gray-100 pb-5 relative z-50">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold tracking-wide text-gray-600">From Date</span>
+            <div className="w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-50">
+              <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
+                <DOBCalendar 
+                  value={fromDate} 
+                  onChange={setFromDate} 
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold tracking-wide text-gray-600">To Date</span>
+            <div className="w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-50">
+              <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
+                <DOBCalendar 
+                  value={toDate} 
+                  onChange={setToDate} 
+                />
+              </div>
+            </div>
+          </div>
 
           <button 
-            onClick={() => setTimeFilter('Week')}
-            className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border ${
-              timeFilter === 'Week' 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-            }`}
+            onClick={() => fetchSummary()}
+            className="bg-emerald-600 text-white px-6 h-[38px] rounded-lg text-xs font-bold hover:bg-emerald-700 transition shadow-sm ml-2"
           >
-            Week <span className="block text-[9px] font-normal opacity-90">22 Jul - 16 Jul</span>
-          </button>
-
-          <button 
-            onClick={() => setTimeFilter('Month')}
-            className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border ${
-              timeFilter === 'Month' 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            Month <span className="block text-[9px] font-normal opacity-90">July</span>
-          </button>
-
-          <button 
-            onClick={() => setTimeFilter('Quarter')}
-            className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border ${
-              timeFilter === 'Quarter' 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            Quarter <span className="block text-[9px] font-normal opacity-90">Jul - Mar</span>
-          </button>
-
-          <button 
-            onClick={() => setTimeFilter('Year')}
-            className={`px-5 py-2 rounded-lg text-xs font-bold transition-all border ${
-              timeFilter === 'Year' 
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            Year <span className="block text-[9px] font-normal opacity-90">2026</span>
-          </button>
-
-          <button className="bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-all ml-auto">
-            <span>More Options</span>
-            <ChevronDown size={14} />
+            Get Statement
           </button>
         </div>
 

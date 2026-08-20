@@ -4,7 +4,7 @@ import { selectCurrentUser, setCredentials } from '../../../store/authSlice';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Wallet, CreditCard, Banknote, ShieldCheck } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw } from 'lucide-react';
 
 // Extend window for Razorpay
 declare global {
@@ -157,7 +157,7 @@ export default function WalletPage() {
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex justify-between items-center bg-[url('/pattern.png')] bg-cover">
               <div>
                 <p className="text-gray-500 font-bold text-sm uppercase tracking-wider mb-2">Available Balance</p>
-                <div className="text-5xl font-black text-[#0b1031] flex items-center gap-2">
+                <div className="text-3xl md:text-5xl font-black text-[#0b1031] flex items-center gap-2">
                   {pageLoading ? (
                     <div className="h-12 w-48 bg-gray-200 animate-pulse rounded-lg"></div>
                   ) : (
@@ -172,8 +172,8 @@ export default function WalletPage() {
             </div>
 
             {/* Add Money Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-              <h2 className="text-xl font-black text-gray-900 mb-6">Add Money to Wallet</h2>
+            <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm border border-gray-100">
+              <h2 className="text-lg md:text-xl font-black text-gray-900 mb-6">Add Money to Wallet</h2>
               
               <div className="space-y-6">
                 <div>
@@ -188,12 +188,12 @@ export default function WalletPage() {
                       placeholder="0"
                     />
                   </div>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {[500, 1000, 2000, 5000].map(val => (
                       <button 
                         key={val}
                         onClick={() => setAmount(val.toString())}
-                        className="px-4 py-1.5 rounded-full border border-gray-200 text-sm font-bold text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="px-3 py-1.5 md:px-4 rounded-full border border-gray-200 text-xs md:text-sm font-bold text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                       >
                         +₹{val}
                       </button>
@@ -250,8 +250,8 @@ export default function WalletPage() {
                     <span className="font-bold text-gray-900">₹{surcharge.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-black text-gray-900">Total Payable</span>
-                    <span className="text-2xl font-black text-blue-600">₹{totalPayable.toLocaleString('en-IN')}</span>
+                    <span className="text-base md:text-lg font-black text-gray-900">Total Payable</span>
+                    <span className="text-xl md:text-2xl font-black text-blue-600">₹{totalPayable.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -268,8 +268,17 @@ export default function WalletPage() {
 
           {/* Right Column: Transactions */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full max-h-[800px] overflow-hidden flex flex-col">
-              <h2 className="text-lg font-black text-gray-900 mb-6">Recent Transactions</h2>
+            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 h-[500px] lg:h-full lg:max-h-[800px] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h2 className="text-lg font-black text-gray-900">Recent Transactions</h2>
+                <button 
+                  onClick={() => fetchWallet()}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
+                  title="Refresh Transactions"
+                >
+                  <RefreshCw size={14} className={pageLoading ? 'animate-spin text-blue-600' : ''} />
+                </button>
+              </div>
               
               <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 {pageLoading ? (

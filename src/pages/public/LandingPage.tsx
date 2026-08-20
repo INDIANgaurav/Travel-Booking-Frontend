@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile } from 'lucide-react';
+import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
 import api from '../../services/api';
 import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
 import ChatBot from '../../components/common/ChatBot';
+import ScrollAirplane from '../../components/common/ScrollAirplane';
 
 
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -158,8 +159,11 @@ export default function LandingPage() {
   const isNavWhite = isScrolled || isHovered;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
       
+      {/* Scroll Background Airplane */}
+      <ScrollAirplane />
+
       {/* Public Navbar */}
       <TopNavbar />
 
@@ -228,10 +232,10 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-6 lg:pb-8 px-4 lg:px-8 relative">
+          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-12 lg:pb-8 px-4 lg:px-8 relative">
             
             {activeTab === 'Flights' ? (
-              <div className="relative">
+              <div className="relative pb-10 md:pb-0">
                 {/* Flight Types */}
                 <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 lg:mb-6 relative">
                   <label className="flex items-center gap-2 cursor-pointer group">
@@ -522,41 +526,7 @@ export default function LandingPage() {
 
                 </div>
 
-                {/* Special Fares Section */}
-                <div className="mt-5 flex flex-col gap-2 relative">
-                  <span className="text-[13px] font-bold text-gray-800 tracking-wide">Select a special fare</span>
-                  <div className="flex items-center gap-2 flex-1 overflow-x-auto pb-2 custom-scrollbar w-full">
-                    
-                    <button className="flex flex-col items-center justify-center border border-blue-200 bg-blue-50/60 text-blue-700 rounded-lg px-4 py-1.5 min-w-[100px] hover:bg-blue-50 transition">
-                      <span className="text-[13px] font-bold">Regular</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Regular fares</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
-                      <span className="text-[13px] font-bold">Student</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Extra discounts</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
-                      <span className="text-[13px] font-bold">Armed Forces</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border border-blue-200 bg-[#f4f8ff] text-blue-700 rounded-lg px-4 py-1.5 min-w-[130px] transition">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[13px] font-bold text-blue-600">Have a GST number?</span>
-                        <span className="text-[9px] font-black bg-purple-600 text-white px-1 rounded uppercase">New</span>
-                      </div>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Upto 10% Extra Savings!</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[100px] transition">
-                      <span className="text-[13px] font-bold">Senior Citizen</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg px-4 py-1.5 min-w-[120px] transition">
-                      <span className="text-[13px] font-bold">Doctor and Nurses</span>
-                      <span className="text-[10px] text-gray-500 mt-0.5">Up to ₹600 off</span>
-                    </button>
 
-                  </div>
-                </div>
 
                 {/* Flight Tracker Button - Hidden on mobile to save space for Search button */}
                 <div className="mt-5 hidden md:block">
@@ -567,15 +537,15 @@ export default function LandingPage() {
                 </div>
 
                 {/* Massive Search Button Overlapping Bottom for Flights */}
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
-                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
+                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
                     SEARCH FLIGHTS
                   </button>
                 </div>
 
               </div>
             ) : activeTab === 'Hotels' ? (
-              <div className="relative">
+              <div className="relative pb-10 md:pb-0">
                 {/* Hotel Search Inputs */}
                 <div className="flex flex-col md:flex-row border border-gray-300 rounded-lg overflow-visible md:h-[110px] relative hover:border-gray-400 transition-colors">
                   
@@ -693,8 +663,8 @@ export default function LandingPage() {
 
             {/* Massive Search Button Overlapping Bottom for Hotels */}
             {activeTab === 'Hotels' && (
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
-                  <button onClick={handleSearch} className={`w-full md:w-auto px-12 py-3 rounded-full text-white font-black text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
+                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
                     SEARCH HOTELS
                   </button>
                 </div>
@@ -749,76 +719,104 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Popular Destinations Section */}
-      <div id="destinations" className="max-w-7xl mx-auto px-6 py-20 w-full">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h2 className="text-3xl font-black text-gray-900 mb-2">Popular Destinations</h2>
-            <p className="text-gray-500 font-medium">Explore our highly rated tour packages and places.</p>
+      {/* Popular Destinations Section with Enhanced Background */}
+      <div id="destinations" className="relative bg-[#f9f8ff] py-24 w-full overflow-hidden border-y border-gray-100">
+        
+        {/* Decorative Dotted Path SVG in Background */}
+        <svg className="absolute inset-0 w-full h-full text-[#e2d5f8] pointer-events-none z-0" preserveAspectRatio="none" viewBox="0 0 1000 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M-100,150 Q 200,300 500,150 T 1100,150" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" />
+        </svg>
+
+        {/* Floating Decorative Badges in BG */}
+        <div className="absolute top-[10%] right-[10%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 4s infinite ease-in-out' }}>
+          <div className="bg-white rounded-full p-2.5 shadow-lg">
+            <Heart size={20} className="text-[#ff5c5c] fill-[#ff5c5c]" />
           </div>
-          <button onClick={() => setIsLoginModalOpen(true)} className="hidden md:flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 transition">
-            See all <ChevronRight size={18} />
-          </button>
+        </div>
+        <div className="absolute top-[40%] left-[5%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 5s infinite ease-in-out', animationDelay: '1s' }}>
+           <div className="bg-white rounded-full p-2 shadow-lg flex items-center justify-center">
+             <Share2 size={16} className="text-[#4f80ff]" />
+           </div>
+        </div>
+        <div className="absolute bottom-[20%] right-[5%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 4.5s infinite ease-in-out', animationDelay: '2s' }}>
+           <div className="bg-white rounded-full p-2 shadow-lg flex items-center justify-center">
+             <ThumbsUp size={16} className="text-[#10b981]" />
+           </div>
         </div>
 
-        {destinations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {destinations.map((dest) => (
-              <div 
-                key={dest.name} 
-                onClick={() => setIsLoginModalOpen(true)}
-                className="group cursor-pointer rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 bg-white flex flex-col"
-              >
-                <div className="h-48 overflow-hidden relative">
-                  <img 
-                    src={dest.imgUrl} 
-                    alt={dest.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
-                  <h3 className="absolute bottom-4 left-4 text-white text-xl font-bold">{dest.name}</h3>
-                </div>
-                <div className="p-4 flex justify-between items-center">
-                  <p className="text-gray-500 text-sm font-medium">Starting from</p>
-                  <p className="text-lg font-bold text-blue-600">₹{dest.price.toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-4xl font-black text-gray-900 mb-2">Popular Destinations</h2>
+              <p className="text-gray-500 font-medium">Explore our highly rated tour packages and places.</p>
+            </div>
+            <button onClick={() => setIsLoginModalOpen(true)} className="hidden md:flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 transition">
+              See all <ChevronRight size={18} />
+            </button>
           </div>
-        ) : (
-          <div className="flex gap-6 overflow-hidden opacity-50">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-64 w-full bg-gray-200 animate-pulse rounded-2xl"></div>)}
-          </div>
-        )}
+
+          {destinations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {destinations.map((dest, index) => {
+                const rotation = index % 2 === 0 ? 'hover:rotate-2' : 'hover:-rotate-2';
+                return (
+                  <div 
+                    key={dest.name} 
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className={`relative z-20 group cursor-pointer rounded-xl bg-white p-3 pb-8 shadow-[0_10px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 ${rotation} flex flex-col`}
+                  >
+                    <div className="h-48 overflow-hidden relative rounded-lg">
+                      <img 
+                        src={dest.imgUrl} 
+                        alt={dest.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
+                      <h3 className="absolute bottom-4 left-4 text-white text-xl font-black tracking-wide">{dest.name}</h3>
+                    </div>
+                    <div className="pt-4 px-1 flex justify-between items-center">
+                      <p className="text-gray-500 text-sm font-medium">Starting from</p>
+                      <p className="text-lg font-black text-blue-600">₹{dest.price.toLocaleString()}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex gap-6 overflow-hidden opacity-50">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-64 w-full bg-white animate-pulse rounded-2xl p-3 pb-8"></div>)}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Features Section */}
-      <div id="features" className="bg-white py-20 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-6">
+      <div id="features" className="relative bg-white py-24">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-black text-gray-900 mb-4">Why Book With TrippeChalo?</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">Why Book With TrippeChalo?</h2>
             <p className="text-gray-500">We provide the best booking experience for travelers and agents globally.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center relative z-20">
+            <div className="flex flex-col items-center group cursor-pointer">
+              <div className="w-20 h-20 bg-blue-50/50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-blue-100 transition-colors group-hover:scale-110 duration-300">
                 <Globe size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Global Coverage</h3>
+              <h3 className="text-xl font-black text-gray-900 mb-2">Global Coverage</h3>
               <p className="text-gray-500 leading-relaxed">Access to millions of flights and hotels worldwide at your fingertips.</p>
             </div>
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <div className="flex flex-col items-center group cursor-pointer">
+              <div className="w-20 h-20 bg-green-50/50 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-green-100 transition-colors group-hover:scale-110 duration-300">
                 <CreditCard size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Best Price Guarantee</h3>
+              <h3 className="text-xl font-black text-gray-900 mb-2">Best Price Guarantee</h3>
               <p className="text-gray-500 leading-relaxed">We match prices. Find a lower price online and we will refund the difference.</p>
             </div>
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <div className="flex flex-col items-center group cursor-pointer">
+              <div className="w-20 h-20 bg-purple-50/50 text-purple-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-purple-100 transition-colors group-hover:scale-110 duration-300">
                 <Shield size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Secure Booking</h3>
+              <h3 className="text-xl font-black text-gray-900 mb-2">Secure Booking</h3>
               <p className="text-gray-500 leading-relaxed">Your data and payments are protected with enterprise-grade security.</p>
             </div>
           </div>
@@ -827,12 +825,17 @@ export default function LandingPage() {
 
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12 text-sm">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <footer className="bg-gray-900 text-gray-400 pt-16 pb-12 text-sm relative">
+        {/* Sleek Runway Strip */}
+        <div id="runway-strip" className="absolute top-0 left-0 w-full h-8 bg-[#111827] border-y border-gray-800/50 flex items-center overflow-hidden">
+          <div className="w-[150%] h-1 border-t-[3px] border-dashed border-gray-600/40 -ml-10"></div>
+        </div>
 
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-white">
-              <Plane size={24} className="text-blue-500" />
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 mt-2 relative z-10">
+
+          <div className="order-last md:order-first mt-8 md:mt-0">
+            <div className="flex items-center gap-2 mb-6">
+              <Plane id="footer-plane-icon" size={24} className="text-blue-500 opacity-0" />
               <span className="text-xl font-black tracking-tight">TrippeChalo</span>
             </div>
             <p className="mb-4 text-gray-500">The world's leading travel booking platform for users and agents.</p>

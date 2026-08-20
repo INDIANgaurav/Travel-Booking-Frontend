@@ -166,7 +166,7 @@ export default function ChatBot() {
       {/* Floating Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[9999] group"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group"
         aria-label="Open AI Chat Assistant"
       >
         <div className={`relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-[0_8px_30px_rgba(37,99,235,0.45)] flex items-center justify-center transition-all duration-300 hover:shadow-[0_8px_40px_rgba(37,99,235,0.6)] hover:scale-105 ${isOpen ? 'rotate-0' : ''}`}>
@@ -206,7 +206,7 @@ export default function ChatBot() {
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="fixed bottom-[90px] right-6 z-[9998] w-[380px] max-h-[560px] flex flex-col rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] border border-gray-200/80"
+          className="fixed bottom-[80px] sm:bottom-[90px] right-4 sm:right-6 z-[9998] w-[calc(100vw-2rem)] sm:w-[380px] max-h-[80vh] sm:max-h-[560px] flex flex-col rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] border border-gray-200/80"
           style={{ animation: 'chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
         >
           {/* Header */}

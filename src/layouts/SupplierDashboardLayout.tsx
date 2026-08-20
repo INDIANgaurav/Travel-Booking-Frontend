@@ -117,6 +117,18 @@ const SupplierDashboardLayout: React.FC = () => {
         </NavLink>
 
         <NavLink 
+          to="/supplier-portal/ledger"
+          className={({ isActive }) => 
+            `px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all border-b-2 ${
+              isActive ? 'text-[#1d6aa3] border-[#1d6aa3] bg-[#f0f7ff]' : 'text-gray-700 border-transparent hover:text-[#1d6aa3] hover:bg-gray-100'
+            }`
+          }
+        >
+          <Tag size={16} />
+          <span>LEDGER</span>
+        </NavLink>
+
+        <NavLink 
           to="/supplier-portal/series-queue"
           className={({ isActive }) => 
             `px-4 py-2.5 text-xs font-bold flex items-center gap-2 transition-all border-b-2 ${

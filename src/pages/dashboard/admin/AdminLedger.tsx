@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
-import api from '../../services/api';
-import DOBCalendar from '../../components/ui/DOBCalendar';
-import Dropdown from '../../components/ui/Dropdown';
+import api from '../../../services/api';
+import DOBCalendar from '../../../components/ui/DOBCalendar';
+import Dropdown from '../../../components/ui/Dropdown';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { RefreshCw, X } from 'lucide-react';
 
@@ -14,17 +12,13 @@ const ALL_COLUMNS = [
   'Balance'
 ];
 
-// Default selected columns matching the screenshot
 const DEFAULT_SELECTED = [
-  'Reference No.', 'PNR', 'Product Name', 'Description', 'Passenger Name',
+  'User Name', 'Reference No.', 'PNR', 'Product Name', 'Description',
   'Date Time', 'Gross Amount', 'Markup', 'Commission', 'TDS', 'SGST', 'CGST',
   'IGST', 'Penalty', 'Credit', 'Amount', 'Balance'
 ];
 
-const B2BAccountStatement: React.FC = () => {
-  const loggedInUser = useSelector((state: RootState) => state.auth.user);
-  const agentBalance = loggedInUser?.walletBalance ?? loggedInUser?.balance ?? 0;
-  
+export default function AdminLedger() {
   const [statementType, setStatementType] = useState('Date Range Statement');
   const [selectedColumns, setSelectedColumns] = useState<string[]>(DEFAULT_SELECTED);
   const [search, setSearch] = useState('');
@@ -41,30 +35,66 @@ const B2BAccountStatement: React.FC = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserBalance, setSelectedUserBalance] = useState<number>(0);
+
+  // Fetch all users on mount
   useEffect(() => {
-    fetchData();
-  }, [page, limit, statementType]);
+    const fetchUsers = async () => {
+      try {
+        const { data } = await api.get('/api/admin/users?limit=1000');
+        const userList = Array.isArray(data) ? data : data.data || [];
+        setUsers(userList);
+        setSelectedUserId('ALL');
+        setSelectedUserBalance(0);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (selectedUserId) {
+      fetchData();
+      
+      if (selectedUserId === 'ALL') {
+        setSelectedUserBalance(0);
+        setSelectedColumns(prev => prev.includes('User Name') ? prev : ['User Name', ...prev]);
+      } else {
+        const user = users.find(u => u._id === selectedUserId);
+        if(user) {
+           setSelectedUserBalance(user.walletBalance || user.balance || 0);
+        }
+      }
+    }
+  }, [page, limit, selectedUserId, statementType]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      // It's safe to call here because it will use the current search value.
-      setPage(1);
-      fetchData(search);
+      if (selectedUserId) {
+        // Only reset page and fetch if this isn't the initial render
+        // Actually, we can just reset page to 1 and call fetchData.
+        // It's safe to call here because it will use the current search value.
+        setPage(1);
+        fetchData(search);
+      }
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search]);
 
   const fetchData = async (overrideSearch?: string) => {
+    if (!selectedUserId) return;
     try {
       setLoading(true);
       const querySearch = overrideSearch !== undefined ? overrideSearch : search;
-      let url = `/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}`;
+      let url = `/api/account-statement?page=${page}&limit=${limit}&search=${querySearch}&userId=${selectedUserId}`;
       
       if (statementType === 'Date Range Statement') {
         url += `&fromDate=${fromDate}&toDate=${toDate}`;
       } else if (statementType === 'Month Wise Statement') {
-        // Just for example, though backend might handle month differently
         url += `&month=${month}&year=${year}`;
       } else if (statementType === 'Mini Statement') {
         url += `&type=mini`;
@@ -95,27 +125,55 @@ const B2BAccountStatement: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#f8f9fc] p-6 text-[#0c1a40] min-h-screen">
-      <div className="max-w-[1500px] mx-auto flex flex-col gap-6">
+    <div className="w-full space-y-6">
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div>
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900">Global Ledger</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">View account statements for any user, agent, or supplier.</p>
+        </div>
         
-        {/* Header Bar */}
-        <div className="bg-white px-8 py-5 rounded-t-xl rounded-b-md shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center justify-between">
-          <h2 className="text-[13px] font-black uppercase tracking-wide text-[#0c1a40]">ACCOUNT STATEMENT</h2>
-          <div className="text-[11px] font-bold text-gray-500">
-            Available Balance = <span className="text-[#0c1a40] font-black">{agentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+        {/* User Selector */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-xs font-bold text-gray-700">Select User:</span>
+          <div className="w-[300px]">
+            <Dropdown
+              value={selectedUserId}
+              onChange={(val) => {
+                setSelectedUserId(val);
+                setPage(1);
+              }}
+              options={[
+                { value: 'ALL', label: 'ALL USERS (Global Ledger)' },
+                ...users.map(u => ({
+                  value: u._id,
+                  label: `${u.name} (${u.role}) - ${u.email}`
+                }))
+              ]}
+            />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        {/* Header Bar */}
+        <div className="bg-white pb-5 border-b border-gray-100 mb-6 flex items-center justify-between">
+          <h2 className="text-[14px] font-black uppercase tracking-wide text-gray-900">ACCOUNT STATEMENT</h2>
+          {selectedUserId !== 'ALL' && (
+            <div className="text-[12px] font-bold text-gray-500">
+              Available Balance = <span className="text-blue-600 font-black">₹ {selectedUserBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Settings Container */}
-        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
-          
+        <div className="mb-6 border border-gray-100 rounded-xl">
           {/* Statement Types Row */}
-          <div className="px-8 py-5 border-b border-gray-50">
-            <div className="flex items-center gap-10">
+          <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
+            <div className="flex items-center gap-8">
               {['Mini Statement', 'Month Wise Statement', 'Date Range Statement'].map(type => (
-                <label key={type} className="flex items-center gap-3 cursor-pointer text-xs font-bold text-[#0c1a40]">
-                  <div className={`w-[18px] h-[18px] rounded-full border-[2px] flex items-center justify-center ${statementType === type ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
-                    {statementType === type && <div className="w-2 h-2 rounded-full bg-[#0c1a40]" />}
+                <label key={type} className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                  <div className={`w-[16px] h-[16px] rounded-full border-[2px] flex items-center justify-center ${statementType === type ? 'border-blue-600' : 'border-gray-300'}`}>
+                    {statementType === type && <div className="w-2 h-2 rounded-full bg-blue-600" />}
                   </div>
                   <input 
                     type="radio" 
@@ -134,20 +192,20 @@ const B2BAccountStatement: React.FC = () => {
           </div>
 
           {/* Dynamic Inputs Row */}
-          <div className="px-8 py-6 bg-white min-h-[110px] flex items-end gap-6">
+          <div className="px-6 py-5 bg-white flex flex-wrap items-end gap-6">
             {statementType === 'Date Range Statement' && (
               <>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">From Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative bg-white flex items-center px-4">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-bold tracking-wide text-gray-600">From Date</span>
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative bg-gray-50 flex items-center px-3">
                     <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
                       <DOBCalendar value={fromDate} onChange={setFromDate} />
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">To Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative bg-white flex items-center px-4">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-bold tracking-wide text-gray-600">To Date</span>
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative bg-gray-50 flex items-center px-3">
                     <div className="absolute inset-0 [&>div]:h-full [&>div>div]:h-full [&>div>div]:border-none [&>div>div]:bg-transparent">
                       <DOBCalendar value={toDate} onChange={setToDate} />
                     </div>
@@ -158,9 +216,9 @@ const B2BAccountStatement: React.FC = () => {
 
             {statementType === 'Month Wise Statement' && (
               <>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">Month</span>
-                  <div className="w-[180px] h-[42px]">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-bold tracking-wide text-gray-600">Month</span>
+                  <div className="w-[160px] h-[38px]">
                     <Dropdown 
                       value={month} 
                       onChange={(val) => { setMonth(val); setPage(1); }}
@@ -168,9 +226,9 @@ const B2BAccountStatement: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">Year</span>
-                  <div className="w-[160px] h-[42px]">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-bold tracking-wide text-gray-600">Year</span>
+                  <div className="w-[140px] h-[38px]">
                     <Dropdown 
                       value={year} 
                       onChange={(val) => { setYear(val); setPage(1); }}
@@ -184,41 +242,41 @@ const B2BAccountStatement: React.FC = () => {
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => fetchData()}
-                className="bg-[#0b1031] text-white px-8 h-[42px] rounded-full text-xs font-bold hover:bg-blue-900 transition shadow-md"
+                className="bg-blue-600 text-white px-6 h-[38px] rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-sm"
               >
                 Get Statement
               </button>
               <button 
                 onClick={() => fetchData()}
-                className="bg-white text-gray-700 w-[42px] h-[42px] flex items-center justify-center rounded-full hover:bg-gray-50 transition shadow-md border border-gray-200"
+                className="bg-gray-100 text-gray-700 w-[38px] h-[38px] flex items-center justify-center rounded-lg hover:bg-gray-200 transition shadow-sm border border-gray-200"
                 title="Refresh Data"
               >
-                <RefreshCw size={18} className={loading ? 'animate-spin text-[#0b1031]' : ''} />
+                <RefreshCw size={16} className={loading ? 'animate-spin text-blue-600' : ''} />
               </button>
             </div>
           </div>
         </div>
 
         {/* Columns Selector */}
-        <div className="bg-white px-8 py-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-y-6 gap-x-4">
+        <div className="mb-6 p-5 border border-gray-100 rounded-xl bg-gray-50/50">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-y-4 gap-x-3">
             {ALL_COLUMNS.map(col => (
-              <label key={col} className="flex items-center gap-3 cursor-pointer text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition group">
+              <label key={col} className="flex items-center gap-2 cursor-pointer text-[11px] font-semibold text-gray-600 hover:text-blue-600 transition group">
                 <input 
                   type="checkbox" 
                   checked={selectedColumns.includes(col)}
                   onChange={() => toggleColumn(col)}
-                  className="w-[14px] h-[14px] rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
+                  className="w-[13px] h-[13px] rounded-sm text-blue-600 focus:ring-blue-600 border-gray-300 cursor-pointer"
                 />
                 <span className="truncate">{col}</span>
               </label>
             ))}
-            <label className="flex items-center gap-3 cursor-pointer text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition">
+            <label className="flex items-center gap-2 cursor-pointer text-[11px] font-bold text-gray-800 hover:text-blue-600 transition">
               <input 
                 type="checkbox" 
                 checked={selectedColumns.length === ALL_COLUMNS.length}
                 onChange={() => toggleColumn('ALL')}
-                className="w-[14px] h-[14px] rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
+                className="w-[13px] h-[13px] rounded-sm text-blue-600 focus:ring-blue-600 border-gray-300 cursor-pointer"
               />
               <span className="truncate">ALL</span>
             </label>
@@ -226,48 +284,45 @@ const B2BAccountStatement: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-3 w-full md:w-[450px]">
-          <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">Search By</span>
-          <div className="relative w-full">
-            <input 
-              type="text" 
-              placeholder="Type to filter rows..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 pr-10 h-[38px] text-[11px] font-semibold border border-gray-200 rounded-md focus:outline-none focus:border-gray-400 transition"
-            />
-            {search && (
-              <button 
-                onClick={() => { setSearch(''); setPage(1); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
-                title="Clear search"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
+        <div className="flex items-center gap-3 w-full md:w-[350px] mb-4 relative">
+          <input 
+            type="text" 
+            placeholder="Search Reference No, PNR..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 pr-10 h-[38px] text-[12px] border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 transition bg-gray-50 focus:bg-white"
+          />
+          {search && (
+            <button 
+              onClick={() => { setSearch(''); setPage(1); }}
+              className="absolute right-3 text-gray-400 hover:text-gray-600 transition"
+              title="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {/* Data Table */}
-        <div className="bg-white rounded-md shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-10">
+        <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-[10px] whitespace-nowrap">
-              <thead className="bg-[#0b1031] text-white font-semibold uppercase">
+            <table className="w-full text-left text-[13px] whitespace-nowrap">
+              <thead className="bg-gray-50 text-gray-700 font-bold uppercase border-b border-gray-100 text-[12px]">
                 <tr>
-                  <th className="px-5 py-3.5 tracking-wider">S.NO</th>
+                  <th className="px-5 py-4 tracking-wider">S.NO</th>
                   {ALL_COLUMNS.filter(c => selectedColumns.includes(c)).map(col => (
-                    <th key={col} className="px-5 py-3.5 tracking-wider">{col}</th>
+                    <th key={col} className="px-5 py-4 tracking-wider">{col}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-[#0c1a40] font-semibold">
+              <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
                 {loading ? (
                   <tr>
-                    <td colSpan={selectedColumns.length + 1} className="px-5 py-10 text-center text-gray-400">Loading data...</td>
+                    <td colSpan={selectedColumns.length + 1} className="px-5 py-12 text-center text-gray-400">Loading data...</td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={selectedColumns.length + 1} className="px-5 py-12 text-center text-gray-500 font-medium">No Records Found.</td>
+                    <td colSpan={selectedColumns.length + 1} className="px-5 py-12 text-center text-gray-500">No Records Found for this User.</td>
                   </tr>
                 ) : (
                   data.map((row, index) => {
@@ -284,11 +339,11 @@ const B2BAccountStatement: React.FC = () => {
                     const sNo = (page - 1) * limit + index + 1;
 
                     return (
-                      <tr key={row.sNo} className="hover:bg-blue-50/50 transition">
-                        <td className="px-5 py-3">{sNo}</td>
+                      <tr key={row.sNo} className="hover:bg-blue-50/30 transition">
+                        <td className="px-5 py-3 font-semibold">{sNo}</td>
                         {ALL_COLUMNS.filter(c => selectedColumns.includes(c)).map(col => {
                           const keyMap: Record<string, keyof typeof row> = {
-                            'User Name': 'passengerName', 
+                            'User Name': 'userName', 
                             'Reference No.': 'referenceNo',
                             'PNR': 'pnr',
                             'Product Name': 'productName',
@@ -316,7 +371,7 @@ const B2BAccountStatement: React.FC = () => {
                           const val = row[key];
                           
                           return (
-                            <td key={col} className={`px-5 py-3 ${col === 'Reference No.' ? 'text-blue-600 font-bold' : ''}`}>
+                            <td key={col} className={`px-5 py-3 ${col === 'Reference No.' ? 'text-blue-600 font-bold' : ''} ${col === 'Credit' && val > 0 ? 'text-green-600 font-bold' : ''} ${col === 'Net Amount Debited' && val > 0 ? 'text-red-600 font-bold' : ''}`}>
                               {formatVal(val)}
                             </td>
                           );
@@ -331,15 +386,15 @@ const B2BAccountStatement: React.FC = () => {
           
           {/* Pagination Controls */}
           {data.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
               <div className="text-xs font-semibold text-gray-500">
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-gray-900 font-bold">{totalRecords}</span> entries
               </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1 || loading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
                 >
                   Previous
                 </button>
@@ -351,7 +406,7 @@ const B2BAccountStatement: React.FC = () => {
                         <button
                           key={p}
                           onClick={() => setPage(p)}
-                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-blue-600 text-white' : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'}`}
                         >
                           {p}
                         </button>
@@ -366,7 +421,7 @@ const B2BAccountStatement: React.FC = () => {
                 <button 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages || loading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 transition"
                 >
                   Next
                 </button>
@@ -374,10 +429,7 @@ const B2BAccountStatement: React.FC = () => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
-};
-
-export default B2BAccountStatement;
+}

@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 @theme {
   --font-sans: 'Ubuntu', sans-serif;
@@ -8,6 +8,7 @@
 @layer base {
   body {
     @apply font-sans;
+    overflow-y: scroll;
   }
   
   /* Hide scrollbar for Chrome, Safari and Opera */

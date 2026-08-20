@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding } from './store/authSlice'
 
@@ -60,6 +60,7 @@ import AdminBookings from './pages/dashboard/admin/AdminBookings'
 import AdminProfile from './pages/dashboard/admin/AdminProfile'
 import AdminAgents from './pages/dashboard/admin/AdminAgents'
 import AdminFinance from './pages/dashboard/admin/AdminFinance'
+import AdminLedger from './pages/dashboard/admin/AdminLedger'
 import SupplierManagement from './pages/dashboard/admin/SupplierManagement'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
 import AdminSettings from './pages/dashboard/admin/AdminSettings'
@@ -160,6 +161,7 @@ function App() {
             <Route path="series-fare" element={<SeriesFareManager />} />
             <Route path="users" element={<SupplierUserManagement />} />
             <Route path="history" element={<SupplierBookingHistory />} />
+            <Route path="ledger" element={<B2BAccountStatement />} />
             <Route path="series-queue" element={<SupplierQueueHistory />} />
           </Route>
         </Route>
@@ -246,7 +248,8 @@ function App() {
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="finance" element={<AdminFinance />} />
-            <Route path="suppliers" element={<SupplierManagement />} />
+          <Route path="ledger" element={<AdminLedger />} />
+          <Route path="suppliers" element={<SupplierManagement />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="settings" element={<AdminSettings />} />

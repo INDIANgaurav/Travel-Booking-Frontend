@@ -84,7 +84,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 </>
               ) : (
                 <>
-                  <Plane size={28} className={isNavWhite ? 'text-blue-600' : 'text-white'} />
+                  <Plane id="navbar-plane-icon" size={28} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
                   <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
                     Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span>
                   </span>

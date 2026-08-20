@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -42,6 +42,7 @@ export default function AdminLayout() {
       items: [
         { name: 'Inventory & CMS', path: '/admin/inventory', icon: <PackageOpen size={20} /> },
         { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
+        { name: 'Global Ledger', path: '/admin/ledger', icon: <CreditCard size={20} /> },
         { name: 'Suppliers', path: '/admin/suppliers', icon: <Globe size={20} /> },
       ]
     },
