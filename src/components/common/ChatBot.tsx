@@ -118,9 +118,20 @@ export default function ChatBot() {
       };
       setMessages((prev) => [...prev, botReply]);
     } catch (error: any) {
+      console.error("ChatBot API Error:", error);
+      
+      let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏\n\nYou can also reach us at:\n📧 trippechaloindia@gmail.com\n📞 9555934205";
+      
+      if (error.response && error.response.data && error.response.data.reply) {
+        errorMessage = error.response.data.reply;
+      } else if (error.message) {
+        // Append the actual network error for debugging
+        errorMessage += `\n\n*(Error: ${error.message})*`;
+      }
+
       const errorReply: Message = {
         id: Date.now() + 1,
-        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment! 🙏\n\nYou can also reach us at:\n📧 trippechaloindia@gmail.com\n📞 9555934205",
+        text: errorMessage,
         sender: 'bot',
         timestamp: new Date(),
       };

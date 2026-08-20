@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+  ? `http://${window.location.hostname}:5000`
+  : 'http://localhost:5000';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
 });
 
 // Add a request interceptor to include the auth token
