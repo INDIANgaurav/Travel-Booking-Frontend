@@ -33,7 +33,7 @@ export default function FlightBookingPage() {
   const isInternational = selectedOutbound && (!indianAirports.has(selectedOutbound.departureAirportCode) || !indianAirports.has(selectedOutbound.arrivalAirportCode));
 
   const requireDob = selectedOutbound?.inputRequirements?.dob?.required || isInternational;
-  const requirePassport = selectedOutbound?.inputRequirements?.passport?.required || requireDob || isInternational;
+  const requirePassport = selectedOutbound?.inputRequirements?.passport?.required || isInternational;
   const [showErrors, setShowErrors] = useState(false);
 
   const adultsCount = passengers.filter(p => p.type === 'Adult').length;
@@ -45,6 +45,8 @@ export default function FlightBookingPage() {
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'RAZORPAY' | 'WALLET'>('RAZORPAY');
+  const [showWalletConfirm, setShowWalletConfirm] = useState(false);
 
   // Fare summary states
   const [showBaseFare, setShowBaseFare] = useState(false);
@@ -109,15 +111,27 @@ export default function FlightBookingPage() {
     setPassengers(newPaxList);
   };
 
-  const handlePayment = async () => {
+  const handlePaymentSubmit = () => {
+    if (paymentMethod === 'WALLET') {
+      setShowWalletConfirm(true);
+    } else {
+      processPayment();
+    }
+  };
+
+  const processPayment = async () => {
     try {
       setIsProcessing(true);
-      const res = await loadRazorpayScript();
-      
-      if (!res) {
-        toast.error('Razorpay SDK failed to load. Are you online?');
-        setIsProcessing(false);
-        return;
+      setShowWalletConfirm(false);
+
+      if (paymentMethod === 'RAZORPAY') {
+        const res = await loadRazorpayScript();
+        
+        if (!res) {
+          toast.error('Razorpay SDK failed to load. Are you online?');
+          setIsProcessing(false);
+          return;
+        }
       }
 
         const totalAmount = selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0);
@@ -142,6 +156,7 @@ export default function FlightBookingPage() {
       
       const { data } = await api.post('/api/bookings/flight', {
         bookingMode: agentBookingMode,
+        paymentMethod: paymentMethod,
         totalAmount,
         date: selectedOutbound.departureTime,
         details: {
@@ -171,6 +186,13 @@ export default function FlightBookingPage() {
           total_price: selectedOutbound.nexus_total_price || selectedOutbound.price
         }
       });
+
+      if (paymentMethod === 'WALLET') {
+        toast.success('Payment successful! Booking confirmed using Wallet.');
+        navigate(`/dashboard/invoice/${data.booking._id}`);
+        setIsProcessing(false);
+        return;
+      }
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
@@ -206,9 +228,9 @@ export default function FlightBookingPage() {
       const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Could not initiate payment. Please try again.');
+      toast.error(error.response?.data?.message || 'Could not initiate payment. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -218,6 +240,22 @@ export default function FlightBookingPage() {
 
   return (
     <div className="min-h-screen bg-[#e5eef5] pb-20">
+      
+      {/* Global Processing Overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/60 z-[200] flex flex-col items-center justify-center backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center w-80 text-center">
+            <div className="relative w-16 h-16 mb-6">
+              <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              <Plane className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue-600 w-6 h-6 animate-pulse" />
+            </div>
+            <h2 className="text-xl font-black text-gray-900 mb-2">Confirming Booking</h2>
+            <p className="text-sm text-gray-500">Please do not refresh or close this page.</p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#0a1930] text-white py-4 px-6 md:px-20 flex items-center justify-between shadow-md sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <button 
@@ -718,11 +756,54 @@ export default function FlightBookingPage() {
           )}
           {bookingStep === 4 && (
              <div className="bg-white p-6 shadow-sm rounded-lg border border-gray-200">
-               <h2 className="text-xl font-bold text-gray-900 mb-4">Add-ons</h2>
+               <h2 className="text-xl font-bold text-gray-900 mb-4">Add-ons & Payment Method</h2>
                <p className="text-sm text-gray-500 mb-6">No add-ons selected.</p>
+               
+               <div className="mb-8 p-4 border border-blue-100 bg-blue-50/50 rounded-xl">
+                 <h3 className="font-bold text-gray-800 mb-4 text-sm">Select Payment Method</h3>
+                 <div className="space-y-3">
+                   <label className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'RAZORPAY' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                     <div className="flex items-center gap-3">
+                       <input 
+                         type="radio" 
+                         name="paymentMethod" 
+                         className="w-4 h-4 text-blue-600"
+                         checked={paymentMethod === 'RAZORPAY'} 
+                         onChange={() => setPaymentMethod('RAZORPAY')} 
+                       />
+                       <span className="font-bold text-gray-700 text-sm">Razorpay (Cards / UPI / NetBanking)</span>
+                     </div>
+                   </label>
+                   
+                   <label className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'WALLET' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                     <div className="flex items-center gap-3">
+                       <input 
+                         type="radio" 
+                         name="paymentMethod" 
+                         className="w-4 h-4 text-blue-600"
+                         checked={paymentMethod === 'WALLET'} 
+                         onChange={() => setPaymentMethod('WALLET')} 
+                       />
+                       <div>
+                         <span className="font-bold text-gray-700 text-sm">Agent Wallet</span>
+                         <div className="text-xs text-gray-500 mt-0.5">Pay using your available wallet balance</div>
+                       </div>
+                     </div>
+                     {user && user.walletBalance !== undefined && (
+                       <div className="text-right">
+                         <div className="text-xs text-gray-500">Available Balance</div>
+                         <div className={`font-bold text-sm ${(user.walletBalance < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))) ? 'text-red-500' : 'text-green-600'}`}>
+                           ₹ {user.walletBalance.toLocaleString('en-IN')}
+                         </div>
+                       </div>
+                     )}
+                   </label>
+                 </div>
+               </div>
+               
                <button 
                   disabled={isProcessing}
-                  onClick={handlePayment}
+                  onClick={handlePaymentSubmit}
                   className={`bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md w-full md:w-auto ${isProcessing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'}`}
                >
                   {isProcessing ? 'PROCESSING...' : 'PROCEED TO PAY'}
@@ -808,6 +889,54 @@ export default function FlightBookingPage() {
         </div>
 
       </div>
+
+      {/* Wallet Payment Confirmation Modal */}
+      {showWalletConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onClick={() => setShowWalletConfirm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+              </div>
+              <h2 className="text-2xl font-black text-gray-900">Confirm Payment</h2>
+              <p className="text-gray-500 mt-2 text-sm">Please confirm the deduction from your Agent Wallet.</p>
+            </div>
+            
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-gray-600 font-medium text-sm">Booking Amount</span>
+                <span className="font-bold text-gray-900">₹ {(selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600 font-medium text-sm">Wallet Balance</span>
+                <span className="font-bold text-blue-600">₹ {user?.walletBalance?.toLocaleString('en-IN') || 0}</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowWalletConfirm(false)}
+                className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={processPayment}
+                disabled={isProcessing || (user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))}
+                className={`flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-md ${isProcessing || (user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)) ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700'}`}
+              >
+                {isProcessing ? 'Processing...' : 'Pay Now'}
+              </button>
+            </div>
+            {((user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))) && (
+              <p className="text-red-500 text-xs text-center mt-3 font-medium">Insufficient wallet balance for this transaction.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,8 +19,8 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const [usersRes, bookingsRes] = await Promise.all([
-          api.get('/api/admin/users'),
-          api.get('/api/admin/bookings')
+          api.get('/api/admin/users?limit=100000'),
+          api.get('/api/admin/bookings?limit=100000')
         ]);
         
         const users = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.data || []);
@@ -63,10 +63,21 @@ export default function AdminDashboard() {
         // Filter for agents and map them for the chart
         const agentsList = users.filter((u: any) => u.role?.toUpperCase() === 'B2B_AGENT');
         if (agentsList.length > 0) {
-          const mapped = agentsList.map((a: any) => ({
-            name: a.name?.split(' ')[0] || 'Agent', // First name for short labels
-            sales: Math.floor(Math.random() * 50) + 10 // Mock sales data for now
-          }));
+          const mapped = agentsList.map((a: any) => {
+            // Count real confirmed bookings for this agent
+            const agentBookings = bookings.filter((b: any) => 
+              (b.user === a._id || (b.user && b.user._id === a._id)) && 
+              b.status === 'CONFIRMED'
+            );
+            return {
+              name: a.name || 'Agent',
+              sales: agentBookings.length
+            };
+          });
+          
+          // Sort by sales descending
+          mapped.sort((x: any, y: any) => y.sales - x.sales);
+          
           setAgentData(mapped);
         }
       } catch (error) {
@@ -90,8 +101,7 @@ export default function AdminDashboard() {
     { title: 'Total Revenue', value: `₹ ${stats.revenue.toLocaleString()}`, icon: <TrendingUp size={24} />, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+18.2%', path: '/admin/finance' },
     { title: 'Total Bookings', value: stats.bookings, icon: <CreditCard size={24} />, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+5.4%', path: '/admin/bookings' },
     { title: 'Active Users', value: stats.users, icon: <Users size={24} />, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+12.1%', path: '/admin/users' },
-    { title: 'API Requests (24h)', value: 'Coming Soon', icon: <Activity size={24} />, color: 'text-amber-600', bg: 'bg-amber-50', trend: 'Pending', path: '' },
-  ];
+   ];
 
   return (
     <div className="space-y-8 p-8">
@@ -172,7 +182,7 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
           <div className="mb-6">
             <h2 className="text-lg font-bold text-gray-900">Top Agents</h2>
-            <p className="text-xs text-gray-500">By total sales volume (Demo Data)</p>
+            <p className="text-xs text-gray-500">By total sales volume</p>
           </div>
           <div className="h-[300px] w-full">
             {agentData.length > 0 ? (

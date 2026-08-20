@@ -63,6 +63,38 @@ export default function AdminFinance() {
     fetchFinanceData();
   }, []);
 
+  const handleGenerateReport = () => {
+    // Generate Enhanced CSV
+    const dateStr = new Date().toLocaleString('en-IN');
+    
+    let csvContent = `TRAVELGO FINANCIAL HUB REPORT\n`;
+    csvContent += `Generated On:,${dateStr}\n`;
+    csvContent += `Report Type:,Summary Overview\n\n`;
+    
+    csvContent += `CATEGORY,AMOUNT (INR)\n`;
+    
+    const rows = [
+      ['Total Revenue', stats.totalRevenue],
+      ['Flight Revenue', stats.flightRevenue],
+      ['Hotel Revenue', stats.hotelRevenue],
+      ['Pending Refunds', stats.pendingRefunds]
+    ];
+    
+    rows.forEach(row => {
+      csvContent += `${row[0]},${row[1]}\n`;
+    });
+    
+    // Create Blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[70vh]">
@@ -85,7 +117,10 @@ export default function AdminFinance() {
           <h1 className="text-lg md:text-2xl font-bold text-gray-900">Financial Hub</h1>
           <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Track revenue, process refunds, and view service costs.</p>
         </div>
-        <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
+        <button 
+          onClick={handleGenerateReport}
+          className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2"
+        >
           <FileText size={18} />
           Generate Report
         </button>
