@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import api from '../../../services/api';
 import { PlusCircle, Edit2, DollarSign, Activity, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Dropdown from '../../../components/ui/Dropdown';
@@ -48,9 +48,7 @@ const SupplierManagement = () => {
 
   const fetchSuppliers = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/suppliers', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const { data } = await api.get('/api/suppliers');
       setSuppliers(data.suppliers || data);
     } catch (err: any) {
       toast.error('Failed to load suppliers');
@@ -63,14 +61,10 @@ const SupplierManagement = () => {
     e.preventDefault();
     try {
       if (currentSupplier._id) {
-        await axios.put(`http://localhost:5000/api/suppliers/${currentSupplier._id}`, currentSupplier, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await api.put(`/api/suppliers/${currentSupplier._id}`, currentSupplier);
         toast.success('Supplier Updated!');
       } else {
-        await axios.post('http://localhost:5000/api/suppliers', currentSupplier, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await api.post('/api/suppliers', currentSupplier);
         toast.success('Supplier Created!');
       }
       setIsModalOpen(false);
@@ -83,12 +77,10 @@ const SupplierManagement = () => {
   const handleTopup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(`http://localhost:5000/api/suppliers/${topupData.supplierId}/transactions`, {
+      await api.post(`/api/suppliers/${topupData.supplierId}/transactions`, {
         type: topupData.type,
         amount: Number(topupData.amount),
         description: topupData.description
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       toast.success('Transaction Successful');
       setIsTopupModalOpen(false);
@@ -100,9 +92,7 @@ const SupplierManagement = () => {
 
   const handleSyncBalance = async (supplierId: string) => {
     try {
-      const { data } = await axios.post(`http://localhost:5000/api/suppliers/${supplierId}/sync`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const { data } = await api.post(`/api/suppliers/${supplierId}/sync`, {});
       toast.success(data.synced ? `Synced! Diff: ${data.difference}` : 'Already in sync');
       fetchSuppliers();
     } catch (err: any) {

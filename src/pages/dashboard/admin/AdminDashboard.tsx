@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, CreditCard, TrendingUp, ArrowUpRight, Activity, Globe, Package } from 'lucide-react';
 import api from '../../../services/api';
@@ -23,8 +23,10 @@ export default function AdminDashboard() {
           api.get('/api/admin/bookings')
         ]);
         
-        const users = usersRes.data;
-        const bookings = bookingsRes.data;
+        const users = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.data || []);
+        const bookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : (bookingsRes.data.data || []);
+        const totalUsersCount = usersRes.data.totalRecords || users.length;
+        const totalBookingsCount = bookingsRes.data.totalRecords || bookings.length;
         
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const revMap: Record<string, number> = {};
@@ -53,8 +55,8 @@ export default function AdminDashboard() {
         setRevenueData(formattedRevData);
         
         setStats({
-          users: users.length,
-          bookings: bookings.length,
+          users: totalUsersCount,
+          bookings: totalBookingsCount,
           revenue: totalRevenue
         });
 
