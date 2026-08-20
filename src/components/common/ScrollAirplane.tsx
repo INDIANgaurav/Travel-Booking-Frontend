@@ -16,6 +16,7 @@ export default function ScrollAirplane() {
   const rafRef = useRef<number | undefined>(undefined);
   const lastScrollY = useRef(0);
   const scrollingUpRef = useRef(false);
+  const isInitialized = useRef(false);
   
   const generatePath = (width: number, height: number, targetRunwayY: number) => {
     if (width === 0 || height === 0 || targetRunwayY === 0) return '';
@@ -153,8 +154,9 @@ export default function ScrollAirplane() {
         // Lerp current length towards target length (0.05 is the smoothing factor - lower is smoother/slower)
         currentLengthRef.current += (targetLengthRef.current - currentLengthRef.current) * 0.08;
         
-        // Prevent unnecessary updates if we're very close
-        if (Math.abs(targetLengthRef.current - currentLengthRef.current) > 0.5) {
+        // Prevent unnecessary updates if we're very close, unless it's the first render
+        if (Math.abs(targetLengthRef.current - currentLengthRef.current) > 0.5 || !isInitialized.current) {
+          isInitialized.current = true;
           setDrawLength(currentLengthRef.current);
           
           const point = pathRef.current.getPointAtLength(currentLengthRef.current);
