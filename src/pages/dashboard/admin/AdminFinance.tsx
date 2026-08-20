@@ -9,8 +9,7 @@ export default function AdminFinance() {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     flightRevenue: 0,
-    hotelRevenue: 0,
-    pendingRefunds: 0
+    hotelRevenue: 0
   });
 
   // Mock historical data for charts
@@ -43,16 +42,12 @@ export default function AdminFinance() {
             if (b.type === 'FLIGHT') flightRev += (b.totalAmount || 0);
             if (b.type === 'HOTEL') hotelRev += (b.totalAmount || 0);
           }
-          if (b.status === 'CANCELLED' && b.refundStatus !== 'COMPLETED') {
-            pendingRef += (b.refundAmount !== undefined ? b.refundAmount : (b.totalAmount || 0));
-          }
         });
 
         setStats({
           totalRevenue: totalRev,
           flightRevenue: flightRev,
-          hotelRevenue: hotelRev,
-          pendingRefunds: pendingRef
+          hotelRevenue: hotelRev
         });
       } catch (err) {
         console.error("Error fetching finance data:", err);
@@ -76,8 +71,7 @@ export default function AdminFinance() {
     const rows = [
       ['Total Revenue', stats.totalRevenue],
       ['Flight Revenue', stats.flightRevenue],
-      ['Hotel Revenue', stats.hotelRevenue],
-      ['Pending Refunds', stats.pendingRefunds]
+      ['Hotel Revenue', stats.hotelRevenue]
     ];
     
     rows.forEach(row => {
@@ -161,15 +155,6 @@ export default function AdminFinance() {
           <h3 className="text-2xl font-black text-gray-900 mt-1">₹ {stats.hotelRevenue.toLocaleString()}</h3>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-red-50 rounded-xl">
-              <TrendingDown size={24} className="text-red-600" />
-            </div>
-          </div>
-          <p className="text-gray-500 font-medium text-sm">Pending Refunds</p>
-          <h3 className="text-2xl font-black text-gray-900 mt-1 text-red-600">₹ {stats.pendingRefunds.toLocaleString()}</h3>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
