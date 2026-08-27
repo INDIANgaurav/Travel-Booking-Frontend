@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Plane, Building2, Briefcase, User, ChevronDown, ArrowLeft, Heart, Menu, X, CreditCard } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectIsAuthenticated, selectCurrentUser, logout, selectAgentBookingMode, setAgentBookingMode } from '../../store/authSlice';
+import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/authSlice';
 import LoginModal from '../auth/LoginModal';
 
 interface TopNavbarProps {
@@ -18,7 +18,6 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-  const agentMode = useSelector(selectAgentBookingMode);
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -73,62 +72,16 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
               </button>
             )}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              {user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ' ? (
-                <>
-                  <div className={`p-1.5 rounded-lg ${isNavWhite ? 'bg-orange-500' : 'bg-white'}`}>
-                    <Briefcase size={20} className={isNavWhite ? 'text-white' : 'text-orange-500'} />
-                  </div>
-                  <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
-                    Trippe<span className={isNavWhite ? 'text-orange-500' : 'text-orange-200'}>Biz</span>
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Plane id="navbar-plane-icon" size={28} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
-                  <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
-                    Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span>
-                  </span>
-                </>
-              )}
+              <>
+                <Plane id="navbar-plane-icon" size={28} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
+                <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
+                  Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span>
+                </span>
+              </>
             </div>
-
-            {user?.role === 'B2B_AGENT' && (
-              <div className={`relative ml-8 flex items-center p-1 rounded-full ${isDarkText ? 'bg-gray-100' : 'bg-white/20'} transition-colors w-[180px]`}>
-                {/* Sliding Background Pill */}
-                <div
-                  className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow-md transition-all duration-300 ease-in-out ${
-                    agentMode === 'PERSONAL' 
-                      ? 'left-1 bg-blue-600' 
-                      : 'left-[calc(50%+2px)] bg-white'
-                  }`}
-                ></div>
-                
-                {/* Buttons */}
-                <button 
-                  onClick={() => dispatch(setAgentBookingMode('PERSONAL'))}
-                  className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold transition-colors duration-300 ${
-                    agentMode === 'PERSONAL' 
-                      ? 'text-white' 
-                      : isDarkText ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-white/80'
-                  }`}
-                >
-                  PERSONAL
-                </button>
-                <button 
-                  onClick={() => dispatch(setAgentBookingMode('MYBIZ'))}
-                  className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold transition-colors duration-300 ${
-                    agentMode === 'MYBIZ' 
-                      ? 'text-gray-900' 
-                      : isDarkText ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-white/80'
-                  }`}
-                >
-                  MYBIZ
-                </button>
-              </div>
-            )}
           </div>
         <div className="flex items-center gap-2 lg:gap-6">
-            {user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ' ? (
+            {user?.role === 'B2B_AGENT' ? (
               <>
                 <Link to="/agent/requests" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
                   <Briefcase size={20} className="text-orange-500" />
@@ -145,7 +98,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 </Link>
                 <Link to="/agent/wallet" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition px-3 py-1.5 rounded-md ${isDarkText ? 'bg-orange-50 border border-orange-200 text-gray-700' : 'bg-white/10 text-white'}`}>
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-bold">myBiz Wallet</span>
+                    <span className="text-[11px] font-bold">Agent Wallet</span>
                   </div>
                 </Link>
               </>
@@ -274,7 +227,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                           <p className="text-base font-black text-slate-900 truncate mt-1">{user?.name}</p>
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                         </div>
-                      {user?.role === 'USER' && (
+                      {(user?.roles?.includes('USER') || user?.role === 'USER' || (!user?.roles?.includes('B2B_AGENT') && !user?.roles?.includes('SUPER_ADMIN') && !user?.roles?.includes('SUPPLIER_AGENT'))) && (
                         <>
                           <div onClick={() => { navigate('/dashboard/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
@@ -284,17 +237,17 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                           </div>
                         </>
                       )}
-                      {(user?.role === 'SUPPLIER_AGENT') && (
+                      {(user?.roles?.includes('B2B_AGENT') || user?.roles?.includes('SELLER') || user?.roles?.includes('SUPPLIER_AGENT') || user?.role === 'B2B_AGENT' || user?.role === 'SELLER' || user?.role === 'SUPPLIER_AGENT') && (
                         <div onClick={() => { navigate('/b2b/home'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> B2B Dashboard
                         </div>
                       )}
-                      {(user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
+                      {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN') || user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
                         <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Building2 size={16} /> Admin Panel
                         </div>
                       )}
-                      {(user?.role === 'SUPPLIER_AGENT' || user?.role === 'SUPPLIER_STAFF' || user?.role === 'SUPPLIER_PORTAL_ONLY') && (
+                      {(user?.roles?.includes('SUPPLIER_AGENT') || user?.roles?.includes('SUPPLIER_STAFF') || user?.roles?.includes('SUPPLIER_PORTAL_ONLY') || user?.role === 'SUPPLIER_AGENT' || user?.role === 'SUPPLIER_STAFF' || user?.role === 'SUPPLIER_PORTAL_ONLY') && (
                         <div onClick={() => { navigate('/supplier-portal/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> Supplier Portal
                         </div>
@@ -392,7 +345,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                   </Link>
                 )}
                 
-                {user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ' && (
+                {user?.role === 'B2B_AGENT' && (
                   <>
                     <div className="my-2 border-t border-gray-100"></div>
                     <Link to="/agent/requests" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 text-gray-700 transition">
@@ -401,7 +354,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                     </Link>
                     <Link to="/agent/wallet" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-gray-700 transition">
                       <CreditCard size={20} className="text-blue-500" />
-                      <span className="text-sm font-bold">myBiz Wallet</span>
+                      <span className="text-sm font-bold">Agent Wallet</span>
                     </Link>
                   </>
                 )}

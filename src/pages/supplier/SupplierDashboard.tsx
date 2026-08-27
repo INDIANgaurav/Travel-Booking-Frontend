@@ -105,7 +105,7 @@ const SupplierDashboard: React.FC = () => {
           </div>
 
           {/* Card 2: Booking Value */}
-          {user?.role !== 'SUPPLIER_STAFF' && (
+          {!user?.roles?.includes('SUPPLIER_STAFF') && (
             <div className="bg-white border-l-4 border-l-emerald-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-3">
                 <DollarSign size={20} />
@@ -127,7 +127,7 @@ const SupplierDashboard: React.FC = () => {
           </div>
 
           {/* Card 4: Cancellation Value */}
-          {user?.role !== 'SUPPLIER_STAFF' && (
+          {!user?.roles?.includes('SUPPLIER_STAFF') && (
             <div className="bg-white border-l-4 border-l-pink-500 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-10 h-10 bg-pink-50 text-pink-600 rounded-lg flex items-center justify-center mb-3">
                 <TrendingDown size={20} />

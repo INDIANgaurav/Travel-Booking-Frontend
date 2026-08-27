@@ -42,7 +42,7 @@ const RetailAgentLoginPage: React.FC = () => {
       const user = response.data;
 
       // Check if user is an agent or supplier
-      if (user.role !== 'B2B_AGENT' && user.role !== 'SUPPLIER_AGENT' && user.role !== 'SELLER') {
+      if (!user.roles?.includes('B2B_AGENT') && !user.roles?.includes('SUPPLIER_AGENT') && !user.roles?.includes('SELLER')) {
         throw new Error('This portal is strictly for B2B Agents. Regular users cannot log in here.');
       }
 
@@ -127,26 +127,7 @@ const RetailAgentLoginPage: React.FC = () => {
             <span className="text-[11px] font-black text-[#0c1a40]">Hotel & Villas</span>
           </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
-            <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
-              <ShieldCheck size={24} />
-            </div>
-            <span className="text-[11px] font-black text-[#0c1a40]">Insurance</span>
-          </div>
 
-          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
-            <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
-              <CreditCard size={24} />
-            </div>
-            <span className="text-[11px] font-black text-[#0c1a40]">Visa</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 group cursor-pointer shrink-0">
-            <div className="w-14 h-14 bg-white text-[#0c1a40] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-gray-100">
-              <Compass size={24} />
-            </div>
-            <span className="text-[11px] font-black text-[#0c1a40]">Umrah Packages</span>
-          </div>
         </div>
       </div>
 
@@ -462,7 +443,7 @@ const RetailAgentLoginPage: React.FC = () => {
             <div className="space-y-4 text-xs font-bold text-[#0c1a40]">
                <div><Link to="/" className="hover:text-blue-600">Flight</Link></div>
                <div><Link to="/" className="hover:text-blue-600">Hotel</Link></div>
-               <div><Link to="/" className="hover:text-blue-600">Insurance</Link></div>
+
             </div>
           </div>
         </div>

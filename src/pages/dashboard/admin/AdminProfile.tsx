@@ -1,24 +1,19 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../../store/authSlice';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import { User, Mail, Phone, Lock, Save, Shield, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import UserProfileForm from '../../../components/admin/UserProfileForm';
 
 export default function AdminProfile() {
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') === 'security' ? 'security' : 'profile';
-  
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
-
-  const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-  });
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -26,12 +21,11 @@ export default function AdminProfile() {
     confirmPassword: '',
   });
 
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleProfileSubmit = async (data: any) => {
     setLoading(true);
     try {
-      const { data } = await api.put('/api/users/profile', profileData);
-      dispatch(setCredentials({ user: data, token: localStorage.getItem('token')! }));
+      const res = await api.put('/api/users/profile', data);
+      dispatch(setCredentials({ user: res.data, token: localStorage.getItem('token')! }));
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -62,7 +56,7 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Admin Profile</h1>
         <p className="text-sm text-gray-500 mt-1">Manage your administrator account settings and security</p>
@@ -98,69 +92,9 @@ export default function AdminProfile() {
 
         <div className="p-8">
           {activeTab === 'profile' ? (
-            <form onSubmit={handleProfileSubmit} className="space-y-6 max-w-xl">
-              <div className="flex items-center gap-6 mb-8">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-3xl text-white font-bold shadow-lg">
-                  {user?.name?.charAt(0).toUpperCase() || 'A'}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">{user?.name}</h3>
-                  <p className="text-gray-500">{user?.role}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="pl-10 pr-4 py-2.5 w-full bg-gray-50 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                    required
-                    className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="tel"
-                    value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-70"
-                >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                  Save Changes
-                </button>
-              </div>
-            </form>
+            <div className="w-full">
+              <UserProfileForm initialData={user} onSave={handleProfileSubmit} isSaving={loading} isAdminViewingSelf={true} />
+            </div>
           ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-6 max-w-xl">
               <div>

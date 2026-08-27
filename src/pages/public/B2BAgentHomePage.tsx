@@ -367,74 +367,58 @@ interface RecentSearch {
 
   return (
     <div className="min-h-screen bg-[#f1f5f9] font-sans text-gray-800 flex flex-col">
-      {/* B2B Header Bar (Matching Reference Screenshot 2) */}
-      <header className="bg-white border-b border-gray-200 px-8 py-2.5 flex justify-between items-center shadow-sm sticky top-0 z-50">
+            {/* B2B Premium Header */}
+      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+        {/* Subtle background glow effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+        
         {/* Logo & Category Navigation */}
-        <div className="flex items-center gap-10">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/b2b/home')}>
-            <div className="flex items-center justify-center">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
+        <div className="flex items-center gap-10 relative z-10">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
+            <div className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform">
+              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8" crossOrigin="anonymous" />
             </div>
             <div>
-              <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
-              <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-widest -mt-1">B2B AGENT ENGINE</span>
+              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="block text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-gray-700">
-            <div className="flex flex-col items-center gap-1 cursor-pointer text-blue-600 border-b-2 border-blue-600 pb-1">
-              <div className="w-7 h-7 bg-blue-600 text-white rounded-lg flex items-center justify-center">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-gray-300">
+            <div className="flex flex-col items-center gap-1.5 cursor-pointer text-white border-b-2 border-blue-500 pb-1">
+              <div className="w-8 h-8 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                 <Plane size={16} />
               </div>
-              <span>Flight</span>
+              <span className="tracking-wide">Flights</span>
             </div>
 
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
-              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
+              <div className="w-8 h-8 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-colors">
                 <Building2 size={16} />
               </div>
-              <span>Hotel & Villas</span>
+              <span className="tracking-wide">Hotels</span>
             </div>
 
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
-              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-                <ShieldCheck size={16} />
-              </div>
-              <span>Insurance</span>
-            </div>
-
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
-              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-                <CreditCard size={16} />
-              </div>
-              <span>Visa</span>
-            </div>
-
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
-              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Compass size={16} />
-              </div>
-              <span>UMRAH Packages</span>
-            </div>
-
-            <div className="relative flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition" ref={moreRef}>
+            <div className="relative flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group" ref={moreRef}>
               <div 
-                className={`w-7 h-7 rounded-lg flex items-center justify-center border ${showMoreMenu ? 'border-gray-900 border-2' : 'border-transparent'}`}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-colors ${showMoreMenu ? 'bg-white/10 border-white/20 text-white' : 'bg-white/5 border-white/10 group-hover:bg-white/10'}`}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
               >
                 <MoreHorizontal size={16} />
               </div>
-              <span onClick={() => setShowMoreMenu(!showMoreMenu)}>More</span>
+              <span onClick={() => setShowMoreMenu(!showMoreMenu)} className="tracking-wide">More</span>
 
               {/* More Dropdown */}
               {showMoreMenu && (
-                <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 -ml-16">
+                <div className="absolute top-full mt-4 w-56 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)] py-2 border border-white/10 z-50 -ml-20 overflow-hidden backdrop-blur-xl">
                   {[
-                    { label: 'Dashboard', path: '/b2b/dashboard' },
-                    { label: 'Account Statement', path: '/b2b/account-statement' },
-                    { label: 'Booking Status', path: '/b2b/booking-status' },
-                    { label: 'Manage Booking', path: '/b2b/manage-booking' },
-                    { label: 'Agent Certificate', path: '#' }
+                    { label: 'Dashboard', path: '/b2b/dashboard', icon: <TrendingUp size={14}/> },
+                    { label: 'Account Statement', path: '/b2b/account-statement', icon: <FileText size={14}/> },
+                    { label: 'Booking Status', path: '/b2b/booking-status', icon: <Check size={14}/> },
+                    { label: 'Manage Booking', path: '/b2b/manage-booking', icon: <Briefcase size={14}/> },
+                    { label: 'Agent Certificate', path: '#', icon: <ShieldCheck size={14}/> }
                   ].map((item, index) => (
                     <button 
                       key={index}
@@ -447,8 +431,9 @@ interface RecentSearch {
                         }
                       }}
                       disabled={item.label === 'Agent Certificate' && generatingCert}
-                      className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 transition"
+                      className="w-full text-left px-5 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors border-b border-white/5 last:border-0"
                     >
+                      <span className="text-blue-400">{item.icon}</span>
                       {item.label === 'Agent Certificate' && generatingCert ? 'Generating...' : item.label}
                     </button>
                   ))}
@@ -458,50 +443,59 @@ interface RecentSearch {
           </nav>
         </div>
 
-        {/* Right Contacts & Agent Balance Profile */}
-        <div className="flex items-center gap-4">
-          <div className="hidden lg:flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-bold text-amber-900">
-            <span>Call Us: +91 9555934205</span>
+        {/* Right Contacts & Agent Profile */}
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="hidden lg:flex flex-col items-end">
+            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5">Support</span>
+            <div className="flex items-center gap-1.5 text-blue-400 font-black text-xs bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
+              <span>+91 9555934205</span>
+            </div>
           </div>
 
-          <button 
+          <div 
             onClick={() => navigate('/b2b/dashboard/wallet')}
-            className="bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer text-xs font-black px-4 py-2 rounded-full border border-gray-200"
+            className="flex flex-col items-end cursor-pointer group"
           >
-            Balance: ₹ {agentBalance.toLocaleString('en-IN')}
-          </button>
+            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
+            <div className="flex items-center gap-1.5 text-green-400 font-black text-sm bg-green-500/10 px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+              <span>₹ {agentBalance.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          <div className="h-8 w-px bg-white/10 mx-1"></div>
 
           <div className="relative" ref={profileRef}>
             <div 
-              className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 cursor-pointer hover:bg-blue-100 transition"
+              className="flex items-center gap-3 bg-white/5 px-2 py-1.5 pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
             >
-              <div className="w-7 h-7 rounded-full bg-[#0b1031] text-white flex items-center justify-center font-bold text-xs">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
                 {agentInitial}
               </div>
-              <div className="text-left leading-tight">
-                <span className="block text-xs font-black text-[#0c1a40]">{agentName}</span>
-                <span className="block text-[9px] text-gray-500 font-bold uppercase">({agentCode})</span>
+              <div className="text-left leading-tight hidden sm:block">
+                <span className="block text-xs font-black text-white">{agentName}</span>
+                <span className="block text-[9px] text-blue-300 font-bold uppercase tracking-widest">{agentCode}</span>
               </div>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </div>
 
             {/* Profile Dropdown */}
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 border border-gray-100 z-50">
-                <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                  <p className="text-xs font-bold text-[#0c1a40] truncate">{agentName}</p>
-                  <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+              <div className="absolute right-0 mt-3 w-56 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] py-2 border border-white/10 z-50 overflow-hidden backdrop-blur-xl">
+                <div className="px-5 py-4 border-b border-white/10 mb-1 bg-white/5">
+                  <p className="text-sm font-black text-white truncate">{agentName}</p>
+                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{user?.email}</p>
                 </div>
                 <button 
                   onClick={() => navigate('/b2b/profile')}
-                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 flex items-center gap-2 transition"
+                  className="w-full text-left px-5 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors"
                 >
-                  <Users size={14} />
+                  <Users size={14} className="text-blue-400" />
                   <span>My Profile</span>
                 </button>
                 <button 
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
+                  className="w-full text-left px-5 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
                 >
                   <LogOut size={14} />
                   <span>Logout</span>
@@ -513,19 +507,23 @@ interface RecentSearch {
       </header>
 
       {/* Main Search Engine Box (Matching Reference Screenshot 2) */}
-      <main className="w-full px-4 md:px-8 lg:px-12 xl:px-16 py-8">
-        <div className="bg-[#f8f9fb] rounded-[32px] border border-gray-200 p-8 pt-6 space-y-6 shadow-sm mx-auto max-w-[1400px]">
+      <main className="w-full px-4 md:px-8 lg:px-12 xl:px-16 pt-10 pb-16 relative overflow-hidden flex-1 flex flex-col justify-start">
+        {/* Dynamic Background Elements */}
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[120px] pointer-events-none opacity-60"></div>
+        <div className="absolute bottom-[-10%] right-[-5%] w-[30%] h-[30%] bg-blue-200 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none"></div>
+        <div className="bg-white/80 backdrop-blur-2xl rounded-[32px] border border-white/50 p-8 pt-8 space-y-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] mx-auto max-w-[1400px] relative z-10 w-full hover:shadow-[0_25px_65px_-15px_rgba(0,0,0,0.15)] transition-shadow duration-500">
           
           {/* Trip Type Tabs */}
-          <div className="flex items-center gap-2 text-sm font-bold">
+          <div className="flex items-center gap-3 text-sm font-bold bg-gray-50/50 p-1.5 rounded-full w-fit border border-gray-100">
             {['OneWay', 'Round Trip', 'Multi City'].map(t => (
               <label 
                 key={t} 
                 onClick={() => setTripType(t)}
-                className={`flex items-center gap-2 cursor-pointer px-6 py-2.5 rounded-full transition-all ${tripType === t ? 'bg-[#0b1031] text-white shadow-md' : 'bg-transparent text-[#0c1a40] hover:bg-gray-100'}`}
+                className={`flex items-center gap-2 cursor-pointer px-6 py-2 rounded-full transition-all duration-300 ${tripType === t ? 'bg-white text-blue-700 shadow-[0_4px_15px_rgba(0,0,0,0.05)] border border-white' : 'bg-transparent text-gray-500 hover:text-gray-900'}`}
               >
-                <div className={`w-[18px] h-[18px] rounded-full border-[2px] flex items-center justify-center ${tripType === t ? 'border-white' : 'border-[#0c1a40]'}`}>
-                  {tripType === t && <div className="w-2 h-2 rounded-full bg-white" />}
+                <div className={`w-[16px] h-[16px] rounded-full border-[2px] flex items-center justify-center transition-colors ${tripType === t ? 'border-blue-600' : 'border-gray-300'}`}>
+                  {tripType === t && <div className="w-2 h-2 rounded-full bg-blue-600" />}
                 </div>
                 {t}
               </label>
@@ -618,10 +616,10 @@ interface RecentSearch {
             <button
               type="button"
               onClick={() => handleSearch()}
-              className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-8 h-[54px] rounded-full transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-black text-[15px] px-10 h-[56px] rounded-full transition-all shadow-[0_8px_20px_rgba(37,99,235,0.3)] hover:shadow-[0_12px_25px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap"
             >
-              <Search size={16} />
-              <span>Search</span>
+              <Search size={18} />
+              <span>Search Flights</span>
             </button>
 
             {/* Calendar Popover */}
@@ -716,42 +714,24 @@ interface RecentSearch {
             </div>
           )}
 
-          {/* Special Fares Row */}
-          <div className="flex items-center gap-4 text-xs font-bold pt-2">
-            <span className="text-[#0c1a40]">Select a special fare</span>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setSpecialFare('EXTRA SAVINGS')}
-                className={`px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wide font-black transition-colors ${specialFare === 'EXTRA SAVINGS' ? 'bg-[#10b981] text-white hover:bg-[#059669]' : 'bg-white text-gray-700 border border-gray-200'}`}
-              >
-                EXTRA SAVINGS
-              </button>
-              {['Direct Flight', 'Defence', 'Student', 'Senior Citizen', 'Host Search'].map(f => (
-                <label key={f} className="flex items-center gap-2 cursor-pointer text-[#0c1a40] hover:text-blue-600 transition-colors">
-                  <div className={`w-3.5 h-3.5 rounded-full border-[1.5px] flex items-center justify-center ${specialFare === f ? 'border-blue-600' : 'border-gray-300'}`}>
-                    {specialFare === f && <div className="w-2 h-2 rounded-full bg-blue-600" />}
-                  </div>
-                  <input type="radio" className="hidden" checked={specialFare === f} onChange={() => setSpecialFare(f)} />
-                  <span>{f}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          
         </div>
       </main>
 
 
-      {/* Latest Deals & Offers */}
-      <section className="bg-amber-400 py-2 text-xs font-bold text-gray-900 overflow-hidden whitespace-nowrap pause-on-hover cursor-pointer">
+      
+
+      {/* Premium TrippeChalo Marquee */}
+      <section className="bg-gradient-to-r from-[#0b1031] via-blue-900 to-[#0b1031] py-3 text-[11px] font-black tracking-widest text-blue-200 uppercase overflow-hidden whitespace-nowrap pause-on-hover cursor-pointer border-t border-b border-blue-500/20 shadow-inner">
         <div className="animate-marquee inline-block w-max">
           {[...Array(12)].map((_, i) => (
             <React.Fragment key={i}>
-              <span className="mx-12">Get Best Deals on Flights</span>
-              <span className="mx-12 text-black/40">•</span>
-              <span className="mx-12">Book Your Tickets</span>
-              <span className="mx-12 text-black/40">•</span>
-              <span className="mx-12">Get Best Rates</span>
-              <span className="mx-12 text-black/40">•</span>
+              <span className="mx-12 hover:text-white transition-colors">Exclusive B2B Fares Available</span>
+              <span className="mx-12 text-blue-500/50">✦</span>
+              <span className="mx-12 hover:text-white transition-colors">Premium Supplier Network</span>
+              <span className="mx-12 text-blue-500/50">✦</span>
+              <span className="mx-12 hover:text-white transition-colors">Instant Ticketing & Support</span>
+              <span className="mx-12 text-blue-500/50">✦</span>
             </React.Fragment>
           ))}
         </div>

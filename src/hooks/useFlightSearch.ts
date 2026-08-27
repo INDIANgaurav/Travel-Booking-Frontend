@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser, selectAgentBookingMode } from '../store/authSlice';
+import { selectCurrentUser } from '../store/authSlice';
 import api from '../services/api';
 
 export interface Flight {
@@ -49,9 +49,8 @@ export function useFlightSearch() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
-  const agentMode = useSelector(selectAgentBookingMode);
   
-  const isAgentDiscount = user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ';
+  const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
   const getDisplayPrice = (price: number) => isAgentDiscount ? Math.floor(price * 0.9) : price;
 
   const getLocalISO = (d: Date) => {
@@ -234,7 +233,7 @@ export function useFlightSearch() {
     handleSearch,
     getDisplayPrice,
     user,
-    agentMode,
+
     isAgentDiscount,
     navigate
   };

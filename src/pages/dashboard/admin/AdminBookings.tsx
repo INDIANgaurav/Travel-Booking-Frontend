@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import { Search } from 'lucide-react';
 import Loader from '../../../components/common/Loader';
 import Dropdown from '../../../components/ui/Dropdown';
+import RefreshButton from '../../../components/ui/RefreshButton';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -14,19 +15,21 @@ export default function AdminBookings() {
   const [filterType, setFilterType] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/api/admin/bookings?page=${page}&limit=10`);
+      setBookings(data.data || (Array.isArray(data) ? data : []));
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to load bookings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const { data } = await api.get(`/api/admin/bookings?page=${page}&limit=10`);
-        setBookings(data.data || (Array.isArray(data) ? data : []));
-        setTotalPages(data.totalPages || 1);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-        toast.error('Failed to load bookings');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBookings();
   }, [page]);
 
@@ -52,15 +55,17 @@ export default function AdminBookings() {
           <h1 className="text-lg md:text-2xl font-bold text-gray-900">All Bookings</h1>
           <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage and track all platform bookings</p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input 
-            type="text" 
-            placeholder="Search booking ID..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input 
+              type="text" 
+              placeholder="Search booking ID..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64"
+            />
+          </div>
         </div>
       </div>
       
@@ -77,20 +82,23 @@ export default function AdminBookings() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-gray-600">Status:</span>
-            <div className="w-40">
-              <Dropdown
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { value: 'ALL', label: 'All Status' },
-                  { value: 'PENDING', label: 'Pending' },
-                  { value: 'CONFIRMED', label: 'Confirmed' },
-                  { value: 'CANCELLED', label: 'Cancelled' }
-                ]}
-              />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-600">Status:</span>
+              <div className="w-40">
+                <Dropdown
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: 'ALL', label: 'All Status' },
+                    { value: 'PENDING', label: 'Pending' },
+                    { value: 'CONFIRMED', label: 'Confirmed' },
+                    { value: 'CANCELLED', label: 'Cancelled' }
+                  ]}
+                />
+              </div>
             </div>
+            <RefreshButton onClick={fetchBookings} loading={loading} count={filteredBookings.length} />
           </div>
         </div>
         <div className="overflow-x-auto">

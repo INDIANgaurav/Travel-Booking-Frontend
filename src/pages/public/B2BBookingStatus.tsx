@@ -53,7 +53,7 @@ const B2BBookingStatus: React.FC = () => {
         
         {/* Top Product Filter Bar */}
         <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-6">
-          {['Flight', 'Hotel', 'Travel Insurance', 'Top-Up', 'OD Details'].map(type => (
+          {['Flight', 'Hotel', 'Top-Up', 'OD Details'].map(type => (
             <label key={type} className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#0c1a40]">
               <input 
                 type="radio" 

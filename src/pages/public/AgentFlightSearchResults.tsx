@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { Plane, Building2, Shield, ShieldCheck, CreditCard, Compass, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Users, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setAgentBookingMode, logout } from '../../store/authSlice';
+import { logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';

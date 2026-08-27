@@ -10,11 +10,7 @@ import CancellationModal from '../../../components/bookings/CancellationModal';
 import Loader from '../../../components/common/Loader';
 import ETicketModal from '../../../components/bookings/ETicketModal';
 
-interface BookingsPageProps {
-  mode?: 'PERSONAL' | 'MYBIZ' | 'ALL';
-}
-
-export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
+export default function BookingsPage() {
   const user = useSelector(selectCurrentUser);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +54,7 @@ export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
     const travelDate = isHotel ? new Date(b.details?.checkOut || b.createdAt) : new Date(b.date || b.createdAt);
     const isPast = travelDate.getTime() < new Date().getTime();
 
-    let isModeMatch = true;
-    if (mode !== 'ALL') {
-      const bMode = b.bookingMode || 'PERSONAL';
-      isModeMatch = bMode === mode;
-    }
 
-    if (!isModeMatch) return false;
 
     if (activeTab === 'UPCOMING') return (status === 'CONFIRMED' || status === 'PENDING') && !isPast;
     if (activeTab === 'CANCELLED') return status === 'CANCELLED';
@@ -235,7 +225,7 @@ export default function BookingsPage({ mode = 'PERSONAL' }: BookingsPageProps) {
                           </button>
                           <button 
                             onClick={() => {
-                              const basePath = user?.role === 'B2B_AGENT' ? '/agent-portal' : user?.role === 'SUPER_ADMIN' ? '/admin' : user?.role === 'SUB_ADMIN' ? '/sub-admin' : '/dashboard';
+                              const basePath = user?.roles?.includes('B2B_AGENT') ? '/agent-portal' : user?.roles?.includes('SUPER_ADMIN') ? '/admin' : user?.roles?.includes('SUB_ADMIN') ? '/sub-admin' : '/dashboard';
                               navigate(`${basePath}/invoice/${booking._id}`);
                             }}
                             className="flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition-colors"

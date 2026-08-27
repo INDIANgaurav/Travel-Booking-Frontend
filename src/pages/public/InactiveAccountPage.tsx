@@ -1,12 +1,32 @@
-﻿import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import TopNavbar from '../../components/layout/TopNavbar';
-import { ShieldAlert, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, Mail, Phone, ArrowLeft, Timer } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/authSlice';
 
 const InactiveAccountPage = () => {
+  const [timeLeft, setTimeLeft] = useState(20);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      dispatch(logout());
+      navigate('/');
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, navigate, dispatch]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <TopNavbar />
+      <TopNavbar forceWhite={true} />
       
       <div className="flex-1 flex items-center justify-center p-4 pt-24">
         <div className="max-w-xl w-full bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -28,6 +48,11 @@ const InactiveAccountPage = () => {
           
           <div className="p-8 md:p-12">
             <div className="space-y-6">
+              <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-3 text-orange-800 font-semibold justify-center">
+                <Timer size={20} className="animate-pulse" />
+                <span>Redirecting to homepage in {timeLeft} seconds...</span>
+              </div>
+
               <p className="text-gray-700 text-center text-lg">
                 Your account has been suspended by the administrator. This might be due to policy violations, incomplete documentation, or a manual deactivation.
               </p>
@@ -37,26 +62,29 @@ const InactiveAccountPage = () => {
                   Contact Support
                 </h3>
                 <div className="space-y-3">
-                  <a href="mailto:support@TrippeChalo.com" className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors">
+                  <a href="mailto:support@trippechalo.com" className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors">
                     <Mail size={18} />
-                    <span>support@TrippeChalo.com</span>
+                    <span>support@trippechalo.com</span>
                   </a>
-                  <a href="tel:+18001234567" className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors">
+                  <a href="tel:+919555934205" className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors">
                     <Phone size={18} />
-                    <span>+1 (800) 123-4567</span>
+                    <span>+91 9555934205</span>
                   </a>
                 </div>
               </div>
             </div>
             
             <div className="mt-8 pt-8 border-t border-gray-100 text-center">
-              <Link 
-                to="/" 
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold transition-colors"
+              <button 
+                onClick={() => {
+                  dispatch(logout());
+                  navigate('/');
+                }}
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold transition-colors cursor-pointer"
               >
                 <ArrowLeft size={18} />
-                Return to Homepage
-              </Link>
+                Return to Homepage Now
+              </button>
             </div>
           </div>
         </div>

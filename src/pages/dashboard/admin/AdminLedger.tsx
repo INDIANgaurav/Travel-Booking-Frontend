@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../../../services/api';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
 import Dropdown from '../../../components/ui/Dropdown';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { RefreshCw, X } from 'lucide-react';
+import RefreshButton from '../../../components/ui/RefreshButton';
 
 const ALL_COLUMNS = [
-  'User Name', 'Reference No.', 'PNR', 'Product Name', 'Description', 'Passenger Name', 'Mobile Number',
+  'Agency Name', 'Reference No.', 'Booking ID', 'Airline PNR', 'Product Name', 'Description', 'Passenger Name', 'Mobile Number',
   'Date Time', 'Gross Amount', 'Markup', 'Commission', 'TDS', 'SGST', 'CGST',
   'IGST', 'Penalty', 'Credit', 'Net Amount Debited', 'Promo Amount', 'Amount', 'User Remarks',
   'Balance'
 ];
 
 const DEFAULT_SELECTED = [
-  'User Name', 'Reference No.', 'PNR', 'Product Name', 'Description',
+  'Agency Name', 'Reference No.', 'Booking ID', 'Airline PNR', 'Product Name', 'Description',
   'Date Time', 'Gross Amount', 'Markup', 'Commission', 'TDS', 'SGST', 'CGST',
   'IGST', 'Penalty', 'Credit', 'Amount', 'Balance'
 ];
 
 export default function AdminLedger() {
+  const location = useLocation();
   const [statementType, setStatementType] = useState('Date Range Statement');
   const [selectedColumns, setSelectedColumns] = useState<string[]>(DEFAULT_SELECTED);
   const [search, setSearch] = useState('');
@@ -46,7 +49,12 @@ export default function AdminLedger() {
         const { data } = await api.get('/api/admin/users?limit=1000');
         const userList = Array.isArray(data) ? data : data.data || [];
         setUsers(userList);
-        setSelectedUserId('ALL');
+        
+        if (location.state && location.state.userId) {
+          setSelectedUserId(location.state.userId);
+        } else {
+          setSelectedUserId('ALL');
+        }
         setSelectedUserBalance(0);
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -61,7 +69,7 @@ export default function AdminLedger() {
       
       if (selectedUserId === 'ALL') {
         setSelectedUserBalance(0);
-        setSelectedColumns(prev => prev.includes('User Name') ? prev : ['User Name', ...prev]);
+        setSelectedColumns(prev => prev.includes('Agency Name') ? prev : ['Agency Name', ...prev]);
       } else {
         const user = users.find(u => u._id === selectedUserId);
         if(user) {
@@ -74,9 +82,7 @@ export default function AdminLedger() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (selectedUserId) {
-        // Only reset page and fetch if this isn't the initial render
-        // Actually, we can just reset page to 1 and call fetchData.
-        // It's safe to call here because it will use the current search value.
+        
         setPage(1);
         fetchData(search);
       }
@@ -142,11 +148,12 @@ export default function AdminLedger() {
                 setSelectedUserId(val);
                 setPage(1);
               }}
+              searchable={true}
               options={[
                 { value: 'ALL', label: 'ALL USERS (Global Ledger)' },
                 ...users.map(u => ({
                   value: u._id,
-                  label: `${u.name} (${u.role}) - ${u.email}`
+                  label: `${u.companyName ? u.companyName + ' - ' : ''}${u.name} (${u.role}) - ${u.email}`
                 }))
               ]}
             />
@@ -158,11 +165,14 @@ export default function AdminLedger() {
         {/* Header Bar */}
         <div className="bg-white pb-5 border-b border-gray-100 mb-6 flex items-center justify-between">
           <h2 className="text-[14px] font-black uppercase tracking-wide text-gray-900">ACCOUNT STATEMENT</h2>
-          {selectedUserId !== 'ALL' && (
-            <div className="text-[12px] font-bold text-gray-500">
-              Available Balance = <span className="text-blue-600 font-black">₹ {selectedUserBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {selectedUserId !== 'ALL' && (
+              <div className="text-[12px] font-bold text-gray-500">
+                Available Balance = <span className="text-blue-600 font-black">₹ {selectedUserBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              </div>
+            )}
+            <RefreshButton onClick={() => fetchData()} loading={loading} count={totalRecords} />
+          </div>
         </div>
 
         {/* Dynamic Settings Container */}
@@ -197,7 +207,7 @@ export default function AdminLedger() {
               <>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold tracking-wide text-gray-600">From Date</span>
-                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-50 bg-gray-50 flex items-center px-3">
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-10 bg-gray-50 flex items-center px-3">
                     <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={fromDate} onChange={setFromDate} />
                     </div>
@@ -205,7 +215,7 @@ export default function AdminLedger() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[11px] font-bold tracking-wide text-gray-600">To Date</span>
-                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-50 bg-gray-50 flex items-center px-3">
+                  <div className="w-[180px] h-[38px] border border-gray-200 rounded-lg relative z-10 bg-gray-50 flex items-center px-3">
                     <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                       <DOBCalendar value={toDate} onChange={setToDate} />
                     </div>
@@ -232,7 +242,7 @@ export default function AdminLedger() {
                     <Dropdown 
                       value={year} 
                       onChange={(val) => { setYear(val); setPage(1); }}
-                      options={['2024', '2025', '2026', '2027'].map(y => ({ label: y, value: y }))}
+                      options={[ '2026', '2027'].map(y => ({ label: y, value: y }))}
                     />
                   </div>
                 </div>
@@ -287,7 +297,7 @@ export default function AdminLedger() {
         <div className="flex items-center gap-3 w-full md:w-[350px] mb-4 relative">
           <input 
             type="text" 
-            placeholder="Search Reference No, PNR..."
+            placeholder="Search Reference No, Booking ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-4 pr-10 h-[38px] text-[12px] border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 transition bg-gray-50 focus:bg-white"
@@ -343,13 +353,14 @@ export default function AdminLedger() {
                         <td className="px-5 py-3 font-semibold">{sNo}</td>
                         {ALL_COLUMNS.filter(c => selectedColumns.includes(c)).map(col => {
                           const keyMap: Record<string, keyof typeof row> = {
-                            'User Name': 'userName', 
+                            'Agency Name': 'userName', 
                             'Reference No.': 'referenceNo',
-                            'PNR': 'pnr',
+                            'Booking ID': 'bookingId',
+                            'Airline PNR': 'airlinePnr',
                             'Product Name': 'productName',
                             'Description': 'description',
                             'Passenger Name': 'passengerName',
-                            'Mobile Number': 'userRemarks', 
+                            'Mobile Number': 'mobileNumber',
                             'Date Time': 'dateTime',
                             'Gross Amount': 'grossAmount',
                             'Markup': 'markup',

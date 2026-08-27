@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plane, Building2, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCurrentUser, setAgentBookingMode } from '../../../store/authSlice';
+import { selectCurrentUser } from '../../../store/authSlice';
 import api from '../../../services/api';
 
 export default function AgentDashboard() {
@@ -14,10 +14,10 @@ export default function AgentDashboard() {
   useEffect(() => {
     if (user?.isApproved) {
       api.get('/api/bookings/my-bookings').then(({ data }) => {
-        const myBizBookings = data.filter((b: any) => b.bookingMode === 'MYBIZ' && b.status !== 'CANCELLED');
+        const myBizBookings = data.filter((b: any) => b.status !== 'CANCELLED');
         const revenue = myBizBookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
         
-        // As per user plan, assuming 10% profit margin on MYBIZ bookings
+        // As per user plan, assuming 10% profit margin on B2B bookings
         const profit = revenue * 0.10;
         
         const activeFlights = myBizBookings.filter((b: any) => {
@@ -37,12 +37,10 @@ export default function AgentDashboard() {
   }, [user]);
 
   const handleBookFlight = () => {
-    dispatch(setAgentBookingMode('MYBIZ'));
     navigate('/?tab=Flights');
   };
 
   const handleBookHotel = () => {
-    dispatch(setAgentBookingMode('MYBIZ'));
     navigate('/?tab=Hotels');
   };
 

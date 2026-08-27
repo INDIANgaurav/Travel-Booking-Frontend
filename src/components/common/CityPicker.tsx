@@ -40,7 +40,8 @@ interface CityPickerProps {
 
 export default function CityPicker({ value, onChange, onClose, title = "SELECT CITY", type = 'flight' }: CityPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [availableCities, setAvailableCities] = useState<City[]>(POPULAR_CITIES);
+  const [availableCities, setAvailableCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (type === 'hotel') {
@@ -52,19 +53,25 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
             ...POPULAR_CITIES.filter(pc => !dynamicCities.some((dc: any) => dc.code === pc.code))
           ];
           setAvailableCities(mergedCities);
+        } else {
+          setAvailableCities(POPULAR_CITIES);
         }
-      }).catch(err => console.error("Failed to fetch hotel cities", err));
+      }).catch(err => {
+        console.error("Failed to fetch hotel cities", err);
+        setAvailableCities(POPULAR_CITIES);
+      }).finally(() => setLoading(false));
     } else {
       // Flight cities
       api.get('/api/searches/cities').then(res => {
-        if (res.data && Array.isArray(res.data)) {
-          // If the backend returns a full list, we just use it.
-          // Fallback to POPULAR_CITIES if backend fails or returns empty.
-          if (res.data.length > 0) {
-            setAvailableCities(res.data);
-          }
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          setAvailableCities(res.data);
+        } else {
+          setAvailableCities(POPULAR_CITIES);
         }
-      }).catch(err => console.error("Failed to fetch flight cities", err));
+      }).catch(err => {
+        console.error("Failed to fetch flight cities", err);
+        setAvailableCities(POPULAR_CITIES);
+      }).finally(() => setLoading(false));
     }
   }, [type]);
 
@@ -94,7 +101,12 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
       </div>
       
       <div className="flex-1 overflow-y-auto max-h-[300px]">
-        {filteredCities.length === 0 ? (
+        {loading ? (
+          <div className="p-6 text-center text-gray-500 text-sm font-semibold flex items-center justify-center gap-2">
+            <span className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
+            Loading cities...
+          </div>
+        ) : filteredCities.length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-sm">
             No cities found.
           </div>

@@ -191,7 +191,7 @@ export default function ProfilePage() {
             <div className="text-[#0c1a40] mb-2">
               <h1 className="text-3xl font-black flex items-center gap-3">
                 {profile?.name || 'User'}
-                {currentUser?.role === 'B2B_AGENT' && (
+                {currentUser?.roles?.includes('B2B_AGENT') && (
                   <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${
                     currentUser.agentStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border-green-200' :
                     currentUser.agentStatus === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' :

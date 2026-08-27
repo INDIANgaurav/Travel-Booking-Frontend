@@ -85,9 +85,7 @@ const B2BManageBooking: React.FC = () => {
         <div className="bg-white px-3 py-3 rounded-xl border border-gray-200 flex items-center gap-2 w-fit mb-8 shadow-sm">
           {[
             { id: 'Flight', icon: Plane },
-            { id: 'Hotel', icon: Building2 },
-            { id: 'Travel Insurance', icon: ShieldCheck },
-            { id: 'UMRAH Packages', icon: Compass }
+            { id: 'Hotel', icon: Building2 }
           ].map(type => {
             const Icon = type.icon;
             const isActive = productType === type.id;

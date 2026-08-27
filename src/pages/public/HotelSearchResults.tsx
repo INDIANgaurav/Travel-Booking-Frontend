@@ -4,7 +4,7 @@ import api from '../../services/api';
 import TopNavbar from '../../components/layout/TopNavbar';
 import { MapPin, Star, Building2, Check, Wifi, Coffee, Car, ArrowLeft, Heart } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
 import AgentHotelSearchResults from './AgentHotelSearchResults';
 
 interface Hotel {
@@ -36,8 +36,7 @@ export default function HotelSearchResults() {
   const checkOut = searchParams.get('checkOut');
 
   const user = useSelector(selectCurrentUser);
-  const agentMode = useSelector(selectAgentBookingMode);
-  const isAgentDiscount = user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ';
+  const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
 
   useEffect(() => {
     fetchHotels();
@@ -102,23 +101,7 @@ export default function HotelSearchResults() {
     return <Check size={14} />;
   };
 
-  if (isAgentDiscount) {
-    return (
-      <AgentHotelSearchResults 
-        filteredHotels={filteredHotels}
-        loading={loading}
-        priceFilters={priceFilters}
-        togglePriceFilter={togglePriceFilter}
-        starFilters={starFilters}
-        toggleStarFilter={toggleStarFilter}
-        city={city}
-        checkIn={checkIn}
-        checkOut={checkOut}
-        user={user}
-        navigate={navigate}
-      />
-    );
-  }
+  // Redirect removed, all users get normal UI
 
   const sortedHotels = [...filteredHotels].sort((a, b) => {
     const priceA = Number(a.pricePerNight) || 0;

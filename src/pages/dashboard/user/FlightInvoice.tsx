@@ -95,9 +95,9 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
         {!isModal ? (
           <button 
             onClick={() => {
-              if (user?.role === 'SUPER_ADMIN') navigate('/admin/bookings');
-              else if (user?.role === 'SUB_ADMIN') navigate('/sub-admin/bookings');
-              else if (user?.role === 'B2B_AGENT') navigate('/agent-portal/bookings');
+              if (user?.roles?.includes('SUPER_ADMIN')) navigate('/admin/bookings');
+              else if (user?.roles?.includes('SUB_ADMIN')) navigate('/sub-admin/bookings');
+              else if (user?.roles?.includes('B2B_AGENT')) navigate('/agent-portal/bookings');
               else navigate('/dashboard/bookings');
             }} 
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200"

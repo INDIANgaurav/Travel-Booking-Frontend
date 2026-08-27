@@ -5,8 +5,11 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import Dropdown from '../../components/ui/Dropdown';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../store/authSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser, logout } from '../../store/authSlice';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { LogOut, Users, ChevronDown, Check, Building2, ShieldCheck, MoreHorizontal, FileText, Briefcase, TrendingUp, Search } from 'lucide-react';
 
 export interface Passenger {
   type: 'ADULT' | 'CHILD' | 'INFANT';
@@ -30,6 +33,53 @@ const B2BAgentCheckout: React.FC = () => {
   const [fillMyContact, setFillMyContact] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const user = useSelector(selectCurrentUser);
+  const dispatch = useDispatch();
+  const agentName = user?.companyName || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.name) || '';
+  const agentInitial = (agentName.charAt(0) || '').toUpperCase();
+  const agentCode = user?.agencyCode || user?.agencyId || (user?._id ? `UPTF${user._id.slice(-6).toUpperCase()}` : '');
+  const agentBalance = user?.walletBalance ?? user?.balance ?? 0;
+  
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = React.useRef<HTMLDivElement>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreRef = React.useRef<HTMLDivElement>(null);
+  
+  const [generatingCert, setGeneratingCert] = useState(false);
+  const certificateRef = React.useRef<HTMLDivElement>(null);
+
+  const downloadCertificate = async () => {
+    if (!certificateRef.current) return;
+    setGeneratingCert(true);
+    try {
+      const element = certificateRef.current;
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${agentCode}_Certificate.pdf`);
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    } finally {
+      setGeneratingCert(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) setShowProfileMenu(false);
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) setShowMoreMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/b2b/login');
+  };
+
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showBaseFareDetails, setShowBaseFareDetails] = useState(false);
   const [showTaxesDetails, setShowTaxesDetails] = useState(false);
@@ -152,7 +202,7 @@ const B2BAgentCheckout: React.FC = () => {
       const { data } = await api.post('/api/bookings/flight', {
         totalAmount: totalFare,
         date: flight.departureTime,
-        bookingMode: paymentMethod === 'Agency Account' ? 'MYBIZ' : 'PERSONAL',
+        bookingMode: 'B2B',
         details: {
           flight_keys: [flight._id],
           passengers: passengers.map(p => ({
@@ -311,6 +361,144 @@ const B2BAgentCheckout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] font-sans pb-24 text-[#0c1a40]">
+      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+        {/* Subtle background glow effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+        </div>
+        
+        {/* Logo & Category Navigation */}
+        <div className="flex items-center gap-10 relative z-10">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
+            <div className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform">
+              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8" crossOrigin="anonymous" />
+            </div>
+            <div>
+              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="block text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
+            </div>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-gray-300">
+            <div className="flex flex-col items-center gap-1.5 cursor-pointer text-white border-b-2 border-blue-500 pb-1">
+              <div className="w-8 h-8 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-xl flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                <Plane size={16} />
+              </div>
+              <span className="tracking-wide">Flights</span>
+            </div>
+
+            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
+              <div className="w-8 h-8 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                <Building2 size={16} />
+              </div>
+              <span className="tracking-wide">Hotels</span>
+            </div>
+
+            <div className="relative flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group" ref={moreRef}>
+              <div 
+                className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-colors ${showMoreMenu ? 'bg-white/10 border-white/20 text-white' : 'bg-white/5 border-white/10 group-hover:bg-white/10'}`}
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+              >
+                <MoreHorizontal size={16} />
+              </div>
+              <span onClick={() => setShowMoreMenu(!showMoreMenu)} className="tracking-wide">More</span>
+
+              {/* More Dropdown */}
+              {showMoreMenu && (
+                <div className="absolute top-full mt-4 w-56 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)] py-2 border border-white/10 z-50 -ml-20 overflow-hidden backdrop-blur-xl">
+                  {[
+                    { label: 'Dashboard', path: '/b2b/dashboard', icon: <TrendingUp size={14}/> },
+                    { label: 'Account Statement', path: '/b2b/account-statement', icon: <FileText size={14}/> },
+                    { label: 'Booking Status', path: '/b2b/booking-status', icon: <Check size={14}/> },
+                    { label: 'Manage Booking', path: '/b2b/manage-booking', icon: <Briefcase size={14}/> },
+                    { label: 'Agent Certificate', path: '#', icon: <ShieldCheck size={14}/> }
+                  ].map((item, index) => (
+                    <button 
+                      key={index}
+                      onClick={() => {
+                        if (item.label === 'Agent Certificate') {
+                          downloadCertificate();
+                        } else {
+                          setShowMoreMenu(false);
+                          if (item.path !== '#') navigate(item.path);
+                        }
+                      }}
+                      disabled={item.label === 'Agent Certificate' && generatingCert}
+                      className="w-full text-left px-5 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <span className="text-blue-400">{item.icon}</span>
+                      {item.label === 'Agent Certificate' && generatingCert ? 'Generating...' : item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
+
+        {/* Right Contacts & Agent Profile */}
+        <div className="flex items-center gap-5 relative z-10">
+          <div className="hidden lg:flex flex-col items-end">
+            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5">Support</span>
+            <div className="flex items-center gap-1.5 text-blue-400 font-black text-xs bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
+              <span>+91 9555934205</span>
+            </div>
+          </div>
+
+          <div 
+            onClick={() => navigate('/b2b/dashboard/wallet')}
+            className="flex flex-col items-end cursor-pointer group"
+          >
+            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
+            <div className="flex items-center gap-1.5 text-green-400 font-black text-sm bg-green-500/10 px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+              <span>₹ {agentBalance.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          <div className="h-8 w-px bg-white/10 mx-1"></div>
+
+          <div className="relative" ref={profileRef}>
+            <div 
+              className="flex items-center gap-3 bg-white/5 px-2 py-1.5 pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
+                {agentInitial}
+              </div>
+              <div className="text-left leading-tight hidden sm:block">
+                <span className="block text-xs font-black text-white">{agentName}</span>
+                <span className="block text-[9px] text-blue-300 font-bold uppercase tracking-widest">{agentCode}</span>
+              </div>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
+            </div>
+
+            {/* Profile Dropdown */}
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-3 w-56 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] py-2 border border-white/10 z-50 overflow-hidden backdrop-blur-xl">
+                <div className="px-5 py-4 border-b border-white/10 mb-1 bg-white/5">
+                  <p className="text-sm font-black text-white truncate">{agentName}</p>
+                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{user?.email}</p>
+                </div>
+                <button 
+                  onClick={() => navigate('/b2b/profile')}
+                  className="w-full text-left px-5 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors"
+                >
+                  <Users size={14} className="text-blue-400" />
+                  <span>My Profile</span>
+                </button>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-5 py-3 text-xs font-bold text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Top Header Navigation */}
       <div className="bg-white border-b border-gray-200 py-3 mb-6 shadow-sm relative">
         <div className="absolute left-8 top-1/2 -translate-y-1/2">
@@ -695,29 +883,7 @@ const B2BAgentCheckout: React.FC = () => {
                 </div>
               </div>
 
-              <div className="relative pt-4">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#f0f4ff] text-blue-800 text-[10px] font-bold px-4 py-1 rounded-full">
-                  Buy Additional Services
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 mt-6">
-                  <button className="flex items-center justify-center gap-2 border border-gray-200 rounded py-3 text-[10px] font-bold text-[#0c1a40] hover:bg-gray-50 uppercase">
-                    <span className="text-blue-500 text-lg">💼</span> BAGGAGE
-                  </button>
-                  <button className="flex items-center justify-center gap-2 border border-gray-200 rounded py-3 text-[10px] font-bold text-[#0c1a40] hover:bg-gray-50 uppercase">
-                    <span className="text-blue-500 text-lg">⏭</span> FASTFORWARD
-                  </button>
-                  <button className="flex items-center justify-center gap-2 border border-gray-200 rounded py-3 text-[10px] font-bold text-[#0c1a40] hover:bg-gray-50 uppercase">
-                    <span className="text-pink-500 text-lg">👜</span> ADDITIONAL BAGGAGE
-                  </button>
-                  <button className="flex items-center justify-center gap-2 border border-gray-200 rounded py-3 text-[10px] font-bold text-[#0c1a40] hover:bg-gray-50 uppercase">
-                    <span className="text-blue-500 text-lg">♿</span> WHEELCHAIR
-                  </button>
-                  <button className="flex items-center justify-center gap-2 border border-gray-200 rounded py-3 text-[10px] font-bold text-[#0c1a40] hover:bg-gray-50 uppercase">
-                    <span className="text-blue-500 text-lg">💺</span> SEAT
-                  </button>
-                </div>
-              </div>
+              
 
               <div className="border-t border-gray-100 pt-6 text-right">
                 <button 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Plus, Users, Trash2, Edit2, Loader2, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../../store/authSlice';
@@ -6,6 +6,7 @@ import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
 import Dropdown from '../../../components/ui/Dropdown';
+import RefreshButton from '../../../components/ui/RefreshButton';
 
 export default function AdminSubAdmins() {
   const user = useSelector(selectCurrentUser);
@@ -110,13 +111,16 @@ export default function AdminSubAdmins() {
           </h1>
           <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage role-based sub-admins for your organization.</p>
         </div>
-        <button 
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20 font-medium text-sm"
-        >
-          <Plus size={18} />
-          {showCreateForm ? 'Cancel' : 'Create Sub-Admin'}
-        </button>
+        <div className="flex items-center gap-3">
+          <RefreshButton onClick={fetchSubAdmins} loading={loading} />
+          <button 
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-600/20 font-medium text-sm"
+          >
+            <Plus size={18} />
+            {showCreateForm ? 'Cancel' : 'Create Sub-Admin'}
+          </button>
+        </div>
       </div>
 
       {showCreateForm && (

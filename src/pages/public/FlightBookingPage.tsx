@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser, selectIsAuthenticated, selectAgentBookingMode } from '../../store/authSlice';
+import { selectCurrentUser, selectIsAuthenticated } from '../../store/authSlice';
 import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
@@ -13,7 +13,7 @@ export default function FlightBookingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-  const agentBookingMode = useSelector(selectAgentBookingMode);
+  const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
 
   const { selectedOutbound, selectedReturn, tripType, adults: initialAdults = 1, children: initialChildren = 0, infants: initialInfants = 0 } = location.state || {};
 
@@ -155,7 +155,7 @@ export default function FlightBookingPage() {
       const generatedPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
       
       const { data } = await api.post('/api/bookings/flight', {
-        bookingMode: agentBookingMode,
+        bookingMode: user?.roles?.includes('B2B_AGENT') ? 'B2B' : 'PERSONAL',
         paymentMethod: paymentMethod,
         totalAmount,
         date: selectedOutbound.departureTime,

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Search, CheckCircle, Trash2, Plus, X } from 'lucide-react';
+import { Search, CheckCircle, Trash2, Plus, X, Edit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Loader from '../../../components/common/Loader';
+import RefreshButton from '../../../components/ui/RefreshButton';
 
-export default function AdminAgents() {
+export default function AdminPendingUsers() {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,16 +14,14 @@ export default function AdminAgents() {
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', companyName: '', password: '' });
   
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editData, setEditData] = useState({ name: '', phone: '', companyName: '' });
+  const navigate = useNavigate();
   const [selectedDocsAgent, setSelectedDocsAgent] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchAgents = async () => {
     try {
-      const { data } = await api.get(`/api/admin/users?role=B2B_AGENT&page=${page}&limit=10`);
+      const { data } = await api.get(`/api/admin/users?role=B2B_AGENT&agentStatus=PENDING&page=${page}&limit=10`);
       setAgents(data.data || (Array.isArray(data) ? data : []));
       setTotalPages(data.totalPages || 1);
     } catch (error) {
@@ -71,23 +71,7 @@ export default function AdminAgents() {
   };
 
   const startEdit = (agent: any) => {
-    setEditingId(agent._id);
-    setEditData({ name: agent.name, phone: agent.phone || '', companyName: agent.companyName || '' });
-    setIsEditModalOpen(true);
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingId) return;
-    try {
-      await api.put(`/api/admin/users/${editingId}`, editData);
-      toast.success('Agent updated successfully');
-      setIsEditModalOpen(false);
-      setEditingId(null);
-      fetchAgents();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update agent');
-    }
+    navigate(`/admin/user-profile/${agent._id}`);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -122,10 +106,10 @@ export default function AdminAgents() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div>
-          <h1 className="text-lg md:text-2xl font-bold text-gray-900">Agents Management</h1>
-          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage partner agents, approvals, and commissions.</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Pending Users</h1>
+          <p className="text-sm text-slate-500 font-medium">Review and approve new agent sign-ups</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative w-full md:w-auto">
@@ -138,6 +122,7 @@ export default function AdminAgents() {
               className="w-full md:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
+          <RefreshButton onClick={fetchAgents} loading={loading} count={agents.length} />
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
@@ -155,9 +140,8 @@ export default function AdminAgents() {
                 <th className="px-6 py-4 rounded-tl-2xl">Name</th>
                 <th className="px-6 py-4">Contact</th>
                 <th className="px-6 py-4">Company</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Joined Date</th>
-                <th className="px-6 py-4 rounded-tr-2xl text-right">Actions</th>
+                <th className="p-4 border-b border-gray-200 font-semibold text-gray-700 w-32">Status</th>
+                <th className="p-4 border-b border-gray-200 font-semibold text-gray-700 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100/80">
@@ -348,50 +332,7 @@ export default function AdminAgents() {
         </div>
       )}
 
-      {/* Edit Agent Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-black text-gray-900">Edit Agent</h2>
-              <button 
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleUpdate} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Full Name</label>
-                <input required type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Company Name</label>
-                <input required type="text" value={editData.companyName} onChange={(e) => setEditData({...editData, companyName: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Phone Number</label>
-                <input required type="tel" value={editData.phone} onChange={(e) => setEditData({...editData, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 focus:bg-white" />
-              </div>
-
-              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* View Verification Documents Modal */}
+            {/* View Verification Documents Modal */}
       {selectedDocsAgent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -416,7 +357,7 @@ export default function AdminAgents() {
                 </div>
                 <div>
                   <span className="block text-gray-400 font-bold uppercase text-[10px]">Location</span>
-                  <span className="font-bold text-gray-800">{selectedDocsAgent.city || ''}, {selectedDocsAgent.state || ''} - {selectedDocsAgent.pincode || ''}</span>
+                  <span className="font-bold text-gray-800">{selectedDocsAgent.city || ''}, {selectedDocsAgent.state || ''}</span>
                 </div>
                 <div>
                   <span className="block text-gray-400 font-bold uppercase text-[10px]">PAN Number</span>
@@ -428,47 +369,70 @@ export default function AdminAgents() {
                 </div>
               </div>
 
-              {/* PAN Card Copy */}
-              <div>
-                <h4 className="font-bold text-gray-800 mb-2">PAN Card Copy ({selectedDocsAgent.panNumber || 'N/A'})</h4>
-                {selectedDocsAgent.panCardImage ? (
-                  selectedDocsAgent.panCardImage.startsWith('data:image') || selectedDocsAgent.panCardImage.startsWith('http') ? (
-                    <img src={selectedDocsAgent.panCardImage} alt="PAN Card" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
-                  ) : (
-                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.panCardImage}</div>
-                  )
-                ) : (
-                  <p className="text-gray-400 italic">No PAN Image Uploaded</p>
-                )}
-              </div>
-
-              {/* ID / Address Proof Copy */}
-              <div>
-                <h4 className="font-bold text-gray-800 mb-2">Address / Identity Proof ({selectedDocsAgent.idProofType || 'Identity Proof'})</h4>
-                {selectedDocsAgent.idProofImage ? (
-                  selectedDocsAgent.idProofImage.startsWith('data:image') || selectedDocsAgent.idProofImage.startsWith('http') ? (
-                    <img src={selectedDocsAgent.idProofImage} alt="Identity Proof" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
-                  ) : (
-                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.idProofImage}</div>
-                  )
-                ) : (
-                  <p className="text-gray-400 italic">No Identity Proof Image Uploaded</p>
-                )}
-              </div>
-
-              {/* GST Copy */}
-              {selectedDocsAgent.gstImage && (
-                <div>
-                  <h4 className="font-bold text-gray-800 mb-2">GST Copy ({selectedDocsAgent.gstn})</h4>
-                  {selectedDocsAgent.gstImage.startsWith('data:image') || selectedDocsAgent.gstImage.startsWith('http') ? (
-                    <img src={selectedDocsAgent.gstImage} alt="GST Copy" className="max-h-56 rounded-xl border border-gray-200 shadow-sm object-contain" />
-                  ) : (
-                    <div className="p-4 bg-gray-100 rounded-xl font-mono text-gray-600 truncate">{selectedDocsAgent.gstImage}</div>
-                  )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                {/* PAN Card Copy */}
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-col">
+                  <h4 className="font-bold text-gray-800 mb-3 flex items-center justify-between">
+                    <span>PAN Card</span>
+                    <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase">{selectedDocsAgent.panNumber || 'N/A'}</span>
+                  </h4>
+                  <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center p-2 h-48">
+                    {selectedDocsAgent.panCardImage ? (
+                      selectedDocsAgent.panCardImage.startsWith('data:image') || selectedDocsAgent.panCardImage.startsWith('http') ? (
+                        <a href={selectedDocsAgent.panCardImage} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
+                          <img src={selectedDocsAgent.panCardImage} alt="PAN Card" className="max-w-full max-h-full object-contain hover:scale-105 transition-transform cursor-pointer" />
+                        </a>
+                      ) : (
+                        <div className="font-mono text-gray-500 break-all text-[10px] text-center">{selectedDocsAgent.panCardImage}</div>
+                      )
+                    ) : (
+                      <p className="text-gray-400 italic text-center w-full">No Image</p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
 
+                {/* ID / Address Proof Copy */}
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-col">
+                  <h4 className="font-bold text-gray-800 mb-3 flex items-center justify-between">
+                    <span>ID Proof</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase">{selectedDocsAgent.idProofType || 'N/A'}</span>
+                  </h4>
+                  <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center p-2 h-48">
+                    {selectedDocsAgent.idProofImage ? (
+                      selectedDocsAgent.idProofImage.startsWith('data:image') || selectedDocsAgent.idProofImage.startsWith('http') ? (
+                         <a href={selectedDocsAgent.idProofImage} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
+                          <img src={selectedDocsAgent.idProofImage} alt="Identity Proof" className="max-w-full max-h-full object-contain hover:scale-105 transition-transform cursor-pointer" />
+                         </a>
+                      ) : (
+                        <div className="font-mono text-gray-500 break-all text-[10px] text-center">{selectedDocsAgent.idProofImage}</div>
+                      )
+                    ) : (
+                      <p className="text-gray-400 italic text-center w-full">No Image</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* GST Copy */}
+                {selectedDocsAgent.gstImage && (
+                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex flex-col md:col-span-2">
+                    <h4 className="font-bold text-gray-800 mb-3 flex items-center justify-between">
+                      <span>GST Certificate</span>
+                      <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase">{selectedDocsAgent.gstn || 'N/A'}</span>
+                    </h4>
+                    <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center p-2 h-48 md:h-64">
+                      {selectedDocsAgent.gstImage.startsWith('data:image') || selectedDocsAgent.gstImage.startsWith('http') ? (
+                         <a href={selectedDocsAgent.gstImage} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
+                          <img src={selectedDocsAgent.gstImage} alt="GST Copy" className="max-w-full max-h-full object-contain hover:scale-105 transition-transform cursor-pointer" />
+                         </a>
+                      ) : (
+                        <div className="font-mono text-gray-500 break-all text-[10px] text-center">{selectedDocsAgent.gstImage}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
               <button 
                 onClick={() => setSelectedDocsAgent(null)}
@@ -497,4 +461,3 @@ export default function AdminAgents() {
     </div>
   );
 }
-

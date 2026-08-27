@@ -55,17 +55,25 @@ import SupplierQueueHistory from './pages/supplier/SupplierQueueHistory'
 
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
-import AdminUsers from './pages/dashboard/admin/AdminUsers'
+import AdminPendingUsers from './pages/dashboard/admin/AdminPendingUsers'
+import AdminManageUsers from './pages/dashboard/admin/AdminManageUsers'
 import AdminBookings from './pages/dashboard/admin/AdminBookings'
 import AdminProfile from './pages/dashboard/admin/AdminProfile'
-import AdminAgents from './pages/dashboard/admin/AdminAgents'
 import AdminFinance from './pages/dashboard/admin/AdminFinance'
 import AdminLedger from './pages/dashboard/admin/AdminLedger'
 import SupplierManagement from './pages/dashboard/admin/SupplierManagement'
+import CugSuppliersManager from './pages/dashboard/admin/CugSuppliersManager'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
 import AdminSettings from './pages/dashboard/admin/AdminSettings'
 import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
 import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
+import AdminUserProfile from './pages/dashboard/admin/AdminUserProfile'
+import AdminFDMaker from './pages/dashboard/admin/AdminFDMaker'
+import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
+import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
+import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
+import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
+import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
 import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 
 import SubAdminLayout from './layouts/SubAdminLayout'
@@ -79,11 +87,11 @@ function App() {
   const user = useSelector(selectCurrentUser)
   const showAgentOnboarding = useSelector(selectShowAgentOnboarding)
 
-  const getRedirectPath = (role?: string) => {
-    if (role === 'SUPER_ADMIN') return '/admin';
-    if (role === 'SUB_ADMIN') return '/sub-admin';
-    if (role === 'B2B_AGENT' || role === 'B2B_AGENT' || role === 'SELLER') return '/b2b/home';
-    if (role === 'SUPPLIER_AGENT' || role === 'SUPPLIER_STAFF') return '/supplier-portal/dashboard';
+  const getRedirectPath = (roles: string[] = []) => {
+    if (roles.includes('SUPER_ADMIN')) return '/admin';
+    if (roles.includes('SUB_ADMIN')) return '/sub-admin';
+    if (roles.includes('B2B_AGENT') || roles.includes('SELLER')) return '/b2b/home';
+    if (roles.includes('SUPPLIER_AGENT') || roles.includes('SUPPLIER_STAFF')) return '/supplier-portal/dashboard';
     return '/';
   };
 
@@ -91,11 +99,11 @@ function App() {
   const ProtectedRoute = ({ children, allowedRoles }: { children?: React.ReactNode, allowedRoles?: string[] }) => {
     if (!isAuthenticated) return <Navigate to="/" replace />
     if (user && user.isActive === false) return <Navigate to="/inactive-account" replace />
-    if (user && user.role === 'B2B_AGENT' && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
+    if (user && user.roles && user.roles.includes('B2B_AGENT') && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
       return <Navigate to="/pending-approval" replace />
     }
-    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-      return <Navigate to={getRedirectPath(user.role)} replace /> // Prevent redirect loop
+    if (allowedRoles && user && user.roles && !user.roles.some((role: string) => allowedRoles.includes(role))) {
+      return <Navigate to={getRedirectPath(user.roles)} replace /> // Prevent redirect loop
     }
     return <>{children ? children : <Outlet />}</>
   }
@@ -193,7 +201,7 @@ function App() {
             <Route index element={<Navigate to="/agent-portal/dashboard" replace />} />
             <Route path="dashboard" element={<AgentDashboard />} />
             <Route path="profile" element={<ProfilePage />} />
-            <Route path="bookings" element={<BookingsPage mode="MYBIZ" />} />
+            <Route path="bookings" element={<BookingsPage />} />
             <Route path="ticket/:id" element={<FlightTicket />} />
             <Route path="invoice/:id" element={<FlightInvoice />} />
             {/* Additional agent routes can be added here */}
@@ -242,15 +250,23 @@ function App() {
         >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
+          <Route path="pending-users" element={<AdminPendingUsers />} />
+          <Route path="manage-users" element={<AdminManageUsers />} />
+          <Route path="user-profile/:id" element={<AdminUserProfile />} />
           <Route path="sub-admins" element={<AdminSubAdmins />} />
-          <Route path="agents" element={<AdminAgents />} />
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
+          <Route path="offline-topups" element={<AdminOfflineTopUps />} />
+          <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="finance" element={<AdminFinance />} />
           <Route path="ledger" element={<AdminLedger />} />
           <Route path="suppliers" element={<SupplierManagement />} />
+          <Route path="cug-suppliers" element={<CugSuppliersManager />} />
           <Route path="inventory" element={<AdminInventory />} />
+          <Route path="fd-maker" element={<AdminFDMaker />} />
+          <Route path="fd-report" element={<AdminFDReport />} />
+          <Route path="fd-archive" element={<AdminFDArchive />} />
+          <Route path="fd-slow-moving" element={<AdminFDSlowMovingSector />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="ticket/:id" element={<FlightTicket />} />

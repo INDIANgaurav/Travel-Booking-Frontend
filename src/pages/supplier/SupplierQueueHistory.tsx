@@ -88,7 +88,7 @@ const SupplierQueueHistory: React.FC = () => {
       {/* Outer Card with Blue Header Bar */}
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
         {/* Blue Header Bar */}
-        <div className="bg-[#1d6aa3] text-white px-6 py-3">
+        <div className="bg-[#0b1031] text-white px-6 py-3">
           <h2 className="text-sm font-bold tracking-wider uppercase">
             PF QUEUE HISTORY
           </h2>
@@ -146,7 +146,7 @@ const SupplierQueueHistory: React.FC = () => {
             <div>
               <button
                 type="submit"
-                className="bg-[#242b59] hover:bg-blue-900 text-white text-xs font-bold px-8 py-2.5 rounded transition-colors shadow-md w-full md:w-auto"
+                className="bg-[#0b1031] hover:bg-blue-900 text-white text-xs font-bold px-8 py-2.5 rounded transition-colors shadow-md w-full md:w-auto"
               >
                 Submit
               </button>

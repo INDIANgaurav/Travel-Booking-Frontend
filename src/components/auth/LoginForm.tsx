@@ -37,11 +37,11 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
       // Cleaned up unused role prop logic
       dispatch(setCredentials({ user, token }));
       
-      if (user.role === 'USER') navigate('/dashboard');
-      else if (user.role === 'SUPER_ADMIN') navigate('/admin');
-      else if (user.role === 'SUB_ADMIN') navigate('/sub-admin');
-      else if (user.role === 'B2B_AGENT') navigate('/agent-portal/dashboard');
-      else if (user.role === 'SUPPLIER_AGENT' || user.role === 'SUPPLIER_STAFF') navigate('/supplier/dashboard');
+      if (user.roles?.includes('SUPER_ADMIN')) navigate('/admin');
+      else if (user.roles?.includes('SUB_ADMIN')) navigate('/sub-admin');
+      else if (user.roles?.includes('B2B_AGENT')) navigate('/agent-portal/dashboard');
+      else if (user.roles?.includes('SUPPLIER_AGENT') || user.roles?.includes('SUPPLIER_STAFF')) navigate('/supplier/dashboard');
+      else navigate('/dashboard');
       
       if (onSuccess) {
         onSuccess();
@@ -74,11 +74,11 @@ export default function LoginForm({ onSuccess, onToggleMode }: LoginFormProps) {
       
       dispatch(setCredentials({ user, token }));
       
-      if (user.role === 'USER') navigate('/dashboard');
-      else if (user.role === 'SUPER_ADMIN') navigate('/admin');
-      else if (user.role === 'SUB_ADMIN') navigate('/sub-admin');
-      else if (user.role === 'B2B_AGENT') navigate('/agent-portal/dashboard');
-      else if (user.role === 'SUPPLIER_AGENT' || user.role === 'SUPPLIER_STAFF') navigate('/supplier/dashboard');
+      if (user.roles?.includes('SUPER_ADMIN')) navigate('/admin');
+      else if (user.roles?.includes('SUB_ADMIN')) navigate('/sub-admin');
+      else if (user.roles?.includes('B2B_AGENT')) navigate('/agent-portal/dashboard');
+      else if (user.roles?.includes('SUPPLIER_AGENT') || user.roles?.includes('SUPPLIER_STAFF')) navigate('/supplier/dashboard');
+      else navigate('/dashboard');
       
       if (onSuccess) {
         onSuccess();

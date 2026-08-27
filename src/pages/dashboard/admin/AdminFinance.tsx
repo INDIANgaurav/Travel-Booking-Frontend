@@ -121,7 +121,7 @@ export default function AdminFinance() {
       </div>
 
       {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-emerald-50 rounded-xl">

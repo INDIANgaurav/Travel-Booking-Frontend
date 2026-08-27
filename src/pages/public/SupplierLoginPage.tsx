@@ -25,8 +25,8 @@ const SupplierLoginPage: React.FC = () => {
       const user = response.data;
 
       // Ensure only suppliers and their staff can log in here
-      if (user.role !== 'SUPPLIER_AGENT' && user.role !== 'SUPPLIER_STAFF') {
-        if (user.role === 'SUPER_ADMIN' || user.role === 'SUB_ADMIN') {
+      if (!user.roles?.includes('SUPPLIER_AGENT') && !user.roles?.includes('SUPPLIER_STAFF')) {
+        if (user.roles?.includes('SUPER_ADMIN') || user.roles?.includes('SUB_ADMIN')) {
           throw new Error('Admin login is not allowed in the Supplier Portal. Please use the Admin Portal.');
         }
         throw new Error('This portal is restricted to Suppliers and their Staff only.');

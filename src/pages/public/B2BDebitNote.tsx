@@ -7,9 +7,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const products = [
   { value: 'airline', label: 'Airline' },
-  { value: 'hotel', label: 'Hotel' },
-  { value: 'insurance', label: 'Insurance' },
-  { value: 'visa', label: 'Visa' },
+  { value: 'hotel', label: 'Hotel' }
 ];
 
 const B2BDebitNote: React.FC = () => {
@@ -109,7 +107,7 @@ const B2BDebitNote: React.FC = () => {
             {records.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-[#0c1a40] whitespace-nowrap">
-                  <thead className="bg-[#72b0ff] text-white text-xs uppercase font-bold tracking-wider">
+                  <thead className="bg-[#0b1031] text-white text-[10px] uppercase font-black tracking-widest">
                     <tr>
                       <th className="px-6 py-4 rounded-tl-lg">DATE</th>
                       <th className="px-6 py-4">PRODUCT</th>

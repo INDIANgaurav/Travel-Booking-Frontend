@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-do
 import api from '../../services/api';
 import { ChevronDown, Check, Plane, Building2, User, ArrowLeft } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectCurrentUser, logout, selectAgentBookingMode, setAgentBookingMode } from '../../store/authSlice';
+import { selectCurrentUser, logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
 import CabinClassPicker from '../../components/common/CabinClassPicker';
@@ -86,7 +86,7 @@ export default function FlightSearchResults() {
     handleSearch,
     getDisplayPrice,
     user,
-    agentMode,
+
     isAgentDiscount,
     navigate
   } = flightSearchState;
@@ -102,11 +102,7 @@ export default function FlightSearchResults() {
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
 
-  const isAgent = user && ['B2B_AGENT', 'AGENT', 'B2B_AGENT', 'SUPPLIER_AGENT'].includes(user.role);
-
-  if (isAgent || isAgentDiscount) {
-    return <AgentFlightSearchResults {...flightSearchState} />;
-  }
+  // Redirect removed, all users get normal UI
 
   const formatDate = (d: Date) => {
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' }).replace(',', '');
@@ -156,22 +152,6 @@ export default function FlightSearchResults() {
               </span>
             </Link>
 
-            {user?.role === 'B2B_AGENT' && (
-              <div className="ml-4 flex items-center p-1 rounded-full bg-gray-100 transition-colors">
-                <button 
-                  onClick={() => dispatch(setAgentBookingMode('PERSONAL'))}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${agentMode === 'PERSONAL' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'}`}
-                >
-                  PERSONAL
-                </button>
-                <button 
-                  onClick={() => dispatch(setAgentBookingMode('MYBIZ'))}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${agentMode === 'MYBIZ' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'}`}
-                >
-                  MYBIZ
-                </button>
-              </div>
-            )}
           </div>
           
           <div className="flex items-center gap-8 mr-12">
@@ -211,16 +191,16 @@ export default function FlightSearchResults() {
               </button>
               <div className="absolute right-0 top-full mt-1 w-48 hidden group-hover:block z-50">
                 <div className="bg-white rounded-lg shadow-xl py-2 border border-gray-100">
-                  {user?.role === 'USER' && (
+                  {user?.roles?.includes('USER') && (
                     <>
                       <Link to="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
                       <Link to="/dashboard/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Bookings</Link>
                     </>
                   )}
-                  {(user?.role === 'SUPPLIER_AGENT') && (
+                  {(user?.roles?.includes('SUPPLIER_AGENT')) && (
                     <Link to="/b2b/home" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">B2B Dashboard</Link>
                   )}
-                  {(user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
+                  {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN')) && (
                     <Link to="/admin/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
                   )}
                   <button onClick={() => { navigate('/'); dispatch(logout()); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100 mt-1">Logout</button>

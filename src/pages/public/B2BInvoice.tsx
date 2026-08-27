@@ -9,9 +9,7 @@ import { saveAs } from 'file-saver';
 
 const products = [
   { value: 'airline', label: 'Airline' },
-  { value: 'hotel', label: 'Hotel' },
-  { value: 'insurance', label: 'Insurance' },
-  { value: 'visa', label: 'Visa' },
+  { value: 'hotel', label: 'Hotel' }
 ];
 
 const B2BInvoice: React.FC = () => {

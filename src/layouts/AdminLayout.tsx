@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -12,6 +12,11 @@ export default function AdminLayout() {
   const user = useSelector(selectCurrentUser);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['TrippeChalo FD']);
+
+  const toggleMenu = (name: string) => {
+    setExpandedMenus(prev => prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name]);
+  };
 
   const handleLogout = () => {
     navigate('/');
@@ -22,34 +27,78 @@ export default function AdminLayout() {
 
   const navGroups = [
     {
-      title: 'Overview',
+      title: 'Main',
       items: [
         { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
       ]
     },
     {
-      title: 'Management',
+      title: 'Inventory & Suppliers',
       items: [
-        { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
-        { name: 'Sub-Admins', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
-        { name: 'Agents', path: '/admin/agents', icon: <Briefcase size={20} /> },
-        { name: 'B2B Requests', path: '/admin/b2b-requests', icon: <PackageOpen size={20} /> },
-        { name: 'Bookings', path: '/admin/bookings', icon: <CreditCard size={20} /> },
+        { 
+          name: 'Vendor Network', 
+          icon: <Globe size={20} />,
+          subItems: [
+            { name: 'All Vendors', path: '/admin/suppliers' }
+          ]
+        },
+        { 
+          name: 'TrippeChalo FD', 
+          icon: <PackageOpen size={20} />,
+          subItems: [
+            { name: 'FD Maker', path: '/admin/fd-maker' },
+            { name: 'FD Report', path: '/admin/fd-report' },
+            { name: 'FD Archive', path: '/admin/fd-archive' },
+            { name: 'Slow Moving Sector', path: '/admin/fd-slow-moving' }
+          ]
+        },
+        { 
+          name: 'CUG Network', 
+          icon: <ShieldCheck size={20} />,
+          subItems: [
+            { name: 'CUG Mappings', path: '/admin/cug-suppliers' }
+          ]
+        },
+        { name: 'CMS & Inventory', path: '/admin/inventory', icon: <LayoutGrid size={20} /> },
       ]
     },
     {
-      title: 'Business',
+      title: 'People & Access',
       items: [
-        { name: 'Inventory & CMS', path: '/admin/inventory', icon: <PackageOpen size={20} /> },
+        { 
+          name: 'User Directory', 
+          icon: <Users size={20} />,
+          subItems: [
+            { name: 'Active Users', path: '/admin/manage-users' },
+            { name: 'Pending Approvals', path: '/admin/pending-users' }
+          ]
+        },
+        { name: 'Sub-Admin Roles', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
+        { name: 'B2B Registrations', path: '/admin/b2b-requests', icon: <Briefcase size={20} /> },
+      ]
+    },
+    {
+      title: 'Finance & Accounts',
+      items: [
         { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
         { name: 'Global Ledger', path: '/admin/ledger', icon: <CreditCard size={20} /> },
-        { name: 'Suppliers', path: '/admin/suppliers', icon: <Globe size={20} /> },
+        { name: 'Offline Top-Ups', path: '/admin/offline-topups', icon: <CreditCard size={20} /> },
+        { name: 'Withdrawal Reqs', path: '/admin/withdrawals', icon: <CreditCard size={20} /> },
+        { name: 'Commissions & Fees', path: '#', icon: <DollarSign size={20} /> },
+      ]
+    },
+    {
+      title: 'Operations & Logs',
+      items: [
+        { name: 'Booking Operations', path: '/admin/bookings', icon: <Briefcase size={20} /> },
+        { name: 'Analytics & Reports', path: '#', icon: <FileText size={20} /> },
       ]
     },
     {
       title: 'System',
       items: [
-        { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
+        { name: 'My Profile', path: '/admin/profile', icon: <UserIcon size={20} /> },
+        { name: 'System Settings', path: '/admin/settings', icon: <Settings size={20} /> },
       ]
     }
   ];
@@ -104,31 +153,89 @@ export default function AdminLayout() {
               )}
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive = location.pathname.includes(item.path);
+                  const isActive = item.path ? location.pathname.includes(item.path) : (item.subItems?.some(sub => location.pathname.includes(sub.path)));
+                  const isExpanded = expandedMenus.includes(item.name);
+                  const hasSubItems = item.subItems && item.subItems.length > 0;
+
                   return (
-                    <Link
-                      key={item.name}
-                      to={item.path}
-                      onClick={() => {
-                        if (window.innerWidth < 768) {
-                          setIsSidebarOpen(false);
-                        }
-                      }}
-                      className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
-                        isActive 
-                          ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
-                          : 'text-blue-100 text-blue-300 hover:bg-white/5 hover:text-white'
-                      }`}
-                      title={!isSidebarOpen ? item.name : ''}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`${isActive ? 'text-blue-300' : 'text-blue-200 group-hover:text-white'} transition-colors`}>
-                          {item.icon}
+                    <div key={item.name} className="flex flex-col">
+                      {hasSubItems ? (
+                        <button
+                          onClick={() => {
+                            if (!isSidebarOpen) setIsSidebarOpen(true);
+                            toggleMenu(item.name);
+                          }}
+                          className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                            isActive 
+                              ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
+                              : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
+                              {item.icon}
+                            </span>
+                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide">{item.name}</span>}
+                          </div>
+                          {isSidebarOpen && (
+                            <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                          )}
+                        </button>
+                      ) : (
+                        <Link
+                          to={item.path!}
+                          onClick={() => {
+                            if (window.innerWidth < 768) {
+                              setIsSidebarOpen(false);
+                            }
+                          }}
+                          className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                            isActive 
+                              ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
+                              : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
+                              {item.icon}
+                            </span>
+                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide">{item.name}</span>}
+                          </div>
+                          {!isSidebarOpen && (
+                            <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                              {item.name}
+                            </div>
+                          )}
+                        </Link>
+                      )}
+
+                      {/* Sub Items */}
+                      {hasSubItems && isSidebarOpen && isExpanded && (
+                        <div className="mt-1 ml-4 pl-4 border-l border-blue-500/30 space-y-1">
+                          {item.subItems!.map(sub => {
+                            const isSubActive = location.pathname.includes(sub.path);
+                            return (
+                              <Link
+                                key={sub.name}
+                                to={sub.path}
+                                onClick={() => {
+                                  if (window.innerWidth < 768) {
+                                    setIsSidebarOpen(false);
+                                  }
+                                }}
+                                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                                  isSubActive
+                                    ? 'bg-blue-500/30 text-white font-medium'
+                                    : 'text-blue-200/60 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                <span className="text-sm">{sub.name}</span>
+                              </Link>
+                            );
+                          })}
                         </div>
-                        {isSidebarOpen && <span className="font-medium text-sm">{item.name}</span>}
-                      </div>
-                      {isSidebarOpen && isActive && <ChevronRight size={16} className="text-blue-300" />}
-                    </Link>
+                      )}
+                    </div>
                   );
                 })}
               </div>

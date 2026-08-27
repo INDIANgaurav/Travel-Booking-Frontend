@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plane, Building2, MapPin, Star, User, ArrowLeft, Map, Car, ChevronDown, Check, Wifi, Coffee } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { setAgentBookingMode } from '../../store/authSlice';
+import { logout } from '../../store/authSlice';
 
 interface Hotel {
   _id: string;
@@ -76,20 +76,6 @@ export default function AgentHotelSearchResults(props: any) {
                 Trippe<span className="text-orange-500">Biz</span>
               </span>
             </div>
-
-            <div className="ml-4 flex items-center p-1 rounded-full bg-gray-100 transition-colors">
-              <button 
-                onClick={() => dispatch(setAgentBookingMode('PERSONAL'))}
-                className="px-4 py-1.5 rounded-full text-xs font-bold transition-all text-gray-600 hover:bg-gray-200"
-              >
-                PERSONAL
-              </button>
-              <button 
-                className="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-white text-gray-900 shadow-md"
-              >
-                MYBIZ
-              </button>
-            </div>
           </div>
 
           <div className="flex items-center gap-6">
@@ -114,7 +100,7 @@ export default function AgentHotelSearchResults(props: any) {
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-orange-200 bg-orange-50 text-gray-700 cursor-pointer">
                <div className="flex flex-col">
-                 <span className="text-[11px] font-bold">myBiz Wallet</span>
+                 <span className="text-[11px] font-bold">Agent Wallet</span>
               </div>
              </div>
              
@@ -270,7 +256,7 @@ export default function AgentHotelSearchResults(props: any) {
           <div className="bg-red-50/80 border border-red-100 rounded-lg p-4 flex items-center justify-between">
             <div>
               <span className="bg-white border border-red-200 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Free Breakfast</span>
-              <p className="text-gray-900 font-bold mt-2">myBiz Exclusive: Get Complimentary Breakfast on your stay.</p>
+              <p className="text-gray-900 font-bold mt-2">Agent Exclusive: Get Complimentary Breakfast on your stay.</p>
               <p className="text-gray-700 text-sm">Choose from breakfast-inclusive hotels at room-only rates</p>
             </div>
             <div className="w-12 h-6 bg-blue-500 rounded-full relative cursor-pointer shadow-inner">
@@ -278,7 +264,7 @@ export default function AgentHotelSearchResults(props: any) {
             </div>
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-6 mb-2">myBiz recommended properties</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-6 mb-2">Agent recommended properties</h2>
 
           {loading ? (
              <div className="p-8 text-center text-gray-500 font-bold bg-white rounded-lg border border-gray-200 shadow-sm">Loading hotels...</div>
@@ -300,7 +286,7 @@ export default function AgentHotelSearchResults(props: any) {
                    <div className="flex-1 pr-4">
                      <div className="flex items-center gap-2 mb-2">
                        <span className="bg-[#1a2530] text-white text-[10px] font-black px-2 py-0.5 rounded flex items-center gap-1 tracking-wide">
-                         <Check size={10} className="text-red-500" /> MYBIZ ASSURED
+                         <Check size={10} className="text-red-500" /> B2B ASSURED
                        </span>
                      </div>
                      

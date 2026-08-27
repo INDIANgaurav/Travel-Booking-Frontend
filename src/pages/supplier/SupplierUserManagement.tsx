@@ -10,7 +10,7 @@ interface SupplierUser {
   emailId: string;
   mobileNumber: string;
   status: 'Active' | 'InActive';
-  role: string;
+  roles: string[];
 }
 
 const SupplierUserManagement: React.FC = () => {
@@ -48,15 +48,15 @@ const SupplierUserManagement: React.FC = () => {
     try {
       const response = await api.get('/api/users/supplier-staff');
       if (Array.isArray(response.data)) {
-        const mapped: SupplierUser[] = response.data.map((u: any) => ({
-          id: u._id || u.id,
-          userName: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Agent',
-          emailId: u.email,
-          mobileNumber: u.phone || u.mobileNumber || 'N/A',
-          status: (u.isActive === false ? 'InActive' : 'Active') as "Active" | "InActive",
-          role: 'Supplier Staff'
+        const mappedUsers: SupplierUser[] = response.data.map((user: any) => ({
+          id: user._id || user.id,
+          userName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Agent',
+          emailId: user.email,
+          mobileNumber: user.phone || user.mobileNumber || 'N/A',
+          status: (user.isActive === false ? 'InActive' : 'Active') as "Active" | "InActive",
+          roles: user.roles || ['SUPPLIER_STAFF']
         }));
-        setUsers(mapped);
+        setUsers(mappedUsers);
       }
     } catch (err: any) {
       toast.error('Failed to load users');
@@ -167,7 +167,7 @@ const SupplierUserManagement: React.FC = () => {
       {/* Outer Card with Blue Header Bar */}
       <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
         {/* Blue Header Bar */}
-        <div className="bg-[#1d6aa3] text-white px-6 py-3 flex justify-between items-center">
+        <div className="bg-[#0b1031] text-white px-6 py-3 flex justify-between items-center">
           <h2 className="text-sm font-bold tracking-wider uppercase flex items-center gap-2">
             USER MANAGEMENT
           </h2>
@@ -220,7 +220,7 @@ const SupplierUserManagement: React.FC = () => {
                   </td>
                   <td className="p-3">
                     <span className="bg-[#60a5fa] text-white px-3 py-1 rounded text-[11px] font-bold shadow-sm inline-block">
-                      {user.role}
+                      {user.roles?.[0] || 'USER'}
                     </span>
                   </td>
                   <td className="p-3 text-center flex items-center justify-center gap-2">
@@ -257,7 +257,7 @@ const SupplierUserManagement: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-            <div className="bg-[#1d6aa3] px-4 py-3 flex justify-between items-center text-white">
+            <div className="bg-[#0b1031] px-4 py-3 flex justify-between items-center text-white">
               <h3 className="font-bold uppercase text-sm">
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h3>

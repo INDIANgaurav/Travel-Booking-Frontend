@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { selectIsAuthenticated, selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
 import api from '../../services/api';
 import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
@@ -41,11 +41,10 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
-  const agentMode = useSelector(selectAgentBookingMode);
 
   // Redirect B2B agents away from consumer landing page
   useEffect(() => {
-    if (isAuthenticated && user && (user.role === 'SUPPLIER_AGENT')) {
+    if (isAuthenticated && user && (user.roles?.includes('SUPPLIER_AGENT'))) {
       navigate('/b2b/home', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
@@ -170,10 +169,9 @@ export default function LandingPage() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-b from-[#f9e2e2] to-[#fdfaf8]' : 'bg-[#00224f]'}`}>
+      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 bg-[#00224f]`}>
         
         {/* Dynamic Background Elements */}
-        {!(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') && (
           <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">
             {/* Main Image with slow zoom effect */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center opacity-80" style={{ animation: 'zoomInOut 30s infinite alternate ease-in-out' }}></div>
@@ -196,21 +194,15 @@ export default function LandingPage() {
                 100% { opacity: 1; transform: translateY(0); }
               }
             `}</style>
-          </div>
-        )}
-
-        {/* Search Widget Container */}
+          </div>        {/* Search Widget Container */}
         <div className={`mx-auto w-full px-4 relative z-10 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
           
           {/* Welcome Headline */}
-          {!(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') && (
             <div className="text-center mb-6 lg:mb-8 animate-[fadeInUp_1s_ease-out]">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tight drop-shadow-2xl">
                 Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">Dream Vacation</span>
               </h1>
             </div>
-          )}
-
           {/* Top Tabs Pill */}
           <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-15px] lg:mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
             {[
@@ -463,7 +455,7 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                {user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ' && (
+                {user?.roles?.includes('B2B_AGENT') && (
                   <div className="relative flex flex-col sm:flex-row w-full lg:w-[150px] border-t md:border-t-0 md:border-l border-gray-200">
                     <div 
                       className="w-full sm:flex-1 p-3 px-5 cursor-pointer hover:bg-orange-50/30 transition-colors group"
@@ -538,7 +530,7 @@ export default function LandingPage() {
 
                 {/* Massive Search Button Overlapping Bottom for Flights */}
                 <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
-                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]`}>
                     SEARCH FLIGHTS
                   </button>
                 </div>
@@ -664,7 +656,7 @@ export default function LandingPage() {
             {/* Massive Search Button Overlapping Bottom for Hotels */}
             {activeTab === 'Hotels' && (
                 <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
-                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.role === 'B2B_AGENT' && agentMode === 'MYBIZ') ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
+                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.roles?.includes('B2B_AGENT')) ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
                     SEARCH HOTELS
                   </button>
                 </div>
@@ -852,13 +844,13 @@ export default function LandingPage() {
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Quick Links</h4>
             <ul className="space-y-2">
               <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition">Book Flights</button></li>
-              {isAuthenticated && user?.role !== 'B2B_AGENT' && (
+              {isAuthenticated && !user?.roles?.includes('B2B_AGENT') && (
                 <>
                   <li><Link to="/dashboard/profile" className="hover:text-white transition">My Profile</Link></li>
                   <li><Link to="/dashboard/wallet" className="hover:text-white transition">My Wallet</Link></li>
                 </>
               )}
-              {isAuthenticated && user?.role === 'B2B_AGENT' && (
+              {isAuthenticated && user?.roles?.includes('B2B_AGENT') && (
                 <>
                   <li><Link to="/b2b/home" className="hover:text-white transition">Agent Portal</Link></li>
                   <li><Link to="/b2b/profile" className="hover:text-white transition">Agent Profile</Link></li>

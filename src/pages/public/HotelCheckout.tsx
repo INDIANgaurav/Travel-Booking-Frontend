@@ -6,7 +6,7 @@ import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser, selectAgentBookingMode } from '../../store/authSlice';
+import { selectCurrentUser } from '../../store/authSlice';
 
 declare global {
   interface Window {
@@ -33,7 +33,7 @@ export default function HotelCheckout() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
-  const agentBookingMode = useSelector(selectAgentBookingMode);
+  const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
 
   const [loading, setLoading] = useState(false);
   const [bookingFor, setBookingFor] = useState<'myself' | 'someone_else'>('myself');
@@ -129,8 +129,8 @@ export default function HotelCheckout() {
         }
       };
 
-      if (user?.role === 'B2B_AGENT') {
-        (payload as any).bookingMode = agentBookingMode;
+      if (user?.roles?.includes('B2B_AGENT')) {
+        (payload as any).bookingMode = 'B2B';
       }
 
       const { data } = await api.post('/api/bookings/hotel', payload, {

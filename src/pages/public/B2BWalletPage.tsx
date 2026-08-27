@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../store/authSlice';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Wallet, CreditCard, Banknote, ShieldCheck } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw } from 'lucide-react';
 
 // Extend window for Razorpay
 declare global {
@@ -24,6 +24,29 @@ export default function B2BWalletPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<'INSTANT' | 'NET_TRANSFER' | 'CASH' | 'CHEQUE' | 'OTHER' | 'WITHDRAW_FUNDS'>('INSTANT');
+  const [offlinePaymentMode, setOfflinePaymentMode] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [depositedBank, setDepositedBank] = useState('');
+  const [depositedAccountNo, setDepositedAccountNo] = useState('');
+  const [chequeNumber, setChequeNumber] = useState('');
+  const [bankDetails, setBankDetails] = useState('');
+
+  const [myOfflineRequests, setMyOfflineRequests] = useState<any[]>([]);
+  const [refreshingRequests, setRefreshingRequests] = useState(false);
+
+  const fetchMyRequests = async () => {
+    setRefreshingRequests(true);
+    try {
+      const { data } = await api.get('/api/wallet/offline-topup/my-requests');
+      setMyOfflineRequests(data);
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setRefreshingRequests(false);
+    }
+  };
 
   const PAYMENT_METHODS = [
     { id: 'UPI', label: 'UPI', fee: 0, disabled: true },
@@ -37,9 +60,14 @@ export default function B2BWalletPage() {
 
   const fetchWallet = async () => {
     try {
-      const { data } = await api.get('/api/wallet');
+      const [walletRes, requestsRes] = await Promise.all([
+        api.get('/api/wallet'),
+        api.get('/api/wallet/offline-topup/my-requests').catch(() => ({ data: [] }))
+      ]);
+      const data = walletRes.data;
       setWalletBalance(data.balance);
       setTransactions(data.transactions || []);
+      setMyOfflineRequests(requestsRes.data || []);
       if (currentUser && currentUser.walletBalance !== data.balance) {
         const token = localStorage.getItem('token');
         if (token) {
@@ -53,8 +81,87 @@ export default function B2BWalletPage() {
     }
   };
 
+  const fetchMyWithdrawals = async () => {
+    try {
+      const { data } = await api.get('/api/wallet/withdrawal-requests');
+      // Just mapping them into the same list for simplicity in this demo, or we can use a separate state
+      // Actually, since we have 'myOfflineRequests', let's fetch both or separate them in UI
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   const calculateSurcharge = (amt: number) => {
     return paymentMethod === 'UPI' ? 0 : amt * 0.02;
+  };
+
+  
+  const handleOfflineTopUp = async () => {
+    if (!amount || Number(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (activeTab === 'INSTANT') {
+      // Use existing Razorpay flow for instant topup
+      handleTopUp();
+      return;
+    }
+    
+    if (activeTab === 'WITHDRAW_FUNDS') {
+      if (!bankDetails) {
+        toast.error('Please enter your Bank Details');
+        return;
+      }
+      setLoading(true);
+      try {
+        await api.post('/api/wallet/withdrawal-request', { amount, bankDetails });
+        toast.success('Withdrawal Request submitted successfully. Waiting for admin approval.');
+        setAmount('5000');
+        setBankDetails('');
+        fetchWallet();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Failed to submit withdrawal request');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Offline validations
+    if (!offlinePaymentMode) {
+      toast.error('Please select a payment mode');
+      return;
+    }
+    if (activeTab !== 'OTHER' && activeTab !== 'CASH' && (!referenceNumber && !chequeNumber)) {
+       // Just a loose validation for now
+    }
+    
+    setLoading(true);
+    try {
+      await api.post('/api/wallet/offline-topup', {
+        amount,
+        paymentMode: offlinePaymentMode,
+        referenceNumber,
+        depositedBank,
+        depositedAccountNo,
+        chequeNumber,
+        remarks
+      });
+      
+      toast.success('Top-up request submitted successfully. Waiting for admin approval.');
+      setAmount('100');
+      setOfflinePaymentMode('');
+      setRemarks('');
+      setReferenceNumber('');
+      setDepositedBank('');
+      setDepositedAccountNo('');
+      setChequeNumber('');
+      fetchWallet();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to submit request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTopUp = async () => {
@@ -164,99 +271,268 @@ export default function B2BWalletPage() {
             </div>
           </div>
 
+          
           {/* Add Money Card */}
-          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-200">
-            <h2 className="text-xl font-black text-[#0c1a40] mb-6">Recharge Wallet</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Enter Amount</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">₹</span>
-                  <input 
-                    type="number" 
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-4 pl-10 pr-4 text-2xl font-black text-[#0c1a40] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {[5000, 10000, 20000, 50000].map(val => (
-                    <button 
-                      key={val}
-                      onClick={() => setAmount(val.toString())}
-                      className="px-4 py-1.5 rounded-full border border-gray-200 text-sm font-bold text-gray-600 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                    >
-                      +₹{val.toLocaleString('en-IN')}
-                    </button>
-                  ))}
-                </div>
+          <div className="bg-white rounded-xl p-0 shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between">
+              <h2 className="text-[13px] font-black text-[#0b1031] uppercase tracking-wider">TOP-UP REQUEST</h2>
+              <div className="text-[11px] font-bold mt-2 md:mt-0 flex flex-wrap gap-4">
+                <span className="text-gray-500">Agent Name: <span className="text-[#0b1031]">{(currentUser as any)?.agencyName || currentUser?.name || ''} ({(currentUser as any)?.agencyCode || (currentUser as any)?.agencyId || ''})</span></span>
+                <span className="text-gray-500">Agent Balance = <span className="text-[#0b1031]">{walletBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></span>
               </div>
+            </div>
+            
+            {/* Tabs */}
+            <div className="flex overflow-x-auto border-b border-gray-200 hide-scrollbar px-2">
+              {['INSTANT', 'NET_TRANSFER', 'CASH', 'CHEQUE', 'OTHER', 'WITHDRAW_FUNDS'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => { setActiveTab(tab as any); setOfflinePaymentMode(''); }}
+                  className={`px-6 py-4 text-[11px] font-black whitespace-nowrap uppercase tracking-wider transition-all border-b-[3px] ${
+                    activeTab === tab 
+                      ? 'border-[#0b1031] text-[#0b1031]' 
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {tab === 'INSTANT' ? 'INSTANT TOPUP' : tab === 'WITHDRAW_FUNDS' ? 'WITHDRAW FUNDS' : tab.replace('_', ' ')}
+                </button>
+              ))}
+            </div>             <div className="p-6 space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
+                 <div>
+                   <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Amount (Rs.) *</label>
+                   <input 
+                     type="number"
+                     value={amount}
+                     onChange={(e) => setAmount(e.target.value)}
+                     className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none"
+                     placeholder="100"
+                   />
+                 </div>
+                 
+                 {activeTab === 'INSTANT' ? (
+                   <div>
+                     <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Payment Mode *</label>
+                     <div className="relative">
+                       <button
+                         type="button"
+                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                         className="w-full flex items-center justify-between border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none bg-white text-left"
+                       >
+                         <span>{PAYMENT_METHODS.find(p => p.id === paymentMethod)?.label || '-Select-'}</span>
+                         <svg className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </button>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-3">Select Payment Method</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full flex items-center justify-between bg-white border-2 border-gray-100 hover:border-blue-500 rounded-xl py-4 px-4 text-left focus:outline-none transition-colors shadow-sm"
-                  >
-                    <span className="font-bold text-gray-900">
-                      {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label} 
-                    </span>
-                    <svg className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+                       {isDropdownOpen && (
+                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded shadow-lg overflow-hidden">
+                           {PAYMENT_METHODS.map(mode => (
+                             <div 
+                               key={mode.id}
+                               onClick={() => { if(!mode.disabled) { setPaymentMethod(mode.id); setIsDropdownOpen(false); } }}
+                               className={`px-3 py-2 text-xs flex justify-between items-center ${mode.disabled ? 'cursor-not-allowed bg-gray-50 text-gray-400' : 'cursor-pointer ' + (paymentMethod === mode.id ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white')}`}
+                             >
+                               <span>{mode.label}</span>
+                               {mode.disabled && <span className="text-[9px] text-red-500 font-bold">Temporarily Unavailable</span>}
+                             </div>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 ) : (
+                   <div>
+                     <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Payment Mode *</label>
+                     <div className="relative">
+                       <button
+                         type="button"
+                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                         className="w-full flex items-center justify-between border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none bg-white text-left"
+                       >
+                         <span>{offlinePaymentMode === 'CASH_DEPOSIT' ? 'Cash Deposit' : offlinePaymentMode || '-Select-'}</span>
+                         <svg className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </button>
 
-                  {isDropdownOpen && (
-                    <div className="absolute z-20 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden">
-                      {PAYMENT_METHODS.map(method => (
-                        <div 
-                          key={method.id}
-                          onClick={() => {
-                            if (!method.disabled) {
-                              setPaymentMethod(method.id);
-                              setIsDropdownOpen(false);
-                            }
-                          }}
-                          className={`px-4 py-4 flex items-center justify-between transition-colors ${method.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer'} ${paymentMethod === method.id ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-gray-50 border-l-4 border-transparent'}`}
-                        >
-                          <span className={`font-bold ${paymentMethod === method.id ? 'text-blue-700' : 'text-gray-700'}`}>
-                            {method.label} {method.disabled && <span className="text-xs text-red-500 ml-2 font-medium">(Temporarily Unavailable)</span>}
-                          </span>
-                        </div>
-                      ))}
+                       {isDropdownOpen && (
+                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded shadow-lg overflow-hidden">
+                           <div 
+                             onClick={() => { setOfflinePaymentMode(''); setIsDropdownOpen(false); }}
+                             className={`px-3 py-2 text-xs cursor-pointer ${offlinePaymentMode === '' ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white'}`}
+                           >
+                             -Select-
+                           </div>
+                           {(activeTab === 'NET_TRANSFER') && (
+                             <>
+                               {['NEFT', 'RTGS', 'IMPS'].map(mode => (
+                                 <div 
+                                   key={mode}
+                                   onClick={() => { setOfflinePaymentMode(mode); setIsDropdownOpen(false); }}
+                                   className={`px-3 py-2 text-xs cursor-pointer ${offlinePaymentMode === mode ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white'}`}
+                                 >
+                                   {mode}
+                                 </div>
+                               ))}
+                             </>
+                           )}
+                           {activeTab === 'CASH' && (
+                             <div 
+                               onClick={() => { setOfflinePaymentMode('CASH_DEPOSIT'); setIsDropdownOpen(false); }}
+                               className={`px-3 py-2 text-xs cursor-pointer ${offlinePaymentMode === 'CASH_DEPOSIT' ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white'}`}
+                             >
+                               Cash Deposit
+                             </div>
+                           )}
+                           {activeTab === 'CHEQUE' && (
+                             <div 
+                               onClick={() => { setOfflinePaymentMode('CHEQUE'); setIsDropdownOpen(false); }}
+                               className={`px-3 py-2 text-xs cursor-pointer ${offlinePaymentMode === 'CHEQUE' ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white'}`}
+                             >
+                               Cheque
+                             </div>
+                           )}
+                           {activeTab === 'OTHER' && (
+                             <div 
+                               onClick={() => { setOfflinePaymentMode('OTHER'); setIsDropdownOpen(false); }}
+                               className={`px-3 py-2 text-xs cursor-pointer ${offlinePaymentMode === 'OTHER' ? 'bg-[#1965d6] text-white' : 'text-[#0b1031] hover:bg-[#1965d6] hover:text-white'}`}
+                             >
+                               Other
+                             </div>
+                           )}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
+                 
+                 <div>
+                   <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Remarks</label>
+                   <input 
+                     type="text"
+                     value={remarks}
+                     onChange={(e) => setRemarks(e.target.value)}
+                     className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none"
+                     placeholder="Optional"
+                   />
+                 </div>
+                  
+                  {activeTab === 'WITHDRAW_FUNDS' && (
+                    <div className="md:col-span-3">
+                      <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Bank Details (Account No, IFSC, Bank Name) *</label>
+                      <textarea 
+                        value={bankDetails}
+                        onChange={(e) => setBankDetails(e.target.value)}
+                        className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none min-h-[60px]"
+                        placeholder="Please provide your full bank details for the withdrawal..."
+                      />
                     </div>
                   )}
-                </div>
-              </div>
+                  
+                  {activeTab !== 'INSTANT' && activeTab !== 'WITHDRAW_FUNDS' && (
+                   <>
+                     <div>
+                       <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">
+                         {activeTab === 'CHEQUE' ? 'Cheque Number *' : activeTab === 'CASH' ? 'Deposit Slip / Reference Number *' : 'Reference / Confirmation Number *'}
+                       </label>
+                       <input 
+                         type="text"
+                         value={activeTab === 'CHEQUE' ? chequeNumber : referenceNumber}
+                         onChange={(e) => activeTab === 'CHEQUE' ? setChequeNumber(e.target.value) : setReferenceNumber(e.target.value)}
+                         className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none"
+                         placeholder="Alphanumeric, max 20 chars"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Deposited Bank *</label>
+                       <input 
+                         type="text"
+                         value={depositedBank}
+                         onChange={(e) => setDepositedBank(e.target.value)}
+                         className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none"
+                         placeholder="Digits only or Bank Name"
+                       />
+                     </div>
+                     <div>
+                       <label className="block text-[11px] font-black text-[#0b1031] mb-1.5">Deposited Account No. *</label>
+                       <input 
+                         type="text"
+                         value={depositedAccountNo}
+                         onChange={(e) => setDepositedAccountNo(e.target.value)}
+                         className="w-full border border-gray-200 rounded p-2 text-xs font-medium focus:border-[#0b1031] focus:outline-none"
+                         placeholder="Digits only"
+                       />
+                     </div>
+                   </>
+                 )}
+               </div>
 
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600 font-medium">Recharge Amount</span>
-                  <span className="font-bold text-gray-900">₹{currentAmount.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
-                  <span className="text-gray-600 font-medium">Convenience Fee ({paymentMethod === 'UPI' ? '0%' : '2%'})</span>
-                  <span className="font-bold text-gray-900">₹{surcharge.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-black text-[#0c1a40]">Total Payable</span>
-                  <span className="text-2xl font-black text-blue-600">₹{totalPayable.toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              <button 
-                onClick={handleTopUp}
-                disabled={loading || currentAmount <= 0}
-                className="w-full bg-[#0c1a40] hover:bg-blue-900 text-white font-black text-lg py-4 rounded-xl shadow-lg transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
-              >
-                {loading ? 'Processing...' : <>PROCEED TO PAY ₹{totalPayable.toLocaleString('en-IN')} <CreditCard size={20} /></>}
-              </button>
+               <div className="flex justify-center pt-4">
+                 <button
+                   onClick={handleOfflineTopUp}
+                   disabled={loading}
+                   className="bg-[#0b1031] text-white font-bold text-xs px-10 py-2.5 rounded-full hover:bg-blue-900 transition-colors disabled:opacity-50"
+                 >
+                   {loading ? 'Processing...' : 'Submit'}
+                 </button>
+               </div>
             </div>
           </div>
+
+          {/* My Offline Top-Up Requests Table */}
+          {myOfflineRequests.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-[13px] font-black text-[#0b1031] uppercase tracking-wider">MY WALLET REQUESTS (TOP-UPS & WITHDRAWALS)</h2>
+                <button 
+                  onClick={fetchMyRequests} // Can update this to fetch both if needed later
+                  disabled={refreshingRequests}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 hover:text-[#0b1031] transition-colors disabled:opacity-50"
+                  title="Refresh Requests"
+                >
+                  <RefreshCw size={14} className={refreshingRequests ? 'animate-spin' : ''} />
+                  <span>Refresh</span>
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-white text-gray-500 font-bold uppercase border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-3">Date</th>
+                      <th className="px-6 py-3">Mode</th>
+                      <th className="px-6 py-3">Ref/Cheque</th>
+                      <th className="px-6 py-3 text-right">Amount</th>
+                      <th className="px-6 py-3 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {myOfflineRequests.map(req => (
+                      <tr key={req._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-3 font-medium text-gray-600">
+                          {new Date(req.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-3 font-bold text-[#0b1031]">
+                          {req.paymentMode}
+                        </td>
+                        <td className="px-6 py-3 font-mono text-gray-500">
+                          {req.referenceNumber || req.chequeNumber || '-'}
+                        </td>
+                        <td className="px-6 py-3 text-right font-black text-blue-600">
+                          ₹{req.amount.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          {req.status === 'PENDING' && <span className="inline-block px-2 py-1 bg-yellow-50 text-yellow-600 rounded text-[10px] font-bold">PENDING</span>}
+                          {req.status === 'APPROVED' && <span className="inline-block px-2 py-1 bg-green-50 text-green-600 rounded text-[10px] font-bold">APPROVED</span>}
+                          {req.status === 'REJECTED' && <span className="inline-block px-2 py-1 bg-red-50 text-red-600 rounded text-[10px] font-bold">REJECTED</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Transactions */}
