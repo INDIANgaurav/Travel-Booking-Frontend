@@ -14,6 +14,7 @@ interface DateRangeFilterProps {
   onSearchTypeChange?: (type: string) => void;
   onSearchSubmit?: () => void;
 }
+import DOBCalendar from './DOBCalendar';
 
 export default function DateRangeFilter({
   fromDate,
@@ -31,21 +32,23 @@ export default function DateRangeFilter({
     <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-4 rounded-2xl shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)] border border-slate-100/60 w-full mb-6">
       <div className="flex items-center gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">From</label>
-        <input 
-          type="date"
-          value={fromDate}
-          onChange={(e) => onFromChange(e.target.value)}
-          className="px-3 py-2.5 bg-slate-50/50 border border-slate-200/80 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all w-[150px]"
-        />
+        <div className="w-[150px]">
+          <DOBCalendar
+            value={fromDate}
+            onChange={onFromChange}
+            placeholder="From Date"
+          />
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">To</label>
-        <input 
-          type="date"
-          value={toDate}
-          onChange={(e) => onToChange(e.target.value)}
-          className="px-3 py-2.5 bg-slate-50/50 border border-slate-200/80 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all w-[150px]"
-        />
+        <div className="w-[150px]">
+          <DOBCalendar
+            value={toDate}
+            onChange={onToChange}
+            placeholder="To Date"
+          />
+        </div>
       </div>
 
       {(onSearchChange !== undefined) && (
