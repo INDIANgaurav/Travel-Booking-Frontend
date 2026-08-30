@@ -243,9 +243,23 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         </div>
                       )}
                       {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN') || user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
-                        <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                          <Building2 size={16} /> Admin Panel
-                        </div>
+                        <>
+                          <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <Briefcase size={16} /> My Dashboard
+                          </div>
+                          <div onClick={() => { navigate('/admin/bookings'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <Briefcase size={16} /> Booking History
+                          </div>
+                          <div onClick={() => { navigate('/admin/profile?tab=security'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <Building2 size={16} /> Change Password
+                          </div>
+                          <div onClick={() => { navigate('/admin/queue'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <Briefcase size={16} /> Pending Queue
+                          </div>
+                          <div onClick={() => { navigate('/admin/ledger'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <CreditCard size={16} /> View Ledger
+                          </div>
+                        </>
                       )}
                       {(user?.roles?.includes('SUPPLIER_AGENT') || user?.roles?.includes('SUPPLIER_STAFF') || user?.roles?.includes('SUPPLIER_PORTAL_ONLY') || user?.role === 'SUPPLIER_AGENT' || user?.role === 'SUPPLIER_STAFF' || user?.role === 'SUPPLIER_PORTAL_ONLY') && (
                         <div onClick={() => { navigate('/supplier-portal/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">

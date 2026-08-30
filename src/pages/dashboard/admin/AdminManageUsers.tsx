@@ -512,6 +512,13 @@ export default function AdminManageUsers() {
           </div>
         </div>
       )}
+
+      {/* Ledger Modal */}
+      <UserLedgerModal 
+        isOpen={!!selectedLedgerAgent} 
+        onClose={() => setSelectedLedgerAgent(null)} 
+        user={selectedLedgerAgent} 
+      />
     </div>
   );
 }

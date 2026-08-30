@@ -29,6 +29,8 @@ interface ISeriesFare {
   availableSeats: number;
   realtimeBook: boolean;
   status: 'Active' | 'Inactive' | 'SoldOut';
+  supplierName?: string;
+  supplierId?: string;
 }
 
 const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
@@ -637,7 +639,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-900">{supplierName}</span>
+                          <span className="font-bold text-gray-900">{fare.supplierName || 'UNKNOWN'}</span>
                           <span className="text-[10px] text-gray-500 uppercase">{fare.airline}</span>
                         </div>
                       </td>
@@ -1274,7 +1276,7 @@ const AdminSeriesFareMaker: React.FC = () => {
               <div className="bg-blue-50 text-blue-700 p-4 rounded-lg text-xs">
                 Upload a CSV file containing your Series Fares. Please ensure it matches the standard template.
               </div>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group">
+              <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group">
                 <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Upload size={20} className="text-blue-600" />
                 </div>

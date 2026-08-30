@@ -3,6 +3,7 @@ import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, Plus, CreditCard, FileText, Settings, MoreVertical, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import UserLedgerModal from '../../../components/admin/modals/UserLedgerModal';
 
 interface Agent {
   _id: string;
@@ -39,10 +40,13 @@ const CugSuppliersManager = () => {
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [isCreditNoteModalOpen, setIsCreditNoteModalOpen] = useState(false);
   const [isAddAgentModalOpen, setIsAddAgentModalOpen] = useState(false);
+  const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
   const [selectedMapping, setSelectedMapping] = useState<CugMapping | null>(null);
+  const [selectedLedgerAgent, setSelectedLedgerAgent] = useState<any | null>(null);
+
+  // Form states
   const [creditAmount, setCreditAmount] = useState<number | ''>('');
   const [creditNoteDesc, setCreditNoteDesc] = useState('');
-  const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
   const [commissionPlans, setCommissionPlans] = useState<any[]>([]);
   const [selectedCommissionPlanId, setSelectedCommissionPlanId] = useState('');
   const [selectedAgentToAdd, setSelectedAgentToAdd] = useState('');
@@ -297,7 +301,7 @@ const CugSuppliersManager = () => {
                               </button>
                               <button 
                                 onClick={() => {
-                                  navigate('/admin/ledger', { state: { userId: mapping.agent._id } });
+                                  setSelectedLedgerAgent(mapping.agent);
                                 }}
                                 className="w-full text-left flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-indigo-600 font-medium"
                               >
@@ -531,6 +535,13 @@ const CugSuppliersManager = () => {
           </div>
         </div>
       )}
+
+      {/* Ledger Modal */}
+      <UserLedgerModal 
+        isOpen={!!selectedLedgerAgent} 
+        onClose={() => setSelectedLedgerAgent(null)} 
+        user={selectedLedgerAgent} 
+      />
     </div>
   );
 };

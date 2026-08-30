@@ -869,9 +869,9 @@ export default function LandingPage() {
         </div>
         <div className="max-w-7xl mx-auto px-6 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p>&copy; {new Date().getFullYear()} TrippeChalo India Pvt Ltd. All rights reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition">Terms of Service</a>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 md:mt-0 text-sm">
+            <Link to="/page/PrivacyPolicy" className="hover:text-white transition">Privacy Policy</Link>
+            <Link to="/page/TermsConditions" className="hover:text-white transition">Terms of Service</Link>
           </div>
         </div>
       </footer>

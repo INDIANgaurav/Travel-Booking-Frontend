@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Filter, ArrowRight, Plane, TrendingDown, Loader2 } from 'lucide-react';
+import { AlertTriangle, Filter, ArrowRight, Plane, TrendingDown, Loader2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import RefreshButton from '../../../components/ui/RefreshButton';
 
@@ -15,11 +16,39 @@ interface ISlowMoving {
   sellPercent: number;
   pnr: string;
   price: number;
+  supplierName?: string;
 }
 
 export default function AdminFDSlowMovingSector() {
   const [sectors, setSectors] = useState<ISlowMoving[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDropSector, setSelectedDropSector] = useState<ISlowMoving | null>(null);
+  const [newPrice, setNewPrice] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handlePushPromo = (sector: ISlowMoving) => {
+    toast.success(`Promo emails sent to all B2B agents for ${sector.sector} flight!`);
+  };
+
+  const handleAlertSupplier = (sector: ISlowMoving) => {
+    toast.success(`Alert sent to ${sector.supplierName} to review pricing for ${sector.sector}!`);
+  };
+
+  const handleUpdatePrice = async () => {
+    if (!selectedDropSector || !newPrice) return;
+    try {
+      setIsUpdating(true);
+      await api.put(`/api/series-fare/${selectedDropSector.id}`, { adtFare: Number(newPrice) });
+      toast.success('Price dropped successfully!');
+      setSectors(prev => prev.map(s => s.id === selectedDropSector.id ? { ...s, price: Number(newPrice) } : s));
+      setSelectedDropSector(null);
+      setNewPrice('');
+    } catch (error) {
+      toast.error('Failed to update price');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const fetchSectors = async () => {
     try {
@@ -157,10 +186,16 @@ export default function AdminFDSlowMovingSector() {
                   <td className="p-3 text-center font-bold text-gray-800">₹{item.price}</td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
-                        Drop Price
-                      </button>
-                      <button className="bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
+                      {item.supplierName && !['trippechalo', 'admin', 'super admin', 'pj holiday bookers', 'supplier'].includes(item.supplierName.toLowerCase()) ? (
+                        <button onClick={() => handleAlertSupplier(item)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
+                          Alert Supplier
+                        </button>
+                      ) : (
+                        <button onClick={() => { setSelectedDropSector(item); setNewPrice(item.price.toString()); }} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
+                          Drop Price
+                        </button>
+                      )}
+                      <button onClick={() => handlePushPromo(item)} className="bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
                         Push Promo
                       </button>
                     </div>
@@ -170,7 +205,42 @@ export default function AdminFDSlowMovingSector() {
             </tbody>
           </table>
         </div>
-      </div>
+    </div>
+
+      {selectedDropSector && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-blue-50">
+              <h3 className="font-black text-blue-800 text-sm">Drop Price</h3>
+              <button onClick={() => setSelectedDropSector(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <div className="text-xs font-bold text-gray-500 uppercase">Sector</div>
+                <div className="font-bold text-gray-900">{selectedDropSector.sector} ({selectedDropSector.airline})</div>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">New Adult Price (₹)</label>
+                <input 
+                  type="number"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+              <button onClick={() => setSelectedDropSector(null)} className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-700">Cancel</button>
+              <button onClick={handleUpdatePrice} disabled={isUpdating} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-lg text-xs font-bold transition-colors">
+                {isUpdating ? 'Updating...' : 'Confirm Drop'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

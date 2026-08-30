@@ -31,6 +31,7 @@ import AgentSignUpPage from './pages/public/AgentSignUpPage'
 import RetailAgentLoginPage from './pages/public/RetailAgentLoginPage'
 import B2BAgentHomePage from './pages/public/B2BAgentHomePage'
 import B2BAgentCheckout from './pages/public/B2BAgentCheckout'
+import DynamicPageViewer from './pages/public/DynamicPageViewer'
 import B2BAgentDashboard from './pages/public/B2BAgentDashboard'
 import B2BBankDetails from './pages/public/B2BBankDetails'
 import B2BWalletPage from './pages/public/B2BWalletPage'
@@ -57,6 +58,7 @@ import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
 import AdminPendingUsers from './pages/dashboard/admin/AdminPendingUsers'
 import AdminManageUsers from './pages/dashboard/admin/AdminManageUsers'
+import AdminPendingQueue from './pages/dashboard/admin/AdminPendingQueue'
 import AdminBookings from './pages/dashboard/admin/AdminBookings'
 import AdminProfile from './pages/dashboard/admin/AdminProfile'
 import AdminFinance from './pages/dashboard/admin/AdminFinance'
@@ -64,8 +66,11 @@ import AdminLedger from './pages/dashboard/admin/AdminLedger'
 import SupplierManagement from './pages/dashboard/admin/SupplierManagement'
 import CugSuppliersManager from './pages/dashboard/admin/CugSuppliersManager'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
-import AdminSettings from './pages/dashboard/admin/AdminSettings'
 import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
+import AdminSMSSettings from './pages/dashboard/admin/settings/AdminSMSSettings'
+import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
+import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
+import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
 import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
 import AdminUserProfile from './pages/dashboard/admin/AdminUserProfile'
 import AdminFDMaker from './pages/dashboard/admin/AdminFDMaker'
@@ -74,6 +79,24 @@ import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
 import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
 import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
 import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
+import AdminCommissionList from './pages/dashboard/admin/commissions/AdminCommissionList'
+import AdminCommissionAdd from './pages/dashboard/admin/commissions/AdminCommissionAdd'
+import AdminCommissionGroups from './pages/dashboard/admin/commissions/AdminCommissionGroups'
+import AdminBankAccounts from './pages/dashboard/admin/treasury/AdminBankAccounts'
+import AdminRecordPayment from './pages/dashboard/admin/treasury/AdminRecordPayment'
+import AdminSettlementQueue from './pages/dashboard/admin/treasury/AdminSettlementQueue'
+import AdminInvoiceCenter from './pages/dashboard/admin/treasury/AdminInvoiceCenter'
+import AdminFlightSalesReport from './pages/dashboard/admin/reports/AdminFlightSalesReport'
+import AdminDebitNoteReport from './pages/dashboard/admin/reports/AdminDebitNoteReport'
+import AdminCreditNoteReport from './pages/dashboard/admin/reports/AdminCreditNoteReport'
+import AdminCancellationHistory from './pages/dashboard/admin/reports/AdminCancellationHistory'
+import AdminHotelCancellations from './pages/dashboard/admin/reports/AdminHotelCancellations'
+import AdminPGReport from './pages/dashboard/admin/reports/AdminPGReport'
+import AdminAgentOutstanding from './pages/dashboard/admin/reports/AdminAgentOutstanding'
+import AdminAgentActivation from './pages/dashboard/admin/reports/AdminAgentActivation'
+import AdminSupplierMapping from './pages/dashboard/admin/reports/AdminSupplierMapping'
+import AdminFareQuoteReport from './pages/dashboard/admin/reports/AdminFareQuoteReport'
+import AdminPassengerCalendar from './pages/dashboard/admin/reports/AdminPassengerCalendar'
 import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 
 import SubAdminLayout from './layouts/SubAdminLayout'
@@ -129,6 +152,7 @@ function App() {
         <Route path="/partner-connect" element={<PartnerConnect />} />
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
         <Route path="/inactive-account" element={<InactiveAccountPage />} />
+        <Route path="/page/:pageName" element={<DynamicPageViewer />} />
 
         {/* New Agent Sign Up, Agent Login, Agent B2B Engine & Supplier Login Public Routes */}
         <Route path="/b2b/coming-soon" element={<FeatureComingSoonPage />} />
@@ -250,6 +274,7 @@ function App() {
         >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="queue" element={<AdminPendingQueue />} />
           <Route path="pending-users" element={<AdminPendingUsers />} />
           <Route path="manage-users" element={<AdminManageUsers />} />
           <Route path="user-profile/:id" element={<AdminUserProfile />} />
@@ -257,6 +282,13 @@ function App() {
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
           <Route path="offline-topups" element={<AdminOfflineTopUps />} />
           <Route path="withdrawals" element={<AdminWithdrawals />} />
+          <Route path="commissions" element={<AdminCommissionList />} />
+          <Route path="commissions/add" element={<AdminCommissionAdd />} />
+          <Route path="commissions/groups" element={<AdminCommissionGroups />} />
+          <Route path="treasury/banks" element={<AdminBankAccounts />} />
+          <Route path="treasury/record-payment" element={<AdminRecordPayment />} />
+          <Route path="treasury/queue" element={<AdminSettlementQueue />} />
+          <Route path="treasury/invoices" element={<AdminInvoiceCenter />} />
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="finance" element={<AdminFinance />} />
           <Route path="ledger" element={<AdminLedger />} />
@@ -268,7 +300,25 @@ function App() {
           <Route path="fd-archive" element={<AdminFDArchive />} />
           <Route path="fd-slow-moving" element={<AdminFDSlowMovingSector />} />
           <Route path="profile" element={<AdminProfile />} />
-          <Route path="settings" element={<AdminSettings />} />
+          
+          <Route path="settings/sms-emails" element={<AdminSMSSettings />} />
+          <Route path="settings/roles" element={<AdminRoleMaster />} />
+          <Route path="settings/pg-mapping" element={<AdminPGMapping />} />
+          <Route path="settings/pages" element={<AdminDynamicPages />} />
+          
+          {/* Reports */}
+          <Route path="reports/passenger-calendar" element={<AdminPassengerCalendar />} />
+          <Route path="reports/fare-quotes" element={<AdminFareQuoteReport />} />
+          <Route path="reports/debit-notes" element={<AdminDebitNoteReport />} />
+          <Route path="reports/credit-notes" element={<AdminCreditNoteReport />} />
+          <Route path="reports/flight-sales" element={<AdminFlightSalesReport />} />
+          <Route path="reports/cancellations" element={<AdminCancellationHistory />} />
+          <Route path="reports/hotel-cancellations" element={<AdminHotelCancellations />} />
+          <Route path="reports/pg-reports" element={<AdminPGReport />} />
+          <Route path="reports/agent-outstanding" element={<AdminAgentOutstanding />} />
+          <Route path="reports/agent-activation" element={<AdminAgentActivation />} />
+          <Route path="reports/supplier-mapping" element={<AdminSupplierMapping />} />
+
           <Route path="ticket/:id" element={<FlightTicket />} />
           <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>

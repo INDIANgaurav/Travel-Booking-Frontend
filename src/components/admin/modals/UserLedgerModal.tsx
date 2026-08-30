@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, Search, Filter } from 'lucide-react';
+import api from '../../../services/api';
 
 interface UserLedgerModalProps {
   isOpen: boolean;
@@ -11,6 +12,37 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [category, setCategory] = useState('ALL');
+  
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    if (isOpen && user?._id) {
+      fetchData();
+    }
+  }, [isOpen, user?._id, page]);
+
+  const fetchData = async () => {
+    if (!user?._id) return;
+    try {
+      setLoading(true);
+      let url = `/api/account-statement?page=${page}&limit=50&userId=${user._id}`;
+      if (fromDate && toDate) {
+        url += `&fromDate=${fromDate}&toDate=${toDate}`;
+      }
+      const res = await api.get(url);
+      if (res.data && res.data.data) {
+        setData(res.data.data);
+        setTotalPages(res.data.totalPages || 1);
+      }
+    } catch (error) {
+      console.error('Error fetching ledger statement:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen || !user) return null;
 
@@ -64,8 +96,8 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
                 <option value="TOPUP">Wallet Topup</option>
               </select>
             </div>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm">
-              <Search size={16} /> Fetch
+            <button onClick={() => { setPage(1); fetchData(); }} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm">
+              <Search size={16} /> {loading ? 'Fetching...' : 'Fetch'}
             </button>
             
             <button className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-lg transition-all shadow-sm ml-auto">
@@ -89,14 +121,55 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400 font-bold bg-gray-50">
-                  <div className="flex flex-col items-center justify-center">
-                    <Filter size={32} className="mb-3 opacity-20" />
-                    No transactions found for the selected period.
-                  </div>
-                </td>
-              </tr>
+              {loading && data.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500 font-bold bg-gray-50">
+                    Loading ledger data...
+                  </td>
+                </tr>
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-400 font-bold bg-gray-50">
+                    <div className="flex flex-col items-center justify-center">
+                      <Filter size={32} className="mb-3 opacity-20" />
+                      No transactions found for the selected period.
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                data.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0">
+                    <td className="px-4 py-3 text-xs font-semibold text-gray-700 border-r border-gray-100/50">
+                      {new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      <br/>
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {new Date(row.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs font-bold text-gray-800 border-r border-gray-100/50">
+                      {row._id?.substring(row._id.length - 6).toUpperCase() || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-xs font-semibold text-gray-600 border-r border-gray-100/50">
+                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded mr-2 font-mono text-[10px]">
+                        {row.referenceNumber || row.transactionId || '-'}
+                      </span>
+                      {row.description || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500 font-medium border-r border-gray-100/50">
+                      -
+                    </td>
+                    <td className="px-4 py-3 text-xs font-bold text-red-500 text-right border-r border-gray-100/50">
+                      {row.debit > 0 ? row.debit.toLocaleString() : '0'}
+                    </td>
+                    <td className="px-4 py-3 text-xs font-bold text-emerald-500 text-right border-r border-gray-100/50">
+                      {row.credit > 0 ? row.credit.toLocaleString() : '0'}
+                    </td>
+                    <td className="px-4 py-3 text-xs font-bold text-blue-600 text-right">
+                      {row.balance?.toLocaleString() || 0}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot className="bg-gray-100 font-black text-gray-800 sticky bottom-0">
               <tr>
@@ -108,6 +181,28 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
             </tfoot>
           </table>
         </div>
+        {/* Pagination Controls */}
+        {data.length > 0 && (
+          <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
+            <span className="text-xs font-bold text-gray-500">Page {page} of {totalPages}</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

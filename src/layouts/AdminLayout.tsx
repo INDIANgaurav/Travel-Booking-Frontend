@@ -12,10 +12,10 @@ export default function AdminLayout() {
   const user = useSelector(selectCurrentUser);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['TrippeChalo FD']);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const toggleMenu = (name: string) => {
-    setExpandedMenus(prev => prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name]);
+    setExpandedMenus(prev => prev.includes(name) ? [] : [name]);
   };
 
   const handleLogout = () => {
@@ -80,28 +80,78 @@ export default function AdminLayout() {
     {
       title: 'Finance & Accounts',
       items: [
+        { 
+          name: 'Treasury & Payments', 
+          icon: <DollarSign size={20} />,
+          subItems: [
+            { name: 'Bank Accounts', path: '/admin/treasury/banks' },
+            { name: 'Record Payment', path: '/admin/treasury/record-payment' },
+            { name: 'Settlement Queue', path: '/admin/treasury/queue' },
+            { name: 'Invoice Center', path: '/admin/treasury/invoices' },
+            { name: 'Wallet Recharge', path: '/admin/offline-topups' }
+          ]
+        },
         { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
         { name: 'Global Ledger', path: '/admin/ledger', icon: <CreditCard size={20} /> },
-        { name: 'Offline Top-Ups', path: '/admin/offline-topups', icon: <CreditCard size={20} /> },
         { name: 'Withdrawal Reqs', path: '/admin/withdrawals', icon: <CreditCard size={20} /> },
-        { name: 'Commissions & Fees', path: '#', icon: <DollarSign size={20} /> },
+        { name: 'Commissions & Fees', path: '/admin/commissions', icon: <DollarSign size={20} /> },
+      ]
+    },
+    {
+      title: 'Intelligence & Reports',
+      items: [
+        { 
+          name: 'Comprehensive Reports', 
+          icon: <FileText size={20} />,
+          subItems: [
+            { name: 'Passenger Calendar', path: '/admin/reports/passenger-calendar' },
+            { name: 'Fare Quote Reports', path: '/admin/reports/fare-quotes' },
+            { name: 'Debit Notes', path: '/admin/reports/debit-notes' },
+            { name: 'Credit Notes', path: '/admin/reports/credit-notes' },
+            { name: 'Flight Sales', path: '/admin/reports/flight-sales' },
+            { name: 'Cancellations', path: '/admin/reports/cancellations' },
+            { name: 'Hotel Cancellations', path: '/admin/reports/hotel-cancellations' },
+            { name: 'Payment Gateway (PG)', path: '/admin/reports/pg-reports' },
+            { name: 'Agent Outstanding', path: '/admin/reports/agent-outstanding' },
+            { name: 'Agent Activation', path: '/admin/reports/agent-activation' },
+            { name: 'Supplier Mapping', path: '/admin/reports/supplier-mapping' }
+          ]
+        }
       ]
     },
     {
       title: 'Operations & Logs',
       items: [
         { name: 'Booking Operations', path: '/admin/bookings', icon: <Briefcase size={20} /> },
-        { name: 'Analytics & Reports', path: '#', icon: <FileText size={20} /> },
       ]
     },
     {
       title: 'System',
       items: [
         { name: 'My Profile', path: '/admin/profile', icon: <UserIcon size={20} /> },
-        { name: 'System Settings', path: '/admin/settings', icon: <Settings size={20} /> },
+        { 
+          name: 'System Settings', 
+          icon: <Settings size={20} />,
+          subItems: [
+            { name: 'SMS & Emails', path: '/admin/settings/sms-emails' },
+            { name: 'Role Master', path: '/admin/settings/roles' },
+            { name: 'PG User Mapping', path: '/admin/settings/pg-mapping' },
+            { name: 'Edit Footer Links', path: '/admin/settings/pages' }
+          ]
+        },
       ]
     }
   ];
+
+  React.useEffect(() => {
+    navGroups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.subItems?.some(sub => location.pathname.includes(sub.path))) {
+          setExpandedMenus([item.name]);
+        }
+      });
+    });
+  }, [location.pathname]);
 
   return (
     <>
@@ -175,7 +225,7 @@ export default function AdminLayout() {
                             <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
                               {item.icon}
                             </span>
-                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide">{item.name}</span>}
+                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide whitespace-nowrap">{item.name}</span>}
                           </div>
                           {isSidebarOpen && (
                             <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -199,7 +249,7 @@ export default function AdminLayout() {
                             <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
                               {item.icon}
                             </span>
-                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide">{item.name}</span>}
+                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide whitespace-nowrap">{item.name}</span>}
                           </div>
                           {!isSidebarOpen && (
                             <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
