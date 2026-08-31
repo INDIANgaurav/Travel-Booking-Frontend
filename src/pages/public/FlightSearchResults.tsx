@@ -102,6 +102,25 @@ export default function FlightSearchResults() {
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
 
+  // Calendar Prices State
+  const [calendarPrices, setCalendarPrices] = useState<Record<string, number>>({});
+  const [sliderOffset, setSliderOffset] = useState(0);
+
+  useEffect(() => {
+    const fetchCalendarPrices = async () => {
+      if (!from || !to) return;
+      try {
+        const { data } = await api.get(`/api/searches/calendar-prices?origin=${from}&destination=${to}`);
+        if (data) {
+          setCalendarPrices(data);
+        }
+      } catch (err) {
+        console.error('Error fetching calendar prices:', err);
+      }
+    };
+    fetchCalendarPrices();
+  }, [from, to]);
+
   // Redirect removed, all users get normal UI
 
   const formatDate = (d: Date) => {
@@ -275,11 +294,11 @@ export default function FlightSearchResults() {
             </div>
 
             <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-24"
+              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-28"
               onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(true); }}
             >
               <span className="text-[10px] text-gray-500 font-bold uppercase">Travellers</span>
-              <span className="text-sm font-bold text-gray-900">{adults + children + infants} Traveller</span>
+              <span className="text-sm font-bold text-gray-900 truncate">{adults + children + infants} Traveller</span>
             </div>
 
             <div 
@@ -377,19 +396,6 @@ export default function FlightSearchResults() {
               />
             </div>
           )}
-
-          {/* Fare Types */}
-          <div className="flex items-center gap-4 mt-3 text-sm">
-            <span className="text-xs text-gray-500 font-bold">FARE TYPE:</span>
-            {['Regular', 'Student', 'Armed Forces', 'Senior Citizen', 'Doctor and Nurses'].map((fare, idx) => (
-              <label key={fare} className="flex items-center gap-1.5 cursor-pointer">
-                <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${idx === 0 ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
-                  {idx === 0 && <Check size={10} className="text-white" />}
-                </div>
-                <span className={`text-xs font-bold ${idx === 0 ? 'text-gray-900' : 'text-gray-600'}`}>{fare}</span>
-              </label>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -406,145 +412,76 @@ export default function FlightSearchResults() {
           <h2 className="text-2xl font-black text-gray-900 mt-2">Hold on, we're fetching flights for you</h2>
         </div>
       ) : (
-        <div className="max-w-[1200px] mx-auto py-6 flex gap-6">
-          {/* Left Sidebar - Filters */}
-          <div className="w-[240px] shrink-0 space-y-4">
+        <div className="max-w-[1000px] mx-auto py-6 w-full">
+          {/* Main Content - Flight Results */}
+          <div className="w-full">
+            <h2 className="text-2xl font-black text-gray-900 mb-4">
+              Flights from {getCityName(from)} to {getCityName(to)}{tripType === 'Round Trip' ? ', and back' : ''}
+            </h2>
             {(nonStopFilter || morningFilter) && (
-              <div className="bg-white p-4 rounded shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900 text-sm">Applied Filters</h3>
-                  <span className="text-xs text-blue-500 font-bold cursor-pointer" onClick={() => { setNonStopFilter(false); setMorningFilter(false); }}>Clear All</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-white p-3 rounded shadow-sm border border-gray-200 mb-4 flex items-center gap-4">
+                <h3 className="font-bold text-gray-900 text-sm">Applied Filters:</h3>
+                <div className="flex flex-wrap gap-2 flex-1">
                   {nonStopFilter && (
                     <div className="bg-gray-100 px-2 py-1 rounded text-xs flex items-center gap-1 text-gray-700">
-                      Non Stop <span className="text-gray-400 cursor-pointer" onClick={() => setNonStopFilter(false)}>×</span>
+                      Non Stop <span className="text-gray-400 cursor-pointer hover:text-red-500" onClick={() => setNonStopFilter(false)}>�</span>
                     </div>
                   )}
                   {morningFilter && (
                     <div className="bg-gray-100 px-2 py-1 rounded text-xs flex items-center gap-1 text-gray-700">
-                      Morning Dep. <span className="text-gray-400 cursor-pointer" onClick={() => setMorningFilter(false)}>×</span>
+                      Morning Dep. <span className="text-gray-400 cursor-pointer hover:text-red-500" onClick={() => setMorningFilter(false)}>�</span>
                     </div>
                   )}
                 </div>
+                <span className="text-xs text-blue-500 font-bold cursor-pointer hover:underline" onClick={() => { setNonStopFilter(false); setMorningFilter(false); }}>Clear All</span>
               </div>
             )}
 
-            <div className="bg-white p-4 rounded shadow-sm border border-gray-200">
-              <h3 className="font-bold text-gray-900 text-sm mb-4">Popular Filters</h3>
-              <label className="flex items-center gap-3 mb-3 cursor-pointer" onClick={() => setNonStopFilter(!nonStopFilter)}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center ${nonStopFilter ? 'bg-blue-500' : 'border border-gray-300'}`}>
-                  {nonStopFilter && <Check size={12} className="text-white" />}
-                </div>
-                <span className="text-sm text-gray-700">Non Stop</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer" onClick={() => setMorningFilter(!morningFilter)}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center ${morningFilter ? 'bg-blue-500' : 'border border-gray-300'}`}>
-                  {morningFilter && <Check size={12} className="text-white" />}
-                </div>
-                <span className="text-sm text-gray-700">Morning Departures</span>
-              </label>
-            </div>
-
-            {/* Promotional Ad Block */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded shadow-sm border border-blue-100 mt-4 overflow-hidden relative">
-              <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
-              <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-indigo-200 rounded-full mix-blend-multiply filter blur-2xl opacity-70"></div>
-              
-              <div className="relative z-10">
-                <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-3 inline-block">Sponsored</span>
-                <h3 className="font-black text-gray-900 text-lg leading-tight mb-2">Explore Bali at ₹12,999!</h3>
-                <p className="text-xs text-gray-600 mb-4 leading-relaxed">Book your dream tropical getaway with flat 20% off on Round Trips. Limited time offer.</p>
-                <div className="w-full h-28 rounded-lg overflow-hidden mb-3 shadow-md">
-                  <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80" alt="Bali" className="w-full h-full object-cover transform hover:scale-110 transition duration-700" />
-                </div>
-                <button className="w-full bg-gray-900 text-white font-bold text-xs py-2.5 rounded hover:bg-black transition shadow-lg shadow-gray-300">Grab Offer</button>
-              </div>
-            </div>
-
-            {/* Trending Deals */}
-            <div className="bg-white rounded shadow-sm border border-gray-200 mt-4 overflow-hidden">
-              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-                <h3 className="font-bold text-gray-900 text-sm">Trending Getaways</h3>
-              </div>
-              <div className="divide-y divide-gray-100">
-                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
-                  <img src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Goa" />
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-800">Goa</h4>
-                    <span className="text-[10px] text-gray-500 block">Starting from ₹3,499</span>
-                  </div>
-                </div>
-                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
-                  <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Maldives" />
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-800">Maldives</h4>
-                    <span className="text-[10px] text-gray-500 block">Starting from ₹15,999</span>
-                  </div>
-                </div>
-                <div className="p-3 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition group">
-                  <img src="https://images.unsplash.com/photo-1518182170546-076616fd4aa6?auto=format&fit=crop&w=200&q=80" className="w-12 h-12 rounded object-cover shadow-sm group-hover:shadow-md transition" alt="Kerala" />
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-800">Kerala</h4>
-                    <span className="text-[10px] text-gray-500 block">Starting from ₹4,199</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content - Flight Results */}
-          <div className="flex-1">
-            <h2 className="text-2xl font-black text-gray-900 mb-4">
-              Flights from {getCityName(from)} to {getCityName(to)}{tripType === 'Round Trip' ? ', and back' : ''}
-            </h2>
-
-            {/* Promo Banners */}
-            <div className="flex gap-4 mb-4 overflow-hidden h-[70px]">
-              <div className="flex-1 bg-[#eaf5fe] border border-[#d6eaff] rounded-lg p-3 flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">₹</div>
-                <div>
-                  <p className="font-bold text-sm text-gray-900">Price Drop Protection</p>
-                  <p className="text-xs text-gray-600">We refund the difference, if price...</p>
-                </div>
-              </div>
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3">
-                <div className="text-blue-800 font-black text-xl italic">VISA</div>
-                <div>
-                  <p className="font-bold text-sm text-gray-900">VISA Exclusive Offer</p>
-                  <p className="text-xs text-gray-600">Free Seat with VISA Signature...</p>
-                </div>
-              </div>
-            </div>
 
             {/* One Way Advanced Filtering UI */}
             {tripType === 'One Way' && (
               <>
                 {/* Date Carousel */}
                 <div className="flex bg-white shadow-sm border border-gray-200 rounded mb-4 overflow-hidden h-[60px]">
-                  <div className="w-10 flex items-center justify-center border-r border-gray-100 text-blue-500 font-black text-xl cursor-pointer hover:bg-gray-50 bg-white">{'<'}</div>
+                  <div onClick={() => setSliderOffset(prev => prev - 1)} className="w-10 flex items-center justify-center border-r border-gray-100 text-blue-500 font-black text-xl cursor-pointer hover:bg-gray-50 bg-white">{'<'}</div>
                   <div className="flex flex-1 divide-x divide-gray-100 text-center text-sm overflow-hidden">
                     {[...Array(7)].map((_, i) => {
                       const d = new Date(date);
-                      d.setDate(d.getDate() - 3 + i);
-                      const isSelected = i === 3;
+                      d.setDate(d.getDate() - 3 + i + sliderOffset);
+                      const isSelected = d.toDateString() === new Date(date).toDateString();
+
+                      const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                      const priceForDate = calendarPrices[dStr];
+                      
+                      let displayPriceStr = '--';
+                      if (isSelected && cheapestFlight) {
+                         displayPriceStr = `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')}`;
+                      } else if (priceForDate > 0) {
+                         displayPriceStr = `₹ ${getDisplayPrice(priceForDate).toLocaleString('en-IN')}`;
+                      } else if (priceForDate === -1) {
+                         displayPriceStr = 'Available';
+                      }
+
                       return (
                         <div 
                            key={i} 
-                           onClick={() => setDate(d)}
+                           onClick={() => {
+                             setDate(d);
+                             setSliderOffset(0);
+                           }}
                            className={`flex-1 py-2 cursor-pointer ${isSelected ? 'border-b-[3px] border-blue-500 bg-blue-50/50' : 'bg-white hover:bg-gray-50'}`}
                         >
                           <p className={`font-bold text-[13px] ${isSelected ? 'text-blue-600' : 'text-gray-900'}`}>
                             {d.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
                           </p>
-                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
-                            {isSelected && cheapestFlight ? `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')}` : '--'}
+                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : (priceForDate ? 'text-green-600' : 'text-gray-500')}`}>
+                            {displayPriceStr}
                           </p>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="w-10 flex items-center justify-center border-l border-gray-100 text-blue-500 font-black text-xl cursor-pointer hover:bg-gray-50 bg-white">{'>'}</div>
+                  <div onClick={() => setSliderOffset(prev => prev + 1)} className="w-10 flex items-center justify-center border-l border-gray-100 text-blue-500 font-black text-xl cursor-pointer hover:bg-gray-50 bg-white">{'>'}</div>
                 </div>
 
                 {/* Sorting Tabs */}
@@ -563,18 +500,7 @@ export default function FlightSearchResults() {
                       <p className="text-gray-500 text-[11px]">{nonStopFlight ? `₹ ${getDisplayPrice(nonStopFlight.price).toLocaleString('en-IN')} | ${formatDuration(nonStopFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
-                  <div onClick={() => setSortBy('YOU MAY PREFER')} className={`flex-1 bg-white border-x border-t ${sortBy === 'YOU MAY PREFER' ? 'border-b-4 border-blue-500 shadow-md opacity-100' : 'border-b border-gray-200 shadow-sm opacity-80 bg-gray-50'} rounded p-2 cursor-pointer flex items-center gap-3 transition`}>
-                    <div className="text-gray-400 w-8 h-8 flex items-center justify-center text-xl">⭐</div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-[13px]">YOU MAY PREFER</p>
-                      <p className="text-gray-500 text-[11px]">{preferFlight ? `₹ ${getDisplayPrice(preferFlight.price).toLocaleString('en-IN')} | ${formatDuration(preferFlight.durationMinutes)}` : '--'}</p>
-                    </div>
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded p-2 shadow-sm cursor-pointer hover:bg-white flex items-center justify-center gap-2 text-gray-700 font-bold text-[13px] w-28">
-                     Other Sort
-                  </div>
-                </div>
-                
                 {/* Text showing sorted by */}
                 <p className="text-sm font-bold text-gray-900 mb-2">Flights sorted by {sortBy === 'CHEAPEST' ? 'Lowest fares' : (sortBy === 'NON STOP FIRST' ? 'Fewest stops' : 'Best matches')} on this route</p>
               </>
@@ -699,8 +625,7 @@ export default function FlightSearchResults() {
               (tripType === 'One Way' && selectedOutbound)
             ) ? createPortal(
               <div className="fixed bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
-                <div className="max-w-[1200px] mx-auto flex gap-6">
-                  <div className="w-[240px] shrink-0 hidden md:block"></div>
+                <div className="max-w-[1000px] mx-auto flex w-full">
                   <div className="flex-1 bg-[#001736] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] rounded-t-lg flex items-center justify-between pointer-events-auto border-t border-blue-900">
                     
                     <div className="flex gap-4 flex-1 pl-2">
@@ -946,3 +871,6 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
     </div>
   );
 }
+
+
+

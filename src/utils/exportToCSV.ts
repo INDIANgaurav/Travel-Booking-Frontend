@@ -5,7 +5,10 @@ export const exportToCSV = (data: any[], filename: string) => {
 
   const escapeCSV = (val: any) => {
     if (val === null || val === undefined) return '';
-    const str = String(val);
+    
+    // Handle nested objects/arrays
+    let str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+    
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
       return `"${str.replace(/"/g, '""')}"`;
     }
@@ -31,5 +34,6 @@ export const exportToCSV = (data: any[], filename: string) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 };

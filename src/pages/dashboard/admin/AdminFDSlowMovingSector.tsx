@@ -26,8 +26,29 @@ export default function AdminFDSlowMovingSector() {
   const [newPrice, setNewPrice] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handlePushPromo = (sector: ISlowMoving) => {
-    toast.success(`Promo emails sent to all B2B agents for ${sector.sector} flight!`);
+  const handlePushPromo = async (sector: ISlowMoving) => {
+    try {
+      const code = `SALE${sector.pnr.toUpperCase()}`;
+      await api.post('/api/promos', {
+        code,
+        description: `Flash sale for ${sector.sector} departing on ${new Date(sector.travelDate).toLocaleDateString()}`,
+        discountType: 'FLAT',
+        discountAmount: 500,
+        maxUses: sector.totalSeats - sector.soldSeats,
+        usageLimitPerUser: 1,
+        validFrom: new Date().toISOString(),
+        validTo: sector.travelDate,
+        applicableModules: ['FLIGHT'],
+        conditions: { pnr: sector.pnr }
+      });
+      toast.success(`Promo Code ${code} generated and emails sent to B2B agents!`);
+    } catch (error: any) {
+      if (error.response?.data?.message === 'Promo code already exists') {
+        toast.error(`Promo Code for this PNR already exists!`);
+      } else {
+        toast.error('Failed to generate promo code');
+      }
+    }
   };
 
   const handleAlertSupplier = (sector: ISlowMoving) => {

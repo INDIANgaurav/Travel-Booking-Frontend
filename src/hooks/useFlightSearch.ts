@@ -147,9 +147,21 @@ export function useFlightSearch() {
       fetchFlights(true);
     } else {
       fetchFlights(false);
+      const query = new URLSearchParams({
+        tripType,
+        from,
+        to,
+        date: getLocalISO(date),
+        returnDate: getLocalISO(returnDate),
+        cabinClass,
+        adults: adults.toString(),
+        children: children.toString(),
+        infants: infants.toString()
+      }).toString();
+      navigate(`/flights/search?${query}`, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nonStopFilter, morningFilter]);
+  }, [nonStopFilter, morningFilter, date]);
 
   const handleSearch = () => {
     fetchFlights(false);
@@ -238,3 +250,4 @@ export function useFlightSearch() {
     navigate
   };
 }
+

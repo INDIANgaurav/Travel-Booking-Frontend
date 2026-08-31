@@ -92,10 +92,25 @@ export default function FlightTicket() {
   const originCode = booking.type === 'FLIGHT' ? (leg?.origin || getAirportCode(booking.details?.from)) : '';
   const destCode = booking.type === 'FLIGHT' ? (leg?.destination || getAirportCode(booking.details?.to)) : '';
   const dateStr = new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const travelDateStr = nexusData?.travel_date ? new Date(nexusData.travel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : dateStr;
   
-  const depTime = leg?.departure_time ? new Date(leg.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : (booking.details?.date ? new Date(booking.details.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '19:30');
-  const arrTime = leg?.arrival_time ? new Date(leg.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : depTime;
+  // For Series Fare: use booking.date (which is the actual flight departure time/date)
+  // For Nexus: use nexusData.travel_date
+  const travelDateRaw = nexusData?.travel_date 
+    ? nexusData.travel_date 
+    : (booking.date || null);
+
+  const travelDateStr = travelDateRaw 
+    ? new Date(travelDateRaw).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
+    : dateStr;
+  
+  const depTime = leg?.departure_time 
+    ? new Date(leg.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) 
+    : (travelDateRaw 
+        ? new Date(travelDateRaw).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) 
+        : '19:30');
+  const arrTime = leg?.arrival_time 
+    ? new Date(leg.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) 
+    : depTime;
   
   const handBaggage = flight?.cabin_baggage || '7kg (1 piece)';
   const checkinBaggage = flight?.checkin_baggage || '15kg (1 piece)';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Plane, ChevronUp, Clock, Info, X } from 'lucide-react';
+import { Plane, ChevronUp, Clock, Info, X, Tag } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import DOBCalendar from '../../components/ui/DOBCalendar';
@@ -86,6 +86,66 @@ const B2BAgentCheckout: React.FC = () => {
   const [isBooking, setIsBooking] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Agency Account');
 
+  // Extract flight and fare details from router state
+  const flight = location.state?.flight;
+  const fareType = location.state?.fareType || 'Coupon fares';
+  const adults = location.state?.adults || 1;
+  const childrenCount = location.state?.children || 0;
+  const infants = location.state?.infants || 0;
+
+  const requireDob = flight?.inputRequirements?.dob?.required;
+  // For International flights, Nexus requires DOB. We'll use this to also ask for Passport.
+  const requirePassport = flight?.inputRequirements?.passport?.required || requireDob;
+
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [promoError, setPromoError] = useState('');
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [availablePromos, setAvailablePromos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPromos = async () => {
+      try {
+        const pnr = flight?.pnr || flight?.airlinePnr;
+        const pnrParam = pnr ? `&pnr=${pnr}` : '';
+        const supplierParam = flight?.supplierId ? `&supplierId=${flight.supplierId}` : '';
+        const res = await api.get(`/api/promos/available?module=FLIGHT${pnrParam}${supplierParam}`);
+        setAvailablePromos(res.data);
+      } catch (err) {
+        console.error('Failed to fetch available promos');
+      }
+    };
+    if (flight) {
+      fetchPromos();
+    }
+  }, [flight]);
+
+  const applyPromoCode = async () => {
+    if (!promoCode) return;
+    setIsApplyingPromo(true);
+    setPromoError('');
+    try {
+      const response = await api.post('/api/promos/validate', { 
+        code: promoCode, 
+        module: 'FLIGHT',
+        flightDetails: { pnr: flight?.pnr || flight?.airlinePnr }
+      });
+      setAppliedPromo(response.data.promo);
+      toast.success('Promo Code Applied!');
+    } catch (error: any) {
+      setPromoError(error.response?.data?.message || 'Invalid Promo Code');
+      setAppliedPromo(null);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setAppliedPromo(null);
+    setPromoError('');
+  };
+
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       if (document.getElementById('razorpay-script')) {
@@ -100,17 +160,6 @@ const B2BAgentCheckout: React.FC = () => {
       document.body.appendChild(script);
     });
   };
-
-  // Extract flight and fare details from router state
-  const flight = location.state?.flight;
-  const fareType = location.state?.fareType || 'Coupon fares';
-  const adults = location.state?.adults || 1;
-  const childrenCount = location.state?.children || 0;
-  const infants = location.state?.infants || 0;
-
-  const requireDob = flight?.inputRequirements?.dob?.required;
-  // For International flights, Nexus requires DOB. We'll use this to also ask for Passport.
-  const requirePassport = flight?.inputRequirements?.passport?.required || requireDob;
 
   const [passengers, setPassengers] = useState<Passenger[]>(() => {
     const p: Passenger[] = [];
@@ -201,6 +250,7 @@ const B2BAgentCheckout: React.FC = () => {
 
       const { data } = await api.post('/api/bookings/flight', {
         totalAmount: totalFare,
+        promoCode: appliedPromo?.code,
         date: flight.departureTime,
         bookingMode: 'B2B',
         details: {
@@ -357,7 +407,11 @@ const B2BAgentCheckout: React.FC = () => {
     (infantNoSeatCount * infantTax);
 
   // Use the exact calculated total
-  const totalFare = totalBaseFare + taxesAndFees;
+  const initialTotalFare = totalBaseFare + taxesAndFees;
+  const promoDiscount = appliedPromo 
+    ? (appliedPromo.discountType === 'FLAT' ? appliedPromo.discountAmount : (initialTotalFare * (appliedPromo.discountAmount / 100))) 
+    : 0;
+  const totalFare = initialTotalFare - promoDiscount;
 
   return (
     <div className="min-h-screen bg-[#f4f7fb] font-sans pb-24 text-[#0c1a40]">
@@ -1045,9 +1099,85 @@ const B2BAgentCheckout: React.FC = () => {
               </div>
             </div>
 
+            {appliedPromo && (
+              <div className="bg-emerald-50 px-4 py-2 flex justify-between items-center text-xs font-black text-emerald-600 border-t border-emerald-100">
+                <span>Promo Discount ({appliedPromo.code})</span>
+                <span>-₹{(promoDiscount).toLocaleString('en-IN')}</span>
+              </div>
+            )}
             <div className="bg-[#f8f9fc] p-4 flex justify-between items-center text-xs font-black text-[#0c1a40] border-t border-gray-100">
               <span>Total Fare</span>
               <span>₹{(totalFare).toLocaleString('en-IN')}.00</span>
+            </div>
+
+            {/* Promo Code Input */}
+            <div className="p-4 border-t border-gray-100 bg-white">
+              <h4 className="text-xs font-bold text-[#0c1a40] mb-2 flex items-center gap-1">
+                <Tag size={12} /> Apply Promo Code
+              </h4>
+              
+              {availablePromos.length > 0 && !appliedPromo && (
+                <div className="mb-4 space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {availablePromos.map((promo: any) => (
+                    <div key={promo._id} className="border border-blue-100 bg-blue-50/50 rounded-lg p-3 flex justify-between items-center group hover:bg-blue-50 transition-colors">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded uppercase tracking-wider">{promo.code}</span>
+                          <span className="text-[10px] font-bold text-emerald-600">
+                            Save {promo.discountType === 'FLAT' ? '₹' : ''}{promo.discountAmount}{promo.discountType === 'PERCENTAGE' ? '%' : ''}
+                          </span>
+                        </div>
+                        {promo.description && <p className="text-[10px] text-gray-500 line-clamp-1">{promo.description}</p>}
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setPromoCode(promo.code);
+                          setTimeout(() => {
+                            const btn = document.getElementById('apply-promo-btn');
+                            if (btn) btn.click();
+                          }, 100);
+                        }}
+                        className="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-white border border-blue-200 px-3 py-1.5 rounded shadow-sm hover:shadow active:scale-95 transition-all"
+                      >
+                        APPLY
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!appliedPromo ? (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={promoCode} 
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      className="w-full border border-gray-200 rounded-md px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 uppercase"
+                      placeholder="Enter Code"
+                    />
+                    <button 
+                      id="apply-promo-btn"
+                      onClick={applyPromoCode}
+                      disabled={isApplyingPromo || !promoCode}
+                      className="bg-gray-100 hover:bg-gray-200 text-[#0c1a40] font-bold text-xs px-4 py-2 rounded-md disabled:opacity-50"
+                    >
+                      {isApplyingPromo ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                  {promoError && <p className="text-[10px] text-red-500 font-bold">{promoError}</p>}
+                </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-200 rounded px-3 py-2 flex justify-between items-center">
+                  <div>
+                    <div className="text-xs font-black text-emerald-700">{appliedPromo.code} Applied</div>
+                    <div className="text-[10px] text-emerald-600 font-semibold">You saved ₹{promoDiscount}</div>
+                  </div>
+                  <button onClick={removePromoCode} className="text-emerald-700 hover:text-emerald-900 font-bold text-[10px]">
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -1236,6 +1366,12 @@ const B2BAgentCheckout: React.FC = () => {
                     <span>Taxes and Fees <span className="text-[9px]">▼</span></span>
                     <span className="font-normal">₹{(taxesAndFees).toLocaleString('en-IN')}.00</span>
                   </div>
+                  {appliedPromo && (
+                    <div className="flex justify-between items-center text-xs text-emerald-600 font-bold">
+                      <span>Promo Discount ({appliedPromo.code})</span>
+                      <span>-₹{(promoDiscount).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
                   <div className="h-px bg-blue-100 my-2 w-full"></div>
                   <div className="flex justify-between items-center text-sm font-black text-[#0c1a40]">
                     <span>Total Fare</span>

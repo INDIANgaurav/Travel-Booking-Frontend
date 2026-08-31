@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -95,6 +95,12 @@ export default function AdminLayout() {
         { name: 'Global Ledger', path: '/admin/ledger', icon: <CreditCard size={20} /> },
         { name: 'Withdrawal Reqs', path: '/admin/withdrawals', icon: <CreditCard size={20} /> },
         { name: 'Commissions & Fees', path: '/admin/commissions', icon: <DollarSign size={20} /> },
+      ]
+    },
+    {
+      title: 'Marketing & Promos',
+      items: [
+        { name: 'Promo Codes', path: '/admin/marketing/promos', icon: <Tag size={20} /> },
       ]
     },
     {

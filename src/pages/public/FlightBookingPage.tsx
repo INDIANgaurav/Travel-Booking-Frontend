@@ -52,6 +52,94 @@ export default function FlightBookingPage() {
   const [showBaseFare, setShowBaseFare] = useState(false);
   const [showTaxes, setShowTaxes] = useState(false);
   
+  // Promo states
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [promoError, setPromoError] = useState('');
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [availablePromos, setAvailablePromos] = useState<any[]>([]);
+
+  // Calculate Unified Cart Totals
+  const cartBaseAmount = selectedOutbound ? (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)) : 0;
+  const cartTotalAmount = appliedPromo ? Math.max(0, cartBaseAmount - (appliedPromo.discountAmount || 0)) : cartBaseAmount;
+
+  useEffect(() => {
+    const fetchPromos = async () => {
+      try {
+        const pnr = selectedOutbound?.pnr || selectedOutbound?.airlinePnr;
+        const pnrParam = pnr ? `&pnr=${pnr}` : '';
+        const supplierParam = selectedOutbound?.supplierId ? `&supplierId=${selectedOutbound.supplierId}` : '';
+        const res = await api.get(`/api/promos/available?module=FLIGHT${pnrParam}${supplierParam}`);
+        setAvailablePromos(res.data);
+      } catch (err) {
+        console.error('Failed to fetch available promos');
+      }
+    };
+    if (selectedOutbound) {
+      fetchPromos();
+    }
+  }, [selectedOutbound]);
+
+  // ── Seat Inventory ──────────────────────────────────────────────────────────
+  const [seatData, setSeatData] = useState<{
+    totalSeats: number;
+    availableSeats: number;
+    bookedSeats: string[];
+    isLoading: boolean;
+  }>({ totalSeats: 30, availableSeats: 30, bookedSeats: [], isLoading: false });
+
+  useEffect(() => {
+    if (bookingStep !== 3) return;
+    const fetchSeats = async () => {
+      setSeatData(prev => ({ ...prev, isLoading: true }));
+      try {
+        if (selectedOutbound?.isSeriesFare) {
+          // Series Fare: get real inventory using sfId (e.g. "SF5123")
+          const sfId = selectedOutbound.seriesFareId || selectedOutbound._id || '';
+          const res = await api.get(`/api/series-fares/${sfId}/seats`);
+          setSeatData({
+            totalSeats: res.data.totalSeats || 30,
+            availableSeats: res.data.availableSeats,
+            bookedSeats: res.data.bookedSeats || [],
+            isLoading: false,
+          });
+        } else {
+          // API flight (Nexus etc.) — no real seat map, show generic
+          setSeatData({ totalSeats: 30, availableSeats: 30, bookedSeats: [], isLoading: false });
+        }
+      } catch (e) {
+        setSeatData(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+    fetchSeats();
+  }, [bookingStep, selectedOutbound]);
+
+  const applyPromoCode = async () => {
+    if (!promoCode) return;
+    setIsApplyingPromo(true);
+    setPromoError('');
+    try {
+      const response = await api.post('/api/promos/validate', { 
+        code: promoCode, 
+        module: 'FLIGHT',
+        flightDetails: { pnr: selectedOutbound?.pnr || selectedOutbound?.airlinePnr }
+      });
+      setAppliedPromo(response.data.promo);
+      toast.success('Promo Code Applied!');
+    } catch (error: any) {
+      setPromoError(error.response?.data?.message || 'Invalid Promo Code');
+      setAppliedPromo(null);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode('');
+    setAppliedPromo(null);
+    setPromoError('');
+  };
+  
   useEffect(() => {
     if (!selectedOutbound) {
       toast.error('No flight selected!');
@@ -133,9 +221,6 @@ export default function FlightBookingPage() {
           return;
         }
       }
-
-        const totalAmount = selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0);
-      
       // Check availability before payment (Only for Nexus flights)
       if (!selectedOutbound.isSeriesFare) {
         try {
@@ -157,7 +242,8 @@ export default function FlightBookingPage() {
       const { data } = await api.post('/api/bookings/flight', {
         bookingMode: user?.roles?.includes('B2B_AGENT') ? 'B2B' : 'PERSONAL',
         paymentMethod: paymentMethod,
-        totalAmount,
+        totalAmount: cartTotalAmount,
+        promoCode: appliedPromo?.code || null,
         date: selectedOutbound.departureTime,
         details: {
           airline: selectedOutbound.airline,
@@ -292,7 +378,7 @@ export default function FlightBookingPage() {
           <span 
             className={`transition-colors ${bookingStep >= 4 ? 'text-white font-bold' : ''} ${maxStepReached >= 4 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
             onClick={() => { if (maxStepReached >= 4) setBookingStep(4); }}
-          >Add-ons</span>
+          >Payment</span>
         </div>
       </div>
 
@@ -605,15 +691,34 @@ export default function FlightBookingPage() {
           {/* STEP 3: SEATS */}
           {bookingStep === 3 && (
             <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-               <div className="p-4 border-b border-gray-200 flex items-center gap-2">
-                 <Plane className="text-gray-500 w-5 h-5 transform rotate-45" />
-                 <h2 className="text-xl font-bold text-gray-900">Seats</h2>
+               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <Plane className="text-gray-500 w-5 h-5 transform rotate-45" />
+                   <h2 className="text-xl font-bold text-gray-900">Seats</h2>
+                 </div>
+                 {selectedOutbound?.isSeriesFare ? (
+                   <div className="flex items-center gap-3 text-sm">
+                     <span className="flex items-center gap-1.5">
+                       <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                       <span className="text-gray-600">{seatData.availableSeats} Available</span>
+                     </span>
+                     <span className="flex items-center gap-1.5">
+                       <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                       <span className="text-gray-600">{seatData.totalSeats - seatData.availableSeats} Booked</span>
+                     </span>
+                     <span className="text-gray-400">of {seatData.totalSeats} total</span>
+                   </div>
+                 ) : (
+                   <span className="text-xs bg-blue-50 text-blue-600 font-semibold px-3 py-1 rounded-full border border-blue-100">API Flight — Generic Layout</span>
+                 )}
                </div>
                
                <div className="p-4 bg-gray-50">
                  <div className="flex justify-between items-center bg-white p-3 border border-gray-200 rounded">
                    <div className="flex items-center gap-2">
-                     <span className="font-bold text-gray-800 text-[14px]">New Delhi → Navi Mumbai</span>
+                     <span className="font-bold text-gray-800 text-[14px]">
+                       {selectedOutbound?.departureAirportCode || selectedOutbound?.origin} → {selectedOutbound?.arrivalAirportCode || selectedOutbound?.destination}
+                     </span>
                      <span className="text-[12px] text-gray-500">{selectedSeats.length} of {totalSeatFareCount} Seat(s) Selected</span>
                      {selectedSeats.length > 0 && (
                        <span className="text-[12px] font-bold text-white bg-green-500 px-2 py-0.5 rounded ml-2">
@@ -621,132 +726,120 @@ export default function FlightBookingPage() {
                        </span>
                      )}
                    </div>
-                   <div className="text-right">
-                     <span className="font-bold text-gray-800 text-[14px]">₹ 301</span>
-                     <p className="text-[10px] text-gray-500">Added to fare</p>
-                   </div>
                  </div>
                </div>
 
-               {/* Airplane Visual - Simplified Rectangular Layout */}
-               <div className="bg-gray-50 w-full py-8 flex justify-center relative">
-                 
-                 {/* Legend */}
-                 <div className="absolute top-6 left-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-[11px] text-gray-700 flex flex-col gap-2 z-10 w-[180px]">
-                   <h4 className="font-bold border-b border-gray-100 pb-2 mb-1">Seat Legend</h4>
-                   <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded-[4px] shadow-inner border border-green-600"></div> Selected</div>
-                   <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#93c5fd] rounded-[4px]"></div> Available</div>
-                   <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#c4b5fd] rounded-[4px]"></div> Extra Legroom</div>
-                   <div className="flex items-center gap-2"><div className="w-4 h-4 bg-white border border-gray-300 rounded-[4px] text-gray-300 flex items-center justify-center font-bold text-[10px]">✕</div> Occupied</div>
+               {seatData.isLoading ? (
+                 <div className="flex items-center justify-center py-20">
+                   <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
                  </div>
+               ) : (
+                 <div className="bg-gray-50 w-full py-8 flex justify-center relative">
+                   
+                   {/* Legend */}
+                   <div className="absolute top-6 left-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-[11px] text-gray-700 flex flex-col gap-2 z-10 w-[180px]">
+                     <h4 className="font-bold border-b border-gray-100 pb-2 mb-1">Seat Legend</h4>
+                     <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded-[4px]"></div> Selected</div>
+                     <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#93c5fd] rounded-[4px]"></div> Available</div>
+                     {selectedOutbound?.isSeriesFare ? (
+                       <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-100 border border-red-300 rounded-[4px] flex items-center justify-center text-red-400 text-[9px] font-bold">✕</div> Booked</div>
+                     ) : (
+                       <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded-[4px] flex items-center justify-center text-gray-300 text-[9px] font-bold">✕</div> Occupied</div>
+                     )}
+                   </div>
 
-                 {/* Simplified Rectangular Body */}
-                 <div className="relative w-[340px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden py-8">
-                   <div className="flex flex-col items-center w-full">
-                     
-                     <div className="text-sm font-bold text-gray-400 mb-6 tracking-widest uppercase">Front</div>
-
-                     {/* Column Headers */}
-                     <div className="flex gap-8 mb-4 text-[12px] font-bold text-gray-700 w-full justify-center pl-2">
-                       <div className="flex gap-2 w-[90px] justify-between">
-                         <span className="w-6 text-center">A</span>
-                         <span className="w-6 text-center">B</span>
-                         <span className="w-6 text-center">C</span>
-                       </div>
-                       <div className="flex gap-2 w-[90px] justify-between">
-                         <span className="w-6 text-center">D</span>
-                         <span className="w-6 text-center">E</span>
-                         <span className="w-6 text-center">F</span>
-                       </div>
+                   {!selectedOutbound?.isSeriesFare && (
+                     <div className="absolute top-6 right-6 bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-700 max-w-[180px] z-10">
+                       <p className="font-bold mb-0.5">ℹ️ API Flight</p>
+                       <p>Seat preference only. Actual assignment by airline at check-in.</p>
                      </div>
+                   )}
 
-                     {/* Rows */}
-                     {Array.from({ length: 30 }, (_, i) => i + 1).map((row) => (
-                       <div key={row} className="flex gap-8 mb-2 items-center text-[10px] w-full justify-center">
-                         <span className="w-4 text-right font-bold text-gray-500 absolute left-6">{row}</span>
-                         
-                         {/* ABC Seats */}
-                         <div className="flex gap-2 w-[90px]">
-                           {['A', 'B', 'C'].map(col => {
-                             const seatId = `${row}${col}`;
-                             // Deterministic unavailability
-                             const isUnavailable = (row * 7 + col.charCodeAt(0)) % 5 === 0;
-                             const isXL = row <= 3;
-                             const isSelected = selectedSeats.includes(seatId);
-                             
-                             let bg = '';
-                             if (isUnavailable) bg = 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed';
-                             else if (isSelected) bg = 'bg-green-500 text-white shadow-inner border border-green-600 hover:bg-green-600 cursor-pointer scale-110 transition-transform';
-                             else if (isXL) bg = 'bg-[#c4b5fd] text-white hover:bg-indigo-400 cursor-pointer shadow-sm border border-[#a78bfa]';
-                             else bg = 'bg-[#93c5fd] text-white hover:bg-blue-400 cursor-pointer shadow-sm border border-[#60a5fa]';
-                             
-                             return (
-                               <div 
-                                 key={col} 
-                                 onClick={() => {
-                                   if (isUnavailable) return;
-                                   if (isSelected) {
-                                     setSelectedSeats(prev => prev.filter(s => s !== seatId));
-                                   } else {
-                                     if (selectedSeats.length >= totalSeatFareCount) {
-                                       toast.error(`You can only select ${totalSeatFareCount} seats.`);
-                                       return;
-                                     }
-                                     setSelectedSeats(prev => [...prev, seatId]);
-                                   }
-                                 }}
-                                 className={`w-7 h-7 rounded-[6px] flex items-center justify-center font-bold text-[9px] transition-colors ${bg}`}
-                               >
-                                 {isUnavailable ? '✕' : (isXL && !isSelected ? 'XL' : (isSelected ? '✓' : ''))}
-                               </div>
-                             );
-                           })}
+                   {/* Airplane Body */}
+                   <div className="relative w-[340px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden py-8">
+                     <div className="flex flex-col items-center w-full">
+                       <div className="text-sm font-bold text-gray-400 mb-6 tracking-widest uppercase">Front</div>
+
+                       {/* Column Headers */}
+                       <div className="flex gap-8 mb-4 text-[12px] font-bold text-gray-700 w-full justify-center pl-2">
+                         <div className="flex gap-2 w-[90px] justify-between">
+                           <span className="w-6 text-center">A</span>
+                           <span className="w-6 text-center">B</span>
+                           <span className="w-6 text-center">C</span>
                          </div>
-
-                         {/* DEF Seats */}
-                         <div className="flex gap-2 w-[90px]">
-                           {['D', 'E', 'F'].map(col => {
-                             const seatId = `${row}${col}`;
-                             const isUnavailable = (row * 11 + col.charCodeAt(0)) % 7 === 0;
-                             const isXL = row <= 3;
-                             const isSelected = selectedSeats.includes(seatId);
-                             
-                             let bg = '';
-                             if (isUnavailable) bg = 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed';
-                             else if (isSelected) bg = 'bg-green-500 text-white shadow-inner border border-green-600 hover:bg-green-600 cursor-pointer scale-110 transition-transform';
-                             else if (isXL) bg = 'bg-[#c4b5fd] text-white hover:bg-indigo-400 cursor-pointer shadow-sm border border-[#a78bfa]';
-                             else bg = 'bg-[#93c5fd] text-white hover:bg-blue-400 cursor-pointer shadow-sm border border-[#60a5fa]';
-                             
-                             return (
-                               <div 
-                                 key={col} 
-                                 onClick={() => {
-                                   if (isUnavailable) return;
-                                   if (isSelected) {
-                                     setSelectedSeats(prev => prev.filter(s => s !== seatId));
-                                   } else {
-                                     if (selectedSeats.length >= totalSeatFareCount) {
-                                       toast.error(`You can only select ${totalSeatFareCount} seats.`);
-                                       return;
-                                     }
-                                     setSelectedSeats(prev => [...prev, seatId]);
-                                   }
-                                 }}
-                                 className={`w-7 h-7 rounded-[6px] flex items-center justify-center font-bold text-[9px] transition-colors ${bg}`}
-                               >
-                                 {isUnavailable ? '✕' : (isXL && !isSelected ? 'XL' : (isSelected ? '✓' : ''))}
-                               </div>
-                             );
-                           })}
+                         <div className="flex gap-2 w-[90px] justify-between">
+                           <span className="w-6 text-center">D</span>
+                           <span className="w-6 text-center">E</span>
+                           <span className="w-6 text-center">F</span>
                          </div>
-
-                         <span className="w-4 text-left font-bold text-gray-500 absolute right-6">{row}</span>
                        </div>
-                     ))}
-                     <div className="text-sm font-bold text-gray-400 mt-6 tracking-widest uppercase">Rear</div>
+
+                       {/* Rows — dynamic based on totalSeats ÷ 6, min 1, max 50 */}
+                       {(() => {
+                         const totalRows = selectedOutbound?.isSeriesFare
+                           ? Math.max(1, Math.ceil(seatData.totalSeats / 6))
+                           : 30;
+                         return Array.from({ length: totalRows }, (_, i) => i + 1).map((row) => (
+                           <div key={row} className="flex gap-8 mb-2 items-center text-[10px] w-full justify-center">
+                             <span className="w-4 text-right font-bold text-gray-500 absolute left-6">{row}</span>
+
+                             {/* ABC + DEF seats */}
+                             {[['A','B','C'], ['D','E','F']].map((cols, gi) => (
+                               <div key={gi} className="flex gap-2 w-[90px]">
+                                 {cols.map(col => {
+                                   const seatId = `${row}${col}`;
+                                   const seatNum = (row - 1) * 6 + ['A','B','C','D','E','F'].indexOf(col) + 1;
+                                   
+                                   // For SeriesFare: seats beyond totalSeats don't exist
+                                   const isNonExistent = selectedOutbound?.isSeriesFare && seatNum > seatData.totalSeats;
+                                   // Booked by another booking
+                                   const isBooked = !isNonExistent && seatData.bookedSeats.includes(seatId);
+                                   // For API flights: deterministic visual "occupied"
+                                   const isApiOccupied = !selectedOutbound?.isSeriesFare && (row * 7 + col.charCodeAt(0)) % 5 === 0;
+                                   const isUnavailable = isNonExistent || isBooked || isApiOccupied;
+                                   const isSelected = selectedSeats.includes(seatId);
+
+                                   let bg = '';
+                                   if (isNonExistent) bg = 'bg-transparent border-0 cursor-default opacity-0';
+                                   else if (isBooked) bg = 'bg-red-50 border border-red-200 text-red-400 cursor-not-allowed';
+                                   else if (isApiOccupied) bg = 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed';
+                                   else if (isSelected) bg = 'bg-green-500 text-white shadow-inner border border-green-600 hover:bg-green-600 cursor-pointer scale-110 transition-transform';
+                                   else bg = 'bg-[#93c5fd] text-white hover:bg-blue-400 cursor-pointer shadow-sm border border-[#60a5fa]';
+
+                                   return (
+                                     <div
+                                       key={col}
+                                       onClick={() => {
+                                         if (isUnavailable) return;
+                                         if (isSelected) {
+                                           setSelectedSeats(prev => prev.filter(s => s !== seatId));
+                                         } else {
+                                           if (selectedSeats.length >= totalSeatFareCount) {
+                                             toast.error(`You can only select ${totalSeatFareCount} seat(s).`);
+                                             return;
+                                           }
+                                           setSelectedSeats(prev => [...prev, seatId]);
+                                         }
+                                       }}
+                                       className={`w-7 h-7 rounded-[6px] flex items-center justify-center font-bold text-[9px] transition-colors ${bg}`}
+                                     >
+                                       {isBooked ? '✕' : isApiOccupied ? '✕' : isSelected ? '✓' : ''}
+                                     </div>
+                                   );
+                                 })}
+                               </div>
+                             ))}
+
+                             <span className="w-4 text-left font-bold text-gray-500 absolute right-6">{row}</span>
+                           </div>
+                         ));
+                       })()}
+
+                       <div className="text-sm font-bold text-gray-400 mt-6 tracking-widest uppercase">Rear</div>
+                     </div>
                    </div>
                  </div>
-               </div>
+               )}
 
                <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end relative z-20">
                   <button onClick={() => { setBookingStep(4); if (maxStepReached < 4) setMaxStepReached(4); }} className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700">CONTINUE</button>
@@ -754,16 +847,15 @@ export default function FlightBookingPage() {
             </div>
           )}
 
-          {/* STEP 4: ADD-ONS (Inactive) */}
+          {/* STEP 4: PAYMENT */}
           {bookingStep < 4 && (
              <div className="bg-white p-4 rounded-lg border border-gray-200 text-gray-500 font-bold flex justify-between cursor-pointer shadow-sm hover:bg-gray-50" onClick={() => bookingStep >= 3 && setBookingStep(4)}>
-               <span>Add-ons</span>
+               <span>Payment</span>
              </div>
           )}
           {bookingStep === 4 && (
              <div className="bg-white p-6 shadow-sm rounded-lg border border-gray-200">
-               <h2 className="text-xl font-bold text-gray-900 mb-4">Add-ons & Payment Method</h2>
-               <p className="text-sm text-gray-500 mb-6">No add-ons selected.</p>
+               <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Method</h2>
                
                <div className="mb-8 p-4 border border-blue-100 bg-blue-50/50 rounded-xl">
                  <h3 className="font-bold text-gray-800 mb-4 text-sm">Select Payment Method</h3>
@@ -792,17 +884,16 @@ export default function FlightBookingPage() {
                        />
                        <div>
                          <span className="font-bold text-gray-700 text-sm">Agent Wallet</span>
-                         <div className="text-xs text-gray-500 mt-0.5">Pay using your available wallet balance</div>
+                         {user && user.walletBalance !== undefined && (
+                           <div className="text-right">
+                             <div className="text-xs text-gray-500">Available Balance</div>
+                             <div className={`font-bold text-sm ${(user.walletBalance < cartTotalAmount) ? 'text-red-500' : 'text-green-600'}`}>
+                               ₹ {user.walletBalance.toLocaleString('en-IN')}
+                             </div>
+                           </div>
+                         )}
                        </div>
                      </div>
-                     {user && user.walletBalance !== undefined && (
-                       <div className="text-right">
-                         <div className="text-xs text-gray-500">Available Balance</div>
-                         <div className={`font-bold text-sm ${(user.walletBalance < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))) ? 'text-red-500' : 'text-green-600'}`}>
-                           ₹ {user.walletBalance.toLocaleString('en-IN')}
-                         </div>
-                       </div>
-                     )}
                    </label>
                  </div>
                </div>
@@ -855,12 +946,11 @@ export default function FlightBookingPage() {
                     )}
                   </tbody>
                 </table>
-             </div>
-             
-             {/* Total Amount */}
+              </div>
+                     {/* Total Amount */}
              <div className="bg-gray-50 p-4 border-t border-gray-200 rounded-b-lg flex justify-between items-center">
                 <span className="font-black text-gray-900 text-[18px]">Total Amount</span>
-                <span className="text-[22px] font-black text-blue-600">₹ {selectedOutbound.price.toLocaleString('en-IN')}</span>
+                <span className="text-[22px] font-black text-blue-600">₹ {(selectedOutbound.price - (appliedPromo?.discountAmount || 0)).toLocaleString('en-IN')}</span>
              </div>
           </div>
 
@@ -868,28 +958,78 @@ export default function FlightBookingPage() {
           <div className="bg-white shadow-sm border border-gray-200 rounded-b-lg">
              <div className="p-4 bg-[#fdf2e9] border-b border-[#f7e0ce] flex justify-between items-center">
                <h3 className="font-bold text-[16px] text-gray-900">Coupons and Offers</h3>
-               <div className="text-orange-500">🎁</div>
+               <div className="text-orange-500">🏷️</div>
              </div>
+             
              <div className="p-4">
-               <input type="text" placeholder="Enter coupon code" className="w-full border border-gray-300 rounded p-2 text-[13px] mb-4" />
-               <div className="flex border border-blue-400 rounded overflow-hidden text-[13px] mb-4">
-                 <button className="flex-1 bg-[#f4f8fe] text-blue-600 font-bold py-2 border-r border-gray-200">All</button>
-                 <button className="flex-1 bg-white text-gray-600 py-2 border-r border-gray-200 hover:bg-gray-50">Bank</button>
-                 <button className="flex-1 bg-white text-gray-600 py-2 hover:bg-gray-50">Add-ons</button>
-               </div>
-               <div className="border border-gray-200 rounded p-3 mb-3 bg-[#fdfdfd]">
-                 <div className="flex justify-between mb-1">
-                   <div className="flex items-center gap-2 font-bold text-[14px]">
-                     <span className="bg-[#249995] text-white w-5 h-5 rounded flex items-center justify-center text-[12px]">%</span>
-                     FLYPROMO
+               {availablePromos.length > 0 && !appliedPromo && (
+                 <div className="mb-4 space-y-2 max-h-40 overflow-y-auto pr-1">
+                   {availablePromos.map((promo: any) => (
+                     <div key={promo._id} className="border border-blue-200 bg-blue-50/50 rounded-lg p-3 flex justify-between items-center hover:bg-blue-50 transition-colors">
+                       <div>
+                         <div className="flex items-center gap-2 mb-1">
+                           <span className="text-[12px] font-black bg-blue-600 text-white px-2 py-0.5 rounded tracking-wider">{promo.code}</span>
+                           <span className="text-[12px] font-bold text-emerald-600">
+                             Save {promo.discountType === 'FLAT' ? '₹' : ''}{promo.discountAmount}{promo.discountType === 'PERCENTAGE' ? '%' : ''}
+                           </span>
+                         </div>
+                         {promo.description && <p className="text-[11px] text-gray-600">{promo.description}</p>}
+                       </div>
+                       <button 
+                         onClick={() => {
+                           setPromoCode(promo.code);
+                           setTimeout(() => {
+                             const btn = document.getElementById('b2c-apply-promo-btn');
+                             if (btn) btn.click();
+                           }, 100);
+                         }}
+                         className="text-[12px] font-bold text-blue-600 hover:text-blue-800 bg-white border border-blue-300 px-4 py-1.5 rounded shadow-sm hover:shadow transition-all"
+                       >
+                         Apply
+                       </button>
+                     </div>
+                   ))}
+                 </div>
+               )}
+
+               {!appliedPromo ? (
+                 <div className="space-y-2">
+                   <div className="flex gap-2">
+                     <input 
+                       type="text" 
+                       value={promoCode}
+                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                       placeholder="Enter coupon code" 
+                       className="flex-1 border border-gray-300 rounded p-2 text-[13px] uppercase focus:ring-1 focus:ring-blue-500" 
+                     />
+                     <button 
+                       id="b2c-apply-promo-btn"
+                       onClick={applyPromoCode}
+                       disabled={isApplyingPromo || !promoCode}
+                       className="bg-[#249995] hover:bg-[#1d827e] text-white font-bold text-[13px] px-6 py-2 rounded disabled:opacity-50"
+                     >
+                       {isApplyingPromo ? '...' : 'Apply'}
+                     </button>
                    </div>
-                   <span className="font-bold text-[#249995] text-[13px]">₹ 410 off</span>
+                   {promoError && <p className="text-[11px] text-red-500 font-bold">{promoError}</p>}
                  </div>
-                 <p className="text-[11px] text-gray-500 mb-2">Get ₹ 410 instant discount on your flight booking</p>
-                 <div className="text-right">
-                   <button className="text-blue-600 font-bold text-[12px] hover:underline">Apply</button>
+               ) : (
+                 <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex justify-between items-center">
+                   <div>
+                     <div className="flex items-center gap-2 mb-1">
+                       <CheckCircle size={14} className="text-emerald-600" />
+                       <span className="text-[12px] font-black text-emerald-700 uppercase">{appliedPromo.code} APPLIED</span>
+                     </div>
+                     <p className="text-[11px] text-emerald-600">You saved ₹{appliedPromo.discountAmount} on this booking!</p>
+                   </div>
+                   <button 
+                     onClick={removePromoCode}
+                     className="text-[11px] font-bold text-red-500 hover:text-red-700 underline"
+                   >
+                     Remove
+                   </button>
                  </div>
-               </div>
+               )}
              </div>
           </div>
         </div>
@@ -914,7 +1054,7 @@ export default function FlightBookingPage() {
             <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
               <div className="flex justify-between items-center py-2 border-b border-gray-200">
                 <span className="text-gray-600 font-medium text-sm">Booking Amount</span>
-                <span className="font-bold text-gray-900">₹ {(selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)).toLocaleString('en-IN')}</span>
+                <span className="font-bold text-gray-900">₹ {cartTotalAmount.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-gray-600 font-medium text-sm">Wallet Balance</span>
@@ -931,13 +1071,13 @@ export default function FlightBookingPage() {
               </button>
               <button 
                 onClick={processPayment}
-                disabled={isProcessing || (user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))}
-                className={`flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-md ${isProcessing || (user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)) ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700'}`}
+                disabled={isProcessing || (user?.walletBalance || 0) < cartTotalAmount}
+                className={`flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-md ${isProcessing || (user?.walletBalance || 0) < cartTotalAmount ? 'bg-gray-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 {isProcessing ? 'Processing...' : 'Pay Now'}
               </button>
             </div>
-            {((user?.walletBalance || 0) < (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0))) && (
+            {((user?.walletBalance || 0) < cartTotalAmount) && (
               <p className="text-red-500 text-xs text-center mt-3 font-medium">Insufficient wallet balance for this transaction.</p>
             )}
           </div>
@@ -946,3 +1086,4 @@ export default function FlightBookingPage() {
     </div>
   );
 }
+

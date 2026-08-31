@@ -49,6 +49,7 @@ import B2BDashboardLayout from './layouts/B2BDashboardLayout'
 import SupplierLoginPage from './pages/public/SupplierLoginPage'
 import SupplierDashboardLayout from './layouts/SupplierDashboardLayout'
 import SupplierDashboard from './pages/supplier/SupplierDashboard'
+import SupplierPromoCodes from './pages/dashboard/supplier/marketing/SupplierPromoCodes'
 import SeriesFareManager from './pages/supplier/SeriesFareManager'
 import SupplierUserManagement from './pages/supplier/SupplierUserManagement'
 import SupplierBookingHistory from './pages/supplier/SupplierBookingHistory'
@@ -77,6 +78,7 @@ import AdminFDMaker from './pages/dashboard/admin/AdminFDMaker'
 import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
 import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
 import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
+import AdminPromoCodes from './pages/dashboard/admin/marketing/AdminPromoCodes'
 import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
 import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
 import AdminCommissionList from './pages/dashboard/admin/commissions/AdminCommissionList'
@@ -191,6 +193,7 @@ function App() {
             <Route index element={<Navigate to="/supplier-portal/dashboard" replace />} />
             <Route path="dashboard" element={<SupplierDashboard />} />
             <Route path="series-fare" element={<SeriesFareManager />} />
+            <Route path="marketing/promos" element={<SupplierPromoCodes />} />
             <Route path="users" element={<SupplierUserManagement />} />
             <Route path="history" element={<SupplierBookingHistory />} />
             <Route path="ledger" element={<B2BAccountStatement />} />
@@ -294,6 +297,7 @@ function App() {
           <Route path="ledger" element={<AdminLedger />} />
           <Route path="suppliers" element={<SupplierManagement />} />
           <Route path="cug-suppliers" element={<CugSuppliersManager />} />
+          <Route path="marketing/promos" element={<AdminPromoCodes />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="fd-maker" element={<AdminFDMaker />} />
           <Route path="fd-report" element={<AdminFDReport />} />

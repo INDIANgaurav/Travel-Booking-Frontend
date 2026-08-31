@@ -109,6 +109,7 @@ export default function AdminBookings() {
                 <th className="px-6 py-4 whitespace-nowrap">User</th>
                 <th className="px-6 py-4 whitespace-nowrap">Route / Item</th>
                 <th className="px-6 py-4 whitespace-nowrap">Amount</th>
+                <th className="px-6 py-4 whitespace-nowrap">Promo</th>
                 <th className="px-6 py-4 whitespace-nowrap">Status</th>
                 <th className="px-6 py-4 whitespace-nowrap">Date</th>
                 <th className="px-6 py-4 rounded-tr-2xl whitespace-nowrap">Action</th>
@@ -117,7 +118,7 @@ export default function AdminBookings() {
             <tbody className="divide-y divide-gray-100/80">
               {filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">No bookings found matching your criteria.</td>
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">No bookings found matching your criteria.</td>
                 </tr>
               ) : (
                 filteredBookings.map((booking: any) => (
@@ -141,9 +142,26 @@ export default function AdminBookings() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-bold text-gray-900 text-base inline-block">
-                      ₹ {booking.totalAmount?.toLocaleString() || '0'}
-                    </span>
+                    <div className="flex flex-col">
+                      {booking.discountAmount > 0 ? (
+                        <>
+                          <span className="text-xs text-gray-400 line-through">₹ {(booking.totalAmount + booking.discountAmount)?.toLocaleString()}</span>
+                          <span className="font-bold text-emerald-600 text-base">₹ {booking.totalAmount?.toLocaleString() || '0'}</span>
+                        </>
+                      ) : (
+                        <span className="font-bold text-gray-900 text-base">₹ {booking.totalAmount?.toLocaleString() || '0'}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {booking.promoCodeApplied ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-full tracking-wide uppercase">{booking.promoCodeApplied}</span>
+                        <span className="text-[10px] text-emerald-600 font-semibold">-₹{booking.discountAmount?.toLocaleString()}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-300 text-xs">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${

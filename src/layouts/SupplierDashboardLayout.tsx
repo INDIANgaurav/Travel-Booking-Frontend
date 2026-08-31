@@ -175,6 +175,18 @@ const SupplierDashboardLayout: React.FC = () => {
           <span>SERIES FARE</span>
         </NavLink>
 
+        <NavLink 
+          to="/supplier-portal/marketing/promos"
+          className={({ isActive }) => 
+            `px-4 py-3.5 text-xs font-bold flex items-center gap-2 transition-all border-b-2 ${
+              isActive ? 'text-blue-400 border-blue-400 bg-white/5' : 'text-gray-400 border-transparent hover:text-white hover:bg-white/5'
+            }`
+          }
+        >
+          <Tag size={16} />
+          <span>MARKETING & PROMOS</span>
+        </NavLink>
+
         {(currentUser?.roles?.includes('SUPPLIER_AGENT') || currentUser?.roles?.includes('SUPPLIER_STAFF') || currentUser?.roles?.includes('SUB_ADMIN') || currentUser?.roles?.includes('SUPER_ADMIN')) && (
           <NavLink 
             to="/supplier-portal/users"
