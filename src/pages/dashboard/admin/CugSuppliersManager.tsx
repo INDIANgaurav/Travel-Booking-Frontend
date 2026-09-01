@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, Plus, CreditCard, FileText, Settings, MoreVertical, X } from 'lucide-react';
+import { Search, ChevronDown, Plus, CreditCard, FileText, Settings, MoreVertical, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UserLedgerModal from '../../../components/admin/modals/UserLedgerModal';
+import Dropdown from '../../../components/ui/Dropdown';
 
 interface Agent {
   _id: string;
@@ -43,6 +44,7 @@ const CugSuppliersManager = () => {
   const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
   const [selectedMapping, setSelectedMapping] = useState<CugMapping | null>(null);
   const [selectedLedgerAgent, setSelectedLedgerAgent] = useState<any | null>(null);
+  const [mappingToRemove, setMappingToRemove] = useState<string | null>(null);
 
   // Form states
   const [creditAmount, setCreditAmount] = useState<number | ''>('');
@@ -176,6 +178,22 @@ const CugSuppliersManager = () => {
     }
   };
 
+  const handleRemoveMapping = (mappingId: string) => {
+    setMappingToRemove(mappingId);
+  };
+
+  const confirmRemoveMapping = async () => {
+    if (!mappingToRemove) return;
+    try {
+      await api.delete(`/api/suppliers/cug-mappings/${mappingToRemove}`);
+      toast.success('Agent removed from CUG');
+      setMappingToRemove(null);
+      fetchMappings(selectedSupplier);
+    } catch (err) {
+      toast.error('Failed to remove agent');
+    }
+  };
+
   const filteredMappings = mappings.filter(m => 
     m.agent?.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     m.agent?.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -195,17 +213,14 @@ const CugSuppliersManager = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <select
+          <div className="flex items-center gap-4 w-full md:w-auto z-20">
+            <Dropdown
               value={selectedSupplier}
-              onChange={(e) => setSelectedSupplier(e.target.value)}
-              className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
-            >
-              <option value="" disabled className="text-slate-400">Select Supplier</option>
-              {suppliers.map(s => (
-                <option key={s._id} value={s._id}>{s.name} ({s._id.slice(-4).toUpperCase()})</option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedSupplier(val)}
+              options={suppliers.map(s => ({ value: s._id, label: `${s.name} (${s._id.slice(-4).toUpperCase()})` }))}
+              placeholder="Select Supplier"
+              className="w-full md:w-64"
+            />
           </div>
         </div>
 
@@ -236,12 +251,12 @@ const CugSuppliersManager = () => {
           <table className="w-full text-left text-sm border-collapse">
             <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">
               <tr>
-                <th className="p-4 border-b border-gray-200 w-12"><input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" /></th>
-                <th className="p-4 border-b border-gray-200">Company Details</th>
-                <th className="p-4 border-b border-gray-200 text-right">Credit Limit</th>
-                <th className="p-4 border-b border-gray-200 text-right">Cash Balance</th>
-                <th className="p-4 border-b border-gray-200 text-right">Running Balance</th>
-                <th className="p-4 border-b border-gray-200 text-center w-32">Action</th>
+                <th className="p-4 border-b border-gray-200 w-[5%]"><input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" /></th>
+                <th className="p-4 border-b border-gray-200 w-[30%]">Company Details</th>
+                <th className="p-4 border-b border-gray-200 text-right w-[15%]">Credit Limit</th>
+                <th className="p-4 border-b border-gray-200 text-right w-[15%]">Cash Balance</th>
+                <th className="p-4 border-b border-gray-200 text-right w-[20%]">Running Balance</th>
+                <th className="p-4 border-b border-gray-200 text-center w-[15%]">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -310,13 +325,21 @@ const CugSuppliersManager = () => {
                               <button 
                                 onClick={() => {
                                   setSelectedMapping(mapping);
-                                  fetchCommissionPlans();
                                   setIsCommissionModalOpen(true);
                                   setActiveDropdown(null);
                                 }}
                                 className="w-full text-left flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-indigo-600 font-medium"
                               >
-                                <Settings size={14} className="mr-2" /> Map Commission Plan
+                                <Settings size={14} className="mr-2" /> Map Commission
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  handleRemoveMapping(mapping._id);
+                                  setActiveDropdown(null);
+                                }}
+                                className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium border-t border-slate-100"
+                              >
+                                <Trash2 size={14} className="mr-2" /> Remove Agent
                               </button>
                             </div>
                           </div>
@@ -346,19 +369,16 @@ const CugSuppliersManager = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Select Agent</label>
-                  <select
-                    required
+                  <Dropdown
                     value={selectedAgentToAdd}
-                    onChange={e => setSelectedAgentToAdd(e.target.value)}
-                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="" disabled className="text-slate-400">Choose an agent</option>
-                    {availableAgents.map(agent => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.companyName} ({agent._id.slice(-4).toUpperCase()})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedAgentToAdd}
+                    options={availableAgents.map(agent => ({
+                      value: agent._id,
+                      label: `${agent.companyName} (${agent._id.slice(-4).toUpperCase()})`
+                    }))}
+                    placeholder="Choose an agent"
+                    searchable
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Initial Credit Limit</label>
@@ -501,17 +521,15 @@ const CugSuppliersManager = () => {
               ) : (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Select Commission Plan</label>
-                  <select
+                  <Dropdown
                     value={selectedCommissionPlanId}
-                    onChange={(e) => setSelectedCommissionPlanId(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {commissionPlans.map(plan => (
-                      <option key={plan._id} value={plan._id}>
-                        {plan.name} ({plan.value}{plan.type === 'PERCENTAGE' ? '%' : ' INR'})
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedCommissionPlanId}
+                    options={commissionPlans.map(plan => ({
+                      value: plan._id,
+                      label: `${plan.name} (${plan.value}${plan.type === 'PERCENTAGE' ? '%' : ' INR'})`
+                    }))}
+                    placeholder="Select a plan"
+                  />
                 </div>
               )}
 
@@ -532,6 +550,32 @@ const CugSuppliersManager = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Remove Confirmation Modal */}
+      {mappingToRemove && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Remove Agent?</h3>
+              <p className="text-sm text-slate-500">Are you sure you want to remove this agent from the CUG network? They will lose access to this supplier's inventory.</p>
+            </div>
+            <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => setMappingToRemove(null)}
+                className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmRemoveMapping}
+                className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors"
+              >
+                Yes, Remove
+              </button>
+            </div>
           </div>
         </div>
       )}

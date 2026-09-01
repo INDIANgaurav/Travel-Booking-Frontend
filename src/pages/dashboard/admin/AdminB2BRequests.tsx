@@ -126,19 +126,19 @@ export default function AdminB2BRequests() {
                       <td className="px-6 py-4 flex gap-2">
                         <button 
                           onClick={() => setSelectedItem(item)}
-                          className="px-3 py-1.5 bg-[#0c1a40] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition"
+                          className="px-3 py-1.5 border border-slate-200 bg-white text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-50 transition shadow-sm"
                         >
                           View Details
                         </button>
                         <button 
                           onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'ACTIVE' : 'COMPLETED')}
-                          className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition"
+                          className="px-3 py-1.5 border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition shadow-sm"
                         >
                           Approve
                         </button>
                         <button 
                           onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'INACTIVE' : 'REJECTED')}
-                          className="px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-lg hover:bg-rose-700 transition"
+                          className="px-3 py-1.5 border border-rose-200 bg-rose-50/50 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-100 transition shadow-sm"
                         >
                           Reject
                         </button>

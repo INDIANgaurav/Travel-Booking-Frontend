@@ -247,13 +247,13 @@ export default function AdminManageUsers() {
                         {agent.agentStatus || 'PENDING'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center relative">
-                      <div className="group/dropdown inline-block">
+                    <td className="px-4 py-3 text-center">
+                      <div className="group/dropdown inline-block relative">
                         <button className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded shadow-sm transition-colors">
                           Select <ChevronDown size={12} className="group-hover/dropdown:rotate-180 transition-transform duration-200" />
                         </button>
                         
-                        <div className="absolute right-6 top-full pt-1 w-48 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-200 z-[60] origin-top-right">
+                        <div className="absolute right-0 top-full pt-1 w-48 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-200 z-[60] origin-top-right">
                           <div className="bg-white border border-gray-100 rounded-xl shadow-xl flex flex-col py-1 text-left transform group-hover/dropdown:scale-100 scale-95 origin-top-right">
                           <button className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-[10px] font-bold text-gray-700 hover:text-blue-700 w-full transition-colors">
                             <Save size={12} className="text-gray-400" /> Save Details

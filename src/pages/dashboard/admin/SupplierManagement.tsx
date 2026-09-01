@@ -24,6 +24,7 @@ interface Supplier {
   commission: Commission;
   apiConfig?: ApiConfig;
   isActive: boolean;
+  cugEnabled?: boolean;
 }
 
 const SupplierManagement = () => {
@@ -225,6 +226,19 @@ const SupplierManagement = () => {
                   <label className="block text-sm font-medium mb-1">Fixed Comm (₹)</label>
                   <input type="number" value={currentSupplier.commission?.fixedAmount === 0 && currentSupplier.commission?.fixedAmount?.toString() !== "0" ? "" : currentSupplier.commission?.fixedAmount ?? ""} onChange={e => setCurrentSupplier({...currentSupplier, commission: { ...currentSupplier.commission!, fixedAmount: e.target.value === "" ? "" as any : Number(e.target.value) }})} className="w-full bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+                <input 
+                  type="checkbox" 
+                  id="cugEnabled" 
+                  checked={!!currentSupplier.cugEnabled} 
+                  onChange={e => setCurrentSupplier({...currentSupplier, cugEnabled: e.target.checked})}
+                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                />
+                <label htmlFor="cugEnabled" className="text-sm font-bold text-indigo-900 cursor-pointer flex-1">
+                  Enable CUG Network <span className="font-normal text-indigo-700 text-xs ml-1">(Hides inventory from regular agents)</span>
+                </label>
               </div>
 
               {currentSupplier.type === 'API' && (
