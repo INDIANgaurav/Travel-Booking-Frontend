@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Plane, Building2, Briefcase, User, ChevronDown, ArrowLeft, Heart, Menu, X, CreditCard } from 'lucide-react';
+import { Plane, Building2, Briefcase, User, ChevronDown, ArrowLeft, Heart, Menu, X, CreditCard, MessageSquare } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/authSlice';
 import LoginModal from '../auth/LoginModal';
@@ -234,6 +234,9 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                           </div>
                           <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <CreditCard size={16} /> My Wallet
+                          </div>
+                          <div onClick={() => { navigate('/dashboard/helpdesk'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <MessageSquare size={16} /> Support Tickets
                           </div>
                         </>
                       )}

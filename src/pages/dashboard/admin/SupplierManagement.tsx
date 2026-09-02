@@ -25,6 +25,7 @@ interface Supplier {
   apiConfig?: ApiConfig;
   isActive: boolean;
   cugEnabled?: boolean;
+  credentials?: { key: string; value: string }[];
 }
 
 const SupplierManagement = () => {
@@ -38,6 +39,7 @@ const SupplierManagement = () => {
     creditLimit: 0,
     commission: { percentage: 0, fixedAmount: 0 },
     isActive: true,
+    credentials: [],
   });
 
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
@@ -110,7 +112,7 @@ const SupplierManagement = () => {
         </div>
         <button 
           onClick={() => {
-            setCurrentSupplier({ name: '', type: 'MANUAL', balance: 0, creditLimit: 0, commission: { percentage: 0, fixedAmount: 0 }, isActive: true });
+            setCurrentSupplier({ name: '', type: 'MANUAL', balance: 0, creditLimit: 0, commission: { percentage: 0, fixedAmount: 0 }, isActive: true, credentials: [] });
             setIsModalOpen(true);
           }}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -192,10 +194,13 @@ const SupplierManagement = () => {
 
       {/* CREATE SUPPLIER MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">{currentSupplier._id ? 'Edit' : 'Add'} Supplier</h2>
-            <form onSubmit={handleSaveSupplier} className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-gray-100 flex-shrink-0 bg-white z-10">
+              <h2 className="text-xl font-bold">{currentSupplier._id ? 'Edit' : 'Add'} Supplier</h2>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <form onSubmit={handleSaveSupplier} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Name</label>
                 <input required type="text" value={currentSupplier.name} onChange={e => setCurrentSupplier({...currentSupplier, name: e.target.value})} className="w-full bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
@@ -243,17 +248,70 @@ const SupplierManagement = () => {
 
               {currentSupplier.type === 'API' && (
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3 mt-4 border border-gray-100">
-                  <h4 className="font-semibold text-xs text-gray-500 uppercase">API Configuration</h4>
-                  <input type="text" placeholder="Endpoint URL" value={currentSupplier.apiConfig?.endpoint || ''} onChange={e => setCurrentSupplier({...currentSupplier, apiConfig: {...currentSupplier.apiConfig, endpoint: e.target.value}})} className="w-full bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
-                  <input type="password" placeholder="API Key" value={currentSupplier.apiConfig?.apiKey || ''} onChange={e => setCurrentSupplier({...currentSupplier, apiConfig: {...currentSupplier.apiConfig, apiKey: e.target.value}})} className="w-full bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-xs text-gray-500 uppercase">API Configuration / Credentials</h4>
+                    <button 
+                      type="button" 
+                      onClick={() => setCurrentSupplier({
+                        ...currentSupplier, 
+                        credentials: [...(currentSupplier.credentials || []), { key: '', value: '' }]
+                      })}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      + Add Key
+                    </button>
+                  </div>
+                  
+                  {(!currentSupplier.credentials || currentSupplier.credentials.length === 0) && (
+                    <div className="text-sm text-gray-400 italic text-center py-2">No credentials added</div>
+                  )}
+
+                  {(currentSupplier.credentials || []).map((cred, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <input 
+                        type="text" 
+                        placeholder="Key (e.g. GAPI_BASIC_AUTH)" 
+                        value={cred.key} 
+                        onChange={e => {
+                          const newCreds = [...(currentSupplier.credentials || [])];
+                          newCreds[index].key = e.target.value;
+                          setCurrentSupplier({...currentSupplier, credentials: newCreds});
+                        }}
+                        className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Value" 
+                        value={cred.value} 
+                        onChange={e => {
+                          const newCreds = [...(currentSupplier.credentials || [])];
+                          newCreds[index].value = e.target.value;
+                          setCurrentSupplier({...currentSupplier, credentials: newCreds});
+                        }}
+                        className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const newCreds = [...(currentSupplier.credentials || [])];
+                          newCreds.splice(index, 1);
+                          setCurrentSupplier({...currentSupplier, credentials: newCreds});
+                        }}
+                        className="text-red-500 hover:bg-red-50 p-1 rounded"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="flex justify-end gap-2 pt-4 mt-6 border-t border-gray-100">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Save Supplier</button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

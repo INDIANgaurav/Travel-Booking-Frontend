@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, Plane, Building2, User as UserIcon, FileText, Menu, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, Plane, Building2, User as UserIcon, FileText, Menu, ChevronRight, MessageSquare } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '../store/authSlice';
 
@@ -39,6 +39,12 @@ export default function AgentLayout() {
       items: [
         { name: 'Customers', path: '/agent-portal/customers', icon: <Users size={20} /> },
         { name: 'Invoices', path: '/agent-portal/invoices', icon: <FileText size={20} /> },
+      ]
+    },
+    {
+      title: 'Support',
+      items: [
+        { name: 'Helpdesk', path: '/agent-portal/helpdesk', icon: <MessageSquare size={20} /> },
       ]
     }
   ];

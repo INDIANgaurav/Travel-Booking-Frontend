@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -120,7 +120,8 @@ export default function AdminLayout() {
             { name: 'Payment Gateway (PG)', path: '/admin/reports/pg-reports' },
             { name: 'Agent Outstanding', path: '/admin/reports/agent-outstanding' },
             { name: 'Agent Activation', path: '/admin/reports/agent-activation' },
-            { name: 'Supplier Mapping', path: '/admin/reports/supplier-mapping' }
+            { name: 'Supplier Mapping', path: '/admin/reports/supplier-mapping' },
+            { name: 'Agent Analytics', path: '/admin/reports/agent-analytics' }
           ]
         }
       ]
@@ -129,6 +130,7 @@ export default function AdminLayout() {
       title: 'Operations & Logs',
       items: [
         { name: 'Booking Operations', path: '/admin/bookings', icon: <Briefcase size={20} /> },
+        { name: 'Helpdesk Tickets', path: '/admin/helpdesk', icon: <MessageSquare size={20} /> },
       ]
     },
     {

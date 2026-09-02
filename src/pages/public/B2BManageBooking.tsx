@@ -31,7 +31,31 @@ const B2BManageBooking: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [modalView, setModalView] = useState<'summary' | 'invoice'>('summary');
+  const [modalView, setModalView] = useState<'summary' | 'invoice' | 'cancel'>('summary');
+  
+  const [selectedPaxToCancel, setSelectedPaxToCancel] = useState<string[]>([]);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleInitiateCancel = async () => {
+    if (selectedPaxToCancel.length === 0) return alert('Select at least one passenger');
+    if (!cancelReason) return alert('Enter a reason for cancellation');
+    
+    try {
+      setIsCancelling(true);
+      await api.post(`/api/cancellations/initiate/${selectedBooking._id}`, {
+        passengerIds: selectedPaxToCancel,
+        reason: cancelReason
+      });
+      alert('Cancellation request submitted to Admin!');
+      setModalView('summary');
+      handleGetHistory(page);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Error initiating cancellation');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const handleGetHistory = async (pageNum = 1) => {
     try {
@@ -364,6 +388,72 @@ const B2BManageBooking: React.FC = () => {
                     <FlightInvoice bookingId={selectedBooking._id} isModal={true} />
                   </div>
                 </div>
+              ) : modalView === 'cancel' ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative p-8">
+                  <button 
+                    onClick={() => setModalView('summary')}
+                    className="absolute top-4 left-4 z-10 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2"
+                  >
+                    ← Back to Summary
+                  </button>
+                  <div className="pt-8">
+                    <h2 className="text-xl font-bold text-[#171b3e] mb-4">Cancel Booking</h2>
+                    <p className="text-sm text-gray-600 mb-6">Select the passengers you wish to cancel.</p>
+                    
+                    <div className="space-y-3 mb-6">
+                      {selectedBooking.details?.passengers?.map((pax: any, idx: number) => {
+                        const isPending = pax.status === 'CANCEL_PENDING';
+                        const isCancelled = pax.status === 'CANCELLED';
+                        const isDisabled = isPending || isCancelled;
+                        return (
+                          <label key={pax._id || idx} className={`flex items-center gap-3 p-3 border rounded-lg ${isDisabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}>
+                            <input 
+                              type="checkbox" 
+                              disabled={isDisabled}
+                              checked={selectedPaxToCancel.includes(pax._id) || isDisabled}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedPaxToCancel(prev => [...prev, pax._id]);
+                                } else {
+                                  setSelectedPaxToCancel(prev => prev.filter(id => id !== pax._id));
+                                }
+                              }}
+                              className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" 
+                            />
+                            <div className="flex-1">
+                              <p className="text-sm font-bold text-[#171b3e] uppercase">{pax.name}</p>
+                              <p className="text-xs text-gray-500">{pax.type} | {pax.gender}</p>
+                            </div>
+                            {isDisabled && (
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isCancelled ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                {isCancelled ? 'CANCELLED' : 'PENDING APPROVAL'}
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-[#171b3e] mb-2">Reason for Cancellation</label>
+                      <textarea 
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="Please provide a reason for cancelling..."
+                        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <button 
+                      onClick={handleInitiateCancel}
+                      disabled={isCancelling || selectedPaxToCancel.length === 0 || !cancelReason}
+                      className="bg-red-600 text-white px-6 py-3 rounded-lg font-bold w-full hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCancelling ? 'Submitting...' : 'Confirm Cancellation Request'}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="flex justify-center mb-10">
@@ -423,7 +513,11 @@ const B2BManageBooking: React.FC = () => {
                       <button 
                         key={btn}
                         onClick={() => {
-                          if (btn === 'Cancel') setSelectedBooking(null);
+                          if (btn === 'Cancel') {
+                            setModalView('cancel');
+                            setSelectedPaxToCancel([]);
+                            setCancelReason('');
+                          }
                         }}
                         className="bg-[#171b3e] text-white px-6 py-2.5 rounded-lg text-xs font-bold shadow-md hover:bg-blue-900 transition"
                       >

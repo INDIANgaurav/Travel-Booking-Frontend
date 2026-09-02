@@ -99,6 +99,8 @@ import AdminAgentActivation from './pages/dashboard/admin/reports/AdminAgentActi
 import AdminSupplierMapping from './pages/dashboard/admin/reports/AdminSupplierMapping'
 import AdminFareQuoteReport from './pages/dashboard/admin/reports/AdminFareQuoteReport'
 import AdminPassengerCalendar from './pages/dashboard/admin/reports/AdminPassengerCalendar'
+import AgentAnalytics from './pages/dashboard/admin/AgentAnalytics'
+import CancellationsManager from './pages/dashboard/admin/CancellationsManager'
 import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 
 import SubAdminLayout from './layouts/SubAdminLayout'
@@ -106,6 +108,8 @@ import AgentLayout from './layouts/AgentLayout'
 import AgentDashboard from './pages/dashboard/agent/AgentDashboard'
 import { Toaster } from 'react-hot-toast'
 import AgentOnboardingModal from './components/agent/AgentOnboardingModal'
+import Helpdesk from './pages/dashboard/common/Helpdesk'
+import AdminHelpdesk from './pages/dashboard/admin/AdminHelpdesk'
 
 function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
@@ -220,6 +224,7 @@ function App() {
           <Route path="properties" element={<PropertiesPage />} />
           <Route path="ticket/:id" element={<FlightTicket />} />
           <Route path="invoice/:id" element={<FlightInvoice />} />
+          <Route path="helpdesk" element={<Helpdesk />} />
         </Route>
 
         {/* Agent Routes */}
@@ -231,6 +236,7 @@ function App() {
             <Route path="bookings" element={<BookingsPage />} />
             <Route path="ticket/:id" element={<FlightTicket />} />
             <Route path="invoice/:id" element={<FlightInvoice />} />
+            <Route path="helpdesk" element={<Helpdesk />} />
             {/* Additional agent routes can be added here */}
             <Route path="*" element={<div className="p-8">Agent Page Coming Soon</div>} />
           </Route>
@@ -283,6 +289,7 @@ function App() {
           <Route path="user-profile/:id" element={<AdminUserProfile />} />
           <Route path="sub-admins" element={<AdminSubAdmins />} />
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
+          <Route path="cancellations" element={<CancellationsManager />} />
           <Route path="offline-topups" element={<AdminOfflineTopUps />} />
           <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="commissions" element={<AdminCommissionList />} />
@@ -295,6 +302,7 @@ function App() {
           <Route path="bookings" element={<AdminBookings />} />
           <Route path="finance" element={<AdminFinance />} />
           <Route path="ledger" element={<AdminLedger />} />
+          <Route path="helpdesk" element={<AdminHelpdesk />} />
           <Route path="suppliers" element={<SupplierManagement />} />
           <Route path="cug-suppliers" element={<CugSuppliersManager />} />
           <Route path="marketing/promos" element={<AdminPromoCodes />} />
@@ -322,6 +330,7 @@ function App() {
           <Route path="reports/agent-outstanding" element={<AdminAgentOutstanding />} />
           <Route path="reports/agent-activation" element={<AdminAgentActivation />} />
           <Route path="reports/supplier-mapping" element={<AdminSupplierMapping />} />
+          <Route path="reports/agent-analytics" element={<AgentAnalytics />} />
 
           <Route path="ticket/:id" element={<FlightTicket />} />
           <Route path="invoice/:id" element={<FlightInvoice />} />
