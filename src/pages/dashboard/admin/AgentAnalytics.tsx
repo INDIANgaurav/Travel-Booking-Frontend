@@ -17,7 +17,7 @@ const AgentAnalytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/reports/agent-analytics');
+      const res = await api.get('/api/reports/agent-analytics');
       if (res.data.success) {
         setData(res.data.data);
       }
