@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
   LineChart, Line
@@ -17,9 +17,7 @@ const AgentAnalytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:5000/api/reports/agent-analytics', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.get('/reports/agent-analytics');
       if (res.data.success) {
         setData(res.data.data);
       }
