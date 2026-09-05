@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated } from '../../store/authSlice';
-import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft } from 'lucide-react';
+import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft, Clock } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
@@ -21,6 +21,8 @@ export default function FlightBookingPage() {
   const [maxStepReached, setMaxStepReached] = useState(1); 
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 Minutes default for non-series
+  const [holdError, setHoldError] = useState('');
   
   const initialPassengers = [];
   for (let i = 0; i < initialAdults; i++) initialPassengers.push({ title: '', firstName: '', lastName: '', type: 'Adult', nationality: 'IN' });
@@ -114,6 +116,38 @@ export default function FlightBookingPage() {
     fetchSeats();
   }, [bookingStep, selectedOutbound]);
 
+  useEffect(() => {
+    let timer: any;
+    
+    const initHold = async () => {
+      if (selectedOutbound?.isSeriesFare) {
+        try {
+          const sfId = selectedOutbound.flight_keys ? selectedOutbound.flight_keys[0].replace('SF_', '') : selectedOutbound._id || selectedOutbound.seriesFareId;
+          const count = adultsCount + childrenCount + infantsWithSeatCount;
+          const paxCount = count > 0 ? count : (initialAdults + initialChildren);
+          const res = await api.post(`/api/series-fare/${sfId}/hold`, { paxCount });
+          if (res.data.hold && res.data.hold.expiresAt) {
+             const expiresAt = new Date(res.data.hold.expiresAt).getTime();
+             const now = new Date().getTime();
+             const diffSeconds = Math.floor((expiresAt - now) / 1000);
+             setTimeLeft(diffSeconds > 0 ? diffSeconds : 0);
+          }
+        } catch (error: any) {
+          console.error("Hold failed", error);
+          setHoldError(error.response?.data?.message || 'Failed to hold seats. They might be sold out.');
+          setTimeLeft(0);
+        }
+      }
+    };
+    
+    initHold();
+
+    timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [selectedOutbound, adultsCount, childrenCount, initialAdults, initialChildren]);
+
   const applyPromoCode = async () => {
     if (!promoCode) return;
     setIsApplyingPromo(true);
@@ -200,6 +234,14 @@ export default function FlightBookingPage() {
   };
 
   const handlePaymentSubmit = () => {
+    if (timeLeft <= 0) {
+      toast.error('Session expired. Please search again.');
+      return;
+    }
+    if (holdError) {
+      toast.error(holdError);
+      return;
+    }
     if (paymentMethod === 'WALLET') {
       setShowWalletConfirm(true);
     } else {
@@ -899,9 +941,9 @@ export default function FlightBookingPage() {
                </div>
                
                <button 
-                  disabled={isProcessing}
+                  disabled={isProcessing || timeLeft <= 0}
                   onClick={handlePaymentSubmit}
-                  className={`bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md w-full md:w-auto ${isProcessing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+                  className={`bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md w-full md:w-auto ${isProcessing || timeLeft <= 0 ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'}`}
                >
                   {isProcessing ? 'PROCESSING...' : 'PROCEED TO PAY'}
                </button>
@@ -1034,6 +1076,18 @@ export default function FlightBookingPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Bottom Sticky Timer Bar */}
+      <div className={`fixed bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
+        <Clock size={18} />
+        {timeLeft <= 0 ? (
+          'Your Session has Expired. Please restart your search.'
+        ) : (
+          <span>
+            Your Session will Expire in <span className="font-mono text-lg bg-black/20 px-2 py-0.5 rounded">{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{Math.floor(timeLeft % 60).toString().padStart(2, '0')}</span>. Please complete your booking.
+          </span>
+        )}
       </div>
 
       {/* Wallet Payment Confirmation Modal */}

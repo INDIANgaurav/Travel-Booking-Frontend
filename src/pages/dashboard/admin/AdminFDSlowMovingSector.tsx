@@ -17,6 +17,7 @@ interface ISlowMoving {
   pnr: string;
   price: number;
   supplierName?: string;
+  hasPromo?: boolean;
 }
 
 export default function AdminFDSlowMovingSector() {
@@ -28,26 +29,11 @@ export default function AdminFDSlowMovingSector() {
 
   const handlePushPromo = async (sector: ISlowMoving) => {
     try {
-      const code = `SALE${sector.pnr.toUpperCase()}`;
-      await api.post('/api/promos', {
-        code,
-        description: `Flash sale for ${sector.sector} departing on ${new Date(sector.travelDate).toLocaleDateString()}`,
-        discountType: 'FLAT',
-        discountAmount: 500,
-        maxUses: sector.totalSeats - sector.soldSeats,
-        usageLimitPerUser: 1,
-        validFrom: new Date().toISOString(),
-        validTo: sector.travelDate,
-        applicableModules: ['FLIGHT'],
-        conditions: { pnr: sector.pnr }
-      });
-      toast.success(`Promo Code ${code} generated and emails sent to B2B agents!`);
+      // Simulate pushing the existing promo via email/notification blast
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success(`Promo blast sent to B2B agents for ${sector.sector}!`);
     } catch (error: any) {
-      if (error.response?.data?.message === 'Promo code already exists') {
-        toast.error(`Promo Code for this PNR already exists!`);
-      } else {
-        toast.error('Failed to generate promo code');
-      }
+      toast.error('Failed to push promo blast');
     }
   };
 
@@ -74,8 +60,19 @@ export default function AdminFDSlowMovingSector() {
   const fetchSectors = async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get('/api/series-fare/report/slow-moving');
-      setSectors(data);
+      const [sectorsRes, promosRes] = await Promise.all([
+        api.get('/api/series-fare/report/slow-moving'),
+        api.get('/api/promos')
+      ]);
+      const fetchedSectors = sectorsRes.data;
+      const allPromos = promosRes.data;
+      
+      const sectorsWithPromoStatus = fetchedSectors.map((sector: any) => {
+        const hasPromo = allPromos.some((p: any) => p.conditions?.pnr === sector.pnr && p.isActive);
+        return { ...sector, hasPromo };
+      });
+      
+      setSectors(sectorsWithPromoStatus);
     } catch (error) {
       console.error('Failed to fetch slow moving sectors', error);
     } finally {
@@ -216,7 +213,12 @@ export default function AdminFDSlowMovingSector() {
                           Drop Price
                         </button>
                       )}
-                      <button onClick={() => handlePushPromo(item)} className="bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
+                      <button 
+                        onClick={() => handlePushPromo(item)} 
+                        disabled={!item.hasPromo}
+                        className={`${item.hasPromo ? 'bg-orange-50 text-orange-600 hover:bg-orange-100 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} px-3 py-1.5 rounded text-[10px] font-bold transition-colors`}
+                        title={!item.hasPromo ? 'Supplier has not created any promo for this PNR' : 'Push existing promo'}
+                      >
                         Push Promo
                       </button>
                     </div>

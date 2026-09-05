@@ -8,6 +8,7 @@ import Dropdown from '../../components/ui/Dropdown';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import TravellerPicker from '../../components/common/TravellerPicker';
+import InteractiveGridBackground from '../../components/ui/InteractiveGridBackground';
 import api from '../../services/api';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
@@ -115,6 +116,7 @@ const B2BAgentHomePage: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
   
   const [generatingCert, setGeneratingCert] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
@@ -151,6 +153,11 @@ const B2BAgentHomePage: React.FC = () => {
       }
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
         setShowMoreMenu(false);
+      }
+      // Added searchBoxRef to close pickers if click is outside the entire search widget
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node)) {
+        setActiveDatePicker(null);
+        setIsTravellerPickerOpen(false);
       }
     };
 
@@ -366,7 +373,7 @@ interface RecentSearch {
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] font-sans text-gray-800 flex flex-col">
+    <div className="min-h-screen font-sans text-gray-800 flex flex-col relative z-0">
             {/* B2B Premium Header */}
       <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
         {/* Subtle background glow effect */}
@@ -508,41 +515,38 @@ interface RecentSearch {
 
       {/* Main Search Engine Box (Matching Reference Screenshot 2) */}
       <main className="w-full px-4 md:px-8 lg:px-12 xl:px-16 pt-10 pb-16 relative overflow-hidden flex-1 flex flex-col justify-start">
-        {/* Dynamic Background Elements */}
-        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[120px] pointer-events-none opacity-60"></div>
-        <div className="absolute bottom-[-10%] right-[-5%] w-[30%] h-[30%] bg-blue-200 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none"></div>
-        <div className="bg-white/80 backdrop-blur-2xl rounded-[32px] border border-white/50 p-8 pt-8 space-y-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] mx-auto max-w-[1400px] relative z-10 w-full hover:shadow-[0_25px_65px_-15px_rgba(0,0,0,0.15)] transition-shadow duration-500">
+        <InteractiveGridBackground theme="dark" />
+        <div ref={searchBoxRef} className="bg-white rounded-xl border border-gray-300 p-6 pt-5 space-y-5 shadow-lg mx-auto max-w-[1400px] relative z-10 w-full hover:shadow-xl transition-shadow duration-300">
           
           {/* Trip Type Tabs */}
-          <div className="flex items-center gap-3 text-sm font-bold bg-gray-50/50 p-1.5 rounded-full w-fit border border-gray-100">
+          <div className="flex items-center gap-5 text-[13px] font-bold text-gray-500 mb-2 border-b border-gray-100 pb-3">
             {['OneWay', 'Round Trip', 'Multi City'].map(t => (
               <label 
                 key={t} 
                 onClick={() => setTripType(t)}
-                className={`flex items-center gap-2 cursor-pointer px-6 py-2 rounded-full transition-all duration-300 ${tripType === t ? 'bg-white text-blue-700 shadow-[0_4px_15px_rgba(0,0,0,0.05)] border border-white' : 'bg-transparent text-gray-500 hover:text-gray-900'}`}
+                className={`flex items-center gap-2 cursor-pointer transition-colors ${tripType === t ? 'text-blue-700' : 'hover:text-gray-900'}`}
               >
-                <div className={`w-[16px] h-[16px] rounded-full border-[2px] flex items-center justify-center transition-colors ${tripType === t ? 'border-blue-600' : 'border-gray-300'}`}>
-                  {tripType === t && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${tripType === t ? 'border-blue-600' : 'border-gray-400'}`}>
+                  {tripType === t && <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                 </div>
                 {t}
               </label>
             ))}
           </div>
 
-          {/* Input Fields Horizontal Pill Row */}
-          <div className="flex items-center bg-white rounded-full border border-gray-200 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] h-[70px] w-full relative pr-2">
+          {/* Input Fields High-Density Row */}
+          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 h-[64px] w-full relative group focus-within:border-blue-500 transition-colors">
             
             {/* Origin */}
-            <div className="flex-1 flex items-center gap-3 px-6 h-full border-r border-gray-100 relative">
-              <div className="w-4 h-4 rounded-full border-2 border-[#0b1031] flex items-center justify-center flex-shrink-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0b1031]" />
+            <div className="flex-1 flex items-center gap-3 px-5 h-full border-r border-gray-300 relative bg-white rounded-l-lg hover:bg-gray-50 transition-colors">
+              <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-blue-600">
+                <Plane size={16} />
               </div>
               <div className="flex-1 w-full h-full relative">
                 <CitySelect
                   value={from}
                   onChange={setFrom}
-                  placeholder="Select Origin City"
+                  placeholder="Origin"
                 />
               </div>
               
@@ -550,179 +554,188 @@ interface RecentSearch {
               <button 
                 type="button" 
                 onClick={() => { const temp = from; setFrom(to); setTo(temp); }}
-                className="absolute -right-4.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#f1f5f9] border border-blue-100 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition shadow-sm z-10 z-[70]"
+                className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition shadow-sm z-10 z-[70]"
               >
                 <ArrowLeftRight size={14} />
               </button>
             </div>
 
             {/* Destination */}
-            <div className="flex-1 flex items-center gap-3 pl-8 pr-6 h-full border-r border-gray-100">
-              <div className="w-4 h-4 rounded-full border-2 border-[#0b1031] flex items-center justify-center flex-shrink-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0b1031]" />
+            <div className="flex-1 flex items-center gap-3 pl-8 pr-5 h-full border-r border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+              <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-blue-600">
+                <Plane size={16} className="transform rotate-90" />
               </div>
               <div className="flex-1 w-full h-full relative">
                 <CitySelect
                   value={to}
                   onChange={setTo}
-                  placeholder="Select Destination City"
+                  placeholder="Destination"
                 />
               </div>
             </div>
 
             {/* Departure Date */}
             <div 
-              className="flex-1 h-full border-r border-gray-100 relative flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50"
-              onClick={() => setActiveDatePicker('depart')}
+              className="flex-1 h-full border-r border-gray-300 relative flex items-center gap-3 px-5 cursor-pointer bg-white hover:bg-blue-50 transition-colors"
+              onClick={() => { setActiveDatePicker('depart'); setIsTravellerPickerOpen(false); }}
             >
-              <Calendar size={18} className="text-gray-400" />
+              <Calendar size={16} className="text-gray-400" />
               <div className="flex-1">
-                <span className="text-[13px] text-gray-700 block mt-1">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Depart</span>
+                <span className="text-[14px] font-bold text-[#0c1a40] block leading-tight">
                   {date ? format(new Date(date), 'dd MMM, yyyy') : 'Select Date'}
                 </span>
               </div>
+              
+              {/* Calendar Popover (Depart) */}
+              {activeDatePicker === 'depart' && (
+                <div className="absolute top-[100%] left-0 z-50">
+                  <DualMonthCalendar 
+                    checkIn={date ? new Date(date) : null} 
+                    checkOut={null}
+                    onDateChange={(type, selectedDate) => {
+                      if (type === 'checkIn' && selectedDate) {
+                        setDate(format(selectedDate, 'yyyy-MM-dd'));
+                        setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
+                      }
+                    }}
+                    onClose={() => setActiveDatePicker(null)}
+                    origin={from}
+                    destination={to}
+                    isOneWay={true}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Return Date */}
             <div 
-              className={`flex-1 h-full border-r border-gray-100 flex items-center gap-3 px-6 cursor-pointer hover:bg-gray-50 ${tripType !== 'Round Trip' ? 'opacity-50 cursor-not-allowed bg-gray-50 pointer-events-none' : ''}`}
+              className={`flex-1 h-full border-r border-gray-300 relative flex items-center gap-3 px-5 cursor-pointer transition-colors ${tripType !== 'Round Trip' ? 'opacity-50 cursor-not-allowed bg-gray-100 pointer-events-none' : 'bg-white hover:bg-blue-50'}`}
               onClick={() => {
-                if (tripType === 'Round Trip') setActiveDatePicker('return');
+                if (tripType === 'Round Trip') { setActiveDatePicker('return'); setIsTravellerPickerOpen(false); }
               }}
             >
-              <Calendar size={18} className="text-gray-400" />
+              <Calendar size={16} className="text-gray-400" />
               <div className="flex-1">
-                <span className="text-[13px] text-gray-300 block mt-1">
-                  {returnDate && tripType === 'Round Trip' ? format(new Date(returnDate), 'dd MMM, yyyy') : 'Return Date'}
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Return</span>
+                <span className="text-[14px] font-bold text-[#0c1a40] block leading-tight">
+                  {returnDate && tripType === 'Round Trip' ? format(new Date(returnDate), 'dd MMM, yyyy') : 'Tap to add'}
                 </span>
               </div>
+
+              {/* Calendar Popover (Return) */}
+              {activeDatePicker === 'return' && (
+                <div className="absolute top-[100%] left-0 z-50">
+                  <DualMonthCalendar 
+                    checkIn={returnDate && tripType === 'Round Trip' ? new Date(returnDate) : null}
+                    checkOut={null}
+                    onDateChange={(type, selectedDate) => {
+                      if (type === 'checkIn' && selectedDate) {
+                        setReturnDate(format(selectedDate, 'yyyy-MM-dd'));
+                        setActiveDatePicker(null);
+                      }
+                    }}
+                    onClose={() => setActiveDatePicker(null)}
+                    origin={to}
+                    destination={from}
+                    isOneWay={true}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Travellers & Class */}
-            <div 
-              className="flex-[1.2] flex items-center gap-3 px-6 h-full cursor-pointer hover:bg-gray-50"
-              onClick={() => setIsTravellerPickerOpen(true)}
-            >
-              <Users size={18} className="text-[#0b1031]" />
-              <div className="flex-1">
-                <div className="text-[13px] text-gray-700 font-medium">
-                  {adults + children + infants} PAX, {cabinClass.split('/')[0]}
+            <div className="flex-1 h-full relative">
+              <div 
+                className="w-full h-full flex items-center gap-3 px-5 cursor-pointer bg-white hover:bg-blue-50 transition-colors rounded-r-lg"
+                onClick={() => { setIsTravellerPickerOpen(true); setActiveDatePicker(null); }}
+              >
+                <Users size={16} className="text-gray-400" />
+                <div className="flex-1 flex justify-between items-center">
+                  <div>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Passengers & Class</span>
+                    <span className="text-[14px] font-bold text-[#0c1a40] block leading-tight">
+                      {adults + children + infants} PAX, {cabinClass}
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className="text-gray-400" />
                 </div>
               </div>
-              <ChevronDown size={14} className="text-gray-400" />
-            </div>
 
+              {/* Traveller Popover */}
+              {isTravellerPickerOpen && (
+                <div className="absolute top-[100%] right-0 mt-2 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  <TravellerPicker 
+                    adults={adults} 
+                    children={children} 
+                    infants={infants} 
+                    cabinClass={cabinClass}
+                    onChange={(a, c, i, cb) => {
+                      setAdults(a); setChildren(c); setInfants(i); setCabinClass(cb);
+                    }}
+                    onClose={() => setIsTravellerPickerOpen(false)} 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-6">
+              {/* Special Fares */}
+              {/* Keep generic filters or add B2B specific ones */}
+            </div>
             {/* Search Button */}
-            <button
-              type="button"
+            <button 
               onClick={() => handleSearch()}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-black text-[15px] px-10 h-[56px] rounded-full transition-all shadow-[0_8px_20px_rgba(37,99,235,0.3)] hover:shadow-[0_12px_25px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-lg font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
             >
               <Search size={18} />
               <span>Search Flights</span>
             </button>
-
-            {/* Calendar Popover */}
-            {activeDatePicker === 'depart' && (
-              <div className="absolute top-[100%] left-[30%] z-50">
-                <DualMonthCalendar 
-                  checkIn={date ? new Date(date) : null} 
-                  checkOut={null}
-                  onDateChange={(type, selectedDate) => {
-                    if (type === 'checkIn' && selectedDate) {
-                      setDate(format(selectedDate, 'yyyy-MM-dd'));
-                      setActiveDatePicker(tripType === 'Round Trip' ? 'return' : null);
-                    }
-                  }}
-                  onClose={() => setActiveDatePicker(null)}
-                  origin={from}
-                  destination={to}
-                  isOneWay={true}
-                />
-              </div>
-            )}
-            {activeDatePicker === 'return' && (
-              <div className="absolute top-[100%] left-[40%] z-50">
-                <DualMonthCalendar 
-                  checkIn={returnDate && tripType === 'Round Trip' ? new Date(returnDate) : null}
-                  checkOut={null}
-                  onDateChange={(type, selectedDate) => {
-                    if (type === 'checkIn' && selectedDate) {
-                      setReturnDate(format(selectedDate, 'yyyy-MM-dd'));
-                      setActiveDatePicker(null);
-                    }
-                  }}
-                  onClose={() => setActiveDatePicker(null)}
-                  origin={to}
-                  destination={from}
-                  isOneWay={true}
-                />
-              </div>
-            )}
-
-            {/* Traveller Popover */}
-            {isTravellerPickerOpen && (
-              <div className="absolute top-[80px] right-[5%] z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white">
-                <TravellerPicker 
-                  adults={adults} 
-                  children={children} 
-                  infants={infants} 
-                  cabinClass={cabinClass}
-                  onChange={(a, c, i, cb) => {
-                    setAdults(a); setChildren(c); setInfants(i); setCabinClass(cb);
-                  }}
-                  onClose={() => setIsTravellerPickerOpen(false)} 
-                />
-              </div>
-            )}
           </div>
 
-          {/* Recent Searches Row */}
-          {recentSearches.length > 0 && (
-            <div className="flex items-center gap-3 pt-4 pb-2 overflow-x-auto hidden-scrollbar">
-              <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap uppercase tracking-wider">Recent:</span>
-              {recentSearches.map((s, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setFrom(s.from);
-                    setTo(s.to);
-                    setDate(s.date);
-                    setReturnDate(s.returnDate);
-                    setTripType(s.tripType);
-                    setAdults(s.adults);
-                    setChildren(s.children);
-                    setInfants(s.infants);
-                    setCabinClass(s.cabinClass);
-                    handleSearch(s);
-                  }}
-                  className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-bold text-[#0c1a40] hover:border-blue-300 hover:bg-blue-50 whitespace-nowrap transition-colors shadow-sm group"
-                >
-                  <span className="text-blue-700">{s.from.split('(')[1]?.replace(')', '') || s.from.substring(0,3)}</span>
-                  {s.tripType === 'Round Trip' ? (
-                    <ArrowLeftRight size={10} className="text-gray-400 group-hover:text-blue-500" />
-                  ) : (
-                    <span className="text-gray-400 group-hover:text-blue-500">→</span>
-                  )}
-                  <span className="text-blue-700">{s.to.split('(')[1]?.replace(')', '') || s.to.substring(0,3)}</span>
-                  <span className="text-gray-300 ml-1">|</span>
-                  <span className="text-gray-600">{s.date ? format(new Date(s.date), 'dd MMM') : ''}</span>
-                  <span className="text-gray-300 ml-1">|</span>
-                  <span className="text-gray-600">{s.adults + s.children + s.infants} PAX</span>
-                </button>
-              ))}
+              {/* Recent Searches Row */}
+              {recentSearches.length > 0 && (
+                <div className="flex items-center gap-3 pt-4 pb-2 overflow-x-auto hidden-scrollbar">
+                  <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap uppercase tracking-wider">Recent:</span>
+                  {recentSearches.map((s, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setFrom(s.from);
+                        setTo(s.to);
+                        setDate(s.date);
+                        setReturnDate(s.returnDate);
+                        setTripType(s.tripType);
+                        setAdults(s.adults);
+                        setChildren(s.children);
+                        setInfants(s.infants);
+                        setCabinClass(s.cabinClass);
+                        handleSearch(s);
+                      }}
+                      className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-bold text-[#0c1a40] hover:border-blue-300 hover:bg-blue-50 whitespace-nowrap transition-colors shadow-sm group"
+                    >
+                      <span className="text-blue-700">{s.from.split('(')[1]?.replace(')', '') || s.from.substring(0,3)}</span>
+                      {s.tripType === 'Round Trip' ? (
+                        <ArrowLeftRight size={10} className="text-gray-400 group-hover:text-blue-500" />
+                      ) : (
+                        <span className="text-gray-400 group-hover:text-blue-500">→</span>
+                      )}
+                      <span className="text-blue-700">{s.to.split('(')[1]?.replace(')', '') || s.to.substring(0,3)}</span>
+                      <span className="text-gray-300 ml-1">|</span>
+                      <span className="text-gray-600">{s.date ? format(new Date(s.date), 'dd MMM') : ''}</span>
+                      <span className="text-gray-300 ml-1">|</span>
+                      <span className="text-gray-600">{s.adults + s.children + s.infants} PAX</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-
-          
-        </div>
       </main>
 
-
-      
-
       {/* Premium TrippeChalo Marquee */}
-      <section className="bg-gradient-to-r from-[#0b1031] via-blue-900 to-[#0b1031] py-3 text-[11px] font-black tracking-widest text-blue-200 uppercase overflow-hidden whitespace-nowrap pause-on-hover cursor-pointer border-t border-b border-blue-500/20 shadow-inner">
+      <section className="relative z-10 bg-gradient-to-r from-[#0b1031] via-blue-900 to-[#0b1031] py-3 text-[11px] font-black tracking-widest text-blue-200 uppercase overflow-hidden whitespace-nowrap cursor-pointer border-t border-b border-blue-500/20 shadow-inner">
         <div className="animate-marquee inline-block w-max">
           {[...Array(12)].map((_, i) => (
             <React.Fragment key={i}>
@@ -839,3 +852,4 @@ interface RecentSearch {
 };
 
 export default B2BAgentHomePage;
+

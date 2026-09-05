@@ -35,6 +35,8 @@ interface Flight {
   checkinBaggage?: string;
   cabinBaggage?: string;
   cabinClass?: string;
+  mealsIncluded?: boolean;
+  isRefundable?: boolean;
 }
 
 export default function AgentFlightSearchResults(props: any) {
@@ -220,8 +222,25 @@ export default function AgentFlightSearchResults(props: any) {
             ) : (
               <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Available</span>
             )}
-            <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded">! Paid Meals</span>
-            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">ADT: 15 Kg / 7 Kg</span>
+            
+            {flight.isRefundable !== undefined ? (
+              <span className={`px-2 py-0.5 rounded ${flight.isRefundable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {flight.isRefundable ? 'Refundable' : 'Non Refundable'}
+              </span>
+            ) : (
+              <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded">Non Refundable</span>
+            )}
+
+            <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded">
+              {flight.mealsIncluded ? 'Free Meal' : '! Paid Meals'}
+            </span>
+            
+            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+              {flight.checkinBaggage && flight.cabinBaggage 
+                ? `ADT: ${flight.checkinBaggage} / ${flight.cabinBaggage}`
+                : 'ADT: 15 Kg / 7 Kg'}
+            </span>
+            
             <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded uppercase">INSTANT FARE</span>
             <span className="text-blue-700 font-bold uppercase">Class: {flight.cabinClass || 'Economy'}</span>
           </div>
@@ -819,75 +838,167 @@ export default function AgentFlightSearchResults(props: any) {
         </div>
       </header>
       
-      {/* Search Header Bar (Summary View) */}
+      {/* Enhanced Search Header Bar (Summary View) */}
       <div className="bg-[#0b1031] text-white py-3 px-8 sticky top-0 z-40 shadow-md">
-        <div className="max-w-[1240px] mx-auto flex items-center justify-between text-xs">
+        <div className="max-w-[1240px] mx-auto flex flex-col gap-3">
           
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">From</span>
-              <span className="font-bold text-[15px] leading-tight">{from}</span>
-            </div>
-            <span className="text-gray-400 font-bold text-lg">➔</span>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">To</span>
-              <span className="font-bold text-[15px] leading-tight">{to}</span>
-            </div>
+          {/* Top Row: Route Title & Actions */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-white">
+              ({from}) {from} <span className="text-gray-400 mx-2">➔</span> ({to}) {to}
+            </h2>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-white/10 rounded-full p-1">
+                <button className="px-3 py-1 text-xs font-bold hover:bg-white/20 rounded-full transition">« Previous Day</button>
+                <div className="w-px h-4 bg-white/20" />
+                <button className="px-3 py-1 text-xs font-bold hover:bg-white/20 rounded-full transition">Next Day »</button>
+              </div>
 
-            <div className="h-8 w-px bg-white/20" />
+              <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+                <span className="text-xs font-bold">Show Incentive</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                </label>
+              </div>
 
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Departure Date</span>
-              <span className="font-bold text-[15px] leading-tight">
-                {new Date(date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
-            </div>
-
-            {tripType === 'Round Trip' && returnDate && (
-              <>
-                <div className="h-8 w-px bg-white/20" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Return Date</span>
-                  <span className="font-bold text-[15px] leading-tight">
-                    {new Date(returnDate).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
-              </>
-            )}
-
-            <div className="h-8 w-px bg-white/20" />
-
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Travellers & Class</span>
-              <span className="font-bold text-[15px] leading-tight">
-                {adults + children + infants} PAX, {cabinClass.split('/')[0]}
-              </span>
+              <div className="flex items-center gap-2 border-l border-white/20 pl-4 text-xs font-bold text-gray-300">
+                Share By:
+                <button className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white hover:bg-green-600 transition">
+                  <span className="text-[10px]">W</span>
+                </button>
+                <button className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition">
+                  <span className="text-[10px]">@</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <button 
-            onClick={() => setIsSearchModalOpen(true)} 
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-8 rounded-full text-xs transition uppercase shadow-md border border-blue-500"
-          >
-            Modify
-          </button>
+          {/* Bottom Row: Search Summary */}
+          <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-gray-300">
+                <span className="font-bold text-white">{new Date(date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+
+              {tripType === 'Round Trip' && returnDate && (
+                <>
+                  <div className="h-4 w-px bg-white/20" />
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <span>Return:</span>
+                    <span className="font-bold text-white">{new Date(returnDate).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                </>
+              )}
+
+              <div className="h-4 w-px bg-white/20" />
+              <div className="flex items-center gap-2 text-gray-300">
+                <span>Travellers:</span>
+                <span className="font-bold text-white">{adults} Adult, {children} Child, {infants} Infant</span>
+              </div>
+              
+              <div className="h-4 w-px bg-white/20" />
+              <div className="flex items-center gap-2 text-gray-300">
+                <span>Class:</span>
+                <span className="font-bold text-white">{cabinClass.split('/')[0]}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsSearchModalOpen(true)} 
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-6 rounded-full text-[11px] transition uppercase shadow-md border border-blue-500"
+            >
+              Modify Search
+            </button>
+          </div>
+
         </div>
       </div>
 
       <div className="max-w-[1240px] mx-auto mt-6 flex gap-6 px-4">
         
         {/* Left Sidebar Filters */}
-        <div className="w-[260px] shrink-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-            <h3 className="font-bold text-gray-900 mb-3 text-xs">Filter Fares</h3>
+        <div className="w-[260px] shrink-0 space-y-4">
+          
+          {/* Refundability */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Refundable</h3>
             <div className="space-y-2 text-xs">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={nonStopFilter} onChange={(e) => setNonStopFilter(e.target.checked)} className="rounded text-blue-600" />
-                <span className="font-medium text-gray-700">Non-Stop Only</span>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                <span className="font-bold text-gray-700 group-hover:text-blue-600">Refundable</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={morningFilter} onChange={(e) => setMorningFilter(e.target.checked)} className="rounded text-blue-600" />
-                <span className="font-medium text-gray-700">Morning Departure</span>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                <span className="font-bold text-gray-700 group-hover:text-blue-600">Non Refundable</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Stops */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Stops</h3>
+            <div className="flex gap-2">
+              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">0</button>
+              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">1</button>
+              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">2+</button>
+            </div>
+          </div>
+
+          {/* Departure Time */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Departure Time</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">00:00 - 06:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">06:00 - 12:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">12:00 - 18:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">18:00 - 00:00</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* Arrival Time */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Arrival Time</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">00:00 - 06:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">06:00 - 12:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">12:00 - 18:00</span>
+              </button>
+              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
+                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">18:00 - 00:00</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Airlines */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Airlines</h3>
+            <div className="space-y-2 text-xs">
+              {/* Dynamic Airlines will be injected here. Mocking some for UI layout */}
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                  <span className="font-bold text-gray-700 group-hover:text-blue-600">IndiGo</span>
+                </div>
+              </label>
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+                  <span className="font-bold text-gray-700 group-hover:text-blue-600">Air India</span>
+                </div>
               </label>
             </div>
           </div>

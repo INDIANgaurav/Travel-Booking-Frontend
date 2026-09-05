@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
-import { ChevronDown, Check, Plane, Building2, User, ArrowLeft } from 'lucide-react';
+import { ChevronDown, Check, Plane, Building2, User, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, logout } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -14,6 +14,7 @@ import LoginModal from '../../components/auth/LoginModal';
 import toast from 'react-hot-toast';
 import { useFlightSearch } from '../../hooks/useFlightSearch';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
+import InteractiveGridBackground from '../../components/ui/InteractiveGridBackground';
 
 interface Flight {
   _id: string;
@@ -150,7 +151,9 @@ export default function FlightSearchResults() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f2f2f2] font-sans pb-32" onClick={closeAllPickers}>
+    <div className="min-h-screen font-sans pb-32 relative z-0 overflow-hidden" onClick={closeAllPickers}>
+      <InteractiveGridBackground theme="light" />
+      
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       {/* Integrated Header */ }
       <div className="bg-white sticky top-0 z-40 shadow-sm border-b border-gray-200">
@@ -236,85 +239,87 @@ export default function FlightSearchResults() {
           )}
         </div>
 
-        {/* Search Bar Row */}
-        <div className="max-w-[1200px] mx-auto py-2 relative">
-          <div className="flex items-center gap-2">
-            
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTripTypePickerOpen(true); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Trip Type</span>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-900">{tripType}</span>
-                <ChevronDown size={14} className="text-gray-500" />
+        {/* Search Bar Row (Premium Dark) */}
+        <div className="bg-gradient-to-r from-[#0c1a40] to-blue-900 py-3 shadow-lg relative z-30">
+          <div className="max-w-[1200px] mx-auto relative">
+            <div className="flex items-center gap-2">
+              
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer w-32 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTripTypePickerOpen(true); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">Trip Type</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-white">{tripType}</span>
+                  <ChevronDown size={14} className="text-blue-200" />
+                </div>
               </div>
-            </div>
 
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 flex-1"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsFromPickerOpen(true); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">From</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{getCityName(from)}</span>
-            </div>
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer flex-1 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsFromPickerOpen(true); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">From</span>
+                <span className="text-sm font-bold text-white truncate">{getCityName(from)}</span>
+              </div>
 
-            <div 
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm z-10 -mx-4 cursor-pointer text-blue-500 hover:shadow-md transition"
-              onClick={(e) => { e.stopPropagation(); const temp = from; setFrom(to); setTo(temp); }}
-            >
-              <span className="text-xs font-bold">⇄</span>
-            </div>
+              <div 
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 border border-blue-400 shadow-md z-10 -mx-4 cursor-pointer text-white hover:bg-blue-400 hover:shadow-lg transition transform hover:scale-105"
+                onClick={(e) => { e.stopPropagation(); const temp = from; setFrom(to); setTo(temp); }}
+              >
+                <span className="text-xs font-black">⇄</span>
+              </div>
 
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 flex-1 pl-6"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">To</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{getCityName(to)}</span>
-            </div>
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer flex-1 pl-6 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">To</span>
+                <span className="text-sm font-bold text-white truncate">{getCityName(to)}</span>
+              </div>
 
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Depart</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{formatDate(date)}</span>
-            </div>
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer w-32 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">Depart</span>
+                <span className="text-sm font-bold text-white truncate">{formatDate(date)}</span>
+              </div>
 
-            <div 
-              className={`flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32 relative ${tripType === 'One Way' ? 'opacity-50' : ''}`}
-              onClick={(e) => { e.stopPropagation(); if (tripType !== 'Round Trip') setTripType('Round Trip'); closeAllPickers(); setActiveDatePicker('return'); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Return</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{tripType === 'Round Trip' ? formatDate(returnDate) : 'Tap to add'}</span>
-              {tripType === 'Round Trip' && (
-                <span className="absolute top-1 right-2 text-gray-400 text-xs hover:text-gray-900" onClick={(e) => { e.stopPropagation(); setTripType('One Way'); }}>×</span>
-              )}
-            </div>
+              <div 
+                className={`flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer w-32 relative backdrop-blur-sm transition text-white ${tripType === 'One Way' ? 'opacity-50' : ''}`}
+                onClick={(e) => { e.stopPropagation(); if (tripType !== 'Round Trip') setTripType('Round Trip'); closeAllPickers(); setActiveDatePicker('return'); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">Return</span>
+                <span className="text-sm font-bold text-white truncate">{tripType === 'Round Trip' ? formatDate(returnDate) : 'Tap to add'}</span>
+                {tripType === 'Round Trip' && (
+                  <span className="absolute top-1 right-2 text-white/50 text-xs hover:text-white" onClick={(e) => { e.stopPropagation(); setTripType('One Way'); }}>×</span>
+                )}
+              </div>
 
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-28"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(true); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Travellers</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{adults + children + infants} Traveller</span>
-            </div>
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer w-28 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(true); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">Travellers</span>
+                <span className="text-sm font-bold text-white truncate">{adults + children + infants} Traveller</span>
+              </div>
 
-            <div 
-              className="flex flex-col bg-gray-50 border border-gray-300 rounded px-3 py-1 cursor-pointer hover:bg-gray-100 w-32"
-              onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(true); }}
-            >
-              <span className="text-[10px] text-gray-500 font-bold uppercase">Cabin Class</span>
-              <span className="text-sm font-bold text-gray-900 truncate">{cabinClass.split('/')[0]}</span>
-            </div>
+              <div 
+                className="flex flex-col bg-white/10 hover:bg-white/20 border border-white/20 rounded px-3 py-1 cursor-pointer w-32 backdrop-blur-sm transition text-white"
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(true); }}
+              >
+                <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider">Cabin Class</span>
+                <span className="text-sm font-bold text-white truncate">{cabinClass.split('/')[0]}</span>
+              </div>
 
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-2.5 rounded-full cursor-pointer transition-colors"
-            >
-              SEARCH
-            </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleSearch(); }}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-black tracking-wide text-sm px-8 py-3 rounded-full cursor-pointer transition-all shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-0.5"
+              >
+                SEARCH
+              </button>
+            </div>
           </div>
 
           {/* Absolute Positioned Pickers */}
@@ -400,16 +405,67 @@ export default function FlightSearchResults() {
       </div>
 
       {loading ? (
-        <div className="w-full flex flex-col items-center justify-center py-32 bg-[#f2f2f2] min-h-[600px]">
-          <div className="relative mb-6 flex items-center">
-            <div className="flex gap-2 mr-2">
-               <div className="w-4 h-[3px] bg-gray-300 rounded animate-pulse" style={{ animationDelay: '0ms' }}></div>
-               <div className="w-8 h-[3px] bg-gray-300 rounded animate-pulse" style={{ animationDelay: '150ms' }}></div>
-               <div className="w-6 h-[3px] bg-gray-300 rounded animate-pulse" style={{ animationDelay: '300ms' }}></div>
-            </div>
-            <Plane size={64} className="text-gray-700" strokeWidth={1.5} fill="white" />
+        <div className="w-full flex flex-col items-center justify-center py-32 bg-[#f8fafc] min-h-[600px] relative z-10 overflow-hidden">
+          <div className="absolute inset-0 opacity-40 pointer-events-none flex items-center justify-center">
+            <div className="w-64 h-64 bg-blue-200 rounded-full blur-[100px] animate-pulse"></div>
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mt-2">Hold on, we're fetching flights for you</h2>
+          
+          <div className="relative mb-8 z-10 flex flex-col items-center">
+            <div className="mb-8 flex items-center justify-center h-16 w-48 relative">
+               {/* Animated Wind Lines */}
+               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-32 h-8 overflow-hidden pointer-events-none">
+                 <div className="w-full h-full relative animate-[wind_1s_linear_infinite]">
+                    <div className="absolute top-[20%] left-[20%] w-3 h-[2px] bg-blue-300 rounded-full"></div>
+                    <div className="absolute top-[50%] left-[50%] w-8 h-[2px] bg-blue-400 rounded-full"></div>
+                    <div className="absolute top-[80%] left-[10%] w-5 h-[2px] bg-blue-300 rounded-full"></div>
+                 </div>
+                 <div className="w-full h-full relative animate-[wind_1.5s_linear_infinite] delay-75">
+                    <div className="absolute top-[30%] left-[70%] w-6 h-[2px] bg-blue-500 rounded-full"></div>
+                    <div className="absolute top-[70%] left-[40%] w-4 h-[2px] bg-blue-400 rounded-full"></div>
+                 </div>
+               </div>
+               
+               {/* Smooth floating Plane */}
+               <div className="absolute right-0 animate-[float_3s_ease-in-out_infinite]">
+                 <Plane size={56} className="text-blue-600 transform rotate-12 drop-shadow-md" strokeWidth={2} fill="white" />
+               </div>
+            </div>
+            
+            <h2 className="text-2xl md:text-3xl font-black text-[#0c1a40] tracking-tight mb-2">
+              Searching for the best fares
+            </h2>
+            <p className="text-sm text-blue-600 font-black uppercase tracking-wider mb-2">
+              {from} <span className="mx-2">✈</span> {to}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
+              <span className="bg-gray-200/50 px-3 py-1 rounded-full">{new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              <span className="bg-gray-200/50 px-3 py-1 rounded-full">{tripType}</span>
+              <span className="bg-gray-200/50 px-3 py-1 rounded-full">
+                {parseInt(adults as any) + parseInt(children as any) + parseInt(infants as any)} Traveller{(parseInt(adults as any) + parseInt(children as any) + parseInt(infants as any)) > 1 ? 's' : ''}
+              </span>
+              <span className="bg-gray-200/50 px-3 py-1 rounded-full">{cabinClass}</span>
+            </div>
+            
+            <div className="w-48 h-1 bg-gray-200 rounded-full mt-8 overflow-hidden relative">
+               <div className="absolute top-0 left-0 h-full bg-blue-600 rounded-full w-full origin-left animate-[shimmer_1.5s_infinite]"></div>
+            </div>
+            <style>{`
+              @keyframes shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+              }
+              @keyframes float {
+                0%, 100% { transform: translateY(0) rotate(12deg); }
+                50% { transform: translateY(-6px) rotate(14deg); }
+              }
+              @keyframes wind {
+                0% { transform: translateX(100%); opacity: 0; }
+                20% { opacity: 1; }
+                80% { opacity: 1; }
+                100% { transform: translateX(-100%); opacity: 0; }
+              }
+            `}</style>
+          </div>
         </div>
       ) : (
         <div className="max-w-[1000px] mx-auto py-6 w-full">
@@ -419,7 +475,7 @@ export default function FlightSearchResults() {
               Flights from {getCityName(from)} to {getCityName(to)}{tripType === 'Round Trip' ? ', and back' : ''}
             </h2>
             {(nonStopFilter || morningFilter) && (
-              <div className="bg-white p-3 rounded shadow-sm border border-gray-200 mb-4 flex items-center gap-4">
+              <div className="bg-white p-3 rounded shadow-sm border border-gray-200 mb-4 flex items-center gap-4 relative z-10">
                 <h3 className="font-bold text-gray-900 text-sm">Applied Filters:</h3>
                 <div className="flex flex-wrap gap-2 flex-1">
                   {nonStopFilter && (
@@ -442,7 +498,7 @@ export default function FlightSearchResults() {
             {tripType === 'One Way' && (
               <>
                 {/* Date Carousel */}
-                <div className="flex bg-white shadow-sm border border-gray-200 rounded mb-4 overflow-hidden h-[60px]">
+                <div className="flex bg-white shadow-sm border border-gray-200 rounded mb-4 overflow-hidden h-[60px] relative z-10">
                   <div onClick={() => setSliderOffset(prev => prev - 1)} className="w-10 flex items-center justify-center border-r border-gray-100 text-blue-500 font-black text-xl cursor-pointer hover:bg-gray-50 bg-white">{'<'}</div>
                   <div className="flex flex-1 divide-x divide-gray-100 text-center text-sm overflow-hidden">
                     {[...Array(7)].map((_, i) => {
@@ -485,7 +541,7 @@ export default function FlightSearchResults() {
                 </div>
 
                 {/* Sorting Tabs */}
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-4 relative z-10">
                   <div onClick={() => setSortBy('CHEAPEST')} className={`flex-1 bg-white border-x border-t ${sortBy === 'CHEAPEST' ? 'border-b-4 border-blue-500 shadow-md' : 'border-b border-gray-200 shadow-sm opacity-80'} rounded p-2 cursor-pointer flex items-center gap-3 transition`}>
                     <div className={`${sortBy === 'CHEAPEST' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} w-8 h-8 rounded-full flex items-center justify-center font-black`}><span className={sortBy === 'CHEAPEST' ? '' : ''}>₹</span></div>
                     <div>
@@ -509,7 +565,7 @@ export default function FlightSearchResults() {
             <div className={`grid gap-4 ${tripType === 'Round Trip' ? 'grid-cols-2' : 'grid-cols-1'}`}>
               
               {/* Outbound Flights Column */}
-              <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden relative z-10">
                 <div className="p-3 border-b border-gray-200 bg-white">
                   <h3 className="font-bold text-gray-900 text-[15px]">{getCityName(from)} → {getCityName(to)} <span className="text-gray-500 font-normal text-sm ml-1">{new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span></h3>
                 </div>
@@ -580,7 +636,7 @@ export default function FlightSearchResults() {
 
               {/* Return Flights Column */}
               {tripType === 'Round Trip' && (
-                <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden relative z-10">
                   <div className="p-3 border-b border-gray-200">
                     <h3 className="font-bold text-gray-900 text-[15px]">{getCityName(to)} → {getCityName(from)} <span className="text-gray-500 font-normal text-sm">{new Date(returnDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span></h3>
                   </div>
@@ -624,61 +680,65 @@ export default function FlightSearchResults() {
               (tripType === 'Round Trip' && selectedOutbound && selectedReturn) ||
               (tripType === 'One Way' && selectedOutbound)
             ) ? createPortal(
-              <div className="fixed bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
-                <div className="max-w-[1000px] mx-auto flex w-full">
-                  <div className="flex-1 bg-[#001736] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] rounded-t-lg flex items-center justify-between pointer-events-auto border-t border-blue-900">
-                    
-                    <div className="flex gap-4 flex-1 pl-2">
+              <div className="fixed bottom-6 left-0 w-full z-[30] pointer-events-none flex justify-center animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out px-4">
+                <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-2xl md:rounded-full pointer-events-auto w-full max-w-[1000px] p-2 md:p-2.5 flex flex-col md:flex-row items-center justify-between gap-4">
+                   
+                  <div className="flex w-full md:w-auto items-center gap-4 flex-1 overflow-hidden px-2">
+                    {/* Outbound */}
+                    <div className="flex-1 flex items-center gap-4">
+                       <div className="relative">
+                         <div className="absolute inset-0 bg-blue-500 blur opacity-20 rounded-full"></div>
+                         <img src={selectedOutbound.airlineLogo} alt="" className="w-10 h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                       </div>
+                       <div className="flex flex-col">
+                         <div className="flex items-center gap-2 mb-0.5">
+                           <span className="font-black text-[15px] text-[#0c1a40]">{new Date(selectedOutbound.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                           <span className="text-blue-500 text-xs">➔</span>
+                           <span className="font-black text-[15px] text-[#0c1a40]">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                         </div>
+                         <div className="flex gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                           <span>{selectedOutbound.airline}</span>
+                           <span className="text-blue-400 hover:text-blue-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
+                         </div>
+                       </div>
+                    </div>
+
+                    {/* Return if roundtrip */}
+                    {tripType === 'Round Trip' && selectedReturn && (
+                      <>
+                        <div className="w-[1px] h-10 bg-gray-200/80 mx-2"></div>
+                        <div className="flex-1 flex items-center gap-4">
+                           <div className="relative">
+                             <div className="absolute inset-0 bg-emerald-500 blur opacity-20 rounded-full"></div>
+                             <img src={selectedReturn.airlineLogo} alt="" className="w-10 h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                           </div>
+                           <div className="flex flex-col">
+                             <div className="flex items-center gap-2 mb-0.5">
+                               <span className="font-black text-[15px] text-[#0c1a40]">{new Date(selectedReturn.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                               <span className="text-emerald-500 text-xs">➔</span>
+                               <span className="font-black text-[15px] text-[#0c1a40]">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                             </div>
+                             <div className="flex gap-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                               <span>{selectedReturn.airline}</span>
+                               <span className="text-emerald-500 hover:text-emerald-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
+                             </div>
+                           </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                   
-                  <div className={`flex-1 flex gap-4 ${tripType === 'Round Trip' ? 'pr-6 border-r border-gray-700' : ''}`}>
-                    <div>
-                      <p className="text-[11px] text-gray-400 mb-2">Departure • {selectedOutbound.airline}</p>
-                      <div className="flex items-center gap-3">
-                        <img src={selectedOutbound.airlineLogo} alt="" className="w-6 h-6 object-contain bg-white rounded-sm p-0.5" />
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-base">{new Date(selectedOutbound.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                          <span className="text-gray-500 text-xs">→</span>
-                          <span className="font-bold text-base">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-blue-400 mt-1 cursor-pointer hover:underline pl-9" onClick={() => setShowFlightDetails(selectedOutbound)}>Flight Details</p>
+                  {/* Action Area */}
+                  <div className="flex items-center justify-between md:justify-end gap-6 bg-white/60 px-6 py-2 rounded-xl md:rounded-full border border-white/60 w-full md:w-auto shadow-sm">
+                    <div className="flex flex-col items-end justify-center">
+                      <p className="font-black text-[22px] text-[#0c1a40] leading-none mb-1">
+                        ₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-[10px] font-black text-gray-500 uppercase cursor-pointer hover:text-blue-600 transition flex items-center gap-1" onClick={() => setShowFareSummaryModal(true)}>
+                        Fare Summary
+                      </p>
                     </div>
-                    <div className="ml-auto flex items-center">
-                      <span className="font-bold text-lg">₹ {getDisplayPrice(selectedOutbound.price).toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-
-                  {tripType === 'Round Trip' && selectedReturn && (
-                    <div className="flex-1 flex gap-4 pr-6 border-r border-gray-700">
-                      <div>
-                        <p className="text-[11px] text-gray-400 mb-2">Return • {selectedReturn.airline}</p>
-                        <div className="flex items-center gap-3">
-                          <img src={selectedReturn.airlineLogo} alt="" className="w-6 h-6 object-contain bg-white rounded-sm p-0.5" />
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-base">{new Date(selectedReturn.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                            <span className="text-gray-500 text-xs">→</span>
-                            <span className="font-bold text-base">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-blue-400 mt-1 cursor-pointer hover:underline pl-9" onClick={() => setShowFlightDetails(selectedReturn)}>Flight Details</p>
-                      </div>
-                      <div className="ml-auto flex items-center">
-                        <span className="font-bold text-lg">₹ {getDisplayPrice(selectedReturn.price).toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-                
-                <div className="flex items-center gap-6 pl-6">
-                  <div className="text-right">
-                    <div className="flex items-baseline justify-end gap-1">
-                      <p className="font-black text-[22px]">₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}</p>
-                    </div>
-                    <p className="text-[10px] text-gray-400">/adult</p>
-                    <p className="text-[10px] text-gray-300 mt-1 leading-tight">Flat 12% OFF using FLYMON<br/>code | Flat Rs. 585 OFF using<br/>BREAKFREE code<br/><span className="text-blue-400 cursor-pointer hover:underline" onClick={() => setShowFareSummaryModal(true)}>Fare Details</span></p>
-                  </div>
-                  <div className="flex flex-col gap-2">
+                    
                     <button 
                       onClick={() => {
                         if (!user) {
@@ -688,17 +748,17 @@ export default function FlightSearchResults() {
                           navigate('/flights/booking', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
                         }
                       }}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-6 rounded text-sm transition"
+                      className="group bg-[#0c1a40] hover:bg-blue-600 text-white font-black py-3 px-8 rounded-full text-sm shadow-[0_5px_15px_rgba(12,26,64,0.3)] hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wider flex items-center gap-2 whitespace-nowrap"
                     >
-                      BOOK NOW
+                      Book Ticket
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
+
                 </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        ) : null}
+              </div>,
+              document.body
+            ) : null}
 
         {/* Fare Summary Modal */}
         {showFareSummaryModal && (selectedOutbound || selectedReturn) && (
@@ -840,7 +900,8 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
         {/* Departure */}
         <div className="text-left">
           <p className="font-black text-[17px] text-gray-900">{formatTime(depTime)}</p>
-          <p className="text-xs text-gray-500 mt-1">{flight.departureCity}</p>
+          <p className="text-xs text-gray-500 mt-1">{flight.departureAirportCode || flight.departureCity}</p>
+          <p className="text-[10px] text-gray-400">{depTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
         </div>
         
         {/* Duration */}
@@ -855,7 +916,8 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
         {/* Arrival */}
         <div className="text-left pl-2">
           <p className="font-black text-[17px] text-gray-900">{formatTime(arrTime)}</p>
-          <p className="text-xs text-gray-500 mt-1">{flight.arrivalCity}</p>
+          <p className="text-xs text-gray-500 mt-1">{flight.arrivalAirportCode || flight.arrivalCity}</p>
+          <p className="text-[10px] text-gray-400">{arrTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
         </div>
 
         {/* Price & Action */}

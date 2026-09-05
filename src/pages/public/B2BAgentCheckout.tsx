@@ -26,7 +26,8 @@ export interface Passenger {
 const B2BAgentCheckout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState(16 * 60 + 3); // 16m 3s
+  const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 Minutes default
+  const [holdError, setHoldError] = useState('');
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
@@ -236,6 +237,14 @@ const B2BAgentCheckout: React.FC = () => {
   };
 
   const handleConfirmBooking = async () => {
+    if (timeLeft <= 0) {
+      toast.error('Session expired. Please search again.');
+      return;
+    }
+    if (holdError) {
+      toast.error(holdError);
+      return;
+    }
     try {
       setIsBooking(true);
 
@@ -272,6 +281,7 @@ const B2BAgentCheckout: React.FC = () => {
             currency: 'INR',
             total_price: flight.nexus_total_price || flight.price // Send exact Nexus price back!
           }),
+          commission: flight.agentMarkup || 0,
           airline: flight.airline,
           flightNo: flight.flightNumber,
           from: flight.origin,
@@ -338,11 +348,35 @@ const B2BAgentCheckout: React.FC = () => {
   }, [flight, navigate]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    let timer: any;
+    
+    const initHold = async () => {
+      if (flight?.isSeriesFare) {
+        try {
+          const sfId = flight.flight_keys ? flight.flight_keys[0].replace('SF_', '') : flight._id || flight.sfId;
+          const count = adults + childrenCount + infants;
+          const res = await api.post(`/api/series-fare/${sfId}/hold`, { paxCount: count });
+          if (res.data.hold && res.data.hold.expiresAt) {
+             const expiresAt = new Date(res.data.hold.expiresAt).getTime();
+             const now = new Date().getTime();
+             const diffSeconds = Math.floor((expiresAt - now) / 1000);
+             setTimeLeft(diffSeconds > 0 ? diffSeconds : 0);
+          }
+        } catch (error: any) {
+          console.error("Hold failed", error);
+          setHoldError(error.response?.data?.message || 'Failed to hold seats. They might be sold out.');
+          setTimeLeft(0);
+        }
+      }
+    };
+    
+    initHold();
+
+    timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [flight, adults, childrenCount, infants]);
 
   if (!flight) return null;
 
@@ -1019,13 +1053,23 @@ const B2BAgentCheckout: React.FC = () => {
                   <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-50">
                     <div className="text-xs text-gray-500 font-bold">
                       You are Paying <span className="text-[#0c1a40] text-sm font-black">₹{(totalFare).toLocaleString('en-IN')}.00</span>
+                      {holdError && <div className="text-red-500 text-[10px] mt-1">{holdError}</div>}
                     </div>
-                    <button 
-                      onClick={() => setShowReviewModal(true)}
-                      className="bg-[#0b1031] text-white font-bold text-xs px-8 py-2.5 rounded-full shadow hover:bg-blue-900 transition"
-                    >
-                      Proceed
-                    </button>
+                    {(timeLeft <= 0 || holdError) ? (
+                      <button 
+                        onClick={() => navigate('/b2b/home')}
+                        className="bg-gray-400 text-white font-bold text-xs px-8 py-2.5 rounded-full shadow"
+                      >
+                        Expired - Search Again
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => setShowReviewModal(true)}
+                        className="bg-[#0b1031] text-white font-bold text-xs px-8 py-2.5 rounded-full shadow hover:bg-blue-900 transition"
+                      >
+                        Proceed
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1384,16 +1428,28 @@ const B2BAgentCheckout: React.FC = () => {
 
             {/* Sticky Bottom Action Bar */}
             <div className="sticky bottom-0 bg-[#f9fafc] p-4 px-6 flex justify-between items-center z-10 rounded-b-2xl">
-              <div className="text-sm font-black text-[#0c1a40]">
-                Total Payable <span className="text-emerald-500 text-lg ml-1">₹{(totalFare).toLocaleString('en-IN')}.00</span>
+              <div className="flex flex-col">
+                <div className="text-sm font-black text-[#0c1a40]">
+                  Total Payable <span className="text-emerald-500 text-lg ml-1">₹{(totalFare).toLocaleString('en-IN')}.00</span>
+                </div>
+                {holdError && <span className="text-xs text-red-500 font-bold">{holdError}</span>}
               </div>
-              <button 
-                onClick={handleConfirmBooking}
-                disabled={isBooking}
-                className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-8 py-3 rounded-full shadow transition disabled:opacity-50"
-              >
-                {isBooking ? 'Processing...' : 'Book Ticket'}
-              </button>
+              {(timeLeft <= 0 || holdError) ? (
+                <button 
+                  onClick={() => navigate('/b2b/home')}
+                  className="bg-gray-400 text-white font-bold text-sm px-8 py-3 rounded-full shadow transition"
+                >
+                  Session Expired
+                </button>
+              ) : (
+                <button 
+                  onClick={handleConfirmBooking}
+                  disabled={isBooking}
+                  className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-8 py-3 rounded-full shadow transition disabled:opacity-50"
+                >
+                  {isBooking ? 'Processing...' : 'Book Ticket'}
+                </button>
+              )}
             </div>
           </div>
         </div>
