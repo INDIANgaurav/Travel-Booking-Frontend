@@ -13,9 +13,10 @@ export default function AdminPassengerCalendar() {
       setLoading(true);
       const year = date.getFullYear();
       const month = date.getMonth() + 1; // 1-12
+      const lastDay = new Date(year, month, 0).toISOString().split('T')[0];
       const res = await reportsApi.getPassengerCalendar({ 
-        fromDate: `${year}-${month.toString().padStart(2, '0')}-01`,
-        toDate: new Date(year, month, 0).toISOString().split('T')[0]
+        fromDate: `${year}-${month.toString().padStart(2, '0')}-01T00:00:00.000Z`,
+        toDate: `${lastDay}T23:59:59.999Z`
       });
       if (res.success) {
         setBookings(res.data);
@@ -105,7 +106,7 @@ export default function AdminPassengerCalendar() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={() => fetchCalendarData(currentDate)} 
         title="Passenger Calendar" 
         description="Visual overview of passenger travel dates and bookings"
       />

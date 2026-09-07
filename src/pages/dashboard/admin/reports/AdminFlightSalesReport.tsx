@@ -61,36 +61,36 @@ export default function AdminFlightSalesReport() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">
         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{row.status}</span>
       </td>
-      <td className="px-6 py-4">{row.basefare}</td>
-      <td className="px-6 py-4">{row.tax}</td>
-      <td className="px-6 py-4">{row.comm}</td>
-      <td className="px-6 py-4">{row.gstComm}</td>
-      <td className="px-6 py-4">{row.tdsComm}</td>
-      <td className="px-6 py-4">{row.mf}</td>
-      <td className="px-6 py-4">{row.gstMf}</td>
-      <td className="px-6 py-4">{row.yq}</td>
-      <td className="px-6 py-4">{row.tfee}</td>
-      <td className="px-6 py-4">{row.markup}</td>
-      <td className="px-6 py-4">{row.additionalMarkup}</td>
-      <td className="px-6 py-4 text-indigo-700 font-bold">{row.invoiceTotal}</td>
-      <td className="px-6 py-4">{row.paymode}</td>
-      <td className="px-6 py-4">{row.channel}</td>
-      <td className="px-6 py-4">{row.journeyType}</td>
-      <td className="px-6 py-4">{row.ticket}</td>
-      <td className="px-6 py-4">{row.email}</td>
-      <td className="px-6 py-4 text-blue-600 font-bold">{row.txid}</td>
-      <td className="px-6 py-4">{row.sf}</td>
-      <td className="px-6 py-4">{row.fareType}</td>
-      <td className="px-6 py-4">{row.remarks}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.basefare}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.tax}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.comm}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.gstComm}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.tdsComm}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.mf}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.gstMf}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.yq}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.tfee}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.markup}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.additionalMarkup}</td>
+      <td className="px-6 py-4 align-middle text-indigo-700 font-bold">{row.invoiceTotal}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.paymode}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.channel}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.journeyType}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.ticket}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.email}</td>
+      <td className="px-6 py-4 align-middle text-blue-600 font-bold">{row.txid}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.sf}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.fareType}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.remarks}</td>
     </tr>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Flight Sales Report" 
         description="Comprehensive view of all flight booking sales, commissions, and taxes"
         onDownload={handleDownload}

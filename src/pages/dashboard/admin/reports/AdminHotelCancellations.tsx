@@ -51,20 +51,20 @@ export default function AdminHotelCancellations() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.txid}</td>
-      <td className="px-6 py-4">{row.bookingDate}</td>
-      <td className="px-6 py-4">{row.caxnDate}</td>
-      <td className="px-6 py-4">{row.checkIn}</td>
-      <td className="px-6 py-4">{row.checkOut}</td>
-      <td className="px-6 py-4">{row.hotelName}</td>
-      <td className="px-6 py-4">{row.state}</td>
-      <td className="px-6 py-4 font-bold">{row.totalAmt}</td>
-      <td className="px-6 py-4 font-bold text-emerald-600">{row.refundAmt}</td>
-      <td className="px-6 py-4">{row.refundStatus}</td>
-      <td className="px-6 py-4">{row.bookingStatus}</td>
-      <td className="px-6 py-4">{row.remarks}</td>
-      <td className="px-6 py-4">{row.hotelCode}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">{row.txid}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.bookingDate}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.caxnDate}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.checkIn}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.checkOut}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.hotelName}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.state}</td>
+      <td className="px-6 py-4 align-middle font-bold">{row.totalAmt}</td>
+      <td className="px-6 py-4 align-middle font-bold text-emerald-600">{row.refundAmt}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.refundStatus}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.bookingStatus}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.remarks}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.hotelCode}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <button className="text-indigo-600 hover:text-indigo-800 text-sm font-bold">View</button>
       </td>
     </tr>
@@ -72,7 +72,7 @@ export default function AdminHotelCancellations() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Hotel Cancellation Transactions" 
         description="Track all cancelled hotel bookings and refund statuses"
         onDownload={handleDownload}

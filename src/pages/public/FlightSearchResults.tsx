@@ -868,7 +868,7 @@ export default function FlightSearchResults() {
             </div>
             
             <div className="bg-gray-50 p-4 border-t border-gray-100 text-center text-xs text-gray-500">
-              Baggage: 15 Kgs Check-in, 7 Kgs Cabin
+              Baggage: {(showFlightDetails as any).checkinBaggage || 'Included'} Check-in, {(showFlightDetails as any).cabinBaggage || 'Included'} Cabin
             </div>
           </div>
         </div>

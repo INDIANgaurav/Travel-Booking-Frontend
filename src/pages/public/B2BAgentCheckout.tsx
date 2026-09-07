@@ -26,7 +26,23 @@ export interface Passenger {
 const B2BAgentCheckout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 Minutes default
+  const flight = location.state?.flight;
+  const storageKey = `bookingTimer_${flight?._id || 'new'}`;
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const saved = sessionStorage.getItem(storageKey);
+    if (saved) {
+      const expiresAt = parseInt(saved, 10);
+      const remaining = Math.floor((expiresAt - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    }
+    return 10 * 60; // 10 Minutes default
+  });
+
+  useEffect(() => {
+    if (!sessionStorage.getItem(storageKey)) {
+      sessionStorage.setItem(storageKey, (Date.now() + 10 * 60 * 1000).toString());
+    }
+  }, [storageKey]);
   const [holdError, setHoldError] = useState('');
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [mobile, setMobile] = useState('');
@@ -87,8 +103,7 @@ const B2BAgentCheckout: React.FC = () => {
   const [isBooking, setIsBooking] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Agency Account');
 
-  // Extract flight and fare details from router state
-  const flight = location.state?.flight;
+  // Extract fare details from router state
   const fareType = location.state?.fareType || 'Coupon fares';
   const adults = location.state?.adults || 1;
   const childrenCount = location.state?.children || 0;
@@ -294,6 +309,7 @@ const B2BAgentCheckout: React.FC = () => {
       
       if (paymentMethod === 'Agency Account') {
         toast.success('Booking Created successfully!');
+        sessionStorage.removeItem(storageKey);
         navigate('/b2b/booking-status', { state: { booking: data.booking } });
       } else {
         const options = {
@@ -312,6 +328,7 @@ const B2BAgentCheckout: React.FC = () => {
               });
               
               toast.success('Payment successful! Booking confirmed.');
+              sessionStorage.removeItem(storageKey);
               navigate('/b2b/booking-status', { state: { booking: data.booking } });
             } catch (error) {
               toast.error('Payment verification failed.');
@@ -353,11 +370,13 @@ const B2BAgentCheckout: React.FC = () => {
     const initHold = async () => {
       if (flight?.isSeriesFare) {
         try {
-          const sfId = flight.flight_keys ? flight.flight_keys[0].replace('SF_', '') : flight._id || flight.sfId;
+          // Extract the Mongo ObjectId from the SF_ prefix
+          const sfId = (flight._id || '').replace('SF_', '');
           const count = adults + childrenCount + infants;
           const res = await api.post(`/api/series-fare/${sfId}/hold`, { paxCount: count });
           if (res.data.hold && res.data.hold.expiresAt) {
              const expiresAt = new Date(res.data.hold.expiresAt).getTime();
+             sessionStorage.setItem(storageKey, expiresAt.toString());
              const now = new Date().getTime();
              const diffSeconds = Math.floor((expiresAt - now) / 1000);
              setTimeLeft(diffSeconds > 0 ? diffSeconds : 0);

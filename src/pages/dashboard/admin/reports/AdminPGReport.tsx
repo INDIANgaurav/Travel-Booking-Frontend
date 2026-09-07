@@ -55,32 +55,32 @@ export default function AdminPGReport() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.srNo}</td>
-      <td className="px-6 py-4 text-indigo-600 font-bold">{row.txid}</td>
-      <td className="px-6 py-4 font-mono">{row.pnr}</td>
-      <td className="px-6 py-4">{row.txDate}</td>
-      <td className="px-6 py-4">{row.agentId}</td>
-      <td className="px-6 py-4 font-bold text-slate-700">{row.pgName}</td>
-      <td className="px-6 py-4">{row.agencyDetails}</td>
-      <td className="px-6 py-4 font-bold">₹ {row.amount}</td>
-      <td className="px-6 py-4">{row.trackingId}</td>
-      <td className="px-6 py-4">{row.bankRefNo}</td>
-      <td className="px-6 py-4">{row.paymentMode}</td>
-      <td className="px-6 py-4">{row.cardName}</td>
-      <td className="px-6 py-4">{row.currency}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">{row.srNo}</td>
+      <td className="px-6 py-4 align-middle text-indigo-600 font-bold">{row.txid}</td>
+      <td className="px-6 py-4 align-middle font-mono">{row.pnr}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.txDate}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.agentId}</td>
+      <td className="px-6 py-4 align-middle font-bold text-slate-700">{row.pgName}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.agencyDetails}</td>
+      <td className="px-6 py-4 align-middle font-bold">₹ {row.amount}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.trackingId}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.bankRefNo}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.paymentMode}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.cardName}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.currency}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <span className={`px-3 py-1 rounded-full text-xs font-bold ${row.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
           {row.status}
         </span>
       </td>
-      <td className="px-6 py-4 text-red-500">{row.failureMessage}</td>
-      <td className="px-6 py-4">{row.pgType}</td>
+      <td className="px-6 py-4 align-middle text-red-500">{row.failureMessage}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.pgType}</td>
     </tr>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Payment Gateway Reports" 
         description="Monitor all PG transactions, successes, and failures"
         onDownload={handleDownload}

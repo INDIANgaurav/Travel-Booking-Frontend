@@ -47,21 +47,21 @@ export default function AdminFareQuoteReport() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.srNo}</td>
-      <td className="px-6 py-4 font-bold text-slate-800">{row.company}</td>
-      <td className="px-6 py-4">{row.sectors}</td>
-      <td className="px-6 py-4">{row.travelDate}</td>
-      <td className="px-6 py-4 font-bold text-indigo-700">{row.pax}</td>
-      <td className="px-6 py-4">{row.time}</td>
-      <td className="px-6 py-4">{row.channel}</td>
-      <td className="px-6 py-4">{row.type}</td>
-      <td className="px-6 py-4">{row.supplier}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.srNo}</td>
+      <td className="px-6 py-4 align-middle font-bold text-slate-800">{row.company}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.sectors}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.travelDate}</td>
+      <td className="px-6 py-4 align-middle font-bold text-indigo-700">{row.pax}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.time}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.channel}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.type}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.supplier}</td>
     </tr>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="User Fare Quote Details Reports" 
         description="Track all agent flight searches, quotes, and pricing requests"
         onDownload={handleDownload}

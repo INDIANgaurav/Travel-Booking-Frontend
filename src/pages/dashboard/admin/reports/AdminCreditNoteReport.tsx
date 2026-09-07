@@ -54,17 +54,17 @@ export default function AdminCreditNoteReport() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.date}</td>
-      <td className="px-6 py-4 text-indigo-600 font-bold">{row.txid}</td>
-      <td className="px-6 py-4">{row.refId}</td>
-      <td className="px-6 py-4 font-mono">{row.pnr}</td>
-      <td className="px-6 py-4">{row.type}</td>
-      <td className="px-6 py-4">{row.creditBy}</td>
-      <td className="px-6 py-4">{row.creditTo}</td>
-      <td className="px-6 py-4 font-bold text-emerald-600">₹ {row.amount}</td>
-      <td className="px-6 py-4">{row.remarks}</td>
-      <td className="px-6 py-4">{row.company}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">{row.date}</td>
+      <td className="px-6 py-4 align-middle text-indigo-600 font-bold">{row.txid}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.refId}</td>
+      <td className="px-6 py-4 align-middle font-mono">{row.pnr}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.type}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.creditBy}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.creditTo}</td>
+      <td className="px-6 py-4 align-middle font-bold text-emerald-600">₹ {row.amount}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.remarks}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.company}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <button className="text-indigo-600 hover:text-indigo-800 text-sm font-bold">View</button>
       </td>
     </tr>
@@ -72,7 +72,7 @@ export default function AdminCreditNoteReport() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Credit Note Report" 
         description="Track all credit transactions and refunds across agencies"
         onDownload={handleDownload}

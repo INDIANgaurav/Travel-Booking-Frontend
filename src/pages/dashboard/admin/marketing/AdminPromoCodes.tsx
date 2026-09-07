@@ -14,6 +14,7 @@ const AdminPromoCodes = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewFlightPromo, setViewFlightPromo] = useState<any | null>(null);
   const [flightModalLoading, setFlightModalLoading] = useState(false);
+  const [seriesFares, setSeriesFares] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     code: '',
@@ -41,8 +42,18 @@ const AdminPromoCodes = () => {
     }
   };
 
+  const fetchSeriesFares = async () => {
+    try {
+      const response = await api.get('/api/series-fare');
+      setSeriesFares(response.data);
+    } catch (error) {
+      console.error('Failed to load series fares', error);
+    }
+  };
+
   useEffect(() => {
     fetchPromos();
+    fetchSeriesFares();
   }, []);
 
   const openFlightModal = async (promo: any) => {
@@ -215,7 +226,7 @@ const AdminPromoCodes = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1 text-gray-600 text-xs">
                           <Users className="h-3 w-3" />
-                          <span>{promo.usedCount} / {promo.maxUses === 0 ? 'Unlimited' : promo.maxUses}</span>
+                          <span>{promo.usedCount} / {promo.maxUses === 0 ? (promo.conditions?.pnr ? (seriesFares.find(sf => (sf.airlinePnr || sf.flightNo) === promo.conditions.pnr)?.availableSeats || 'Unlimited') : 'Unlimited') : promo.maxUses}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -314,7 +325,29 @@ const AdminPromoCodes = () => {
 
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Applicable PNR (Optional)</label>
-                  <input type="text" name="pnr" value={formData.pnr} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase" placeholder="e.g. A3BC24 or leave blank" />
+                  <div className="h-[42px]">
+                    <Dropdown 
+                      value={formData.pnr} 
+                      onChange={(val) => {
+                        const sf = seriesFares.find(f => (f.airlinePnr || f.flightNo) === val);
+                        setFormData({ 
+                          ...formData, 
+                          pnr: val,
+                          maxUses: sf ? sf.availableSeats : formData.maxUses 
+                        });
+                      }}
+                      searchable={true}
+                      options={[
+                        { value: '', label: 'All Flights (Global)' },
+                        ...seriesFares
+                          .filter(sf => sf.status === 'Active' && sf.availableSeats > 0)
+                          .map(sf => ({
+                            value: sf.airlinePnr || sf.flightNo,
+                            label: `${sf.airlinePnr || sf.flightNo} - ${sf.origin} to ${sf.destination} (${new Date(sf.travelDate).toLocaleDateString()})`
+                          }))
+                      ]}
+                    />
+                  </div>
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description / Memo</label>

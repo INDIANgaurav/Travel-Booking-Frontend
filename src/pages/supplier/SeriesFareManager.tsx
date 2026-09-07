@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import api from '../../services/api';
@@ -72,6 +72,19 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
 const SeriesFareManager: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const supplierName = (user as any)?.companyName || user?.name || (user as any)?.firstName || 'Supplier';
+
+  // Generate time options from 00:00 to 23:55
+  const timeOptions = useMemo(() => {
+    const opts = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 5) {
+        const hh = h.toString().padStart(2, '0');
+        const mm = m.toString().padStart(2, '0');
+        opts.push({ value: `${hh}:${mm}`, label: `${hh}:${mm}` });
+      }
+    }
+    return opts;
+  }, []);
 
   const [fares, setFares] = useState<ISeriesFare[]>([]);
   const [loading, setLoading] = useState(true);
@@ -961,11 +974,27 @@ const SeriesFareManager: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
-                          <input type="time" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="21:50" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                          <div className="h-[34px] [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:rounded [&>div>div:first-child]:border-gray-300 [&>div>div:first-child]:bg-white [&>div>div:first-child]:px-3">
+                            <Dropdown
+                              value={newFare.departureTime}
+                              onChange={(val) => setNewFare({ ...newFare, departureTime: val })}
+                              options={timeOptions}
+                              placeholder="Select Time"
+                              searchable={true}
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
-                          <input type="time" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                          <div className="h-[34px] [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:rounded [&>div>div:first-child]:border-gray-300 [&>div>div:first-child]:bg-white [&>div>div:first-child]:px-3">
+                            <Dropdown
+                              value={newFare.arrivalTime}
+                              onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })}
+                              options={timeOptions}
+                              placeholder="Select Time"
+                              searchable={true}
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Duration*</label>

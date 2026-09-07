@@ -161,7 +161,7 @@ export function useFlightSearch() {
       navigate(`/flights/search?${query}`, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nonStopFilter, morningFilter, date]);
+  }, [nonStopFilter, morningFilter, date, adults, children, infants, cabinClass, tripType]);
 
   const handleSearch = () => {
     fetchFlights(false);

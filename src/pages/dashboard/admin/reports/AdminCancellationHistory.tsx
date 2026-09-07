@@ -55,33 +55,33 @@ export default function AdminCancellationHistory() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.txid}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">{row.txid}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
           Select
         </button>
       </td>
-      <td className="px-6 py-4">{row.txdate}</td>
-      <td className="px-6 py-4">{row.agency}</td>
-      <td className="px-6 py-4">{row.pax}</td>
-      <td className="px-6 py-4">{row.sector}</td>
-      <td className="px-6 py-4">{row.jdate}</td>
-      <td className="px-6 py-4 font-bold">{row.totalAmt}</td>
-      <td className="px-6 py-4 font-bold text-emerald-600">{row.refundAmt}</td>
-      <td className="px-6 py-4">{row.journey}</td>
-      <td className="px-6 py-4">{row.refundStatus}</td>
-      <td className="px-6 py-4">{row.bookingStatus}</td>
-      <td className="px-6 py-4">{row.canceledOn}</td>
-      <td className="px-6 py-4">{row.txnBy}</td>
-      <td className="px-6 py-4">{row.admr}</td>
-      <td className="px-6 py-4">{row.agr}</td>
-      <td className="px-6 py-4">{row.supplier}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.txdate}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.agency}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.pax}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.sector}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.jdate}</td>
+      <td className="px-6 py-4 align-middle font-bold">{row.totalAmt}</td>
+      <td className="px-6 py-4 align-middle font-bold text-emerald-600">{row.refundAmt}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.journey}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.refundStatus}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.bookingStatus}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.canceledOn}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.txnBy}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.admr}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.agr}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.supplier}</td>
     </tr>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Cancellation History" 
         description="Track all cancelled flight bookings and refund statuses"
         onDownload={handleDownload}

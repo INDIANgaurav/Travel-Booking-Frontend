@@ -1,14 +1,15 @@
 import React from 'react';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 
 interface ReportHeaderProps {
   title: string;
   description?: string;
   onDownload?: () => void;
+  onRefresh?: () => void;
   metrics?: { label: string; value: string | number }[];
 }
 
-export default function ReportHeader({ title, description, onDownload, metrics }: ReportHeaderProps) {
+export default function ReportHeader({ title, description, onDownload, onRefresh, metrics }: ReportHeaderProps) {
   return (
     <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-6">
       <div>
@@ -27,15 +28,26 @@ export default function ReportHeader({ title, description, onDownload, metrics }
         )}
       </div>
 
-      {onDownload && (
-        <button 
-          onClick={onDownload}
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 w-full xl:w-auto"
-        >
-          <Download size={16} />
-          Export Report
-        </button>
-      )}
+      <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+        {onRefresh && (
+          <button 
+            onClick={onRefresh}
+            className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        )}
+        {onDownload && (
+          <button 
+            onClick={onDownload}
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+          >
+            <Download size={16} />
+            Export Report
+          </button>
+        )}
+      </div>
     </div>
   );
 }

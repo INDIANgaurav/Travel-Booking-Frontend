@@ -45,10 +45,10 @@ export default function AdminSupplierMapping() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4 font-bold text-slate-800">{row.company}</td>
-      <td className="px-6 py-4">{row.contact}</td>
-      <td className="px-6 py-4 text-indigo-600">{row.domain}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle font-bold text-slate-800">{row.company}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.contact}</td>
+      <td className="px-6 py-4 align-middle text-indigo-600">{row.domain}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold border border-slate-200">
           {row.plan}
         </span>
@@ -58,7 +58,7 @@ export default function AdminSupplierMapping() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="View all Suppliers" 
         description="Supplier and Commission Plan mapping directory"
         onDownload={handleDownload}

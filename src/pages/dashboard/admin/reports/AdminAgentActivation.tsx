@@ -52,31 +52,31 @@ export default function AdminAgentActivation() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4">{row.staffId}</td>
-      <td className="px-6 py-4 font-bold text-slate-800">{row.name}</td>
-      <td className="px-6 py-4">{row.mobile}</td>
-      <td className="px-6 py-4">{row.email}</td>
-      <td className="px-6 py-4">{row.role}</td>
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 align-middle align-middle">{row.staffId}</td>
+      <td className="px-6 py-4 align-middle font-bold text-slate-800">{row.name}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.mobile}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.email}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.role}</td>
+      <td className="px-6 py-4 align-middle align-middle">
         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{row.status}</span>
       </td>
-      <td className="px-6 py-4 font-bold text-indigo-700">₹ {row.cash}</td>
-      <td className="px-6 py-4 font-bold text-orange-600">₹ {row.credit}</td>
-      <td className="px-6 py-4">{row.branch}</td>
-      <td className="px-6 py-4">{row.street}</td>
-      <td className="px-6 py-4">{row.city}</td>
-      <td className="px-6 py-4">{row.country}</td>
-      <td className="px-6 py-4">{row.state}</td>
-      <td className="px-6 py-4">{row.pin}</td>
-      <td className="px-6 py-4">{row.landline}</td>
-      <td className="px-6 py-4">{row.fax}</td>
-      <td className="px-6 py-4">{row.creationDate}</td>
+      <td className="px-6 py-4 align-middle font-bold text-indigo-700">₹ {row.cash}</td>
+      <td className="px-6 py-4 align-middle font-bold text-orange-600">₹ {row.credit}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.branch}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.street}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.city}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.country}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.state}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.pin}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.landline}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.fax}</td>
+      <td className="px-6 py-4 align-middle align-middle">{row.creationDate}</td>
     </tr>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 w-full overflow-hidden pb-20">
-      <ReportHeader 
+      <ReportHeader onRefresh={fetchData} 
         title="Agent Activation Reports" 
         description="Detailed demographic and balance view for all agents"
         onDownload={handleDownload}

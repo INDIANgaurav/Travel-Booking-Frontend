@@ -21,7 +21,22 @@ export default function FlightBookingPage() {
   const [maxStepReached, setMaxStepReached] = useState(1); 
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 Minutes default for non-series
+  const storageKey = `bookingTimer_${selectedOutbound?._id || 'new'}`;
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const saved = sessionStorage.getItem(storageKey);
+    if (saved) {
+      const expiresAt = parseInt(saved, 10);
+      const remaining = Math.floor((expiresAt - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    }
+    return 10 * 60; // 10 Minutes default for non-series
+  });
+
+  useEffect(() => {
+    if (!sessionStorage.getItem(storageKey)) {
+      sessionStorage.setItem(storageKey, (Date.now() + 10 * 60 * 1000).toString());
+    }
+  }, [storageKey]);
   const [holdError, setHoldError] = useState('');
   
   const initialPassengers = [];
@@ -62,7 +77,17 @@ export default function FlightBookingPage() {
   const [availablePromos, setAvailablePromos] = useState<any[]>([]);
 
   // Calculate Unified Cart Totals
-  const cartBaseAmount = selectedOutbound ? (selectedOutbound.price + (tripType === 'Round Trip' && selectedReturn ? selectedReturn.price : 0)) : 0;
+  const calculateBaseFare = (flight: any) => {
+    if (!flight) return 0;
+    if (flight.adultPrice !== undefined) {
+      return (flight.adultPrice * adultsCount) + 
+             (flight.childPrice ? flight.childPrice * childrenCount : 0) + 
+             (flight.infantPrice ? flight.infantPrice * infantsCount : 0);
+    }
+    return flight.price;
+  };
+  
+  const cartBaseAmount = calculateBaseFare(selectedOutbound) + (tripType === 'Round Trip' ? calculateBaseFare(selectedReturn) : 0);
   const cartTotalAmount = appliedPromo ? Math.max(0, cartBaseAmount - (appliedPromo.discountAmount || 0)) : cartBaseAmount;
 
   useEffect(() => {
@@ -120,14 +145,16 @@ export default function FlightBookingPage() {
     let timer: any;
     
     const initHold = async () => {
-      if (selectedOutbound?.isSeriesFare) {
+      if (selectedOutbound?.isSeriesFare && isAuthenticated) {
         try {
-          const sfId = selectedOutbound.flight_keys ? selectedOutbound.flight_keys[0].replace('SF_', '') : selectedOutbound._id || selectedOutbound.seriesFareId;
+          // The _id comes from search as "SF_123456789...", we need the Mongo ObjectId part
+          const sfId = (selectedOutbound._id || '').replace('SF_', '');
           const count = adultsCount + childrenCount + infantsWithSeatCount;
           const paxCount = count > 0 ? count : (initialAdults + initialChildren);
           const res = await api.post(`/api/series-fare/${sfId}/hold`, { paxCount });
           if (res.data.hold && res.data.hold.expiresAt) {
              const expiresAt = new Date(res.data.hold.expiresAt).getTime();
+             sessionStorage.setItem(storageKey, expiresAt.toString());
              const now = new Date().getTime();
              const diffSeconds = Math.floor((expiresAt - now) / 1000);
              setTimeLeft(diffSeconds > 0 ? diffSeconds : 0);
@@ -223,8 +250,13 @@ export default function FlightBookingPage() {
       return;
     }
 
-    setBookingStep(3);
-    if (maxStepReached < 3) setMaxStepReached(3);
+    if (selectedOutbound?.isSeriesFare) {
+      setBookingStep(4);
+      if (maxStepReached < 4) setMaxStepReached(4);
+    } else {
+      setBookingStep(3);
+      if (maxStepReached < 3) setMaxStepReached(3);
+    }
   };
 
   const handlePassengerChange = (index: number, field: string, value: any) => {
@@ -323,6 +355,7 @@ export default function FlightBookingPage() {
           return;
         }
         toast.success('Payment successful! Booking confirmed using Wallet.');
+        sessionStorage.removeItem(storageKey);
         navigate(`/dashboard/invoice/${data.booking._id}`);
         setIsProcessing(false);
         return;
@@ -344,6 +377,7 @@ export default function FlightBookingPage() {
             });
             
             toast.success('Payment successful! Booking confirmed.');
+            sessionStorage.removeItem(storageKey);
             navigate(`/dashboard/invoice/${data.booking._id}`);
           } catch (error) {
             toast.error('Payment verification failed.');
@@ -411,11 +445,15 @@ export default function FlightBookingPage() {
             className={`transition-colors ${bookingStep >= 2 ? 'text-white font-bold' : ''} ${maxStepReached >= 2 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
             onClick={() => { if (maxStepReached >= 2) setBookingStep(2); }}
           >Traveller Details</span>
-          <span>•</span>
-          <span 
-            className={`transition-colors ${bookingStep >= 3 ? 'text-white font-bold' : ''} ${maxStepReached >= 3 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
-            onClick={() => { if (maxStepReached >= 3) setBookingStep(3); }}
-          >Seats & Meals</span>
+          {!selectedOutbound?.isSeriesFare && (
+            <>
+              <span>•</span>
+              <span 
+                className={`transition-colors ${bookingStep >= 3 ? 'text-white font-bold' : ''} ${maxStepReached >= 3 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+                onClick={() => { if (maxStepReached >= 3) setBookingStep(3); }}
+              >Seats & Meals</span>
+            </>
+          )}
           <span>•</span>
           <span 
             className={`transition-colors ${bookingStep >= 4 ? 'text-white font-bold' : ''} ${maxStepReached >= 4 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
@@ -481,8 +519,8 @@ export default function FlightBookingPage() {
                  </div>
                  
                  <div className="flex items-center gap-6 text-[12px] text-gray-800 font-bold border-t border-gray-100 pt-4 mb-2">
-                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: <span className="font-normal text-gray-600 ml-1">7 Kgs / Adult</span></div>
-                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🧳</span> Check-In Baggage: <span className="font-normal text-gray-600 ml-1">15 Kgs / Adult</span></div>
+                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).cabinBaggage || 'Included'}</span></div>
+                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🧳</span> Check-In Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).checkinBaggage || 'Included'}</span></div>
                  </div>
                </div>
 
@@ -494,7 +532,7 @@ export default function FlightBookingPage() {
                </div>
 
                <div className="p-4 border-t border-gray-200 bg-white flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-                  <button onClick={() => { setBookingStep(2); if (maxStepReached < 2) setMaxStepReached(2); }} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
+                  <button onClick={() => { setBookingStep(2); if (maxStepReached < 2) setMaxStepReached(2); }} disabled={timeLeft <= 0} className={`text-white px-8 py-2.5 rounded-full font-bold shadow-md uppercase text-sm ${timeLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>CONTINUE</button>
                </div>
             </div>
           )}
@@ -725,7 +763,7 @@ export default function FlightBookingPage() {
                </div>
 
                <div className="p-4 border-t border-gray-200 bg-white flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-                  <button onClick={validateAndContinueToStep3} className="bg-blue-600 text-white px-8 py-2.5 rounded-full font-bold shadow-md hover:bg-blue-700 uppercase text-sm">CONTINUE</button>
+                  <button onClick={validateAndContinueToStep3} disabled={timeLeft <= 0} className={`text-white px-8 py-2.5 rounded-full font-bold shadow-md uppercase text-sm ${timeLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>CONTINUE</button>
                </div>
             </div>
           )}
@@ -884,7 +922,13 @@ export default function FlightBookingPage() {
                )}
 
                <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end relative z-20">
-                  <button onClick={() => { setBookingStep(4); if (maxStepReached < 4) setMaxStepReached(4); }} className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-blue-700">CONTINUE</button>
+                  <button 
+                    onClick={() => { setBookingStep(4); if (maxStepReached < 4) setMaxStepReached(4); }} 
+                    disabled={timeLeft <= 0}
+                    className={`px-8 py-3 rounded-lg font-bold shadow-md text-white ${timeLeft <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  >
+                    CONTINUE
+                  </button>
                </div>
             </div>
           )}
@@ -983,16 +1027,15 @@ export default function FlightBookingPage() {
                     ) : (
                       <tr className="py-2">
                         <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
-                        <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {selectedOutbound.price.toLocaleString('en-IN')}</td>
+                        <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {cartBaseAmount.toLocaleString('en-IN')}</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-                     {/* Total Amount */}
              <div className="bg-gray-50 p-4 border-t border-gray-200 rounded-b-lg flex justify-between items-center">
                 <span className="font-black text-gray-900 text-[18px]">Total Amount</span>
-                <span className="text-[22px] font-black text-blue-600">₹ {(selectedOutbound.price - (appliedPromo?.discountAmount || 0)).toLocaleString('en-IN')}</span>
+                <span className="text-[22px] font-black text-blue-600">₹ {cartTotalAmount.toLocaleString('en-IN')}</span>
              </div>
           </div>
 

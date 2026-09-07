@@ -1154,11 +1154,11 @@ const AdminSeriesFareMaker: React.FC = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
-                          <input type="time" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="21:50" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                          <input type="text" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="e.g. 06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
-                          <input type="time" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                          <input type="text" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="e.g. 23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-gray-600 mb-1">Duration*</label>
@@ -1397,7 +1397,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 mb-1">New Departure Time</label>
                   <input
-                    type="time"
+                    type="text"
                     value={flightModData.departureTime}
                     onChange={e => setFlightModData(prev => ({ ...prev, departureTime: e.target.value }))}
                     className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white"
@@ -1406,7 +1406,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 mb-1">New Arrival Time</label>
                   <input
-                    type="time"
+                    type="text"
                     value={flightModData.arrivalTime}
                     onChange={e => setFlightModData(prev => ({ ...prev, arrivalTime: e.target.value }))}
                     className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white"

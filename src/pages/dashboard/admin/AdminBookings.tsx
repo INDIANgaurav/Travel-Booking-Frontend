@@ -123,47 +123,47 @@ export default function AdminBookings() {
               ) : (
                 filteredBookings.map((booking: any) => (
                   <tr key={booking._id} className="hover:bg-blue-50/50 transition-colors group">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
                     <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded border border-blue-100 uppercase inline-block">
                       {booking.bookingId || booking._id.slice(-8)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
+                    <div className="flex flex-col justify-center">
                       <span className="font-semibold text-gray-900">{booking.user?.name || 'Unknown User'}</span>
                       <span className="text-xs text-gray-500">{booking.user?.email || '-'}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
                     <span className="font-medium text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded inline-block">
                       {booking.details?.from && booking.details?.to 
                         ? `${booking.details.from} → ${booking.details.to}` 
                         : (booking.details?.destination || 'N/A')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-2">
                       {booking.discountAmount > 0 ? (
                         <>
-                          <span className="text-xs text-gray-400 line-through">₹ {(booking.totalAmount + booking.discountAmount)?.toLocaleString()}</span>
-                          <span className="font-bold text-emerald-600 text-base">₹ {booking.totalAmount?.toLocaleString() || '0'}</span>
+                          <span className="text-xs text-gray-400 line-through">₹{(booking.totalAmount + booking.discountAmount)?.toLocaleString()}</span>
+                          <span className="font-bold text-emerald-600 text-base">₹{booking.totalAmount?.toLocaleString() || '0'}</span>
                         </>
                       ) : (
-                        <span className="font-bold text-gray-900 text-base">₹ {booking.totalAmount?.toLocaleString() || '0'}</span>
+                        <span className="font-bold text-gray-900 text-base">₹{booking.totalAmount?.toLocaleString() || '0'}</span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
                     {booking.promoCodeApplied ? (
-                      <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
                         <span className="inline-block bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-full tracking-wide uppercase">{booking.promoCodeApplied}</span>
-                        <span className="text-[10px] text-emerald-600 font-semibold">-₹{booking.discountAmount?.toLocaleString()}</span>
+                        <span className="text-[10px] text-emerald-600 font-bold">(-₹{booking.discountAmount?.toLocaleString()})</span>
                       </div>
                     ) : (
                       <span className="text-gray-300 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 align-middle">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center ${
                       booking.status === 'CONFIRMED' || booking.status === 'Confirmed' ? 'bg-slate-50 text-slate-700 border border-slate-200' :
                       booking.status === 'PENDING' || booking.status === 'Pending' ? 'bg-slate-50 text-slate-700 border border-slate-200' :
@@ -177,10 +177,10 @@ export default function AdminBookings() {
                       {booking.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-600 whitespace-nowrap">
+                  <td className="px-6 py-4 align-middle font-medium text-gray-600 whitespace-nowrap">
                     {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 align-middle whitespace-nowrap">
                     {booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? (
                       <div className="flex items-center gap-2">
                         <a 
