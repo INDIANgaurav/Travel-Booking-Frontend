@@ -75,7 +75,7 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
         className="w-full text-sm font-bold text-[#0c1a40] bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal h-full"
       />
       {isOpen && (
-        <div className="absolute top-[calc(100%+10px)] left-0 z-[60] bg-white border border-gray-200 rounded-xl shadow-2xl w-[320px] max-h-[300px] overflow-y-auto animate-in fade-in zoom-in duration-200">
+        <div className="absolute top-[calc(100%+10px)] left-0 z-[60] bg-white border border-gray-200 rounded-xl shadow-2xl w-[320px] max-h-[300px] overflow-y-auto animate-in fade-in zoom-in duration-200 text-left">
           <div className="text-[10px] text-gray-500 font-bold px-3 py-2 uppercase tracking-wider bg-gray-50/80 sticky top-0 border-b border-gray-100 backdrop-blur-sm">{searchQuery ? 'Search Results' : 'Popular Cities'}</div>
           <div className="py-1">
             {filteredCities.length === 0 ? (
@@ -85,13 +85,13 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
                 <div 
                   key={city.code}
                   onClick={() => { onChange(city.code); setIsOpen(false); setSearchQuery(''); }}
-                  className="flex justify-between items-center px-4 py-2.5 hover:bg-[#1d2757] cursor-pointer group transition-colors border-b border-gray-50 last:border-0"
+                  className="flex justify-between items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
                 >
                   <div>
-                    <div className="font-bold text-[13px] text-gray-900 group-hover:text-white leading-tight capitalize">{city.name.toLowerCase()}</div>
-                    <div className="text-[10px] text-gray-500 group-hover:text-gray-300 flex items-center gap-1 mt-0.5"><Plane size={10} className="transform rotate-45"/> {city.airport}</div>
+                    <div className="font-bold text-[13px] text-[#0c1a40] leading-tight capitalize">{city.name.toLowerCase()}</div>
+                    <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5"><Plane size={10} className="transform rotate-45"/> {city.airport}</div>
                   </div>
-                  <div className="bg-gray-100 text-gray-600 group-hover:bg-white/20 group-hover:text-white text-[10px] px-2 py-0.5 rounded font-bold">{city.code}</div>
+                  <div className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded font-bold">{city.code}</div>
                 </div>
               ))
             )}
@@ -425,6 +425,7 @@ interface RecentSearch {
                     { label: 'Account Statement', path: '/b2b/account-statement', icon: <FileText size={14}/> },
                     { label: 'Booking Status', path: '/b2b/booking-status', icon: <Check size={14}/> },
                     { label: 'Manage Booking', path: '/b2b/manage-booking', icon: <Briefcase size={14}/> },
+                    { label: 'Group Bookings RFQ', path: '/b2b/group-bookings', icon: <Users size={14}/> },
                     { label: 'Agent Certificate', path: '#', icon: <ShieldCheck size={14}/> }
                   ].map((item, index) => (
                     <button 

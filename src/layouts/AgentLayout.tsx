@@ -52,10 +52,10 @@ export default function AgentLayout() {
   return (
     <>
       <TopNavbar portalMode={true} />
-      <div className="min-h-screen pt-[76px] bg-gray-50 flex overflow-hidden">
+      <div className="min-h-dvh pt-[76px] bg-gray-50 flex overflow-hidden">
         {/* Sidebar */}
         <div 
-          className={`print:hidden ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl z-20 relative flex-shrink-0 h-[calc(100vh-76px)]`}
+          className={`print:hidden ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl z-20 relative flex-shrink-0 h-[calc(100dvh-76px)]`}
         >
         <div className={`p-4 border-b border-blue-800/50 flex items-center h-20 ${isSidebarOpen ? 'justify-between' : 'justify-center'}`}>
           {isSidebarOpen && (
@@ -113,7 +113,7 @@ export default function AgentLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-76px)]">
+      <div className="flex-1 flex flex-col min-w-0 h-[calc(100dvh-76px)]">
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-gray-50/50 p-4 lg:p-8">
           <div className="max-w-7xl mx-auto h-full">

@@ -7,7 +7,7 @@ export default function DashboardLayout() {
   return (
     <>
       <TopNavbar forceWhite={true} />
-      <div className="min-h-screen pt-[76px] bg-[#F5F8FA] font-sans">
+      <div className="min-h-dvh pt-[76px] bg-[#F5F8FA] font-sans">
         <Outlet />
       </div>
     </>

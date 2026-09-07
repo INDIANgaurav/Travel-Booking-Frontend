@@ -81,7 +81,7 @@ export default function SubAdminLayout() {
   const navGroups = getNavItems();
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex">
+    <div className="min-h-dvh bg-[#f8fafc] flex">
       {/* Sidebar */}
       <div 
         className={`${

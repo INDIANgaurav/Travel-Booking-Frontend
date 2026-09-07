@@ -5,17 +5,7 @@ import Loader from '../../../components/common/Loader';
 import { format } from 'date-fns';
 import RefreshButton from '../../../components/ui/RefreshButton';
 
-const TABS = [
-  { id: 'offline-bookings', label: 'Offline Bookings' },
-  { id: 'tax-invoices', label: 'Tax Invoices' },
-  { id: 'gst-invoices', label: 'GST Invoices' },
-  { id: 'credit-notes', label: 'Credit Notes' },
-  { id: 'debit-notes', label: 'Debit Notes' },
-  { id: 'markups', label: 'Markups' },
-  { id: 'bank-details', label: 'Bank Details' }
-];
-
-export default function AdminB2BRequests() {
+export default function AdminGroupBookings() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -24,22 +14,19 @@ export default function AdminB2BRequests() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      const res = await api.get('/api/group-bookings');
+      const formattedData = res.data.map((item: any) => ({ 
+        ...item, 
+        requestType: 'group-bookings', 
+        requestTypeLabel: 'Group Bookings RFQ' 
+      }));
       
-      const promises = TABS.map(tab => {
-        if (tab.id === 'group-bookings') {
-          return api.get('/api/group-bookings').then(res => res.data.map((item: any) => ({ ...item, requestType: tab.id, requestTypeLabel: tab.label })));
-        }
-        return api.get(`/api/admin/b2b/${tab.id}`).then(res => res.data.map((item: any) => ({ ...item, requestType: tab.id, requestTypeLabel: tab.label })));
-      });
-      const results = await Promise.all(promises);
+      const sortedData = formattedData.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       
-      // Flatten arrays and sort by createdAt descending
-      const allRequests = results.flat().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      
-      setData(allRequests);
+      setData(sortedData);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
+      console.error('Error fetching group bookings:', error);
+      toast.error('Failed to load group bookings');
     } finally {
       setLoading(false);
     }
@@ -48,21 +35,6 @@ export default function AdminB2BRequests() {
   useEffect(() => {
     fetchAllData();
   }, []);
-
-  const handleStatusUpdate = async (id: string, type: string, status: string) => {
-    try {
-      if (type === 'group-bookings') {
-        // Handled via the modal/quote directly
-        return;
-      }
-      await api.put(`/api/admin/b2b/${type}/${id}`, { status });
-      toast.success(`Status updated to ${status}`);
-      fetchAllData(); // refresh
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update status');
-    }
-  };
 
   const handleQuoteSubmit = async (id: string) => {
     if (!quoteAmount || isNaN(Number(quoteAmount))) {
@@ -85,20 +57,17 @@ export default function AdminB2BRequests() {
     <div className="w-full space-y-6">
       <div className="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">B2B Agent Requests</h1>
-          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage all pending requests submitted by agents.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Group Bookings RFQ</h1>
+          <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">Manage bulk offline booking requests from agents.</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-
-        {/* Content */}
         <div className="p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12"><Loader /></div>
           ) : data.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 font-bold">No pending requests found.</div>
+            <div className="text-center py-12 text-gray-500 font-bold">No pending group booking requests found.</div>
           ) : (
             <div className="flex flex-col gap-4">
               <div className="flex justify-end">
@@ -127,15 +96,7 @@ export default function AdminB2BRequests() {
                         <div className="text-xs text-gray-500">{item.agentId?.email}</div>
                       </td>
                       <td className="px-6 py-4">
-                        {/* Dynamic Details based on request type */}
-                        {item.requestType === 'group-bookings' && <span>{item.flightDetails?.origin} to {item.flightDetails?.destination} | Seats: {item.requestedSeats?.total}</span>}
-                        {item.requestType === 'offline-bookings' && <span>{item.origin} to {item.destination} ({item.product})</span>}
-                        {item.requestType === 'tax-invoices' && <span>{item.fromDate} to {item.toDate} ({item.product})</span>}
-                        {item.requestType === 'gst-invoices' && <span>Bill No: {item.billNumber} | {item.companyName}</span>}
-                        {item.requestType === 'credit-notes' && <span>{item.fromDate} to {item.toDate} ({item.product})</span>}
-                        {item.requestType === 'debit-notes' && <span>{item.fromDate} to {item.toDate} ({item.product})</span>}
-                        {item.requestType === 'markups' && <span>{item.product} | {item.airline} | {item.value}%</span>}
-                        {item.requestType === 'bank-details' && <span>{item.bankName} | A/c: {item.accountNumber}</span>}
+                        <span>{item.flightDetails?.origin} to {item.flightDetails?.destination} | Seats: {item.requestedSeats?.total}</span>
                       </td>
                       <td className="px-6 py-4 text-gray-600">
                         {item.createdAt ? format(new Date(item.createdAt), 'dd MMM yyyy, HH:mm') : ''}
@@ -160,22 +121,6 @@ export default function AdminB2BRequests() {
                         >
                           View Details
                         </button>
-                        {item.requestType !== 'group-bookings' && (
-                          <>
-                            <button 
-                              onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'ACTIVE' : 'COMPLETED')}
-                              className="px-3 py-1.5 border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition shadow-sm"
-                            >
-                              Approve
-                            </button>
-                            <button 
-                              onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'INACTIVE' : 'REJECTED')}
-                              className="px-3 py-1.5 border border-rose-200 bg-rose-50/50 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-100 transition shadow-sm"
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
                       </td>
                     </tr>
                   ))}
@@ -270,7 +215,7 @@ export default function AdminB2BRequests() {
             </div>
             
             {/* Quote Engine for Group Bookings */}
-            {selectedItem.requestType === 'group-bookings' && selectedItem.status === 'PENDING' && (
+            {selectedItem.status === 'PENDING' && (
               <div className="p-6 border-t border-gray-100 bg-blue-50/50 flex flex-col gap-3">
                 <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">Admin Action: Provide Quote</p>
                 <div className="flex gap-3">
@@ -305,4 +250,3 @@ export default function AdminB2BRequests() {
     </div>
   );
 }
-

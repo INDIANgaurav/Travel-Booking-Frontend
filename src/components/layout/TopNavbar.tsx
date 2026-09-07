@@ -227,7 +227,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                           <p className="text-base font-black text-slate-900 truncate mt-1">{user?.name}</p>
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                         </div>
-                      {(user?.roles?.includes('USER') || user?.role === 'USER' || (!user?.roles?.includes('B2B_AGENT') && !user?.roles?.includes('SUPER_ADMIN') && !user?.roles?.includes('SUPPLIER_AGENT'))) && (
+                      {(user?.roles?.includes('USER') || user?.role === 'USER' || (!user?.roles?.includes('B2B_AGENT') && !user?.roles?.includes('SUPER_ADMIN') && !user?.roles?.includes('SUPPLIER_AGENT') && user?.role !== 'B2B_AGENT' && user?.role !== 'SUPER_ADMIN' && user?.role !== 'SUPPLIER_AGENT' && user?.role !== 'SUB_ADMIN')) && (
                         <>
                           <div onClick={() => { navigate('/dashboard/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
@@ -247,8 +247,17 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       )}
                       {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN') || user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
                         <>
+                          <div onClick={() => { navigate('/admin/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <User size={16} /> My Profile
+                          </div>
+                          <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <CreditCard size={16} /> My Wallet
+                          </div>
                           <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> My Dashboard
+                          </div>
+                          <div onClick={() => { navigate('/admin/helpdesk'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                            <MessageSquare size={16} /> Support Tickets
                           </div>
                           <div onClick={() => { navigate('/admin/bookings'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> Booking History

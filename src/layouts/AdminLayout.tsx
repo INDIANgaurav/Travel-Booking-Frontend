@@ -75,6 +75,7 @@ export default function AdminLayout() {
         },
         { name: 'Sub-Admin Roles', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
         { name: 'B2B Registrations', path: '/admin/b2b-requests', icon: <Briefcase size={20} /> },
+        { name: 'Group Bookings RFQ', path: '/admin/group-bookings', icon: <Users size={20} /> },
       ]
     },
     {
@@ -165,7 +166,7 @@ export default function AdminLayout() {
     <>
       <TopNavbar portalMode={true} onMenuClick={() => setIsSidebarOpen(true)} />
       
-      <div className="min-h-screen pt-[76px] bg-slate-50 flex overflow-hidden">
+      <div className="min-h-dvh pt-[76px] bg-slate-50 flex overflow-hidden">
         
         {/* Mobile Overlay */}
         {isSidebarOpen && (
@@ -181,7 +182,7 @@ export default function AdminLayout() {
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           } md:relative md:translate-x-0 ${
             isSidebarOpen ? "w-64" : "w-20"
-          } transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl flex-shrink-0 h-[calc(100vh)] md:h-[calc(100vh-76px)]`}
+          } transition-all duration-300 ease-in-out bg-gradient-to-b from-[#1e3a8a] to-[#172554] text-white flex flex-col shadow-2xl flex-shrink-0 h-[calc(100dvh)] md:h-[calc(100dvh-76px)]`}
         >
 
         <div className={`p-4 border-b border-blue-800/50 flex items-center h-20 ${isSidebarOpen ? 'justify-between' : 'justify-center'}`}>
@@ -305,7 +306,7 @@ export default function AdminLayout() {
       
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-[calc(100vh-76px)] overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 h-[calc(100dvh-76px)] overflow-hidden relative">
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-slate-50 p-3 lg:p-4">
 

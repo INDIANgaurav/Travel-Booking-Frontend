@@ -73,6 +73,7 @@ import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
 import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
 import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
 import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
+import AdminGroupBookings from './pages/dashboard/admin/AdminGroupBookings'
 import AdminUserProfile from './pages/dashboard/admin/AdminUserProfile'
 import AdminFDMaker from './pages/dashboard/admin/AdminFDMaker'
 import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
@@ -293,6 +294,7 @@ function App() {
           <Route path="user-profile/:id" element={<AdminUserProfile />} />
           <Route path="sub-admins" element={<AdminSubAdmins />} />
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
+          <Route path="group-bookings" element={<AdminGroupBookings />} />
           <Route path="cancellations" element={<CancellationsManager />} />
           <Route path="offline-topups" element={<AdminOfflineTopUps />} />
           <Route path="withdrawals" element={<AdminWithdrawals />} />

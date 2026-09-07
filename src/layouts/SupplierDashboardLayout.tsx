@@ -54,7 +54,7 @@ const SupplierDashboardLayout: React.FC = () => {
   const supplierInitial = (supplierName.charAt(0) || '').toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex flex-col font-sans text-gray-800">
+    <div className="min-h-dvh bg-[#f1f5f9] flex flex-col font-sans text-gray-800">
       
       {/* Top Header - Dark Premium Theme */}
       <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">

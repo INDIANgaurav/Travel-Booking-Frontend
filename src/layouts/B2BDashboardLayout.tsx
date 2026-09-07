@@ -77,7 +77,7 @@ const B2BDashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#0c1a40] flex flex-col">
+    <div className="min-h-dvh bg-white font-sans text-[#0c1a40] flex flex-col">
       {/* B2B Premium Header */}
       <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-[100] shadow-xl border-b border-white/10 relative">
         {/* Subtle background glow effect */}

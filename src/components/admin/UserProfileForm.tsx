@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, Loader2, Key, UserCog, CreditCard, FileText, Download, Shield, User, Briefcase, DollarSign, Globe, Lock, CheckCircle2, ChevronDown } from 'lucide-react';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface UserProfileFormProps {
   initialData: any;
@@ -35,6 +37,41 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
         displayOnProfileIcon: initialData.displayOnProfileIcon || 'User Name',
         referredBy: initialData.referredBy || '',
         reportingTo: initialData.reportingTo || '',
+        services: initialData.services || '',
+        businessType: initialData.businessType || '',
+        iataCode: initialData.iataCode || '',
+        contactRepresentative: initialData.contactRepresentative || '',
+        nameOnPan: initialData.nameOnPan || '',
+        commGrp: initialData.commGrp || '',
+        marqueesDetail: initialData.marqueesDetail || '',
+        negoMarqueesDetail: initialData.negoMarqueesDetail || '',
+        salesContactNo: initialData.salesContactNo || '',
+        website: initialData.website || '',
+        officePhone: initialData.officePhone || '',
+        country: initialData.country || '',
+        isVerified: initialData.isVerified || false,
+        isOwner: initialData.isOwner || false,
+        isLoginUser: initialData.isLoginUser || false,
+        youtubeUrl: initialData.youtubeUrl || '',
+        linkedinUrl: initialData.linkedinUrl || '',
+        facebookUrl: initialData.facebookUrl || '',
+        instagramUrl: initialData.instagramUrl || '',
+        twitterUrl: initialData.twitterUrl || '',
+        gstEnabled: initialData.gstEnabled || false,
+        gstCompanyName: initialData.gstCompanyName || '',
+        gstCompanyAddress: initialData.gstCompanyAddress || '',
+        gstEmail: initialData.gstEmail || '',
+        gstContactNo: initialData.gstContactNo || '',
+        cugPlatformSellingCharge: initialData.cugPlatformSellingCharge || 0,
+        cugPlatformBuyingCharge: initialData.cugPlatformBuyingCharge || 0,
+        documents: initialData.documents || [],
+        isApprovedDocument: initialData.isApprovedDocument || false,
+        city: initialData.city || '',
+        state: initialData.state || '',
+        gstn: initialData.gstn || '',
+        officeAddress: initialData.officeAddress || '',
+        pincode: initialData.pincode || '',
+        panNumber: initialData.panNumber || '',
       });
     }
   }, [initialData]);
@@ -211,7 +248,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Profile Display Preference</label>
                   <div className="flex flex-wrap gap-4">
                     {['Company Name', 'User Name', 'Show Both'].map(opt => (
-                      <label key={opt} className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40] bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+                      <label key={opt} onClick={() => handleChange('displayOnProfileIcon', opt)} className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40] bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
                           {formData.displayOnProfileIcon === opt && <div className="w-2 h-2 rounded-full bg-[#0c1a40]" />}
                         </div>
@@ -257,23 +294,253 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
         )}
 
         {activeTab === 'company' && (
-          <div className="bg-white p-12 text-center rounded-2xl shadow-sm border border-gray-100">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-              <Briefcase size={24} />
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Company</label>
+                  <input type="text" value={formData.companyName} onChange={e => handleChange('companyName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Services</label>
+                  <input type="text" value={formData.services} onChange={e => handleChange('services', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Business Type</label>
+                  <div className="relative custom-dropdown">
+                    <select value={formData.businessType} onChange={e => handleChange('businessType', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer">
+                      <option value="">--Select Business Type--</option>
+                      <option value="B2B">B2B</option>
+                      <option value="B2C">B2C</option>
+                      <option value="Supplier">Supplier</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">IATA</label>
+                  <div className="relative custom-dropdown">
+                    <select value={formData.iataCode} onChange={e => handleChange('iataCode', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer">
+                      <option value="">--Select IATA--</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Representative*</label>
+                  <input type="text" value={formData.contactRepresentative} onChange={e => handleChange('contactRepresentative', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Name On PAN*</label>
+                  <input type="text" value={formData.nameOnPan} onChange={e => handleChange('nameOnPan', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">City*</label>
+                  <input type="text" value={formData.city} onChange={e => handleChange('city', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">State*</label>
+                  <input type="text" value={formData.state} onChange={e => handleChange('state', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comm Grp*</label>
+                  <input type="text" value={formData.commGrp} onChange={e => handleChange('commGrp', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Global Marquee Display*</label>
+                  <textarea value={formData.marqueesDetail} onChange={e => handleChange('marqueesDetail', e.target.value)} required={activeTab === 'company'} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Youtube Url</label>
+                  <input type="text" value={formData.youtubeUrl} onChange={e => handleChange('youtubeUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Linkdin Url</label>
+                  <input type="text" value={formData.linkedinUrl} onChange={e => handleChange('linkedinUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Facebook Url</label>
+                  <input type="text" value={formData.facebookUrl} onChange={e => handleChange('facebookUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">GST No</label>
+                  <input type="text" value={formData.gstn} onChange={e => handleChange('gstn', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Address</label>
+                  <input type="text" value={formData.gstCompanyAddress} onChange={e => handleChange('gstCompanyAddress', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Email</label>
+                  <input type="email" value={formData.gstEmail} onChange={e => handleChange('gstEmail', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">B2B Sales Fee</label>
+                  <input type="number" value={formData.cugPlatformSellingCharge} onChange={e => handleChange('cugPlatformSellingCharge', Number(e.target.value))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
+                  <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sales Contact No.</label>
+                  <input type="text" value={formData.salesContactNo} onChange={e => handleChange('salesContactNo', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Website</label>
+                  <input type="text" value={formData.website} onChange={e => handleChange('website', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Office Phone*</label>
+                  <input type="text" value={formData.officePhone} onChange={e => handleChange('officePhone', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PAN No*</label>
+                  <input type="text" value={formData.panNumber} onChange={e => handleChange('panNumber', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Address*</label>
+                  <input type="text" value={formData.officeAddress} onChange={e => handleChange('officeAddress', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PIN Code</label>
+                  <input type="text" value={formData.pincode} onChange={e => handleChange('pincode', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Country*</label>
+                  <input type="text" value={formData.country} onChange={e => handleChange('country', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                
+                <div className="flex gap-6 py-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.isVerified} onChange={e => handleChange('isVerified', e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                    <span className="text-sm font-bold text-gray-700">Verified</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.isOwner} onChange={e => handleChange('isOwner', e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                    <span className="text-sm font-bold text-gray-700">Owner</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.isLoginUser} onChange={e => handleChange('isLoginUser', e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                    <span className="text-sm font-bold text-gray-700">Login User</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Custom B2B Marquee*</label>
+                  <textarea value={formData.negoMarqueesDetail} onChange={e => handleChange('negoMarqueesDetail', e.target.value)} required={activeTab === 'company'} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Instagram Url</label>
+                  <input type="text" value={formData.instagramUrl} onChange={e => handleChange('instagramUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Twitter Url</label>
+                  <input type="text" value={formData.twitterUrl} onChange={e => handleChange('twitterUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                
+                <div className="py-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.gstEnabled} onChange={e => handleChange('gstEnabled', e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                    <span className="text-sm font-bold text-gray-700">GST Enable</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Entity</label>
+                  <input type="text" value={formData.gstCompanyName} onChange={e => handleChange('gstCompanyName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Phone</label>
+                  <input type="text" value={formData.gstContactNo} onChange={e => handleChange('gstContactNo', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">B2B Purchasing Fee</label>
+                  <input type="number" value={formData.cugPlatformBuyingCharge} onChange={e => handleChange('cugPlatformBuyingCharge', Number(e.target.value))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                </div>
+
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">Company Details</h3>
-            <p className="text-gray-500 text-sm max-w-md mx-auto">This section is currently under development. Company specifics will be manageable here soon.</p>
           </div>
         )}
 
         {activeTab === 'document' && (
-           <div className="bg-white p-12 text-center rounded-2xl shadow-sm border border-gray-100">
-           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-             <Shield size={24} />
-           </div>
-           <h3 className="text-lg font-bold text-gray-800 mb-2">Verification Documents</h3>
-           <p className="text-gray-500 text-sm max-w-md mx-auto">Document verification and uploads will be available here.</p>
-         </div>
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">GST Certificate</label>
+                  <input type="file" className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Address Proof*</label>
+                  <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">PAN Card*</label>
+                  <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Aadhaar Card*</label>
+                  <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center items-center gap-6 mb-8">
+              <label className="flex items-center gap-2 cursor-pointer px-4 py-2">
+                <input type="checkbox" checked={formData.isApprovedDocument} onChange={e => handleChange('isApprovedDocument', e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
+                <span className="text-sm font-bold text-gray-700 bg-orange-600 text-white px-4 py-2 rounded-lg">Approve</span>
+              </label>
+              <button type="submit" disabled={isSaving} className="px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md disabled:opacity-70">
+                Update
+              </button>
+            </div>
+
+            {/* Document Table */}
+            <div className="overflow-x-auto rounded-xl border border-gray-200">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-blue-500 text-white text-xs uppercase tracking-wider">
+                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Sr No.</th>
+                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Doc Name</th>
+                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Doc Type</th>
+                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Uploaded On</th>
+                    <th className="px-4 py-3 font-semibold text-center">Download</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {formData.documents && formData.documents.length > 0 ? (
+                    formData.documents.map((doc: any, index: number) => (
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-100">{index + 1}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{doc.docName}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{doc.docType}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 border-r border-gray-100">{new Date(doc.uploadedAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-semibold underline">Download</a>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-500 font-medium">No documents uploaded yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         {/* --- ACTION BAR --- */}
@@ -281,20 +548,31 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
           <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
             <CheckCircle2 size={16} /> All changes are automatically validated
           </div>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-colors shadow-sm"
-            >
-              Sync Domain Cache
-            </button>
+          <div className="flex flex-col gap-3">
+            {activeTab === 'personal' && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const loadingToast = toast.loading('Syncing cache...');
+                    await api.post('/api/users/sync-domain-cache');
+                    toast.success('Domain Cache successfully synchronized!', { id: loadingToast });
+                  } catch (e: any) {
+                    toast.error(e.response?.data?.message || 'Failed to sync domain cache');
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
+              >
+                Update Domain Cache
+              </button>
+            )}
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center justify-center gap-2 px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md disabled:opacity-70"
+              className="w-full flex items-center justify-center gap-2 px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md disabled:opacity-70"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              Save Profile
+              Update
             </button>
           </div>
         </div>

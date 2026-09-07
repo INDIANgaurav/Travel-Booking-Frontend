@@ -42,7 +42,7 @@ export default function AdminProfile() {
     
     setLoading(true);
     try {
-      await api.put('/api/users/profile/password', {
+      await api.put('/api/users/security/password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
