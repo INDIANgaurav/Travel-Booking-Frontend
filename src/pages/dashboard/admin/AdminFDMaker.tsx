@@ -367,16 +367,7 @@ const AdminSeriesFareMaker: React.FC = () => {
     }
   };
 
-  const handlePopulateSectors = async () => {
-    const loadingToast = toast.loading('Populating Sectors...');
-    try {
-      const response = await api.post('/api/series-fare/populate-sectors');
-      toast.success(response.data.message || 'Sectors Populated', { id: loadingToast });
-      fetchFares();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to populate sectors', { id: loadingToast });
-    }
-  };
+
 
   const handleTLDExport = () => {
     if (fares.length === 0) return toast.error('No fares to export');
@@ -541,6 +532,8 @@ const AdminSeriesFareMaker: React.FC = () => {
               onChange={setMoreOptionsFilter}
               options={[
                 { value: 'Active', label: 'Show Active Inventory' },
+                { value: 'Expired', label: 'Show Expired' },
+                { value: 'SoldOut', label: 'Show Sold Out' },
                 { value: 'All', label: 'Show All' }
               ]}
             />
@@ -582,8 +575,8 @@ const AdminSeriesFareMaker: React.FC = () => {
       </div>
 
       {/* Main Series Fare Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="overflow-x-auto rounded-t-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-[#f8fafc] text-gray-900 font-black border-b border-gray-200">
               <tr>
@@ -633,7 +626,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                         />
                       </td>
                       <td className="p-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : fare.status === 'SoldOut' ? 'bg-purple-50 text-purple-600 border-purple-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
                           {fare.status}
                         </span>
                       </td>
@@ -844,7 +837,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                 Export Options
                 <ChevronDown size={14} />
               </button>
-              <div className="absolute bottom-full right-0 mb-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden">
+              <div className="absolute bottom-full right-0 mb-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-[100]">
                 <button onClick={handleDownloadReport} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 w-full">Download Report</button>
                 <button onClick={handleTLDExport} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 w-full">TLD Export</button>
               </div>
@@ -855,12 +848,37 @@ const AdminSeriesFareMaker: React.FC = () => {
                 Bulk Actions
                 <ChevronDown size={14} />
               </button>
-              <div className="absolute bottom-full right-0 mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-50">
+              <div className="absolute bottom-full right-0 mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-[100]">
                 <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400 tracking-wider">Flight Management</div>
-                <button onClick={() => { if(selectedIds.length === 0) toast.error('Select fares first'); else setShowFlightModModal(true); }} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Flight Modifications (FLT-MOD)</button>
+                <button onClick={() => { 
+                  if(selectedIds.length === 0) {
+                    toast.error('Select fares first'); 
+                  } else {
+                    if (selectedIds.length === 1) {
+                      const flight = fares.find(f => f._id === selectedIds[0]);
+                      if (flight) {
+                        const parseTime = (t: string) => {
+                          if(!t) return '';
+                          if(/^\d{2}:\d{2}$/.test(t)) return t;
+                          const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                          if(m) {
+                            let h = parseInt(m[1], 10);
+                            if(h === 12) h = 0;
+                            if(m[3].toUpperCase() === 'PM') h += 12;
+                            return `${h.toString().padStart(2, '0')}:${m[2]}`;
+                          }
+                          return t;
+                        };
+                        setFlightModData({ flightNo: flight.flightNo || '', departureTime: parseTime(flight.departureTime), arrivalTime: parseTime(flight.arrivalTime) });
+                      }
+                    } else {
+                      setFlightModData({ flightNo: '', departureTime: '', arrivalTime: '' });
+                    }
+                    setShowFlightModModal(true);
+                  }
+                }} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Flight Modifications (FLT-MOD)</button>
                 <button onClick={handleConnectionFlights} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Connection Flights (CXN)</button>
-                <button onClick={handlePopulateSectors} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Populate Sectors</button>
-                <button onClick={handleRunAutoSync} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Run Auto Sync</button>
+                <button onClick={handleRunAutoSync} className="text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 w-full">Mark Expired Flights</button>
                 
                 <div className="px-4 py-2 bg-slate-50 border-y border-slate-100 text-[10px] uppercase font-black text-slate-400 tracking-wider">Status Update</div>
                 <button onClick={() => handleBulkStatusUpdate('Active')} className="text-left px-4 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 w-full">Approve Selected</button>
@@ -1335,6 +1353,33 @@ const AdminSeriesFareMaker: React.FC = () => {
               </button>
             </div>
             <div className="p-6 space-y-4">
+              {(() => {
+                const selectedFlightsData = fares.filter(f => selectedIds.includes(f._id));
+                const isSingleFlight = selectedFlightsData.length === 1;
+                const singleFlight = isSingleFlight ? selectedFlightsData[0] : null;
+
+                return isSingleFlight && singleFlight ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm flex justify-between items-center mb-4">
+                    <div>
+                      <div className="font-bold text-gray-900">{singleFlight.airline}</div>
+                      <div className="text-xs text-gray-600 font-mono">{singleFlight.airlinePnr}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-blue-700">{singleFlight.origin} ✈ {singleFlight.destination}</div>
+                      <div className="text-xs text-gray-600">{new Date(singleFlight.travelDate).toLocaleDateString('en-GB')}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs mb-4 max-h-32 overflow-y-auto">
+                    <div className="font-bold text-gray-700 mb-2">Selected Flights ({selectedFlightsData.length}):</div>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600 font-mono">
+                      {selectedFlightsData.map(f => (
+                        <li key={f._id}>{f.airlinePnr || 'NO-PNR'} | {f.origin}-{f.destination} | {new Date(f.travelDate).toLocaleDateString('en-GB')}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
               <div className="bg-orange-50 text-orange-700 p-4 rounded-lg text-xs mb-4">
                 Leave fields empty if you do not wish to modify them.
               </div>

@@ -115,6 +115,45 @@ const SeriesFareManager: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
+  const [showConsumeModal, setShowConsumeModal] = useState(false);
+  const [consumeFare, setConsumeFare] = useState<ISeriesFare | null>(null);
+  const [consumeSeats, setConsumeSeats] = useState(1);
+
+  const handleConsumeSubmit = async () => {
+    if (!consumeFare || consumeSeats < 1) return;
+    
+    const loadingToast = toast.loading('Blocking seats...');
+    try {
+      // Step 1: Hold the seats
+      await api.post(`/api/series-fare/${consumeFare._id}/hold`, { paxCount: consumeSeats });
+
+      // Step 2: Create the booking
+      const details = {
+        supplierId: user?._id,
+        isSeriesFare: true,
+        flight_keys: [consumeFare._id],
+        baseFare: consumeFare.adtFare * consumeSeats, // base cost
+        seats: Array.from({ length: consumeSeats }).map(() => "Random"), // generic seats to satisfy seatCount
+      };
+      
+      const payload = {
+        totalAmount: details.baseFare,
+        details,
+        date: new Date().toISOString(),
+        paymentMethod: 'WALLET'
+      };
+
+      await api.post('/api/bookings/flight', payload);
+      toast.success(`Successfully blocked ${consumeSeats} seats!`, { id: loadingToast });
+      setShowConsumeModal(false);
+      setConsumeFare(null);
+      // Fetch latest data if needed (assuming there's a fetchFares function, else we just reload)
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to block seats', { id: loadingToast });
+    }
+  };
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [bulkFile, setBulkFile] = useState<File | null>(null);
@@ -522,13 +561,25 @@ const SeriesFareManager: React.FC = () => {
                                 <div><span className="block text-[9px] opacity-75">Total Seats</span>{fare.totalSeats}</div>
                                 <div><span className="block text-[9px] opacity-75">Available Seats</span>{fare.availableSeats}</div>
                               </div>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => {
+                                    setConsumeFare(fare);
+                                    setConsumeSeats(1);
+                                    setShowConsumeModal(true);
+                                  }}
+                                  className="h-8 px-4 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center hover:bg-emerald-700 shadow transition-all"
+                                >
+                                  Consume Seats
+                                </button>
                                 <button 
                                   onClick={() => handleToggleExpand(fare)}
-                                  className="w-8 h-8 rounded-full bg-[#0b1031] text-white flex items-center justify-center hover:bg-gray-800 shrink-0 ml-4 shadow transition-all"
+                                  className="w-8 h-8 rounded-full bg-[#0b1031] text-white flex items-center justify-center hover:bg-gray-800 shrink-0 shadow transition-all"
                                   title="Close Drawer"
                                 >
                                 ←
-                              </button>
+                                </button>
+                              </div>
                             </div>
 
                             {/* Inner Controls Table */}
@@ -1103,6 +1154,62 @@ const SeriesFareManager: React.FC = () => {
                   ) : (
                     <><Upload size={14} /> Upload Data</>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Consume Seats (Self-Book) Modal */}
+      {showConsumeModal && consumeFare && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm my-8 overflow-hidden animate-[scaleIn_0.2s_ease-out]">
+            <div className="bg-[#0b1031] px-6 py-4 flex justify-between items-center text-white">
+              <h2 className="text-sm font-black tracking-widest uppercase flex items-center gap-2">
+                Consume Seats
+              </h2>
+              <button onClick={() => setShowConsumeModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
+                <h3 className="font-bold text-[#0b1031] text-sm mb-1">{consumeFare.origin} to {consumeFare.destination}</h3>
+                <p className="text-xs text-gray-600 font-mono mb-2">{consumeFare.flightNo} • {new Date(consumeFare.travelDate).toLocaleDateString()}</p>
+                <div className="inline-block bg-white border border-blue-200 text-blue-800 text-xs font-bold px-3 py-1 rounded shadow-sm">
+                  Available: {consumeFare.availableSeats}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-2">Number of Seats to Block *</label>
+                <input 
+                  type="number" 
+                  min={1}
+                  max={consumeFare.availableSeats}
+                  value={consumeSeats}
+                  onChange={e => setConsumeSeats(Number(e.target.value))}
+                  className="w-full text-center text-lg px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold outline-none transition-all"
+                />
+                <p className="text-[10px] text-gray-500 text-center mt-2">
+                  No commission or markup will be charged. Base fare will be deducted from your wallet.
+                </p>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-100 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowConsumeModal(false)}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-xs px-6 py-2.5 rounded-lg transition-all flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConsumeSubmit}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all shadow-md flex-1 flex items-center justify-center gap-2"
+                >
+                  Block Now
                 </button>
               </div>
             </div>

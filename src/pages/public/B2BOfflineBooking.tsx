@@ -47,12 +47,37 @@ const B2BOfflineBooking: React.FC = () => {
 
     try {
       setLoading(true);
-      await api.post('/api/offline-booking', {
-        ...formData,
-        tabType: activeTab,
-        status: 'PENDING'
-      });
-      toast.success('Offline booking request submitted successfully!');
+      
+      if (activeTab === 'GROUP BOOKING') {
+        const payload = {
+          flightDetails: {
+            origin: formData.origin,
+            destination: formData.destination,
+            onwardDate: formData.onwardDate,
+            classOnward: formData.classOnward,
+            airlineCode: formData.airlineCode,
+            flightCode: formData.flightCode,
+            bookingType: formData.bookingType,
+            travelType: formData.travelType,
+          },
+          requestedSeats: {
+            adults: formData.adults,
+            child: formData.child,
+            infants: formData.infants,
+            total: formData.adults + formData.child + formData.infants,
+          },
+          remarks: formData.remarks
+        };
+        await api.post('/api/group-bookings/request', payload);
+        toast.success('Group booking RFQ submitted successfully!');
+      } else {
+        await api.post('/api/offline-booking', {
+          ...formData,
+          tabType: activeTab,
+          status: 'PENDING'
+        });
+        toast.success('Offline booking request submitted successfully!');
+      }
       
       // Reset form
       setFormData({

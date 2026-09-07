@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import RefreshButton from '../../../components/ui/RefreshButton';
 
 const TABS = [
+  { id: 'group-bookings', label: 'Group Bookings RFQ' },
   { id: 'offline-bookings', label: 'Offline Bookings' },
   { id: 'tax-invoices', label: 'Tax Invoices' },
   { id: 'gst-invoices', label: 'GST Invoices' },
@@ -19,12 +20,18 @@ export default function AdminB2BRequests() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [quoteAmount, setQuoteAmount] = useState<string>('');
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
       
-      const promises = TABS.map(tab => api.get(`/api/admin/b2b/${tab.id}`).then(res => res.data.map((item: any) => ({ ...item, requestType: tab.id, requestTypeLabel: tab.label }))));
+      const promises = TABS.map(tab => {
+        if (tab.id === 'group-bookings') {
+          return api.get('/api/group-bookings').then(res => res.data.map((item: any) => ({ ...item, requestType: tab.id, requestTypeLabel: tab.label })));
+        }
+        return api.get(`/api/admin/b2b/${tab.id}`).then(res => res.data.map((item: any) => ({ ...item, requestType: tab.id, requestTypeLabel: tab.label })));
+      });
       const results = await Promise.all(promises);
       
       // Flatten arrays and sort by createdAt descending
@@ -45,12 +52,33 @@ export default function AdminB2BRequests() {
 
   const handleStatusUpdate = async (id: string, type: string, status: string) => {
     try {
+      if (type === 'group-bookings') {
+        // Handled via the modal/quote directly
+        return;
+      }
       await api.put(`/api/admin/b2b/${type}/${id}`, { status });
       toast.success(`Status updated to ${status}`);
       fetchAllData(); // refresh
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
+    }
+  };
+
+  const handleQuoteSubmit = async (id: string) => {
+    if (!quoteAmount || isNaN(Number(quoteAmount))) {
+      toast.error('Please enter a valid quote amount');
+      return;
+    }
+    try {
+      await api.put(`/api/group-bookings/${id}/quote`, { quotePrice: Number(quoteAmount) });
+      toast.success('Quote sent to Agent successfully!');
+      setSelectedItem(null);
+      setQuoteAmount('');
+      fetchAllData();
+    } catch (error) {
+      console.error('Error quoting:', error);
+      toast.error('Failed to send quote');
     }
   };
 
@@ -101,6 +129,7 @@ export default function AdminB2BRequests() {
                       </td>
                       <td className="px-6 py-4">
                         {/* Dynamic Details based on request type */}
+                        {item.requestType === 'group-bookings' && <span>{item.flightDetails?.origin} to {item.flightDetails?.destination} | Seats: {item.requestedSeats?.total}</span>}
                         {item.requestType === 'offline-bookings' && <span>{item.origin} to {item.destination} ({item.product})</span>}
                         {item.requestType === 'tax-invoices' && <span>{item.fromDate} to {item.toDate} ({item.product})</span>}
                         {item.requestType === 'gst-invoices' && <span>Bill No: {item.billNumber} | {item.companyName}</span>}
@@ -114,10 +143,12 @@ export default function AdminB2BRequests() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          item.status === 'COMPLETED' || item.status === 'APPROVED' || item.status === 'ACTIVE'
+                          item.status === 'COMPLETED' || item.status === 'APPROVED' || item.status === 'ACTIVE' || item.status === 'PAID'
                             ? 'bg-green-100 text-green-700' 
                             : item.status === 'REJECTED' || item.status === 'CANCELLED' 
                             ? 'bg-red-100 text-red-700' 
+                            : item.status === 'QUOTED'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}>
                           {item.status || 'PENDING'}
@@ -130,18 +161,22 @@ export default function AdminB2BRequests() {
                         >
                           View Details
                         </button>
-                        <button 
-                          onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'ACTIVE' : 'COMPLETED')}
-                          className="px-3 py-1.5 border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition shadow-sm"
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'INACTIVE' : 'REJECTED')}
-                          className="px-3 py-1.5 border border-rose-200 bg-rose-50/50 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-100 transition shadow-sm"
-                        >
-                          Reject
-                        </button>
+                        {item.requestType !== 'group-bookings' && (
+                          <>
+                            <button 
+                              onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'ACTIVE' : 'COMPLETED')}
+                              className="px-3 py-1.5 border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 transition shadow-sm"
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleStatusUpdate(item._id, item.requestType, item.requestType === 'markups' || item.requestType === 'bank-details' ? 'INACTIVE' : 'REJECTED')}
+                              className="px-3 py-1.5 border border-rose-200 bg-rose-50/50 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-100 transition shadow-sm"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -196,11 +231,30 @@ export default function AdminB2BRequests() {
 
                 {/* Dynamic Data Fields */}
                 {Object.entries(selectedItem).map(([key, value]) => {
-                  if (['agentId', '_id', '__v', 'createdAt', 'updatedAt', 'status', 'requestType', 'requestTypeLabel'].includes(key)) return null;
+                  if (['agentId', '_id', '__v', 'createdAt', 'updatedAt', 'status', 'requestType', 'requestTypeLabel', 'passengers'].includes(key)) return null;
                   if (value === null || value === undefined || value === '') return null;
                   
                   // Make total amounts span full width
                   const isTotal = key.toLowerCase().includes('total');
+                  
+                  // Handle nested objects (like flightDetails and requestedSeats)
+                  if (typeof value === 'object' && !Array.isArray(value)) {
+                    return (
+                      <div key={key} className="col-span-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-blue-600">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {Object.entries(value).map(([subKey, subValue]) => (
+                            <div key={subKey}>
+                              <p className="text-[9px] text-gray-500 uppercase font-bold">{subKey}</p>
+                              <p className="text-xs font-bold text-gray-900">{String(subValue)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
                   
                   return (
                     <div key={key} className={`bg-white p-4 rounded-xl border border-gray-100 shadow-sm ${isTotal ? 'col-span-2 bg-blue-50/50 border-blue-100' : ''}`}>
@@ -215,6 +269,29 @@ export default function AdminB2BRequests() {
                 })}
               </div>
             </div>
+            
+            {/* Quote Engine for Group Bookings */}
+            {selectedItem.requestType === 'group-bookings' && selectedItem.status === 'PENDING' && (
+              <div className="p-6 border-t border-gray-100 bg-blue-50/50 flex flex-col gap-3">
+                <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">Admin Action: Provide Quote</p>
+                <div className="flex gap-3">
+                  <input 
+                    type="number" 
+                    placeholder="Enter total quote amount (â‚¹)"
+                    value={quoteAmount}
+                    onChange={(e) => setQuoteAmount(e.target.value)}
+                    className="flex-1 px-4 py-3 border-2 border-blue-200 rounded-xl focus:border-blue-500 outline-none font-bold text-blue-900"
+                  />
+                  <button 
+                    onClick={() => handleQuoteSubmit(selectedItem._id)}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all whitespace-nowrap"
+                  >
+                    Send Quote
+                  </button>
+                </div>
+              </div>
+            )}
+            
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end">
               <button 
                 onClick={() => setSelectedItem(null)}

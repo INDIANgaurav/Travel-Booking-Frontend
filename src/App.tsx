@@ -106,6 +106,8 @@ import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
 import SubAdminLayout from './layouts/SubAdminLayout'
 import AgentLayout from './layouts/AgentLayout'
 import AgentDashboard from './pages/dashboard/agent/AgentDashboard'
+import AgentGroupBookings from './pages/dashboard/agent/AgentGroupBookings'
+import ManageGroupBooking from './pages/dashboard/agent/ManageGroupBooking'
 import { Toaster } from 'react-hot-toast'
 import AgentOnboardingModal from './components/agent/AgentOnboardingModal'
 import Helpdesk from './pages/dashboard/common/Helpdesk'
@@ -173,6 +175,8 @@ function App() {
             <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
             <Route path="/b2b/booking-status" element={<B2BBookingStatus />} />
             <Route path="/b2b/manage-booking" element={<B2BManageBooking />} />
+            <Route path="/b2b/group-bookings" element={<AgentGroupBookings />} />
+            <Route path="/b2b/group-bookings/:id" element={<ManageGroupBooking />} />
             <Route path="/b2b/profile" element={<ProfilePage />} />
             <Route path="/b2b/dashboard" element={<B2BAgentDashboard />}>
               <Route path="bank-details" element={<B2BBankDetails />} />

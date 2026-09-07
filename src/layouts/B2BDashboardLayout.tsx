@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Plane, Building2, ShieldCheck, CreditCard, Compass, MoreHorizontal, LogOut, Phone, Check } from 'lucide-react';
+import { Plane, Building2, ShieldCheck, CreditCard, Compass, MoreHorizontal, LogOut, Phone, Check, Users } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { RootState } from '../store/store';
@@ -79,7 +79,7 @@ const B2BDashboardLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-white font-sans text-[#0c1a40] flex flex-col">
       {/* B2B Premium Header */}
-      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-[100] shadow-xl border-b border-white/10 relative">
         {/* Subtle background glow effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
@@ -129,6 +129,7 @@ const B2BDashboardLayout: React.FC = () => {
                     { label: 'Account Statement', path: '/b2b/account-statement', icon: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg> },
                     { label: 'Booking Status', path: '/b2b/booking-status', icon: <Check size={14}/> },
                     { label: 'Manage Booking', path: '/b2b/manage-booking', icon: <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg> },
+                    { label: 'Group Bookings RFQ', path: '/b2b/group-bookings', icon: <Users size={14}/> },
                     { label: 'Agent Certificate', path: '#', icon: <ShieldCheck size={14}/> }
                   ].map((item, index) => (
                     <button 
