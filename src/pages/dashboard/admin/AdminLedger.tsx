@@ -153,7 +153,7 @@ export default function AdminLedger() {
                 { value: 'ALL', label: 'ALL USERS (Global Ledger)' },
                 ...users.map(u => ({
                   value: u._id,
-                  label: `${u.companyName ? u.companyName + ' - ' : ''}${u.name} (${u.role}) - ${u.email}`
+                  label: `${u.companyName ? u.companyName + ' - ' : ''}${u.name} (${u.roles?.length ? u.roles.join(', ') : 'USER'}) - ${u.email}`
                 }))
               ]}
             />

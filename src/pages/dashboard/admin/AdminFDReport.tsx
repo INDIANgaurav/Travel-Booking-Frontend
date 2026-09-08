@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Download, Users, Plane, Calendar, UserCheck, Loader2 } from 'lucide-react';
+import { Search, Download, Users, Plane, Calendar, UserCheck, Loader2, RefreshCw } from 'lucide-react';
 import api from '../../../services/api';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
 import toast from 'react-hot-toast';
@@ -145,13 +145,22 @@ export default function AdminFDReport() {
             />
           </div>
         </div>
-        <div>
+        <div className="flex gap-2">
           <button 
             type="submit"
             disabled={isSearching}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center justify-center min-h-[36px]"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center justify-center min-h-[36px]"
           >
             {isSearching ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
+          </button>
+          <button 
+            type="button"
+            onClick={handleSearch}
+            disabled={isSearching}
+            title="Refresh Data"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg transition-colors flex items-center justify-center min-h-[36px]"
+          >
+            <RefreshCw size={16} className={isSearching ? "animate-spin" : ""} />
           </button>
         </div>
       </form>

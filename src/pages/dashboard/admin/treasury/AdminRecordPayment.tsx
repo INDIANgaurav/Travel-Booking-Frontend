@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../../../../services/api';
 import toast from 'react-hot-toast';
 import { Send, Banknote, RefreshCw } from 'lucide-react';
+import Dropdown from '../../../../components/ui/Dropdown';
+import DOBCalendar from '../../../../components/ui/DOBCalendar';
 
 export default function AdminRecordPayment() {
   const [agencies, setAgencies] = useState<any[]>([]);
@@ -110,49 +112,46 @@ export default function AdminRecordPayment() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-3">
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Select Agency / User *</label>
-            <select
+            <Dropdown
               value={formData.agency}
-              onChange={e => setFormData({ ...formData, agency: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-            >
-              <option value="">-- Choose Agency --</option>
-              {agencies.map((ag: any) => (
-                <option key={ag._id} value={ag._id}>
-                  {ag.companyName || ag.name} ({ag.email})
-                </option>
-              ))}
-            </select>
+              onChange={(val: string) => setFormData({ ...formData, agency: val })}
+              placeholder="-- Choose Agency --"
+              searchable
+              options={agencies.map((ag: any) => ({
+                value: ag._id,
+                label: `${ag.companyName || ag.name} (${ag.email})`
+              }))}
+            />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Payment Mode *</label>
-            <select
+            <Dropdown
               value={formData.paymentMode}
-              onChange={e => setFormData({ ...formData, paymentMode: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-            >
-              <option value="">-- Select Mode --</option>
-              <option value="IMPS">IMPS</option>
-              <option value="NEFT">NEFT</option>
-              <option value="RTGS">RTGS</option>
-              <option value="UPI">UPI</option>
-              <option value="CASH">CASH</option>
-              <option value="CHEQUE">CHEQUE</option>
-            </select>
+              onChange={(val: string) => setFormData({ ...formData, paymentMode: val })}
+              placeholder="-- Select Mode --"
+              options={[
+                { value: 'IMPS', label: 'IMPS' },
+                { value: 'NEFT', label: 'NEFT' },
+                { value: 'RTGS', label: 'RTGS' },
+                { value: 'UPI', label: 'UPI' },
+                { value: 'CASH', label: 'CASH' },
+                { value: 'CHEQUE', label: 'CHEQUE' }
+              ]}
+            />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Our Bank Account *</label>
-            <select
+            <Dropdown
               value={formData.adminBank}
-              onChange={e => setFormData({ ...formData, adminBank: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
-            >
-              <option value="">-- Select Bank --</option>
-              {banks.map((b: any) => (
-                <option key={b._id} value={b._id}>{b.bankName} - {b.accountNo}</option>
-              ))}
-            </select>
+              onChange={(val: string) => setFormData({ ...formData, adminBank: val })}
+              placeholder="-- Select Bank --"
+              options={banks.map((b: any) => ({
+                value: b._id,
+                label: `${b.bankName} - ${b.accountNo}`
+              }))}
+            />
           </div>
 
           <div>
@@ -181,12 +180,10 @@ export default function AdminRecordPayment() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Deposit Date *</label>
-            <input
-              type="date"
-              required
+            <DOBCalendar
               value={formData.depositDate}
-              onChange={e => setFormData({ ...formData, depositDate: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              onChange={(val: string) => setFormData({ ...formData, depositDate: val })}
+              placeholder="Select date"
             />
           </div>
 

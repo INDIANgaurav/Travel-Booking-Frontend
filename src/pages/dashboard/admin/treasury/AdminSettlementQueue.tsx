@@ -3,12 +3,13 @@ import api from '../../../../services/api';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Search, ExternalLink } from 'lucide-react';
 import Loader from '../../../../components/common/Loader';
+import Dropdown from '../../../../components/ui/Dropdown';
 
 export default function AdminSettlementQueue() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'INCOMING' | 'OUTGOING'>('INCOMING');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -76,16 +77,18 @@ export default function AdminSettlementQueue() {
           </div>
 
           <div className="flex items-center gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e: any) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-indigo-500"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+            <div className="w-40">
+              <Dropdown
+                value={statusFilter}
+                onChange={(val: string) => setStatusFilter(val as any)}
+                options={[
+                  { value: 'ALL', label: 'All Status' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'APPROVED', label: 'Approved' },
+                  { value: 'REJECTED', label: 'Rejected' }
+                ]}
+              />
+            </div>
             
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />

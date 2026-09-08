@@ -132,7 +132,11 @@ const AdminCommissionAdd = () => {
                   { value: '', label: 'Select Carrier' },
                   { value: 'ALL', label: 'All Carriers' },
                   { value: '6E', label: 'IndiGo (6E)' },
-                  { value: 'AI', label: 'Air India (AI)' }
+                  { value: 'AI', label: 'Air India (AI)' },
+                  { value: 'UK', label: 'Vistara (UK)' },
+                  { value: 'SG', label: 'SpiceJet (SG)' },
+                  { value: 'IX', label: 'Air India Express (IX)' },
+                  { value: 'QP', label: 'Akasa Air (QP)' }
                 ]}
               />
             </div>
