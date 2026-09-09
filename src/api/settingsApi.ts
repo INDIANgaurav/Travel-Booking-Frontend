@@ -24,6 +24,10 @@ export const settingsApi = {
     const response = await api.post('/api/settings/roles', data);
     return response.data;
   },
+  updateRole: async (id: string, data: any) => {
+    const response = await api.put(`/api/settings/roles/${id}`, data);
+    return response.data;
+  },
   deleteRole: async (id: string) => {
     const response = await api.delete(`/api/settings/roles/${id}`);
     return response.data;

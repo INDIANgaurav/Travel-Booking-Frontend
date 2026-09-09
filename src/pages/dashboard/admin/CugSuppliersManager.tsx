@@ -57,6 +57,7 @@ const CugSuppliersManager = () => {
   useEffect(() => {
     fetchSuppliers();
     fetchAvailableAgents();
+    fetchCommissionPlans();
   }, []);
 
   useEffect(() => {

@@ -35,6 +35,7 @@ const B2BGstInvoice: React.FC = () => {
   const [billDate, setBillDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [platformInfo, setPlatformInfo] = useState<any>(null);
 
   // Dynamic GST Data
   const [gstData, setGstData] = useState({
@@ -49,7 +50,10 @@ const B2BGstInvoice: React.FC = () => {
     const fetchGstData = async () => {
       try {
         setFetching(true);
-        const res = await api.get(`/api/gst-invoices/calculate?month=${month}&year=${year}`);
+        const [res, platformRes] = await Promise.all([
+          api.get(`/api/gst-invoices/calculate?month=${month}&year=${year}`),
+          api.get('/api/admin/platform-info').catch(() => ({ data: null }))
+        ]);
         if (res.data) {
           setGstData({
             taxableValue: res.data.taxableValue || 0,
@@ -58,6 +62,9 @@ const B2BGstInvoice: React.FC = () => {
             igst: res.data.igst || 0,
             totalAmount: res.data.totalAmount || 0
           });
+        }
+        if (platformRes.data) {
+          setPlatformInfo(platformRes.data);
         }
       } catch (error) {
         console.error('Error fetching GST data:', error);
@@ -143,8 +150,8 @@ const B2BGstInvoice: React.FC = () => {
               {/* GST Info Details row */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 border-b border-gray-50 pb-8">
                 <div>
-                  <p className="text-[10px] font-bold text-gray-500 mb-1">TrippeChalo GST Number</p>
-                  <p className="text-[13px] font-black text-[#0c1a40]">18AAJCT4798C1ZW</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">{platformInfo?.companyName?.split(' ')[0] || 'TrippeChalo'} GST Number</p>
+                  <p className="text-[13px] font-black text-[#0c1a40]">{platformInfo?.gstn || '18AAJCT4798C1ZW'}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-500 mb-1">Agent GST Number</p>

@@ -16,22 +16,27 @@ export default function FlightTicket() {
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const [booking, setBooking] = useState<any>(null);
+  const [platformInfo, setPlatformInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBooking = async () => {
+    const fetchBookingAndPlatformInfo = async () => {
       if (!id) return;
       try {
-        const { data } = await api.get(`/api/bookings/${id}`);
-        setBooking(data);
+        const [bookingRes, platformRes] = await Promise.all([
+          api.get(`/api/bookings/${id}`),
+          api.get('/api/admin/platform-info').catch(() => ({ data: null }))
+        ]);
+        setBooking(bookingRes.data);
+        if (platformRes.data) setPlatformInfo(platformRes.data);
       } catch (error) {
-        console.error('Error fetching booking:', error);
+        console.error('Error fetching data:', error);
         toast.error('Failed to load ticket');
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchBooking();
+    if (id) fetchBookingAndPlatformInfo();
   }, [id]);
 
   if (loading) {
@@ -238,16 +243,15 @@ export default function FlightTicket() {
             <div>
               <h2 className="text-3xl font-black text-[#0b1031] tracking-tight flex items-center gap-2 mb-1">
                 <Plane size={28} className="text-blue-600" />
-                <span>Trippe<span className="text-blue-600">Chalo</span></span>
+                <span>{platformInfo?.companyName?.split(' ')[0] || 'Trippe'}<span className="text-blue-600">{platformInfo?.companyName?.split(' ').slice(1).join(' ') || 'Chalo'}</span></span>
               </h2>
               <p className="text-[11px] text-gray-500 font-medium tracking-widest uppercase">E-Ticket / Reservation Voucher</p>
             </div>
             <div className="text-right text-[11px] text-gray-700">
-              <p className="font-bold text-gray-900 mb-1">TRIPPECHALO INDIA PRIVATE LIMITED</p>
-              <p>First Floor, D 42, Greater Noida Expressway</p>
-              <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
-              <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
-              <p>Phone: +91 95559 34205</p>
+              <p className="font-bold text-gray-900 mb-1 uppercase">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+              <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
+              <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+              <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
             </div>
           </div>
 

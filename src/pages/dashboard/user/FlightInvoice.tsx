@@ -14,22 +14,27 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const [booking, setBooking] = useState<any>(null);
+  const [platformInfo, setPlatformInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBooking = async () => {
+    const fetchBookingAndPlatformInfo = async () => {
       if (!actualId) return;
       try {
-        const { data } = await api.get(`/api/bookings/${actualId}`);
-        setBooking(data);
+        const [bookingRes, platformRes] = await Promise.all([
+          api.get(`/api/bookings/${actualId}`),
+          api.get('/api/admin/platform-info').catch(() => ({ data: null }))
+        ]);
+        setBooking(bookingRes.data);
+        if (platformRes.data) setPlatformInfo(platformRes.data);
       } catch (error) {
-        console.error('Error fetching booking:', error);
+        console.error('Error fetching data:', error);
         toast.error('Failed to load ticket');
       } finally {
         setLoading(false);
       }
     };
-    if (actualId) fetchBooking();
+    if (actualId) fetchBookingAndPlatformInfo();
   }, [actualId]);
 
   if (loading) {
@@ -225,12 +230,11 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
               <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
             </div>
             <div className="text-right text-[11px] text-gray-700">
-              <p className="font-bold text-gray-900 mb-1 uppercase">TRIPPECHALO INDIA PRIVATE LIMITED</p>
-              <p>First Floor, D 42, Greater Noida Expressway</p>
-              <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
-              <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
-              <p>Phone: +91 95559 34205</p>
-              <p>Email: trippechaloindia@gmail.com</p>
+              <p className="font-bold text-gray-900 mb-1 uppercase">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+              <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
+              <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+              <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
+              <p>Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
             </div>
           </div>
 

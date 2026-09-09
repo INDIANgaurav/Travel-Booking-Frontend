@@ -86,6 +86,11 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
     if (submitData.firstName || submitData.lastName) {
       submitData.name = `${submitData.firstName} ${submitData.lastName}`.trim();
     }
+    submitData.walletBalance = Number(submitData.walletBalance) || 0;
+    submitData.creditBalance = Number(submitData.creditBalance) || 0;
+    submitData.resultExpiryTime = Number(submitData.resultExpiryTime) || 0;
+    submitData.cugPlatformSellingCharge = Number(submitData.cugPlatformSellingCharge) || 0;
+    submitData.cugPlatformBuyingCharge = Number(submitData.cugPlatformBuyingCharge) || 0;
     onSave(submitData);
   };
 
@@ -164,14 +169,14 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Wallet Balance</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                    <input type="number" value={formData.walletBalance} onChange={e => handleChange('walletBalance', Number(e.target.value))} className="w-full pl-8 pr-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-black text-gray-800 focus:ring-2 focus:ring-emerald-500/20 transition-all" />
+                    <input type="text" value={formData.walletBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Max Credit Limit</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                    <input type="number" value={formData.creditBalance} onChange={e => handleChange('creditBalance', Number(e.target.value))} className="w-full pl-8 pr-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-black text-gray-800 focus:ring-2 focus:ring-emerald-500/20 transition-all" />
+                    <input type="text" value={formData.creditBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
                   </div>
                 </div>
               </div>
@@ -226,7 +231,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Search Timeout (Mins)</label>
-                  <input type="number" value={formData.resultExpiryTime} onChange={e => handleChange('resultExpiryTime', Number(e.target.value))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
+                  <input type="text" value={formData.resultExpiryTime} onChange={e => handleChange('resultExpiryTime', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
                 </div>
                 
                 <div>
@@ -331,28 +336,28 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Representative*</label>
-                  <input type="text" value={formData.contactRepresentative} onChange={e => handleChange('contactRepresentative', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Representative</label>
+                  <input type="text" value={formData.contactRepresentative} onChange={e => handleChange('contactRepresentative', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Name On PAN*</label>
-                  <input type="text" value={formData.nameOnPan} onChange={e => handleChange('nameOnPan', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Name On PAN</label>
+                  <input type="text" value={formData.nameOnPan} onChange={e => handleChange('nameOnPan', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">City*</label>
-                  <input type="text" value={formData.city} onChange={e => handleChange('city', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">City</label>
+                  <input type="text" value={formData.city} onChange={e => handleChange('city', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">State*</label>
-                  <input type="text" value={formData.state} onChange={e => handleChange('state', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">State</label>
+                  <input type="text" value={formData.state} onChange={e => handleChange('state', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comm Grp*</label>
-                  <input type="text" value={formData.commGrp} onChange={e => handleChange('commGrp', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comm Grp</label>
+                  <input type="text" value={formData.commGrp} onChange={e => handleChange('commGrp', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Global Marquee Display*</label>
-                  <textarea value={formData.marqueesDetail} onChange={e => handleChange('marqueesDetail', e.target.value)} required={activeTab === 'company'} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Global Marquee Display</label>
+                  <textarea value={formData.marqueesDetail} onChange={e => handleChange('marqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Youtube Url</label>
@@ -380,7 +385,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">B2B Sales Fee</label>
-                  <input type="number" value={formData.cugPlatformSellingCharge} onChange={e => handleChange('cugPlatformSellingCharge', Number(e.target.value))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.cugPlatformSellingCharge} onChange={e => handleChange('cugPlatformSellingCharge', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
               </div>
 
@@ -399,24 +404,24 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   <input type="text" value={formData.website} onChange={e => handleChange('website', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Office Phone*</label>
-                  <input type="text" value={formData.officePhone} onChange={e => handleChange('officePhone', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Office Phone</label>
+                  <input type="text" value={formData.officePhone} onChange={e => handleChange('officePhone', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PAN No*</label>
-                  <input type="text" value={formData.panNumber} onChange={e => handleChange('panNumber', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PAN No</label>
+                  <input type="text" value={formData.panNumber} onChange={e => handleChange('panNumber', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Address*</label>
-                  <input type="text" value={formData.officeAddress} onChange={e => handleChange('officeAddress', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Address</label>
+                  <input type="text" value={formData.officeAddress} onChange={e => handleChange('officeAddress', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PIN Code</label>
                   <input type="text" value={formData.pincode} onChange={e => handleChange('pincode', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Country*</label>
-                  <input type="text" value={formData.country} onChange={e => handleChange('country', e.target.value)} required={activeTab === 'company'} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Country</label>
+                  <input type="text" value={formData.country} onChange={e => handleChange('country', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 
                 <div className="flex gap-6 py-2">
@@ -435,8 +440,8 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Custom B2B Marquee*</label>
-                  <textarea value={formData.negoMarqueesDetail} onChange={e => handleChange('negoMarqueesDetail', e.target.value)} required={activeTab === 'company'} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Custom B2B Marquee</label>
+                  <textarea value={formData.negoMarqueesDetail} onChange={e => handleChange('negoMarqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Instagram Url</label>
@@ -481,17 +486,17 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   <input type="file" className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
                 </div>
                 <div className="flex items-center gap-4">
-                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Address Proof*</label>
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Address Proof</label>
                   <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
                 </div>
               </div>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">PAN Card*</label>
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">PAN Card</label>
                   <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
                 </div>
                 <div className="flex items-center gap-4">
-                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Aadhaar Card*</label>
+                  <label className="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-wider">Aadhaar Card</label>
                   <input type="file" required={activeTab === 'document'} className="w-2/3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 cursor-pointer" />
                 </div>
               </div>
