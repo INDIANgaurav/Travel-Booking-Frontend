@@ -23,8 +23,9 @@ interface User {
   panNumber?: string;
   department?: string;
   agentStatus?: string;
-  isActive?: boolean;
   companyName?: string;
+  displayOnProfileIcon?: string;
+  isActive?: boolean;
   agencyCode?: string;
   agencyId?: string;
   walletBalance?: number;

@@ -69,7 +69,8 @@ export default function AdminLayout() {
           name: 'User Directory', 
           icon: <Users size={20} />,
           subItems: [
-            { name: 'Active Users', path: '/admin/manage-users' },
+            { name: 'Active Agents', path: '/admin/manage-users' },
+            { name: 'B2C Customers', path: '/admin/users' },
             { name: 'Pending Approvals', path: '/admin/pending-users' }
           ]
         },

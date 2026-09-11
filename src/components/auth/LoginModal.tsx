@@ -73,14 +73,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           
           {/* Top Tabs Removed */}
 
-          {!isLogin && (
-            <button 
-              onClick={() => setIsLogin(true)}
-              className="absolute top-28 left-8 text-blue-600 flex items-center text-sm font-semibold hover:underline"
-            >
-              <ChevronLeft size={16} /> Back to Login
-            </button>
-          )}
+
 
           <div className={`flex-1 overflow-y-auto custom-scrollbar px-1 ${!isLogin ? 'mt-6' : ''}`}>
             {isLogin ? (

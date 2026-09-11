@@ -7,8 +7,10 @@ import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
 import Dropdown from '../../../components/ui/Dropdown';
 import RefreshButton from '../../../components/ui/RefreshButton';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function AdminSubAdmins() {
+  const confirm = useConfirm();
   const user = useSelector(selectCurrentUser);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [subAdmins, setSubAdmins] = useState<any[]>([]);
@@ -62,7 +64,14 @@ export default function AdminSubAdmins() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to remove this sub-admin?')) return;
+    const isConfirmed = await confirm({
+      title: 'Remove Sub-Admin?',
+      message: 'Are you sure you want to remove this sub-admin? They will lose all admin access.',
+      isDestructive: true
+    });
+    
+    if (!isConfirmed) return;
+    
     try {
       await api.delete(`/api/admin/users/${id}`);
       toast.success('Sub-admin removed');

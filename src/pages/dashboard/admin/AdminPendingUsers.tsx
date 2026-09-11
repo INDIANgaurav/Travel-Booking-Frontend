@@ -5,8 +5,10 @@ import { Search, CheckCircle, Trash2, Plus, X, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../../components/common/Loader';
 import RefreshButton from '../../../components/ui/RefreshButton';
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function AdminPendingUsers() {
+  const confirm = useConfirm();
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +50,13 @@ export default function AdminPendingUsers() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this agent?")) {
+    const isConfirmed = await confirm({
+      title: 'Delete Request?',
+      message: 'Are you sure you want to permanently delete this registration request? This action cannot be undone.',
+      isDestructive: true
+    });
+
+    if (isConfirmed) {
       try {
         await api.delete(`/api/admin/users/${id}`);
         toast.success('Agent deleted successfully');

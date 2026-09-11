@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Save, UserCog, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, UserCog, Shield, Loader2 } from 'lucide-react';
+import { settingsApi } from '../../../api/settingsApi';
 
 interface ManageRolesModalProps {
   isOpen: boolean;
@@ -19,6 +20,39 @@ const AVAILABLE_ROLES = [
 export default function ManageRolesModal({ isOpen, onClose, user, onSave }: ManageRolesModalProps) {
   const [selectedRoles, setSelectedRoles] = useState<string[]>(user?.roles?.length ? user.roles : user?.role ? [user.role] : []);
   const [isSaving, setIsSaving] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<any[]>([...AVAILABLE_ROLES]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchDynamicRoles = async () => {
+        setIsLoadingRoles(true);
+        try {
+          const res = await settingsApi.getRoles();
+          const dynamicRoles = res.data.map((r: any) => ({
+            id: r.roleCode,
+            label: r.roleCode,
+            description: r.roleDesc,
+            color: 'bg-teal-50 text-teal-700 border-teal-200'
+          }));
+          
+          // Merge avoiding duplicates by id
+          const merged = [...AVAILABLE_ROLES];
+          dynamicRoles.forEach((dr: any) => {
+            if (!merged.find(mr => mr.id === dr.id)) {
+              merged.push(dr);
+            }
+          });
+          setAvailableRoles(merged);
+        } catch(e) {
+          console.error(e);
+        } finally {
+          setIsLoadingRoles(false);
+        }
+      };
+      fetchDynamicRoles();
+    }
+  }, [isOpen]);
 
   if (!isOpen || !user) return null;
 
@@ -73,8 +107,12 @@ export default function ManageRolesModal({ isOpen, onClose, user, onSave }: Mana
         <div className="p-6">
           <p className="text-sm text-gray-500 font-bold mb-4 uppercase tracking-wider">Select Roles</p>
           
-          <div className="space-y-3">
-            {AVAILABLE_ROLES.map(role => {
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {isLoadingRoles ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="animate-spin text-blue-500" size={24} />
+              </div>
+            ) : availableRoles.map(role => {
               const isSelected = selectedRoles.includes(role.id);
               return (
                 <div 

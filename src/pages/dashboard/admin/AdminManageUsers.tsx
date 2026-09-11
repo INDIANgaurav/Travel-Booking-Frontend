@@ -8,15 +8,23 @@ import ManageRolesModal from '../../../components/admin/modals/ManageRolesModal'
 import AssignCreditModal from '../../../components/admin/modals/AssignCreditModal';
 import UserLedgerModal from '../../../components/admin/modals/UserLedgerModal';
 import RefreshButton from '../../../components/ui/RefreshButton';
-
+import { useConfirm } from '../../../context/ConfirmContext';
 
 export default function AdminManageUsers() {
+  const confirm = useConfirm();
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '', role: 'USER' });
+  const [availableRoles, setAvailableRoles] = useState<any[]>([
+    { id: 'SUPER_ADMIN', label: 'Super Admin' },
+    { id: 'SUB_ADMIN', label: 'TRC Admin' },
+    { id: 'B2B_AGENT', label: 'TRC B2B' },
+    { id: 'SUPPLIER_AGENT', label: 'Supplier Agent' },
+    { id: 'USER', label: 'Normal User' }
+  ]);
   
   const navigate = useNavigate();
   
@@ -52,6 +60,29 @@ export default function AdminManageUsers() {
 
   useEffect(() => {
     fetchAgents();
+    
+    // Fetch dynamic roles for the Add Customer modal dropdown
+    const fetchDynamicRoles = async () => {
+      try {
+        const res = await api.get('/api/settings/roles');
+        if (res.data && res.data.success) {
+           const dynamicRoles = res.data.data.map((r: any) => ({
+             id: r.roleCode,
+             label: r.roleCode
+           }));
+           setAvailableRoles(prev => {
+             const merged = [...prev];
+             dynamicRoles.forEach((dr: any) => {
+               if (!merged.find(m => m.id === dr.id)) merged.push(dr);
+             });
+             return merged;
+           });
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic roles', err);
+      }
+    };
+    fetchDynamicRoles();
   }, [page]);
 
   const handleApprove = async (id: string, status: 'APPROVED' | 'REJECTED') => {
@@ -66,7 +97,13 @@ export default function AdminManageUsers() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this agent?")) {
+    const isConfirmed = await confirm({
+      title: 'Delete Agent?',
+      message: 'Are you sure you want to permanently delete this agent? This action cannot be undone.',
+      isDestructive: true
+    });
+    
+    if (isConfirmed) {
       try {
         await api.delete(`/api/admin/users/${id}`);
         toast.success('Agent deleted successfully');
@@ -96,11 +133,11 @@ export default function AdminManageUsers() {
     e.preventDefault();
     setIsCreating(true);
     try {
-      const submissionData = { ...formData, name: formData.name || `${formData.firstName} ${formData.lastName}`.trim() };
+      const submissionData = { ...formData, name: formData.name || `${formData.firstName} ${formData.lastName}`.trim(), roles: [formData.role] };
       await api.post('/api/admin/agents', submissionData);
       toast.success('Agent created successfully');
       setIsModalOpen(false);
-      setFormData({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '' });
+      setFormData({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '', role: 'B2B_AGENT' });
       fetchAgents();
     } catch (error: any) {
       console.error('Error creating agent:', error);
@@ -371,13 +408,21 @@ export default function AdminManageUsers() {
                   <label className="block text-[10px] font-bold text-gray-600 mb-1">Confirm Password*</label>
                   <input required type="password" placeholder="Confirm Password" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} minLength={6} />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Assign Role*</label>
+                  <select required value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating}>
+                    {availableRoles.map(r => (
+                      <option key={r.id} value={r.id}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-gray-100 flex justify-end gap-3 mt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" disabled={isCreating}>
                   Cancel
                 </button>
-                <button type="submit" disabled={isCreating || (formData.password !== formData.confirmPassword)} className="px-8 py-2 bg-[#ff5722] hover:bg-[#f4511e] text-white text-sm font-bold rounded-lg transition-all shadow-md disabled:opacity-50">
+                <button type="submit" disabled={isCreating || (formData.password !== formData.confirmPassword)} className="px-8 py-2 bg-[#4285f4] hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-md disabled:opacity-50">
                   {isCreating ? <Loader /> : 'Submit'}
                 </button>
               </div>

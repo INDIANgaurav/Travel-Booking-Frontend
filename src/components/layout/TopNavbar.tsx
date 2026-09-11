@@ -211,7 +211,12 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       )}
                     </div>
                     <span className="hidden md:flex items-center gap-1">
-                      Hi, {user?.name?.split(' ')[0] || 'User'}
+                        {user?.displayOnProfileIcon === 'Company Name' 
+                          ? (user?.companyName || user?.name?.split(' ')[0] || 'User')
+                          : user?.displayOnProfileIcon === 'Show Both'
+                            ? `${user?.companyName || 'Company'} (${user?.name?.split(' ')[0] || 'User'})`
+                            : (user?.name?.split(' ')[0] || 'User')
+                        }
                       <ChevronDown size={14} />
                     </span>
                   </button>
@@ -224,7 +229,14 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         {/* Mobile User Info */}
                         <div className="px-4 py-4 border-b border-gray-100 bg-slate-50 mb-2 rounded-t-xl">
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Logged In As</p>
-                          <p className="text-base font-black text-slate-900 truncate mt-1">{user?.name}</p>
+                          <p className="text-base font-black text-slate-900 truncate mt-1">
+                            {user?.displayOnProfileIcon === 'Company Name' 
+                              ? (user?.companyName || user?.name)
+                              : user?.displayOnProfileIcon === 'Show Both'
+                                ? `${user?.companyName || 'Company'} (${user?.name})`
+                                : user?.name
+                            }
+                          </p>
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                         </div>
                       {(user?.roles?.includes('USER') || user?.role === 'USER' || (!user?.roles?.includes('B2B_AGENT') && !user?.roles?.includes('SUPER_ADMIN') && !user?.roles?.includes('SUPPLIER_AGENT') && user?.role !== 'B2B_AGENT' && user?.role !== 'SUPER_ADMIN' && user?.role !== 'SUPPLIER_AGENT' && user?.role !== 'SUB_ADMIN')) && (

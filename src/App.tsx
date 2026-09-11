@@ -59,6 +59,7 @@ import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
 import AdminPendingUsers from './pages/dashboard/admin/AdminPendingUsers'
 import AdminManageUsers from './pages/dashboard/admin/AdminManageUsers'
+import AdminUsers from './pages/dashboard/admin/AdminUsers'
 import AdminPendingQueue from './pages/dashboard/admin/AdminPendingQueue'
 import AdminBookings from './pages/dashboard/admin/AdminBookings'
 import AdminProfile from './pages/dashboard/admin/AdminProfile'
@@ -113,6 +114,7 @@ import { Toaster } from 'react-hot-toast'
 import AgentOnboardingModal from './components/agent/AgentOnboardingModal'
 import Helpdesk from './pages/dashboard/common/Helpdesk'
 import AdminHelpdesk from './pages/dashboard/admin/AdminHelpdesk'
+import { ConfirmProvider } from './context/ConfirmContext'
 
 function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
@@ -141,8 +143,9 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Toaster position="top-right" />
+    <ConfirmProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" />
       <AgentOnboardingModal isOpen={showAgentOnboarding} />
       <Routes>
         {/* Partner Routes */}
@@ -291,6 +294,7 @@ function App() {
           <Route path="queue" element={<AdminPendingQueue />} />
           <Route path="pending-users" element={<AdminPendingUsers />} />
           <Route path="manage-users" element={<AdminManageUsers />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="user-profile/:id" element={<AdminUserProfile />} />
           <Route path="sub-admins" element={<AdminSubAdmins />} />
           <Route path="b2b-requests" element={<AdminB2BRequests />} />
@@ -342,7 +346,8 @@ function App() {
           <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ConfirmProvider>
   )
 }
 

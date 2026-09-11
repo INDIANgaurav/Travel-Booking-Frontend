@@ -504,8 +504,8 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
 
             <div className="flex justify-center items-center gap-6 mb-8">
               <label className="flex items-center gap-2 cursor-pointer px-4 py-2">
-                <input type="checkbox" checked={formData.isApprovedDocument} onChange={e => handleChange('isApprovedDocument', e.target.checked)} className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
-                <span className="text-sm font-bold text-gray-700 bg-orange-600 text-white px-4 py-2 rounded-lg">Approve</span>
+                <input type="checkbox" checked={formData.isApprovedDocument} onChange={e => handleChange('isApprovedDocument', e.target.checked)} className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer" />
+                <span className="text-sm font-bold text-white bg-blue-600 px-6 py-2.5 rounded-xl shadow-sm hover:bg-blue-700 transition-colors">Approve</span>
               </label>
               <button type="submit" disabled={isSaving} className="px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md disabled:opacity-70">
                 Update

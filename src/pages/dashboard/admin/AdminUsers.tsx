@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Search, Trash2 } from 'lucide-react';
+import { Search, Trash2, X, AlertTriangle } from 'lucide-react';
 import Loader from '../../../components/common/Loader';
 import RefreshButton from '../../../components/ui/RefreshButton';
 
@@ -10,6 +10,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -29,16 +30,20 @@ export default function AdminUsers() {
     fetchUsers();
   }, [page]);
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) {
-      try {
-        await api.delete(`/api/admin/users/${id}`);
-        toast.success('User deleted successfully');
-        setUsers(users.filter((u: any) => u._id !== id));
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        toast.error('Failed to delete user');
-      }
+  const handleDelete = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    try {
+      await api.delete(`/api/admin/users/${deleteConfirmId}`);
+      toast.success('User deleted successfully');
+      setUsers(users.filter((u: any) => u._id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
     }
   };
 
@@ -149,6 +154,48 @@ export default function AdminUsers() {
           </button>
         </div>
       </div>
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Delete User?</h3>
+                    <p className="text-sm text-gray-500 font-medium">Are you sure you want to permanently delete this user? This action cannot be undone.</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setDeleteConfirmId(null)} 
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm shadow-red-600/20 flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

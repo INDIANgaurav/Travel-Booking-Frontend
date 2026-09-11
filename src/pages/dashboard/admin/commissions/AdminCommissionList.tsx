@@ -4,6 +4,7 @@ import { Plus, Search, Users, Copy, Trash2, ChevronRight, Check } from 'lucide-r
 import Dropdown from '../../../../components/ui/Dropdown';
 import api from '../../../../services/api';
 import toast from 'react-hot-toast';
+import { useConfirm } from '../../../../context/ConfirmContext';
 
 interface CommissionPlan {
   _id: string;
@@ -17,6 +18,7 @@ interface CommissionPlan {
 }
 
 const AdminCommissionList = () => {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -47,7 +49,13 @@ const AdminCommissionList = () => {
       return;
     }
     
-    if (window.confirm('Are you sure you want to delete the selected plans?')) {
+    const isConfirmed = await confirm({
+      title: 'Delete Plan?',
+      message: 'Are you sure you want to delete the selected plans? This action cannot be undone.',
+      isDestructive: true
+    });
+    
+    if (isConfirmed) {
       try {
         // Just delete the first selected for now as batch delete isn't on backend yet
         await api.delete(`/api/commissions/${selectedIds[0]}`);

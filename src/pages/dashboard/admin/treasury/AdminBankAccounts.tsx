@@ -3,8 +3,10 @@ import api from '../../../../services/api';
 import toast from 'react-hot-toast';
 import { Plus, Building2, Trash2, CheckCircle } from 'lucide-react';
 import Loader from '../../../../components/common/Loader';
+import { useConfirm } from '../../../../context/ConfirmContext';
 
 export default function AdminBankAccounts() {
+  const confirm = useConfirm();
   const [banks, setBanks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'VIEW' | 'ADD'>('VIEW');
@@ -49,7 +51,14 @@ export default function AdminBankAccounts() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to remove this bank account?')) return;
+    const isConfirmed = await confirm({
+      title: 'Remove Bank Account?',
+      message: 'Are you sure you want to remove this bank account?',
+      isDestructive: true
+    });
+    
+    if (!isConfirmed) return;
+    
     try {
       await api.delete(`/api/finance/bank/${id}`);
       toast.success('Bank account removed');
