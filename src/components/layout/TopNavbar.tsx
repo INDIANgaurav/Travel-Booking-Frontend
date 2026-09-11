@@ -4,6 +4,7 @@ import { Plane, Building2, Briefcase, User, ChevronDown, ArrowLeft, Heart, Menu,
 import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/authSlice';
 import LoginModal from '../auth/LoginModal';
+import { useConfirm } from '../../context/ConfirmContext';
 
 interface TopNavbarProps {
   onMenuClick?: () => void;
@@ -18,6 +19,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
+  const confirm = useConfirm();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -39,11 +41,20 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
     ? 'bg-[#1e3a8a] border-[#1e3a8a] py-3 shadow-md' 
     : (isNavWhite ? 'bg-white shadow-md border-gray-200 py-3' : 'bg-transparent border-transparent py-4');
 
-  const handleLogout = () => {
-    navigate('/');
-    setTimeout(() => {
-      dispatch(logout());
-    }, 0);
+  const handleLogout = async () => {
+    const isConfirmed = await confirm({
+      title: 'Logout',
+      message: 'Are you sure you want to log out?',
+      confirmText: 'Logout',
+      isDestructive: true
+    });
+    
+    if (isConfirmed) {
+      navigate('/');
+      setTimeout(() => {
+        dispatch(logout());
+      }, 0);
+    }
   };
 
   return (
@@ -63,7 +74,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 <Menu size={24} />
               </button>
             )}
-            {location.pathname !== '/' && !onMenuClick && (
+            {location.pathname !== '/' && !location.pathname.startsWith('/page/') && !onMenuClick && (
               <button 
                 onClick={() => navigate(-1)} 
                 className={`p-2 rounded-full transition ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}

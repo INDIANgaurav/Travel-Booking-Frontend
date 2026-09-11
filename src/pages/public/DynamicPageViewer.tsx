@@ -41,11 +41,11 @@ export default function DynamicPageViewer() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-12">
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex justify-center items-center h-64 bg-white rounded-3xl shadow-sm border border-slate-200">
             <Loader2 className="animate-spin text-blue-600" size={40} />
           </div>
         ) : error ? (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-slate-200">
+          <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-200">
             <h1 className="text-2xl font-bold text-slate-800 mb-2">Page Not Found</h1>
             <p className="text-slate-500">The content you are looking for is currently unavailable or has not been published yet.</p>
           </div>
@@ -58,7 +58,8 @@ export default function DynamicPageViewer() {
               }}
             />
             <div 
-              className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-a:text-blue-600 text-slate-700 leading-relaxed"
+              className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-a:text-blue-600 text-slate-800 font-medium leading-relaxed break-words overflow-hidden [&_*]:!text-slate-800"
+              style={{ overflowWrap: 'anywhere' }}
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(content.replace(/TrippeChalo/gi, '<span class="text-blue-600 font-bold mx-1">TrippeChalo</span>')) 
               }}

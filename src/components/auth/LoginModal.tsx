@@ -23,7 +23,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       />
       
       {/* Modal Container */}
-      <div className="relative z-10 w-[95%] max-w-[850px] h-[90vh] md:h-[500px] bg-white rounded-2xl shadow-2xl flex animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-[95%] max-w-[950px] h-[90vh] md:h-[500px] bg-white rounded-2xl shadow-2xl flex animate-in zoom-in-95 duration-200">
         
         {/* Close Button - Absolutely positioned outside the modal visually */}
         <button 

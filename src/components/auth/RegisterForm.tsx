@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import api from '../../services/api';
 import { auth } from '../../config/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 interface RegisterFormProps {
@@ -272,7 +272,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
         <div className="flex items-center gap-2 my-4">
           <input type="checkbox" id="terms" className="rounded text-blue-600 focus:ring-blue-500" required />
           <label htmlFor="terms" className="text-xs text-gray-600">
-            I agree to the <a href="#" className="text-blue-600 font-semibold hover:underline">Terms & Conditions</a> and <a href="#" className="text-blue-600 font-semibold hover:underline">Privacy Policy</a>
+            I agree to the <Link to="/page/TermsConditions" target="_blank" className="text-blue-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/page/PrivacyPolicy" target="_blank" className="text-blue-600 font-semibold hover:underline">Privacy Policy</Link>
           </label>
         </div>
 
