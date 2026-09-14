@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CreditCard, Banknote, Calendar, MessageSquare, History } from 'lucide-react';
+import DOBCalendar from '../../../components/ui/DOBCalendar';
 
 interface AssignCreditModalProps {
   isOpen: boolean;
@@ -81,12 +82,13 @@ export default function AssignCreditModal({ isOpen, onClose, user, onSave }: Ass
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="flex text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 gap-2"><Calendar size={14}/> Expiry Date</label>
-                  <input 
-                    type="date" 
-                    value={expiryDate}
-                    onChange={e => setExpiryDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  />
+                  <div className="h-[46px] flex items-center">
+                    <DOBCalendar 
+                      value={expiryDate}
+                      onChange={setExpiryDate}
+                      placeholder="Select Date"
+                    />
+                  </div>
                   <p className="text-[10px] text-gray-400 font-semibold mt-2">* Available balance will be locked automatically on expiry.</p>
                 </div>
               </div>

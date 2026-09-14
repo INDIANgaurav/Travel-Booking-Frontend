@@ -3,6 +3,7 @@ import { Search, Download, FileText, X, Check, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import Dropdown from '../../components/ui/Dropdown';
+import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -99,22 +100,24 @@ const SupplierQueueHistory: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">From Date*</label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
-              />
+              <div className="h-[34px] flex items-center">
+                <DOBCalendar
+                  value={fromDate}
+                  onChange={setFromDate}
+                  placeholder="Select Date"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">To Date*</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
-              />
+              <div className="h-[34px] flex items-center">
+                <DOBCalendar
+                  value={toDate}
+                  onChange={setToDate}
+                  placeholder="Select Date"
+                />
+              </div>
             </div>
 
             <div>

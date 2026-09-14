@@ -6,6 +6,7 @@ import Dropdown from '../../components/ui/Dropdown';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import ETicketModal from '../../components/bookings/ETicketModal';
+import DOBCalendar from '../../components/ui/DOBCalendar';
 
 interface BookingRecord {
   _id: string;
@@ -219,21 +220,23 @@ const SupplierBookingHistory: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] text-gray-600 mb-1">From {dateType === 'booking' ? 'Booking' : 'Travel'} Date</label>
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="w-full text-xs px-3 py-1.5 border border-gray-300 rounded bg-white"
-                  />
+                  <div className="h-[28px] flex items-center">
+                    <DOBCalendar
+                      value={fromDate}
+                      onChange={setFromDate}
+                      placeholder="Select Date"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[11px] text-gray-600 mb-1">To {dateType === 'booking' ? 'Booking' : 'Travel'} Date</label>
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="w-full text-xs px-3 py-1.5 border border-gray-300 rounded bg-white"
-                  />
+                  <div className="h-[28px] flex items-center">
+                    <DOBCalendar
+                      value={toDate}
+                      onChange={setToDate}
+                      placeholder="Select Date"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

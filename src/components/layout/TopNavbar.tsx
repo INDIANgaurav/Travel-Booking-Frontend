@@ -222,11 +222,11 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       )}
                     </div>
                     <span className="hidden md:flex items-center gap-1">
-                        {user?.displayOnProfileIcon === 'Company Name' 
-                          ? (user?.companyName || user?.name?.split(' ')[0] || 'User')
-                          : user?.displayOnProfileIcon === 'Show Both'
-                            ? `${user?.companyName || 'Company'} (${user?.name?.split(' ')[0] || 'User'})`
-                            : (user?.name?.split(' ')[0] || 'User')
+                        {user?.displayOnProfileIcon === 'Company Name' && user?.companyName
+                          ? user?.companyName
+                          : user?.displayOnProfileIcon === 'Show Both' && user?.companyName
+                            ? `${user?.companyName} (${user?.name || 'User'})`
+                            : (user?.name || 'User')
                         }
                       <ChevronDown size={14} />
                     </span>
@@ -241,11 +241,11 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         <div className="px-4 py-4 border-b border-gray-100 bg-slate-50 mb-2 rounded-t-xl">
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Logged In As</p>
                           <p className="text-base font-black text-slate-900 truncate mt-1">
-                            {user?.displayOnProfileIcon === 'Company Name' 
-                              ? (user?.companyName || user?.name)
-                              : user?.displayOnProfileIcon === 'Show Both'
-                                ? `${user?.companyName || 'Company'} (${user?.name})`
-                                : user?.name
+                            {user?.displayOnProfileIcon === 'Company Name' && user?.companyName
+                              ? user?.companyName
+                              : user?.displayOnProfileIcon === 'Show Both' && user?.companyName
+                                ? `${user?.companyName} (${user?.name})`
+                                : user?.name || 'User'
                             }
                           </p>
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>

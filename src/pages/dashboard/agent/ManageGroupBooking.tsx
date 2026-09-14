@@ -4,6 +4,7 @@ import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
 import { ArrowLeft, Save } from 'lucide-react';
+import DOBCalendar from '../../../components/ui/DOBCalendar';
 
 export default function ManageGroupBooking() {
   const { id } = useParams();
@@ -168,12 +169,13 @@ export default function ManageGroupBooking() {
 
                 <div className="md:col-span-2">
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Date of Birth *</label>
-                  <input 
-                    type="date" 
-                    value={p.dob} 
-                    onChange={(e) => handleInputChange(index, 'dob', e.target.value)}
-                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 bg-white"
-                  />
+                  <div className="h-[38px] flex items-center">
+                    <DOBCalendar 
+                      value={p.dob} 
+                      onChange={(val) => handleInputChange(index, 'dob', val)}
+                      placeholder="Select Date"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

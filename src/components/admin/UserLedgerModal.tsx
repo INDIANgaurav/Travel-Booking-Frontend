@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, Download, RefreshCw, FileText } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import DOBCalendar from '../../components/ui/DOBCalendar';
 
 interface LedgerModalProps {
   isOpen: boolean;
@@ -83,23 +84,19 @@ export default function UserLedgerModal({ isOpen, onClose, userId, userName }: L
         {/* Filters */}
         <div className="p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
-              <Calendar size={14} className="text-gray-400" />
-              <input 
-                type="date" 
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 h-[34px] focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+              <DOBCalendar 
                 value={fromDate}
-                onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-                className="bg-transparent text-xs text-gray-700 font-medium focus:outline-none"
+                onChange={(val) => { setFromDate(val); setPage(1); }}
+                placeholder="Select Date"
               />
             </div>
             <span className="text-xs text-gray-400 font-medium">to</span>
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
-              <Calendar size={14} className="text-gray-400" />
-              <input 
-                type="date" 
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 h-[34px] focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+              <DOBCalendar 
                 value={toDate}
-                onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-                className="bg-transparent text-xs text-gray-700 font-medium focus:outline-none"
+                onChange={(val) => { setToDate(val); setPage(1); }}
+                placeholder="Select Date"
               />
             </div>
           </div>

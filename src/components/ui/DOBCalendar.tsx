@@ -9,9 +9,10 @@ interface DOBCalendarProps {
   maxDate?: Date;
   initialDate?: Date;
   placeholder?: string;
+  dropdownPosition?: 'top' | 'bottom';
 }
 
-export default function DOBCalendar({ value, onChange, minDate, maxDate, initialDate, placeholder = 'dd-mm-yyyy' }: DOBCalendarProps) {
+export default function DOBCalendar({ value, onChange, minDate, maxDate, initialDate, placeholder = 'dd-mm-yyyy', dropdownPosition = 'bottom' }: DOBCalendarProps) {
   const [isOpen, setIsOpen] = useState(false);
   
   const parseValue = (val: string | Date | undefined) => {
@@ -85,7 +86,7 @@ export default function DOBCalendar({ value, onChange, minDate, maxDate, initial
       </div>
 
       {isOpen && (
-        <div className="absolute top-[110%] left-0 z-50 bg-white border border-gray-200 rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.1)] w-[290px] p-4 animate-in fade-in zoom-in duration-200 select-none">
+        <div className={`absolute ${dropdownPosition === 'top' ? 'bottom-[110%]' : 'top-[110%]'} left-0 z-50 bg-white border border-gray-200 rounded-lg shadow-[0_10px_30px_rgba(0,0,0,0.1)] w-[290px] p-4 animate-in fade-in zoom-in duration-200 select-none`}>
           
           <div className="flex justify-between items-center mb-5">
             <button 

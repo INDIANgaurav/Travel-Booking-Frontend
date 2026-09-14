@@ -3,7 +3,7 @@ import { Users, Plus, Calendar as CalendarIcon, Hash } from 'lucide-react';
 import api from '../../../services/api';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
-
+import DOBCalendar from '../../../components/ui/DOBCalendar';
 interface Traveller {
   _id?: string;
   firstName: string;
@@ -94,7 +94,12 @@ export default function TravellersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required />
               <Input label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} required />
-              <Input label="Date of Birth" type="date" value={dob} onChange={e => setDob(e.target.value)} required icon={<CalendarIcon size={18} />} />
+              <div className="w-full flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Date of Birth</label>
+                <div className="flex-1 flex items-center h-[42px]">
+                  <DOBCalendar value={dob} onChange={setDob} maxDate={new Date()} placeholder="Select Date" />
+                </div>
+              </div>
               
               <div className="w-full flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Gender</label>

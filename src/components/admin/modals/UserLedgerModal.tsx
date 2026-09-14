@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, Search, Filter } from 'lucide-react';
 import api from '../../../services/api';
+import DOBCalendar from '../../../components/ui/DOBCalendar';
 
 interface UserLedgerModalProps {
   isOpen: boolean;
@@ -81,11 +82,15 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
           <div className="px-6 py-4 bg-white border-t border-gray-100 flex flex-wrap gap-4 items-end">
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">From Date</label>
-              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700" />
+              <div className="h-[38px] flex items-center">
+                <DOBCalendar value={fromDate} onChange={setFromDate} placeholder="Select Date" />
+              </div>
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">To Date</label>
-              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700" />
+              <div className="h-[38px] flex items-center">
+                <DOBCalendar value={toDate} onChange={setToDate} placeholder="Select Date" />
+              </div>
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Category</label>
