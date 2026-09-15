@@ -603,6 +603,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                 <th className="p-3 text-right">SELL FARE</th>
                 <th className="p-3 text-center">FLIGHT</th>
                 <th className="p-3 text-center">FARE ID</th>
+                <th className="p-3 text-center">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -651,11 +652,27 @@ const AdminSeriesFareMaker: React.FC = () => {
                       <td className="p-3 text-right font-bold text-blue-600">₹{sellFare}</td>
                       <td className="p-3 text-center font-mono text-gray-500 text-[10px]">{fare.flightNo}</td>
                       <td className="p-3 text-center">
+                        <span className="font-mono text-gray-500 text-[11px]">{fare.sfId}</span>
+                      </td>
+                      <td className="p-3 text-center">
                         <button 
-                          onClick={() => setExpandedId(isExpanded ? null : fare._id)}
-                          className="text-blue-600 font-bold hover:underline font-mono text-[11px]"
+                          onClick={() => {
+                            setExpandedId(isExpanded ? null : fare._id);
+                            if (!isExpanded) {
+                              setEditBuffer({
+                                adtFare: fare.adtFare,
+                                agentCommission: fare.agentCommission,
+                                totalSeats: fare.totalSeats,
+                                availableSeats: fare.availableSeats,
+                                flightNo: fare.flightNo,
+                                airlinePnr: fare.airlinePnr
+                              });
+                            }
+                          }}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-1.5 rounded transition-colors"
+                          title="Edit Fare"
                         >
-                          {fare.sfId}
+                          <Edit2 size={14} />
                         </button>
                       </td>
                     </tr>
