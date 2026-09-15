@@ -121,7 +121,14 @@ export default function AdminUsers() {
                   <td className="px-6 py-4 font-medium text-gray-600">
                     {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex justify-end gap-2">
+                    <button 
+                      onClick={() => window.location.href = `/admin/user-profile/${user._id}`}
+                      className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border border-blue-200"
+                      title="View Details"
+                    >
+                      View
+                    </button>
                     {!user.roles?.includes('SUPER_ADMIN') && (
                       <button 
                         onClick={() => handleDelete(user._id)}

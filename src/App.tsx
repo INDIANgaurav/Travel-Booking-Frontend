@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding } from './store/authSlice'
+import { useSelector, useDispatch } from 'react-redux'
+import { useEffect } from 'react'
+import { selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout } from './store/authSlice'
 
 // Pages
 import LandingPage from './pages/public/LandingPage'
@@ -120,6 +121,26 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
   const showAgentOnboarding = useSelector(selectShowAgentOnboarding)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      dispatch(logout());
+    };
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+  }, [dispatch]);
+
+  // Validate token on app load if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      import('./services/api').then(({ default: api }) => {
+        api.get('/api/users/profile').catch(() => {
+          // If it fails (e.g. 401), the interceptor will automatically trigger 'auth-unauthorized'
+        });
+      });
+    }
+  }, [isAuthenticated]);
 
   const getRedirectPath = (roles: string[] = []) => {
     if (roles.includes('SUPER_ADMIN')) return '/admin';

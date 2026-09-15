@@ -15,7 +15,7 @@ export default function AdminFlightSalesReport() {
   const [records, setRecords] = useState('10');
 
   const headers = [
-    'Booking Status', 'Basefare', 'Tax', 'Comm', 'GST_Comm', 'TDS_Comm', 
+    'Agent Name', 'Company Name', 'Booking Status', 'Basefare', 'Tax', 'Comm', 'GST_Comm', 'TDS_Comm', 
     'MF', 'GST_MF', 'Yq', 'Tfee', 'Markup', 'Additional Markup', 
     'Invoice Total', 'PayMode', 'Channel', 'Journey Type', 'Ticket Number', 
     'Passenger Email', 'Txid', 'SF', 'Fare Type', 'Remarks'
@@ -61,7 +61,9 @@ export default function AdminFlightSalesReport() {
 
   const renderRow = (row: any) => (
     <tr key={row.id} className="hover:bg-slate-50/50 transition-colors group">
-      <td className="px-6 py-4 align-middle align-middle">
+      <td className="px-6 py-4 align-middle whitespace-nowrap font-bold text-gray-900">{row.agentName}</td>
+      <td className="px-6 py-4 align-middle whitespace-nowrap text-gray-600 text-sm">{row.companyName}</td>
+      <td className="px-6 py-4 align-middle">
         <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">{row.status}</span>
       </td>
       <td className="px-6 py-4 align-middle align-middle">{row.basefare}</td>

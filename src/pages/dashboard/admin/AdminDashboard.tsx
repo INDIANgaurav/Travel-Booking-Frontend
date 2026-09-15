@@ -67,7 +67,7 @@ export default function AdminDashboard() {
           <button onClick={() => navigate('/admin/users')} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition shadow-sm">
             + Add Agent
           </button>
-          <button onClick={() => navigate('/admin/settings/markups')} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-sm shadow-blue-500/30">
+          <button onClick={() => toast.error('Global Markups settings coming soon!')} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-sm shadow-blue-500/30">
             Update Markups
           </button>
         </div>
@@ -187,9 +187,13 @@ export default function AdminDashboard() {
           </div>
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
             {activities.length > 0 ? (
-              activities.map((activity, idx) => (
-                <div key={idx} className="flex gap-3 items-start p-3 rounded-xl hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              activities.map((activity, index) => (
+                <div 
+                  key={index} 
+                  onClick={() => { if (activity.type === 'USER') navigate('/admin/users'); }}
+                  className="flex gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors animate-in fade-in slide-in-from-right-4 duration-300 cursor-pointer border border-transparent hover:border-gray-100 group"
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform ${
                     activity.type === 'BOOKING' ? 'bg-green-100 text-green-600' :
                     activity.type === 'USER' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
                   }`}>
