@@ -5,7 +5,11 @@ import { selectCurrentUser } from '../store/authSlice';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+  ? `${window.location.protocol}//${window.location.hostname}:5000`
+  : 'http://localhost:5000';
+
+const SOCKET_URL = import.meta.env.VITE_API_URL || defaultBaseUrl;
 
 export interface ActivityEvent {
   message: string;
