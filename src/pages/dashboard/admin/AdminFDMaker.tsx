@@ -742,18 +742,18 @@ const AdminSeriesFareMaker: React.FC = () => {
                                     <td className="p-2.5 font-mono">{fare.arrivalTime}</td>
                                     <td className="p-2.5">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.adtFare === 0 ? '' : (editBuffer.adtFare ?? fare.adtFare)}
-                                        onChange={e => setEditBuffer({ ...editBuffer, adtFare: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                                        onChange={e => setEditBuffer({ ...editBuffer, adtFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.adtFare}
                                         className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.adtFare ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
                                       />
                                     </td>
                                     <td className="p-2.5">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.agentCommission === 0 ? '' : (editBuffer.agentCommission ?? fare.agentCommission ?? 0)}
-                                        onChange={e => setEditBuffer({ ...editBuffer, agentCommission: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                                        onChange={e => setEditBuffer({ ...editBuffer, agentCommission: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.commission}
                                         className={`w-16 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.commission ? 'bg-gray-100 text-gray-500' : 'text-emerald-600 bg-white'}`}
                                         title="Agent Commission"
@@ -761,38 +761,38 @@ const AdminSeriesFareMaker: React.FC = () => {
                                     </td>
                                     <td className="p-2.5">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.chdFare === 0 ? '' : (editBuffer.chdFare ?? fare.chdFare)}
-                                        onChange={e => setEditBuffer({ ...editBuffer, chdFare: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                                        onChange={e => setEditBuffer({ ...editBuffer, chdFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.chdFare}
                                         className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.chdFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white'}`}
                                       />
                                     </td>
                                     <td className="p-2.5">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.infFare === 0 ? '' : (editBuffer.infFare ?? fare.infFare)}
-                                        onChange={e => setEditBuffer({ ...editBuffer, infFare: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                                        onChange={e => setEditBuffer({ ...editBuffer, infFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.infFare}
-                                        className={`w-20 px-2 py-1 border border-gray-300 rounded text-xs ${!editFlags.infFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white'}`}
+                                        className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.infFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white'}`}
                                       />
                                     </td>
                                     <td className="p-2.5 text-center">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.totalSeats === 0 ? '' : (editBuffer.totalSeats ?? fare.totalSeats)}
-                                        onChange={e => setNewFare({ ...newFare, totalSeats: e.target.value === '' ? '' : Number(e.target.value), availableSeats: e.target.value === '' ? '' : Number(e.target.value) } as any)}
+                                        onChange={e => setEditBuffer({ ...editBuffer, totalSeats: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.totalSeat}
-                                        className={`w-14 px-1 py-1 border border-gray-300 rounded text-center text-xs ${!editFlags.totalSeat ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
+                                        className={`w-16 px-1 py-1 border border-gray-300 rounded text-center font-bold text-xs ${!editFlags.totalSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
                                       />
                                     </td>
                                     <td className="p-2.5 text-center font-bold">
                                       <input 
-                                        type="number" 
+                                        type="text" 
                                         value={editBuffer.availableSeats === 0 ? '' : (editBuffer.availableSeats ?? fare.availableSeats)}
-                                        onChange={e => setEditBuffer({ ...editBuffer, availableSeats: e.target.value === '' ? ('' as any) : Number(e.target.value) })}
+                                        onChange={e => setEditBuffer({ ...editBuffer, availableSeats: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.availSeat}
-                                        className={`w-14 px-1 py-1 border border-gray-300 rounded text-center text-xs font-bold ${!editFlags.availSeat ? 'bg-gray-100 text-gray-500 font-normal' : 'text-gray-900 bg-white'}`}
+                                        className={`w-16 px-1 py-1 border border-gray-300 rounded text-center font-bold text-xs ${!editFlags.availSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
                                       />
                                     </td>
                                     <td className="p-2.5 text-center font-bold text-emerald-700">
