@@ -103,6 +103,16 @@ const SupplierManagement = () => {
     }
   };
 
+  const handleToggleCug = async (supplier: Supplier) => {
+    try {
+      await api.put(`/api/suppliers/${supplier._id}`, { ...supplier, cugEnabled: !supplier.cugEnabled });
+      toast.success(`CUG ${!supplier.cugEnabled ? 'Enabled' : 'Disabled'} for ${supplier.name}`);
+      fetchSuppliers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error toggling CUG');
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       <div className="flex justify-between items-center">
@@ -138,12 +148,22 @@ const SupplierManagement = () => {
                   </h3>
                   <p className="text-xs text-gray-500">Credit Limit: ₹{supplier.creditLimit.toLocaleString()}</p>
                 </div>
-                <button onClick={() => {
-                  setCurrentSupplier(supplier);
-                  setIsModalOpen(true);
-                }} className="text-gray-400 hover:text-blue-600">
-                  <Edit2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 cursor-pointer" onClick={() => handleToggleCug(supplier)}>
+                    <span className="text-[10px] font-bold text-gray-500">CUG</span>
+                    <button 
+                      className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${supplier.cugEnabled ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${supplier.cugEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                  <button onClick={() => {
+                    setCurrentSupplier(supplier);
+                    setIsModalOpen(true);
+                  }} className="text-gray-400 hover:text-blue-600">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
