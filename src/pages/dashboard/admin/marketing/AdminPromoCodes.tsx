@@ -208,11 +208,11 @@ const AdminPromoCodes = () => {
                           </div>
                           {promo.conditions?.supplierId ? (
                             <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded">
-                              Owner: {promo.conditions.supplierId.companyName || promo.conditions.supplierId.name || 'Supplier'}
+                              Created By: {promo.conditions.supplierId.companyName || promo.conditions.supplierId.name || 'Supplier'}
                             </div>
                           ) : (
                             <div className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
-                              Owner: Admin (Global)
+                              Created By: System Admin
                             </div>
                           )}
                           <div className="text-xs text-gray-500 line-clamp-1" title={promo.description}>{promo.description}</div>
@@ -236,9 +236,23 @@ const AdminPromoCodes = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${promo.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {promo.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                        {!promo.isActive ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                            Inactive
+                          </span>
+                        ) : (promo.maxUses > 0 && promo.usedCount >= promo.maxUses) ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                            Exhausted
+                          </span>
+                        ) : new Date(promo.validTo) < new Date() ? (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+                            Expired
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                            Active
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
