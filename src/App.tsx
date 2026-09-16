@@ -74,6 +74,7 @@ import AdminSMSSettings from './pages/dashboard/admin/settings/AdminSMSSettings'
 import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
 import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
 import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
+import AdminNotifications from './pages/dashboard/admin/AdminNotifications'
 import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
 import AdminGroupBookings from './pages/dashboard/admin/AdminGroupBookings'
 import AdminUserProfile from './pages/dashboard/admin/AdminUserProfile'
@@ -166,7 +167,7 @@ function App() {
   return (
     <ConfirmProvider>
       <BrowserRouter>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" containerStyle={{ top: 80 }} />
       <AgentOnboardingModal isOpen={showAgentOnboarding} />
       <Routes>
         {/* Partner Routes */}
@@ -313,6 +314,7 @@ function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="queue" element={<AdminPendingQueue />} />
+          <Route path="notifications" element={<AdminNotifications />} />
           <Route path="pending-users" element={<AdminPendingUsers />} />
           <Route path="manage-users" element={<AdminManageUsers />} />
           <Route path="users" element={<AdminUsers />} />

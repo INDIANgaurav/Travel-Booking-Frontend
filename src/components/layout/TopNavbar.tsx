@@ -5,6 +5,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/authSlice';
 import LoginModal from '../auth/LoginModal';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useAdminSocket } from '../../hooks/useAdminSocket';
+import { Bell } from 'lucide-react';
 
 interface TopNavbarProps {
   onMenuClick?: () => void;
@@ -25,6 +27,8 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { unreadCount } = useAdminSocket();
+  const isAdmin = user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -123,7 +127,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                   </div>
                 </Link>
               </>
-            ) : (
+            ) : !isAdmin ? (
               <>
                 {/* List Your Property */}
                 <Link to="/partner/connect" className={`hidden md:flex items-center gap-1 lg:gap-2 cursor-pointer transition px-2 py-1.5 lg:px-3 lg:py-1.5 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
@@ -192,6 +196,21 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                   </div>
                 )}
               </>
+            ) : null}
+
+            {/* Admin Notifications */}
+            {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN')) && (
+              <button 
+                onClick={() => navigate('/admin/notifications')}
+                className={`relative p-2 rounded-full transition-colors ml-2 ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white min-w-[20px] text-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
             )}
 
             {/* Login / User Button */}

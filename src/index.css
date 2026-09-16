@@ -11,6 +11,25 @@
     scrollbar-gutter: stable;
   }
   
+  /* Global button and clickable element interactions */
+  button, 
+  [role="button"],
+  a {
+    @apply transition-all duration-200 cursor-pointer;
+  }
+  
+  button:active, 
+  [role="button"]:active,
+  a:active {
+    @apply scale-[0.97];
+  }
+  
+  button:hover:not(:disabled),
+  [role="button"]:hover:not(:disabled),
+  a:hover {
+    @apply opacity-80;
+  }
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   .hidden-scrollbar::-webkit-scrollbar {
     display: none;
