@@ -95,11 +95,11 @@ const B2BAccountStatement: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#f8f9fc] p-6 text-[#0c1a40] min-h-screen">
-      <div className="max-w-[1500px] mx-auto flex flex-col gap-6">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Header Bar */}
-        <div className="bg-white px-8 py-5 rounded-t-xl rounded-b-md shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center justify-between">
+        <div className="bg-white px-4 md:px-8 py-4 md:py-5 rounded-t-xl rounded-b-md shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <h2 className="text-[13px] font-black uppercase tracking-wide text-[#0c1a40]">ACCOUNT STATEMENT</h2>
           <div className="text-[11px] font-bold text-gray-500">
             Available Balance = <span className="text-[#0c1a40] font-black">{agentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
@@ -110,11 +110,11 @@ const B2BAccountStatement: React.FC = () => {
         <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
           
           {/* Statement Types Row */}
-          <div className="px-8 py-5 border-b border-gray-50">
-            <div className="flex items-center gap-10">
+          <div className="px-4 md:px-8 py-4 md:py-5 border-b border-gray-50">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 sm:gap-10">
               {['Mini Statement', 'Month Wise Statement', 'Date Range Statement'].map(type => (
                 <label key={type} className="flex items-center gap-3 cursor-pointer text-xs font-bold text-[#0c1a40]">
-                  <div className={`w-[18px] h-[18px] rounded-full border-[2px] flex items-center justify-center ${statementType === type ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
+                  <div className={`w-[18px] h-[18px] rounded-full border-[2px] flex items-center justify-center shrink-0 ${statementType === type ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
                     {statementType === type && <div className="w-2 h-2 rounded-full bg-[#0c1a40]" />}
                   </div>
                   <input 
@@ -134,33 +134,29 @@ const B2BAccountStatement: React.FC = () => {
           </div>
 
           {/* Dynamic Inputs Row */}
-          <div className="px-8 py-6 bg-white min-h-[110px] flex items-end gap-6">
+          <div className="px-4 md:px-8 py-4 md:py-6 bg-white min-h-[110px] flex flex-col md:flex-row items-stretch md:items-end gap-4 md:gap-6">
             {statementType === 'Date Range Statement' && (
               <>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 w-full md:w-auto">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">From Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative z-50 bg-white flex items-center px-4">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
-                      <DOBCalendar value={fromDate} onChange={setFromDate} />
-                    </div>
+                  <div className="w-full md:w-[200px] h-[42px] relative z-[60]">
+                    <DOBCalendar value={fromDate} onChange={setFromDate} />
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 w-full md:w-auto">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">To Date</span>
-                  <div className="w-[200px] h-[42px] border border-gray-200 rounded-lg relative z-50 bg-white flex items-center px-4">
-                    <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
-                      <DOBCalendar value={toDate} onChange={setToDate} />
-                    </div>
+                  <div className="w-full md:w-[200px] h-[42px] relative z-[50]">
+                    <DOBCalendar value={toDate} onChange={setToDate} />
                   </div>
                 </div>
               </>
             )}
 
             {statementType === 'Month Wise Statement' && (
-              <>
+              <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">Month</span>
-                  <div className="w-[180px] h-[42px]">
+                  <div className="w-full md:w-[180px] h-[42px]">
                     <Dropdown 
                       value={month} 
                       onChange={(val) => { setMonth(val); setPage(1); }}
@@ -170,7 +166,7 @@ const B2BAccountStatement: React.FC = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <span className="text-[11px] font-black tracking-wide text-[#0c1a40]">Year</span>
-                  <div className="w-[160px] h-[42px]">
+                  <div className="w-full md:w-[160px] h-[42px]">
                     <Dropdown 
                       value={year} 
                       onChange={(val) => { setYear(val); setPage(1); }}
@@ -178,19 +174,19 @@ const B2BAccountStatement: React.FC = () => {
                     />
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-2 md:mt-0">
               <button 
                 onClick={() => fetchData()}
-                className="bg-[#0b1031] text-white px-8 h-[42px] rounded-full text-xs font-bold hover:bg-blue-900 transition shadow-md"
+                className="bg-[#0b1031] text-white flex-1 md:flex-none px-8 h-[42px] rounded-full text-xs font-bold hover:bg-blue-900 transition shadow-md whitespace-nowrap"
               >
                 Get Statement
               </button>
               <button 
                 onClick={() => fetchData()}
-                className="bg-white text-gray-700 w-[42px] h-[42px] flex items-center justify-center rounded-full hover:bg-gray-50 transition shadow-md border border-gray-200"
+                className="bg-white shrink-0 text-gray-700 w-[42px] h-[42px] flex items-center justify-center rounded-full hover:bg-gray-50 transition shadow-md border border-gray-200"
                 title="Refresh Data"
               >
                 <RefreshCw size={18} className={loading ? 'animate-spin text-[#0b1031]' : ''} />
@@ -200,25 +196,25 @@ const B2BAccountStatement: React.FC = () => {
         </div>
 
         {/* Columns Selector */}
-        <div className="bg-white px-8 py-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-y-6 gap-x-4">
+        <div className="bg-white px-4 md:px-8 py-4 md:py-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-y-4 md:gap-y-6 gap-x-2 md:gap-x-4">
             {ALL_COLUMNS.map(col => (
-              <label key={col} className="flex items-center gap-3 cursor-pointer text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition group">
+              <label key={col} className="flex items-center gap-2 md:gap-3 cursor-pointer text-[10px] md:text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition group">
                 <input 
                   type="checkbox" 
                   checked={selectedColumns.includes(col)}
                   onChange={() => toggleColumn(col)}
-                  className="w-[14px] h-[14px] rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
+                  className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] shrink-0 rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
                 />
-                <span className="truncate">{col}</span>
+                <span className="truncate leading-tight">{col}</span>
               </label>
             ))}
-            <label className="flex items-center gap-3 cursor-pointer text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition">
+            <label className="flex items-center gap-2 md:gap-3 cursor-pointer text-[10px] md:text-[11px] font-bold text-[#0c1a40] hover:text-blue-600 transition">
               <input 
                 type="checkbox" 
                 checked={selectedColumns.length === ALL_COLUMNS.length}
                 onChange={() => toggleColumn('ALL')}
-                className="w-[14px] h-[14px] rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
+                className="w-[12px] h-[12px] md:w-[14px] md:h-[14px] shrink-0 rounded-sm text-[#0b1031] focus:ring-[#0b1031] border-gray-300 cursor-pointer"
               />
               <span className="truncate">ALL</span>
             </label>
@@ -226,7 +222,7 @@ const B2BAccountStatement: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-3 w-full md:w-[450px]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full md:w-[450px]">
           <span className="text-[11px] font-bold text-gray-500 whitespace-nowrap">Search By</span>
           <div className="relative w-full">
             <input 
@@ -250,7 +246,8 @@ const B2BAccountStatement: React.FC = () => {
 
         {/* Data Table */}
         <div className="bg-white rounded-md shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-10">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-[10px] whitespace-nowrap">
               <thead className="bg-[#0b1031] text-white font-semibold uppercase">
                 <tr>
@@ -328,22 +325,96 @@ const B2BAccountStatement: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards View */}
+          <div className="md:hidden flex flex-col divide-y divide-gray-200 border-t border-gray-200">
+            {loading ? (
+              <div className="px-5 py-10 text-center text-gray-400 text-sm font-bold">Loading data...</div>
+            ) : data.length === 0 ? (
+              <div className="px-5 py-12 text-center text-gray-500 font-medium text-sm">No Records Found.</div>
+            ) : (
+              data.map((row, index) => {
+                const formatVal = (val: any) => {
+                  if (val instanceof Date || (typeof val === 'string' && val.includes('T') && val.includes('Z'))) {
+                    return new Date(val).toLocaleString('en-IN');
+                  }
+                  if (typeof val === 'number') {
+                    return val.toFixed(2);
+                  }
+                  return val;
+                };
+
+                const sNo = (page - 1) * limit + index + 1;
+
+                return (
+                  <div key={row.sNo} className="p-4 flex flex-col gap-3 bg-white">
+                    <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                      <span className="text-[10px] font-black text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase tracking-widest">S.NO #{sNo}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-3">
+                      {ALL_COLUMNS.filter(c => selectedColumns.includes(c)).map(col => {
+                        const keyMap: Record<string, keyof typeof row> = {
+                          'User Name': 'passengerName', 
+                          'Reference No.': 'referenceNo',
+                          'PNR': 'pnr',
+                          'Product Name': 'productName',
+                          'Description': 'description',
+                          'Passenger Name': 'passengerName',
+                          'Mobile Number': 'userRemarks', 
+                          'Date Time': 'dateTime',
+                          'Gross Amount': 'grossAmount',
+                          'Markup': 'markup',
+                          'Commission': 'commission',
+                          'TDS': 'tds',
+                          'SGST': 'sgst',
+                          'CGST': 'cgst',
+                          'IGST': 'igst',
+                          'Penalty': 'penalty',
+                          'Credit': 'credit',
+                          'Net Amount Debited': 'netAmountDebited',
+                          'Promo Amount': 'promoAmount',
+                          'Amount': 'amount',
+                          'User Remarks': 'userRemarks',
+                          'Balance': 'balance'
+                        };
+                        
+                        const key = keyMap[col];
+                        const val = row[key];
+                        
+                        const isFullWidth = col === 'Description' || col === 'Product Name' || col === 'User Remarks';
+                        
+                        return (
+                          <div key={col} className={`${isFullWidth ? 'col-span-2' : ''}`}>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{col}</p>
+                            <p className={`text-[11px] font-bold break-words ${col === 'Reference No.' ? 'text-blue-600' : 'text-[#0c1a40]'}`}>
+                              {formatVal(val) || '-'}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
           
           {/* Pagination Controls */}
           {data.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-[#f8fafc]">
-              <div className="text-xs font-semibold text-gray-500">
+            <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-[#f8fafc] gap-4 sm:gap-0">
+              <div className="text-[11px] sm:text-xs font-semibold text-gray-500 text-center sm:text-left">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of <span className="text-[#0b1031] font-bold">{totalRecords}</span> entries
               </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1 || loading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg text-[11px] sm:text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
-                  Previous
+                  Prev
                 </button>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto max-w-[120px] sm:max-w-none scrollbar-hide">
                   {[...Array(totalPages)].map((_, idx) => {
                     const p = idx + 1;
                     if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
@@ -351,14 +422,14 @@ const B2BAccountStatement: React.FC = () => {
                         <button
                           key={p}
                           onClick={() => setPage(p)}
-                          className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                          className={`w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-lg text-[11px] sm:text-xs font-bold transition flex items-center justify-center ${page === p ? 'bg-[#0b1031] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                           {p}
                         </button>
                       );
                     }
                     if (p === page - 2 || p === page + 2) {
-                      return <span key={p} className="text-gray-400 text-xs">...</span>;
+                      return <span key={p} className="text-gray-400 text-xs px-1">...</span>;
                     }
                     return null;
                   })}
@@ -366,7 +437,7 @@ const B2BAccountStatement: React.FC = () => {
                 <button 
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages || loading}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg text-[11px] sm:text-xs font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                   Next
                 </button>

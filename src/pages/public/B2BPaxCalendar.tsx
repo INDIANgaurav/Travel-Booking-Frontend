@@ -158,68 +158,72 @@ const B2BPaxCalendar: React.FC = () => {
   });
 
   return (
-    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40] relative">
-      <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 relative">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between border-b border-gray-100 pb-4 mb-4 md:mb-6 gap-3 sm:gap-0">
           <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">PAX CALENDAR</h2>
-          <div className="flex items-center gap-4 text-xs font-bold">
-            <button onClick={handlePrevMonth} className="text-gray-500 hover:text-blue-600 transition">&lt;&lt; Prev Month</button>
-            <span className="text-gray-300">|</span>
-            <button onClick={handleNextMonth} className="text-gray-500 hover:text-blue-600 transition">Next Month &gt;&gt;</button>
+          <div className="flex items-center gap-4 text-xs font-bold w-full sm:w-auto justify-between sm:justify-end bg-gray-50 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+            <button onClick={handlePrevMonth} className="text-gray-500 hover:text-blue-600 transition">&lt;&lt; Prev</button>
+            <span className="text-gray-300 hidden sm:inline">|</span>
+            <button onClick={handleNextMonth} className="text-gray-500 hover:text-blue-600 transition">Next &gt;&gt;</button>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col md:flex-row items-end justify-between mb-8">
-          <div className="flex items-end gap-4 w-full md:w-auto">
-            <div className="w-[200px]">
-              <label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Month</label>
-              <Dropdown 
-                value={selectedMonth}
-                onChange={setSelectedMonth}
-                options={months}
-                className="w-full"
-              />
-            </div>
-            <div className="w-[200px]">
-              <label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Year</label>
-              <Dropdown 
-                value={selectedYear}
-                onChange={setSelectedYear}
-                options={years}
-                className="w-full"
-              />
+        <div className="flex flex-col md:flex-row items-end justify-between mb-6 md:mb-8 gap-4 md:gap-0">
+          <div className="flex flex-col sm:flex-row items-end gap-3 md:gap-4 w-full md:w-auto">
+            <div className="grid grid-cols-2 gap-3 w-full sm:flex sm:w-auto">
+              <div className="w-full sm:w-[160px]">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Month</label>
+                <Dropdown 
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  options={months}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-full sm:w-[120px]">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Year</label>
+                <Dropdown 
+                  value={selectedYear}
+                  onChange={setSelectedYear}
+                  options={years}
+                  className="w-full"
+                />
+              </div>
             </div>
             <button 
               onClick={fetchPaxData}
               disabled={loading}
-              className="bg-[#0b1031] text-white px-6 py-2 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[38px] disabled:opacity-50"
+              className="bg-[#0b1031] text-white px-6 py-2 w-full sm:w-auto rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[38px] disabled:opacity-50"
             >
               {loading ? 'Fetching...' : 'Fetch'}
             </button>
           </div>
           
-          <div className="text-[11px] text-gray-500 font-bold mt-4 md:mt-0">
+          <div className="text-[11px] text-gray-500 font-bold self-center md:self-auto w-full text-center md:text-right bg-gray-50 md:bg-transparent py-2 rounded-lg md:rounded-none md:py-0">
             {totalRecords} records in {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-[1000px]">
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="w-full md:min-w-[1000px]">
             {/* Days Header */}
-            <div className="grid grid-cols-7 gap-4 mb-4">
-              {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
-                <div key={day} className="bg-[#f8f9fc] py-3 text-center rounded-lg text-xs font-black text-[#0c1a40]">
-                  {day}
+            <div className="grid grid-cols-7 gap-1 md:gap-4 mb-2 md:mb-4">
+              {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
+                <div key={day} className="bg-[#f8f9fc] py-2 md:py-3 text-center rounded-md md:rounded-lg text-[10px] md:text-xs font-black text-[#0c1a40]">
+                  <span className="hidden md:inline">{day}</span>
+                  <span className="md:hidden">{day.charAt(0)}</span>
                 </div>
               ))}
             </div>
 
             {/* Dates Grid */}
-            <div className="grid grid-cols-7 gap-4">
+            <div className="grid grid-cols-7 gap-1 md:gap-4">
               {calendarCells.map((day, index) => {
                 const dayBookings = day ? bookingsByDay[day] : undefined;
                 const hasBookings = dayBookings && dayBookings.length > 0;
@@ -228,14 +232,14 @@ const B2BPaxCalendar: React.FC = () => {
                   <div 
                     key={index}
                     onClick={() => hasBookings && day && setSelectedDay(day)}
-                    className={`min-h-[140px] border border-gray-100 rounded-lg p-2 transition-colors flex flex-col ${
-                      day ? (hasBookings ? 'cursor-pointer hover:border-blue-400 hover:shadow-md bg-white' : 'bg-white hover:bg-gray-50') : 'bg-gray-50/50'
+                    className={`min-h-[50px] md:min-h-[140px] border border-gray-100 rounded-md md:rounded-lg p-1 md:p-2 transition-colors flex flex-col items-center md:items-stretch ${
+                      day ? (hasBookings ? 'cursor-pointer hover:border-blue-400 hover:shadow-md bg-white border-blue-200' : 'bg-white hover:bg-gray-50') : 'bg-gray-50/50 border-transparent'
                     }`}
                   >
                     {day && (
                       <>
-                        <div className="flex justify-center mb-2">
-                          <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-black ${
+                        <div className="flex justify-center mb-1 md:mb-2 w-full">
+                          <span className={`w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full text-[10px] md:text-xs font-black ${
                             hasBookings ? 'bg-[#0b1031] text-white shadow-md' : 'text-gray-400 border border-gray-200'
                           }`}>
                             {day}
@@ -243,21 +247,31 @@ const B2BPaxCalendar: React.FC = () => {
                         </div>
                         
                         {hasBookings && (
-                          <div className="flex flex-col gap-1.5">
-                            {dayBookings.slice(0, 2).map((pax, i) => (
-                              <div key={i} className="bg-[#f4f6fb] rounded p-2 text-center text-[#0b1031]">
-                                <div className="text-[9px] font-black uppercase truncate">{pax.passengerName}</div>
-                                <div className="text-[9px] font-medium text-gray-600 mt-0.5">{pax.route}</div>
-                                <div className="text-[10px] font-bold mt-0.5">{pax.pnr}</div>
-                              </div>
-                            ))}
-                            
-                            {dayBookings.length > 2 && (
-                              <button className="text-[10px] font-bold text-[#0b1031] underline mt-1 text-center hover:text-blue-600">
-                                More ({dayBookings.length - 2})
-                              </button>
-                            )}
-                          </div>
+                          <>
+                            {/* Mobile Pax Badge */}
+                            <div className="md:hidden mt-auto mb-1 flex justify-center w-full">
+                              <span className="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm">
+                                {dayBookings.length} PAX
+                              </span>
+                            </div>
+
+                            {/* Desktop Pax Details */}
+                            <div className="hidden md:flex flex-col gap-1.5">
+                              {dayBookings.slice(0, 2).map((pax, i) => (
+                                <div key={i} className="bg-[#f4f6fb] rounded p-2 text-center text-[#0b1031]">
+                                  <div className="text-[9px] font-black uppercase truncate">{pax.passengerName}</div>
+                                  <div className="text-[9px] font-medium text-gray-600 mt-0.5">{pax.route}</div>
+                                  <div className="text-[10px] font-bold mt-0.5 truncate">{pax.pnr}</div>
+                                </div>
+                              ))}
+                              
+                              {dayBookings.length > 2 && (
+                                <button className="text-[10px] font-bold text-[#0b1031] underline mt-1 text-center hover:text-blue-600">
+                                  More ({dayBookings.length - 2})
+                                </button>
+                              )}
+                            </div>
+                          </>
                         )}
                       </>
                     )}
@@ -266,8 +280,9 @@ const B2BPaxCalendar: React.FC = () => {
               })}
             </div>
           </div>
-        </div>
+          </div>
       </div>
+    </div>
 
       {/* Details Modal */}
       {selectedDay && bookingsByDay[selectedDay] && (

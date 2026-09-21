@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { User, Users, Smartphone, LogOut, KeyRound, ChevronDown, Building2, Camera, Pencil } from 'lucide-react';
 import api from '../../../services/api';
 import { useDispatch, useSelector } from 'react-redux';
-import { setCredentials, logout, selectCurrentUser } from '../../../store/authSlice';
+import {  setCredentials, logout, logoutUserThunk, selectCurrentUser } from '../../../store/authSlice';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../../../components/layout/TopNavbar';
@@ -196,7 +196,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     navigate('/');
     setTimeout(() => {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
     }, 0);
   };
 
@@ -337,54 +337,56 @@ export default function ProfilePage() {
                   </span>
                 )}
               </h1>
-              <div className="flex items-center gap-4 mt-2 text-sm font-bold text-white/90 drop-shadow">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm font-bold text-white/90 drop-shadow">
                 <span className="flex items-center gap-1.5"><Smartphone size={14}/> {profile?.phone || 'Add Phone'}</span>
-                <span className="flex items-center gap-1.5"><User size={14}/> {profile?.email}</span>
+                <span className="flex items-center gap-1.5 max-w-[200px] sm:max-w-none truncate"><User size={14} className="shrink-0"/> <span className="truncate">{profile?.email}</span></span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content Card */}
-        <div className="max-w-[1200px] mx-auto px-6 mt-12 relative pb-20">
-          <div className="bg-gradient-to-br from-slate-50/90 to-blue-50/80 backdrop-blur-3xl border border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] flex min-h-[600px] items-start overflow-hidden relative">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mt-12 relative pb-20">
+          <div className="bg-gradient-to-br from-slate-50/90 to-blue-50/80 backdrop-blur-3xl border border-white/60 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] flex flex-col lg:flex-row min-h-[600px] items-start overflow-hidden relative">
             {/* Subtle inner glow */}
             <div className="absolute top-0 left-1/4 w-1/2 h-full bg-blue-100/30 blur-3xl rounded-full pointer-events-none"></div>
           
-            {/* Left Sidebar Menu - Sticky */}
-            <div className="w-[280px] border-r border-gray-100 bg-gray-50/30 py-8 flex flex-col sticky top-[80px] h-[calc(100vh-100px)] overflow-y-auto hidden-scrollbar">
-              <div className="px-8 mb-6">
+            {/* Left Sidebar Menu - Sticky on Desktop */}
+            <div className="w-full lg:w-[280px] border-b lg:border-b-0 lg:border-r border-gray-100 bg-white/80 lg:bg-gray-50/30 py-4 lg:py-8 flex flex-col lg:sticky top-[80px] h-auto lg:h-[calc(100vh-100px)] z-20">
+              <div className="overflow-x-auto lg:overflow-y-auto hidden-scrollbar w-full">
+              <div className="px-4 lg:px-8 mb-2 lg:mb-6 shrink-0 hidden lg:block">
                 <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">MY ACCOUNT</p>
               </div>
               
-              <nav className="flex flex-col gap-2 px-4">
+              <nav className="flex flex-row lg:flex-col gap-2 px-2 lg:px-4 shrink-0 min-w-max pb-2 lg:pb-0">
                 <button 
                   onClick={() => setActiveTab('profile')}
-                  className={`flex items-center gap-4 px-5 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'profile' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
+                  className={`flex items-center gap-2 lg:gap-4 px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-300 ${activeTab === 'profile' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 lg:translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
                 >
                   <User size={18} className={activeTab === 'profile' ? 'text-blue-200' : ''} /> My Profile
                 </button>
                 <button 
                   onClick={() => setActiveTab('travellers')}
-                  className={`flex items-center gap-4 px-5 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'travellers' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
+                  className={`flex items-center gap-2 lg:gap-4 px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-300 ${activeTab === 'travellers' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 lg:translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
                 >
-                  <Users size={18} className={activeTab === 'travellers' ? 'text-blue-200' : ''} /> Co-Travellers
+                  <Users size={18} className={activeTab === 'travellers' ? 'text-blue-200' : ''} /> <span className="whitespace-nowrap">Co-Travellers</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('devices')}
-                  className={`flex items-center gap-4 px-5 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'devices' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
+                  className={`flex items-center gap-2 lg:gap-4 px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-300 ${activeTab === 'devices' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 lg:translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
                 >
-                  <Smartphone size={18} className={activeTab === 'devices' ? 'text-blue-200' : ''} /> Logged In Devices
+                  <Smartphone size={18} className={activeTab === 'devices' ? 'text-blue-200' : ''} /> <span className="whitespace-nowrap">Devices</span>
                 </button>
                 <button 
                   onClick={() => setActiveTab('properties')}
-                  className={`flex items-center gap-4 px-5 py-3.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'properties' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
+                  className={`flex items-center gap-2 lg:gap-4 px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-xl text-xs lg:text-sm font-bold transition-all duration-300 ${activeTab === 'properties' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 lg:translate-x-1' : 'text-gray-600 hover:bg-white hover:shadow-sm hover:text-blue-600'}`}
                 >
-                  <Building2 size={18} className={activeTab === 'properties' ? 'text-blue-200' : ''} /> My Properties
+                  <Building2 size={18} className={activeTab === 'properties' ? 'text-blue-200' : ''} /> <span className="whitespace-nowrap">Properties</span>
                 </button>
               </nav>
+              </div>
 
-              <div className="mt-auto px-4 pb-4 space-y-1">
+              <div className="mt-auto px-4 pb-4 space-y-1 shrink-0 hidden lg:block">
                 <div className="border-t border-gray-200 my-6 mx-4"></div>
                 <button 
                   onClick={handleLogout}
@@ -399,24 +401,24 @@ export default function ProfilePage() {
             </div>
 
             {/* Right Content Area */}
-            <div className="flex-1 p-10 relative z-10">
+            <div className="flex-1 p-4 lg:p-10 w-full relative z-10">
             
             {activeTab === 'profile' && (
               <>
-                <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200/60">
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">My Profile</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8 pb-4 lg:pb-6 border-b border-gray-200/60">
+                  <h2 className="text-xl lg:text-2xl font-black text-gray-900 tracking-tight">My Profile</h2>
                   <button 
                     onClick={() => handleUpdate()}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 px-6 lg:px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
                   >
                     SAVE CHANGES
                   </button>
                 </div>
 
             {/* General Information */}
-            <div className="mb-10">
-              <h3 className="font-bold text-lg text-gray-900 mb-5 flex items-center gap-2"><User size={20} className="text-blue-600"/> General Information</h3>
-              <div className="grid grid-cols-2 gap-5">
+            <div className="mb-8 lg:mb-10">
+              <h3 className="font-bold text-base lg:text-lg text-gray-900 mb-4 lg:mb-5 flex items-center gap-2"><User size={20} className="text-blue-600"/> General Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
                 <div className="bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all rounded-xl p-3.5">
                   <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">First & Middle Name</label>
                   <input 
@@ -475,7 +477,7 @@ export default function ProfilePage() {
               <h3 className="font-bold text-lg text-gray-900 mb-1 flex items-center gap-2"><Smartphone size={20} className="text-blue-600"/> Contact Details</h3>
               <p className="text-sm text-gray-500 mb-5 ml-7">Add contact information to receive booking details & other alerts</p>
               
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
                 <div className="bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all rounded-xl p-3.5 flex justify-between items-center group">
                   <div className="w-full pr-4">
                     <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">Mobile Number</label>
@@ -510,7 +512,7 @@ export default function ProfilePage() {
               <h3 className="font-bold text-lg text-gray-900 mb-1 flex items-center gap-2"><KeyRound size={20} className="text-blue-600"/> Documents Details</h3>
               <p className="text-sm text-gray-500 mb-5 ml-7">Add your documents for seamless international and domestic travel.</p>
               
-              <div className="grid grid-cols-2 gap-5 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 mb-4 lg:mb-5">
                 <div className="bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all rounded-xl p-3.5">
                   <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">Passport Number</label>
                   <input 
@@ -532,7 +534,7 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
                 <div className="bg-gray-50/50 hover:bg-gray-50 focus-within:bg-white border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all rounded-xl p-3.5">
                   <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">Passport Expiry Date</label>
                   <DOBCalendar 

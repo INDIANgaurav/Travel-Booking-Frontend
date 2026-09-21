@@ -259,7 +259,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-blue-200">Items requiring your attention</p>
           </div>
           <div className="flex-1 flex flex-col justify-center gap-4 relative z-10">
-            <div className="bg-white/10 hover:bg-white/20 transition cursor-pointer p-4 rounded-xl border border-white/10 flex justify-between items-center backdrop-blur-sm" onClick={() => navigate('/admin/users')}>
+            <div className="bg-white/10 hover:bg-white/20 transition cursor-pointer p-4 rounded-xl border border-white/10 flex justify-between items-center backdrop-blur-sm" onClick={() => navigate('/admin/manage-users')}>
               <div className="flex items-center gap-3">
                 <div className="bg-blue-500/30 p-2 rounded-lg text-blue-300"><Users size={18}/></div>
                 <span className="font-bold text-sm">Agent KYC</span>

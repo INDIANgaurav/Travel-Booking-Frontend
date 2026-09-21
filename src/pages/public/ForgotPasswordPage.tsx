@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { KeyRound, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -11,6 +11,8 @@ export default function ForgotPasswordPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const portal = searchParams.get('portal');
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +20,7 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
     try {
-      const response = await api.post('/api/auth/forgot-password', { email });
+      const response = await api.post('/api/auth/forgot-password', { email, portal });
       setStep(2);
       toast.success(response.data.message || 'OTP sent to your email!');
     } catch (error: any) {

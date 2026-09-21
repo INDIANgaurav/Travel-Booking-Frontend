@@ -235,7 +235,8 @@ export default function B2BWalletPage() {
   const totalPayable = currentAmount + surcharge;
 
   return (
-    <div className="w-full">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-[#0c1a40] flex items-center gap-2">
@@ -252,8 +253,8 @@ export default function B2BWalletPage() {
           
           {/* Balance Card */}
           <div className="bg-gradient-to-r from-[#0c1a40] to-blue-900 rounded-2xl p-8 shadow-md border border-gray-100 flex justify-between items-center text-white relative overflow-hidden">
-            <div className="absolute right-0 top-0 opacity-10">
-              <Wallet size={120} className="-mr-6 -mt-6" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
+              <Wallet size={100} />
             </div>
             <div className="relative z-10">
               <p className="text-blue-100 font-bold text-sm uppercase tracking-wider mb-2">Available Balance</p>
@@ -283,7 +284,7 @@ export default function B2BWalletPage() {
             </div>
             
             {/* Tabs */}
-            <div className="flex overflow-x-auto border-b border-gray-200 hide-scrollbar px-2">
+            <div className="flex overflow-x-auto border-b border-gray-200 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2">
               {['INSTANT', 'NET_TRANSFER', 'CASH', 'CHEQUE', 'OTHER', 'WITHDRAW_FUNDS'].map((tab) => (
                 <button
                   key={tab}
@@ -495,7 +496,7 @@ export default function B2BWalletPage() {
                   <span>Refresh</span>
                 </button>
               </div>
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-white text-gray-500 font-bold uppercase border-b border-gray-100">
                     <tr>
@@ -531,29 +532,50 @@ export default function B2BWalletPage() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Mobile Card Layout for Requests */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {myOfflineRequests.map(req => (
+                  <div key={req._id} className="p-4 bg-white hover:bg-gray-50 flex flex-col gap-2 transition-colors">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#0b1031] text-xs">{req.paymentMode}</span>
+                      <span className="font-black text-blue-600 text-sm">₹{req.amount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] text-gray-500">
+                      <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+                      <span className="font-mono truncate max-w-[150px]">Ref: {req.referenceNumber || req.chequeNumber || '-'}</span>
+                    </div>
+                    <div className="mt-1">
+                      {req.status === 'PENDING' && <span className="inline-block px-2 py-1 bg-yellow-50 text-yellow-600 rounded text-[10px] font-bold">PENDING</span>}
+                      {req.status === 'APPROVED' && <span className="inline-block px-2 py-1 bg-green-50 text-green-600 rounded text-[10px] font-bold">APPROVED</span>}
+                      {req.status === 'REJECTED' && <span className="inline-block px-2 py-1 bg-red-50 text-red-600 rounded text-[10px] font-bold">REJECTED</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* Right Column: Transactions */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 h-full max-h-[800px] overflow-hidden flex flex-col">
-            <h2 className="text-lg font-black text-[#0c1a40] mb-6 flex items-center justify-between">
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-200 h-full max-h-[800px] overflow-hidden flex flex-col">
+            <h2 className="text-lg md:text-xl font-black text-[#0c1a40] mb-4 md:mb-6 flex items-center justify-between">
               Recent Transactions
             </h2>
             
-            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            <div className="flex-1 overflow-y-auto pr-1 md:pr-2 space-y-2 md:space-y-4">
               {pageLoading ? (
                 [1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 animate-pulse"></div>
+                  <div key={i} className="flex items-center justify-between py-2 px-1 md:p-4 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-gray-100 animate-pulse shrink-0"></div>
                       <div>
                         <div className="h-4 w-32 bg-gray-100 animate-pulse rounded mb-2"></div>
                         <div className="h-3 w-20 bg-gray-100 animate-pulse rounded"></div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <div className="h-4 w-16 bg-gray-100 animate-pulse rounded ml-auto mb-2"></div>
                       <div className="h-3 w-10 bg-gray-100 animate-pulse rounded ml-auto"></div>
                     </div>
@@ -569,22 +591,22 @@ export default function B2BWalletPage() {
                   <div 
                     key={idx} 
                     onClick={() => setSelectedTransaction(t)}
-                    className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200"
+                    className="flex flex-row items-center justify-between py-2.5 px-2 md:p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200 gap-2 md:gap-3"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                    <div className="flex items-center gap-2.5 md:gap-3 flex-1 min-w-0">
+                      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm md:text-base ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                         {t.type === 'CREDIT' ? '+' : '-'}
                       </div>
-                      <div className="min-w-0 flex-1 pr-3">
-                        <p className="font-bold text-[14px] text-[#0c1a40] leading-tight mb-1" title={t.description}>{t.description}</p>
-                        <p className="text-[11px] text-gray-500 font-bold">{new Date(t.date).toLocaleDateString()} • {new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-[12px] md:text-[14px] text-[#0c1a40] leading-tight mb-0.5 md:mb-1 truncate" title={t.description}>{t.description}</p>
+                        <p className="text-[10px] md:text-[11px] text-gray-500 font-bold">{new Date(t.date).toLocaleDateString()} • {new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className={`font-black text-[15px] ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <div className="text-right shrink-0 ml-1">
+                      <p className={`font-black text-[12px] md:text-[15px] ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-red-600'}`}>
                         {t.type === 'CREDIT' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                       </p>
-                      {t.paymentMethod && <p className="text-[10px] font-black text-gray-400 uppercase mt-0.5">{t.paymentMethod}</p>}
+                      {t.paymentMethod && <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase mt-0.5">{t.paymentMethod}</p>}
                     </div>
                   </div>
                 ))
@@ -663,6 +685,7 @@ export default function B2BWalletPage() {
         </div>
       )}
 
+      </div>
     </div>
   );
-}
+};

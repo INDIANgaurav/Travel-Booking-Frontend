@@ -215,8 +215,8 @@ const B2BOfflineBooking: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40]">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Header Title Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
@@ -317,7 +317,7 @@ const B2BOfflineBooking: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-8 items-center mb-8 text-xs font-semibold text-gray-700">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start md:items-center mb-8 text-xs font-semibold text-gray-700">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={formData.flexibilityPrice} onChange={(e) => handleInputChange('flexibilityPrice', e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#0c1a40] focus:ring-[#0c1a40]" />
                 Flexibility Price
@@ -358,7 +358,8 @@ const B2BOfflineBooking: React.FC = () => {
               {fetchingHistory ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
@@ -401,6 +402,53 @@ const B2BOfflineBooking: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden flex flex-col divide-y divide-gray-200 border-t border-gray-200">
+            {history.filter(h => activeTab === 'INTERNATIONAL BOOKING' ? h.flightDetails?.travelType === 'International' : h.flightDetails?.travelType !== 'International').length === 0 ? (
+              <div className="px-4 py-8 text-center text-gray-400 font-bold">No requests found</div>
+            ) : (
+              history
+                .filter(h => activeTab === 'INTERNATIONAL BOOKING' ? h.flightDetails?.travelType === 'International' : h.flightDetails?.travelType !== 'International')
+                .map((item, i) => (
+                  <div key={i} className="p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5">Route</p>
+                        <p className="font-black text-[#0c1a40] text-sm uppercase">{item.flightDetails?.origin} → {item.flightDetails?.destination}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest ${
+                        item.status === 'QUOTED' ? 'bg-blue-100 text-blue-700' :
+                        item.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                        item.status === 'APPROVED' || item.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {item.status || 'PENDING'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-1">
+                      <div>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Date</p>
+                        <p className="text-xs font-bold text-gray-800">{new Date(item.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Travel Date</p>
+                        <p className="text-xs font-bold text-gray-800">{item.flightDetails?.onwardDate}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Pax</p>
+                        <p className="text-xs font-bold text-gray-800">{item.requestedSeats?.total}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Quote (INR)</p>
+                        <p className="text-xs font-bold text-green-600">{item.quotePrice ? `₹${item.quotePrice.toLocaleString()}` : '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+              ))
+            )}
           </div>
         </div>
       </div>

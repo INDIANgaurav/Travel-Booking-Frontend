@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { useEffect } from 'react'
-import { selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout } from './store/authSlice'
+import {  selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout, logoutUserThunk } from './store/authSlice'
 
 // Pages
 import LandingPage from './pages/public/LandingPage'
@@ -126,7 +126,7 @@ function App() {
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
     };
     window.addEventListener('auth-unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);

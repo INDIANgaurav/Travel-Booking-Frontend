@@ -75,15 +75,17 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     }
   };
 
-  const renderMonth = (monthToRender: Date) => {
+  const renderMonth = (monthToRender: Date, isSecondMonth: boolean = false) => {
     const monthStart = startOfMonth(monthToRender);
     const monthEnd = endOfMonth(monthStart);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
     const startDayOfWeek = getDay(monthStart);
-    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="h-14"></div>);
+    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="h-10 sm:h-14"></div>);
     const totalCells = startDayOfWeek + days.length;
-    const trailingBlanks = Array.from({ length: 42 - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="h-14"></div>);
+    const rowsNeeded = Math.ceil(totalCells / 7);
+    const cellsNeeded = rowsNeeded * 7;
+    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="h-10 sm:h-14"></div>);
     
     const allCells = [
       ...blanks,
@@ -134,7 +136,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           <div 
             key={day.toString()} 
             onClick={() => !isPast && onDateClick(day)}
-            className={`flex flex-col items-center justify-center h-14 w-[calc(100%/7)] cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+            className={`flex flex-col items-center justify-center h-10 sm:h-14 w-[calc(100%/7)] cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
           >
             {holiday && !isPast && (
               <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
@@ -164,7 +166,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           </div>
         );
       }),
-      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-[calc(100%/7)] h-14"></div>)
+      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-[calc(100%/7)] h-10 sm:h-14"></div>)
     ];
 
     const mappedRows = [];
@@ -177,7 +179,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     }
 
     return (
-      <div className="flex-1 w-full sm:w-1/2 p-4">
+      <div className={`flex-1 w-full sm:w-1/2 p-2 sm:p-4 ${isSecondMonth ? 'hidden sm:block' : ''}`}>
         <h3 className="text-center font-bold text-gray-800 text-lg mb-6">
           {format(monthToRender, 'MMMM yyyy')}
         </h3>
@@ -192,13 +194,17 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
   };
 
   return (
-    <div className="bg-white rounded-xl w-[700px] z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
-      <div className="flex items-center justify-between px-6 py-4 bg-white">
+    <div className={`bg-white rounded-xl w-[340px] ${isOneWay ? 'sm:w-[340px]' : 'sm:w-[700px]'} shadow-2xl sm:shadow-none border border-gray-100 sm:border-none z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white">
         <div className="flex gap-4">
           <div className="font-bold text-gray-900 text-[18px]">
             {startDate ? format(startDate, 'd MMM yy') : 'Select Departure'} 
-            <span className="mx-2 font-normal">-</span>
-            {endDate ? format(endDate, 'd MMM yy') : 'Select Return'}
+            {!isOneWay && (
+              <>
+                <span className="mx-2 font-normal">-</span>
+                {endDate ? format(endDate, 'd MMM yy') : 'Select Return'}
+              </>
+            )}
           </div>
         </div>
         <button onClick={onClose} className="text-blue-600 font-bold hover:bg-blue-50 px-3 py-1 rounded-md transition text-sm">
@@ -206,7 +212,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
         </button>
       </div>
       
-      <div className="relative flex flex-col sm:flex-row p-4 pt-0 gap-4">
+      <div className="relative flex flex-col sm:flex-row p-2 sm:p-4 pt-0 gap-2 sm:gap-4">
         {/* Nav Arrows */}
         <button 
           onClick={handlePrevMonth}
@@ -221,8 +227,8 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           <ChevronRight size={20} />
         </button>
 
-        {renderMonth(currentMonth)}
-        {renderMonth(addMonths(currentMonth, 1))}
+        {renderMonth(currentMonth, false)}
+        {(!isOneWay || window.innerWidth >= 640) && renderMonth(addMonths(currentMonth, 1), true)}
       </div>
 
       <div className="px-6 py-3 bg-white border-t border-gray-100 text-[11px] text-gray-500 flex justify-between items-center">

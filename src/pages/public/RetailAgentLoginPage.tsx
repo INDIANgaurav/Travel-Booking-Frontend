@@ -183,7 +183,7 @@ const RetailAgentLoginPage: React.FC = () => {
           </form>
           
           <div className="text-xs text-white/90 font-medium mb-6">
-            Forgot your password? <button type="button" onClick={() => navigate('/forgot-password')} className="font-bold underline text-amber-300 hover:text-amber-200">Reset Here</button>
+            Forgot your password? <button type="button" onClick={() => navigate('/forgot-password?portal=b2b')} className="font-bold underline text-amber-300 hover:text-amber-200">Reset Here</button>
           </div>
 
           {error && (

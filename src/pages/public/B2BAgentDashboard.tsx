@@ -92,18 +92,18 @@ const B2BAgentDashboard: React.FC = () => {
   const isHome = location.pathname === '/b2b/dashboard' || location.pathname === '/b2b/dashboard/';
 
   return (
-    <main className="flex-1 w-full px-4 md:px-8 lg:px-12 xl:px-16 py-10">
+    <main className="flex-1 w-full md:px-8 lg:px-12 xl:px-16 py-6 md:py-10">
       
       {isHome ? (
         <>
           {/* Welcome Section */}
-          <div className="mb-8">
+          <div className="mb-8 px-4 md:px-0">
             <h1 className="text-[32px] font-black text-[#0c1a40] mb-1">Welcome back, {agentName}</h1>
             <p className="text-[13px] text-gray-500 font-semibold">Quick access to your B2B tools - {agentCode}.</p>
           </div>
 
       {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 px-4 md:px-0">
         {dashboardCards.map((card, index) => (
           <div 
             key={index} 
@@ -131,7 +131,7 @@ const B2BAgentDashboard: React.FC = () => {
       ) : (
         <>
           {/* Compact Horizontal Tabs for Sub-pages */}
-          <div className="mb-6 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="mb-6 flex items-center gap-3 overflow-x-auto pb-2 px-4 md:px-0 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {dashboardCards.map((card, index) => {
               const isActive = location.pathname.startsWith(card.path);
               return (
@@ -154,7 +154,9 @@ const B2BAgentDashboard: React.FC = () => {
           </div>
           
           {/* Sub-page Content */}
-          <Outlet />
+          <div className="px-0 md:px-0">
+            <Outlet />
+          </div>
         </>
       )}
 

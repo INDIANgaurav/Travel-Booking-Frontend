@@ -577,17 +577,17 @@ export default function FlightBookingPage() {
                    </div>
                  </div>
                  
-                 <div className="flex items-center gap-6 text-[12px] text-gray-800 font-bold border-t border-gray-100 pt-4 mb-2">
+                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-[12px] text-gray-800 font-bold border-t border-gray-100 pt-4 mb-2">
                     <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).cabinBaggage || 'Included'}</span></div>
                     <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🧳</span> Check-In Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).checkinBaggage || 'Included'}</span></div>
                  </div>
                </div>
 
-               <div className="px-4 py-3 bg-[#eaf5fe] text-[12px] flex items-center justify-between font-bold text-gray-800 border-t border-[#d6eaff]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-500 text-[16px]">🧳</span> Got excess baggage? Don't stress, buy extra check-in baggage allowance for {selectedOutbound.departureAirportCode}-{selectedOutbound.arrivalAirportCode} at fab rates!
+               <div className="px-4 py-3 bg-[#eaf5fe] text-[12px] flex flex-col sm:flex-row items-start sm:items-center justify-between font-bold text-gray-800 border-t border-[#d6eaff] gap-3">
+                  <div className="flex items-start sm:items-center gap-2">
+                    <span className="text-blue-500 text-[16px] mt-0.5 sm:mt-0">🧳</span> Got excess baggage? Don't stress, buy extra check-in baggage allowance for {selectedOutbound.departureAirportCode}-{selectedOutbound.arrivalAirportCode} at fab rates!
                   </div>
-                  <span className="text-blue-500 cursor-pointer uppercase">ADD BAGGAGE</span>
+                  <span className="text-blue-500 cursor-pointer uppercase shrink-0">ADD BAGGAGE</span>
                </div>
 
                <div className="p-4 border-t border-gray-200 bg-white flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
@@ -628,7 +628,7 @@ export default function FlightBookingPage() {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Title</label>
                           <div className={showErrors && !p.title ? "rounded-lg ring-1 ring-red-500" : ""}>
@@ -794,8 +794,8 @@ export default function FlightBookingPage() {
 
                <div className="px-6 py-2 border-t border-gray-100 bg-[#f4f4f4]">
                  <h3 className="font-bold text-[14px] text-gray-800 mb-4 mt-2">Booking details will be sent to</h3>
-                 <div className="flex gap-4">
-                   <div className="w-1/3">
+                 <div className="flex flex-col md:flex-row gap-4">
+                   <div className="w-full md:w-1/3">
                      <label className="text-[12px] text-gray-500 mb-1 block">Country Code <span className="text-red-500">*</span></label>
                      <Dropdown
                        value="India(91)"
@@ -805,11 +805,11 @@ export default function FlightBookingPage() {
                        ]}
                      />
                    </div>
-                   <div className="w-1/3">
+                   <div className="w-full md:w-1/3">
                      <label className="text-[12px] text-gray-500 mb-1 block">Mobile No <span className="text-red-500">*</span></label>
                      <input type="text" className="w-full border border-gray-300 bg-white rounded p-2 text-[13px]" defaultValue={user?.phone || '9876543210'} onChange={(e) => setContactPhone(e.target.value)} />
                    </div>
-                   <div className="w-1/3">
+                   <div className="w-full md:w-1/3">
                      <label className="text-[12px] text-gray-500 mb-1 block">Email <span className="text-red-500">*</span></label>
                      <input type="email" className="w-full border border-gray-300 bg-white rounded p-2 text-[13px]" defaultValue={user?.email || ''} onChange={(e) => setContactEmail(e.target.value)} />
                    </div>

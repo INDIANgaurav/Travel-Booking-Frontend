@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { Plane, Building2, Shield, ShieldCheck, CreditCard, Compass, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Users, Smile, Baby, ArrowRightLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/authSlice';
+import {  logout, logoutUserThunk } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import TravellerPicker from '../../components/common/TravellerPicker';
@@ -11,6 +11,7 @@ import CabinClassPicker from '../../components/common/CabinClassPicker';
 import CityPicker from '../../components/common/CityPicker';
 import TripTypePicker from '../../components/common/TripTypePicker';
 import { format } from 'date-fns';
+import B2BMobileBottomNav from '../../components/layout/B2BMobileBottomNav';
 
 interface Flight {
   _id: string;
@@ -133,7 +134,7 @@ export default function AgentFlightSearchResults(props: any) {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUserThunk() as any);
     props.navigate('/b2b/login');
   };
 
@@ -155,8 +156,8 @@ export default function AgentFlightSearchResults(props: any) {
           backgroundPosition: 'center center'
         }}
       >
-        <div className={`p-5 flex ${tripType === 'Round Trip' ? 'flex-col gap-4' : 'items-center justify-between'} relative z-10`}>
-           <div className={`flex items-center gap-3 ${tripType === 'Round Trip' ? 'w-full' : 'w-[22%]'}`}>
+        <div className={`p-5 flex flex-col ${tripType === 'Round Trip' ? 'gap-4' : 'md:flex-row md:items-center md:justify-between gap-4 md:gap-0'} relative z-10`}>
+           <div className={`flex items-center justify-between md:justify-start gap-3 w-full ${tripType === 'Round Trip' ? '' : 'md:w-[22%]'}`}>
              <img src={flight.airlineLogo} alt={flight.airline} className="w-8 h-8 object-contain" />
              <div>
                <p className="font-black text-gray-900 text-sm">{flight.airline}</p>
@@ -164,7 +165,7 @@ export default function AgentFlightSearchResults(props: any) {
              </div>
            </div>
            
-           <div className={`flex items-center justify-between ${tripType === 'Round Trip' ? 'w-full' : 'gap-6 w-[42%] text-center'}`}>
+           <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? '' : 'md:w-[42%] md:gap-6 text-center'}`}>
              <div className="text-left">
                <p className="font-black text-lg text-gray-900">{formatTime(flight.departureTime)}</p>
                <p className="text-[10px] text-gray-500 font-semibold">{flight.departureCity} ({flight.departureAirportCode})</p>
@@ -184,7 +185,7 @@ export default function AgentFlightSearchResults(props: any) {
              </div>
            </div>
 
-           <div className={`flex ${tripType === 'Round Trip' ? 'w-full items-center justify-between border-t border-gray-100 pt-3 mt-1' : 'w-[32%] flex-col items-end gap-2'}`}>
+           <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? 'border-t border-gray-100 pt-3 mt-1' : 'md:w-[32%] md:flex-col md:items-end gap-2 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-gray-100 md:border-t-0'}`}>
              <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-0.5' : 'items-end gap-0.5'}`}>
                <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
                {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
@@ -1408,7 +1409,7 @@ export default function AgentFlightSearchResults(props: any) {
 
       {/* Sticky Footer for Selection */}
       {tripType === 'Round Trip' && selectedOutbound && selectedReturn && createPortal(
-        <div className="fixed bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
+        <div className="fixed bottom-[70px] lg:bottom-0 left-0 w-full z-[30] pointer-events-none pb-0">
           <div className="max-w-[1240px] mx-auto flex gap-6 px-4">
             <div className="w-[260px] shrink-0 hidden md:block"></div>
             <div className="flex-1 bg-[#0b1031] text-white p-3 shadow-[0_-10px_30px_rgba(0,0,0,0.4)] rounded-t-lg flex items-center justify-between pointer-events-auto border-t border-blue-900">
@@ -1466,6 +1467,8 @@ export default function AgentFlightSearchResults(props: any) {
           </div>
         </div>
       , document.body)}
+      
+      <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </>
   );
 }

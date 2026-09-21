@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Tag, History, Layers, User, LogOut, Phone, Mail, ChevronDown, Briefcase } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectCurrentUser, setCredentials } from '../store/authSlice';
+import {  logout, logoutUserThunk, selectCurrentUser, setCredentials } from '../store/authSlice';
 import api from '../services/api';
+import SupplierMobileBottomNav from '../components/layout/SupplierMobileBottomNav';
 
 const SupplierDashboardLayout: React.FC = () => {
   const dispatch = useDispatch();
@@ -46,7 +47,7 @@ const SupplierDashboardLayout: React.FC = () => {
 
 
   const confirmLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUserThunk() as any);
     navigate('/supplier/login');
   };
 
@@ -57,25 +58,25 @@ const SupplierDashboardLayout: React.FC = () => {
     <div className="min-h-dvh bg-[#f1f5f9] flex flex-col font-sans text-gray-800">
       
       {/* Top Header - Dark Premium Theme */}
-      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+      <header className="bg-[#0b1031] px-3 sm:px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
         {/* Subtle background glow effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
         </div>
 
-        <div className="flex items-center gap-10 relative z-10">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/supplier-portal/dashboard')}>
-            <div className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8" crossOrigin="anonymous" />
+        <div className="flex items-center gap-2 sm:gap-10 relative z-10 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/supplier-portal/dashboard')}>
+            <div className="flex items-center justify-center bg-white p-1 sm:p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform shrink-0">
+              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
             </div>
-            <div>
-              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
-              <span className="block text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.2em] -mt-1">SUPPLIER PORTAL</span>
+            <div className="hidden min-[380px]:block">
+              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="block text-[8px] sm:text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] -mt-1">SUPPLIER PORTAL</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-5 relative z-10">
+        <div className="flex items-center gap-2 sm:gap-5 relative z-10">
           <div className="hidden lg:flex flex-col items-end">
             <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5">Support</span>
             <div className="flex items-center gap-1.5 text-blue-400 font-black text-xs bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
@@ -85,29 +86,29 @@ const SupplierDashboardLayout: React.FC = () => {
 
           <div 
             onClick={() => navigate('/supplier-portal/ledger')}
-            className="flex flex-col items-end cursor-pointer group ml-2"
+            className="flex flex-col items-end cursor-pointer group ml-1 sm:ml-2"
           >
-            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
-            <div className="flex items-center gap-1.5 text-green-400 font-black text-sm bg-green-500/10 px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+            <span className="hidden sm:block text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
+            <div className="flex items-center gap-1.5 text-green-400 font-black text-xs sm:text-sm bg-green-500/10 px-2 sm:px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
               <span>₹ {(currentUser?.walletBalance ?? currentUser?.balance ?? 0).toLocaleString('en-IN')}</span>
             </div>
           </div>
 
-          <div className="h-8 w-px bg-white/10 mx-1"></div>
+          <div className="hidden sm:block h-8 w-px bg-white/10 mx-1"></div>
 
           <div className="relative" ref={profileRef}>
             <div 
-              className="flex items-center gap-3 bg-white/5 px-2 py-1.5 pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              className="flex items-center gap-2 sm:gap-3 bg-white/5 px-1 sm:px-2 py-1 sm:py-1.5 pr-2 sm:pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
             >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
                 {supplierInitial}
               </div>
               <div className="text-left leading-tight hidden sm:block">
                 <span className="block text-[10px] text-gray-400 font-bold uppercase">Welcome:</span>
                 <span className="block text-xs font-black text-white truncate max-w-[120px]">{supplierName}</span>
               </div>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`hidden sm:block text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </div>
 
             {/* Profile Dropdown */}
@@ -150,7 +151,7 @@ const SupplierDashboardLayout: React.FC = () => {
       </header>
 
       {/* Navigation Bar - Dark Premium Theme */}
-      <nav className="bg-[#161c3f] border-b border-[#2a3461] px-6 lg:px-10 flex items-center gap-1 overflow-x-auto shadow-md">
+      <nav className="hidden lg:flex bg-[#161c3f] border-b border-[#2a3461] px-6 lg:px-10 items-center gap-1 overflow-x-auto shadow-md">
         <NavLink 
           to="/supplier-portal/dashboard"
           className={({ isActive }) => 
@@ -239,12 +240,12 @@ const SupplierDashboardLayout: React.FC = () => {
       </nav>
 
       {/* Main View Area */}
-      <main className="flex-1 p-6 w-full max-w-[1600px] mx-auto">
+      <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 w-full max-w-[1600px] mx-auto">
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#0b1031] border-t border-white/10 py-3 text-center text-xs text-gray-400">
+      <footer className="hidden lg:block bg-[#0b1031] border-t border-white/10 py-3 text-center text-xs text-gray-400">
         © 2026 TrippeChalo. All rights reserved. Supplier Portal 
       </footer>
 
@@ -273,6 +274,8 @@ const SupplierDashboardLayout: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Bottom Nav */}
+      <SupplierMobileBottomNav onProfileClick={() => setShowProfileMenu(true)} />
     </div>
   );
 };

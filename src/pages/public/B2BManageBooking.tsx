@@ -102,8 +102,8 @@ const B2BManageBooking: React.FC = () => {
   }, [productType, searchTab, statusType, fromDate, toDate, month, year, searchOption, searchValue]);
 
   return (
-    <div className="flex-1 w-full bg-[#ffffff] p-8 text-[#0c1a40] min-h-screen">
-      <div className="max-w-[1500px] mx-auto flex flex-col">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Top Product Selector Box */}
         <div className="bg-white px-3 py-3 rounded-xl border border-gray-200 flex items-center gap-2 w-fit mb-8 shadow-sm">
@@ -135,7 +135,7 @@ const B2BManageBooking: React.FC = () => {
         </div>
 
         {/* Search Tabs */}
-        <div className="flex border-b border-gray-100 mb-6">
+        <div className="flex overflow-x-auto hidden-scrollbar whitespace-nowrap border-b border-gray-100 mb-2 md:mb-6">
           {['SEARCH BY DATE', 'SEARCH BY MONTH', 'SEARCH BY OPTIONS'].map(tab => (
             <button
               key={tab}
@@ -153,7 +153,7 @@ const B2BManageBooking: React.FC = () => {
 
         {/* Status Radios */}
         {searchTab !== 'SEARCH BY OPTIONS' && (
-          <div className="flex items-center gap-8 mb-6 ml-2">
+          <div className="flex flex-wrap items-center gap-4 md:gap-8 mb-4 md:mb-6 ml-1 md:ml-2">
             {['LIVE BOOKING', 'CANCELLED BOOKING', 'HOLD BOOKING'].map(status => (
               <label key={status} className="flex items-center gap-3 cursor-pointer text-[11px] font-extrabold text-[#0c1a40] uppercase tracking-wide">
                 <input 
@@ -171,7 +171,7 @@ const B2BManageBooking: React.FC = () => {
 
         {/* Options Radios */}
         {searchTab === 'SEARCH BY OPTIONS' && (
-          <div className="flex items-center gap-6 mb-6 ml-2">
+          <div className="flex flex-wrap items-center gap-4 md:gap-6 mb-4 md:mb-6 ml-1 md:ml-2">
             {['RefNo', 'AirlinePNR', 'Passenger Mobile', 'Passenger Name', 'Ticket Number'].map(opt => (
               <label key={opt} className="flex items-center gap-2 cursor-pointer text-[11px] font-extrabold text-[#0c1a40] uppercase tracking-wide">
                 <input 
@@ -188,16 +188,16 @@ const B2BManageBooking: React.FC = () => {
         )}
 
         {/* Inputs Form Box */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-end gap-6 w-fit shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-end gap-4 md:gap-6 w-full md:w-fit shadow-sm">
           {searchTab === 'SEARCH BY DATE' && (
             <>
-              <div className="flex flex-col gap-2 w-56">
+              <div className="flex flex-col gap-2 w-full md:w-56">
                 <label className="text-xs font-extrabold text-[#0c1a40]">From Date</label>
                 <div className="h-[46px]">
                   <DOBCalendar value={fromDate} onChange={setFromDate} />
                 </div>
               </div>
-              <div className="flex flex-col gap-2 w-56">
+              <div className="flex flex-col gap-2 w-full md:w-56">
                 <label className="text-xs font-extrabold text-[#0c1a40]">To Date</label>
                 <div className="h-[46px]">
                   <DOBCalendar value={toDate} onChange={setToDate} />
@@ -208,7 +208,7 @@ const B2BManageBooking: React.FC = () => {
 
           {searchTab === 'SEARCH BY MONTH' && (
             <>
-              <div className="flex flex-col gap-2 w-56">
+              <div className="flex flex-col gap-2 w-full md:w-56">
                 <label className="text-xs font-extrabold text-[#0c1a40]">Month</label>
                 <Dropdown 
                   options={['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => ({ label: m, value: m }))}
@@ -217,7 +217,7 @@ const B2BManageBooking: React.FC = () => {
                   placeholder="Month"
                 />
               </div>
-              <div className="flex flex-col gap-2 w-56">
+              <div className="flex flex-col gap-2 w-full md:w-56">
                 <label className="text-xs font-extrabold text-[#0c1a40]">Year</label>
                 <Dropdown 
                   options={['2024', '2025', '2026', '2027'].map(y => ({ label: y, value: y }))}
@@ -230,7 +230,7 @@ const B2BManageBooking: React.FC = () => {
           )}
 
           {searchTab === 'SEARCH BY OPTIONS' && (
-            <div className="flex flex-col gap-2 w-80">
+            <div className="flex flex-col gap-2 w-full md:w-80">
               <input 
                 type="text"
                 placeholder={`Enter ${searchOption}`}
@@ -244,14 +244,16 @@ const B2BManageBooking: React.FC = () => {
           <button 
             onClick={() => handleGetHistory(1)}
             disabled={loading}
-            className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[46px]"
+            className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[46px] whitespace-nowrap w-full md:w-auto mt-2 md:mt-0"
           >
             {searchTab === 'SEARCH BY OPTIONS' ? (loading ? 'Loading...' : 'View Details') : (loading ? 'Loading...' : 'Get History')}
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mt-4 overflow-hidden min-h-[400px] flex flex-col">
-          <div className="overflow-x-auto flex-1">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mt-4 md:mt-0 min-h-[400px] flex flex-col">
+          
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto flex-1 rounded-xl">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-[#f1f5f9] text-gray-600 font-bold tracking-wider uppercase border-b border-gray-200">
                 <tr>
@@ -309,6 +311,65 @@ const B2BManageBooking: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden flex flex-col p-4 gap-4 flex-1">
+            {loading ? (
+              <div className="text-center text-gray-400 py-8">Loading data...</div>
+            ) : records.length === 0 ? (
+              <div className="py-12 text-center flex flex-col items-center gap-2">
+                <span className="text-orange-500 font-bold text-sm">No Records Found</span>
+                <span className="text-gray-400 font-normal">
+                  {hasSearched ? "Try adjusting your filters" : "Click the button to fetch bookings"}
+                </span>
+              </div>
+            ) : (
+              records.map((r, i) => (
+                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-3 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-0.5">Reference No</span>
+                      <span className="text-orange-500 font-black text-sm">{r.bookingId}</span>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-[9px] uppercase font-bold tracking-wider ${
+                      r.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                      r.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {r.status}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-y border-gray-50">
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-0.5">Date</span>
+                      <span className="text-gray-700 font-bold text-xs">{new Date(r.date || r.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-0.5">Total Amount</span>
+                      <span className="text-[#0c1a40] font-black">₹{r.totalAmount?.toLocaleString() || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Type</span>
+                      <span className="text-gray-700 font-bold text-xs">{r.type}</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSelectedBooking(r);
+                        setModalView('summary');
+                      }}
+                      className="bg-gray-50 border border-gray-200 px-4 py-1.5 rounded-lg text-blue-600 font-bold text-xs hover:bg-gray-100 transition"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           
           {/* Pagination Controls */}

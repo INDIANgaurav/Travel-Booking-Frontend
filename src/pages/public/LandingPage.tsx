@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp } from 'lucide-react';
+import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp, X, Check, EyeOff, Eye } from 'lucide-react';
+import MobileBottomNav from '../../components/layout/MobileBottomNav';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
 import api from '../../services/api';
@@ -158,7 +159,7 @@ export default function LandingPage() {
   const isNavWhite = isScrolled || isHovered;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
+    <div className="min-h-[100dvh] bg-gray-50 flex flex-col font-sans relative pb-24 lg:pb-0">
       
       {/* Scroll Background Airplane */}
       <ScrollAirplane />
@@ -195,7 +196,7 @@ export default function LandingPage() {
               }
             `}</style>
           </div>        {/* Search Widget Container */}
-        <div className={`mx-auto w-full px-4 relative z-10 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
+        <div className={`mx-auto w-full px-4 relative z-40 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
           
           {/* Welcome Headline */}
             <div className="text-center mb-6 lg:mb-8 animate-[fadeInUp_1s_ease-out]">
@@ -204,7 +205,7 @@ export default function LandingPage() {
               </h1>
             </div>
           {/* Top Tabs Pill */}
-          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] flex items-center justify-start lg:justify-between px-4 lg:px-6 py-3 mx-auto relative z-20 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-15px] lg:mb-[-30px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
+          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-start lg:justify-between px-4 lg:px-6 py-4 lg:py-5 mx-auto relative z-30 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-20px] lg:mb-[-40px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
             {[
               {name: 'Flights', icon: Plane}, {name: 'Hotels', icon: Building2}, {name: 'Villas & Homestays', icon: Map},
               {name: 'Holiday Packages', icon: Map}, {name: 'Trains', icon: Plane}, {name: 'Buses', icon: Bus},
@@ -212,19 +213,27 @@ export default function LandingPage() {
             ].map(tab => (
               <button
                 key={tab.name}
-                className={`flex flex-col items-center gap-1 relative min-w-[70px] ${activeTab === tab.name ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
+                className={`flex flex-col items-center gap-1.5 relative min-w-[80px] shrink-0 ${activeTab === tab.name ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
                 onClick={() => setActiveTab(tab.name)}
               >
                 <tab.icon size={22} className={activeTab === tab.name ? 'text-blue-600' : 'text-gray-400'} />
-                <span className="text-[11px] font-bold text-center leading-tight">{tab.name}</span>
+                <span className="text-[11px] font-bold text-center leading-tight whitespace-nowrap">{tab.name}</span>
                 {activeTab === tab.name && (
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-blue-600 rounded-t-full shadow-[0_-2px_10px_rgba(37,99,235,0.5)]"></div>
+                  <div className="absolute -bottom-4 lg:-bottom-5 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-blue-600 rounded-t-full shadow-[0_-2px_10px_rgba(37,99,235,0.5)]"></div>
                 )}
               </button>
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-12 lg:pb-8 px-4 lg:px-8 relative">
+          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-12 lg:pb-8 px-4 lg:px-8 relative z-20">
+            
+            {/* Click-away overlay */}
+            {(activeDatePicker || isFromPickerOpen || isToPickerOpen || isCabinPickerOpen || isBookingForOpen) && (
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={(e) => { e.stopPropagation(); closeAllPickers(); }}
+              ></div>
+            )}
             
             {activeTab === 'Flights' ? (
               <div className="relative pb-10 md:pb-0">
@@ -362,7 +371,7 @@ export default function LandingPage() {
                   </div>
 
                   {activeDatePicker === 'depart' && (
-                    <div className="absolute top-[100%] left-[-100px] z-50" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] left-0 sm:left-[-100px] z-50 mt-2 sm:mt-0" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={departureDate} 
                         endDate={null}
@@ -379,7 +388,7 @@ export default function LandingPage() {
                   )}
 
                   {activeDatePicker === 'return' && (
-                    <div className="absolute top-[100%] left-[-100px] z-50" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] right-0 sm:left-[-100px] sm:right-auto z-50 mt-2 sm:mt-0" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={returnDate} 
                         endDate={null}
@@ -604,7 +613,7 @@ export default function LandingPage() {
                     )}
 
                     {(activeDatePicker === 'depart' || activeDatePicker === 'return') && (
-                      <div className="absolute top-[100%] left-[-200px] z-50">
+                      <div className="absolute top-[100%] left-0 sm:left-[-200px] z-50 mt-2 sm:mt-0">
                         <DualMonthCalendar 
                           checkIn={departureDate} 
                           checkOut={returnDate}
@@ -878,6 +887,8 @@ export default function LandingPage() {
 
       {/* AI Chat Bot */}
       <ChatBot />
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav onProfileClick={() => isAuthenticated ? navigate('/dashboard/profile') : setIsLoginModalOpen(true)} />
     </div>
   );
 }

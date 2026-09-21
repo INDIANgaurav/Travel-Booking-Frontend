@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import TopNavbar from '../../components/layout/TopNavbar';
 import { ShieldAlert, Mail, Phone, ArrowLeft, Timer } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { logout } from '../../store/authSlice';
+import {  logout, logoutUserThunk } from '../../store/authSlice';
 
 const InactiveAccountPage = () => {
   const [timeLeft, setTimeLeft] = useState(20);
@@ -12,7 +12,7 @@ const InactiveAccountPage = () => {
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
       navigate('/');
       return;
     }
@@ -77,7 +77,7 @@ const InactiveAccountPage = () => {
             <div className="mt-8 pt-8 border-t border-gray-100 text-center">
               <button 
                 onClick={() => {
-                  dispatch(logout());
+                  dispatch(logoutUserThunk() as any);
                   navigate('/');
                 }}
                 className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold transition-colors cursor-pointer"

@@ -37,17 +37,16 @@ export default function TravellerPicker({ adults, children, infants, cabinClass,
         <span className="text-sm font-bold text-gray-800">{title}</span>
         <span className="text-[11px] text-gray-500">{subtitle}</span>
       </div>
-      <div className="flex gap-0 border border-gray-200 rounded-md overflow-hidden inline-flex shadow-sm">
+      <div className="flex gap-0 border border-gray-200 rounded-md overflow-x-auto hidden-scrollbar inline-flex shadow-sm max-w-full">
         {options.map((opt, idx) => {
           const isSelected = count === (typeof opt === 'number' ? opt : parseInt(opt.toString().replace('>', '')) + 1);
-          // For '>9' or '>6', we can just use the last option value logic
           const val = typeof opt === 'number' ? opt : parseInt(opt.toString().replace('>', '')) + 1;
           
           return (
             <button
               key={idx}
               onClick={() => setCount(val)}
-              className={`px-3 py-2 text-sm font-bold border-r border-gray-200 last:border-r-0 transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-sm font-bold border-r border-gray-200 last:border-r-0 transition-colors shrink-0 ${
                 isSelected 
                   ? 'bg-blue-600 text-white' 
                   : 'bg-white text-gray-700 hover:bg-blue-50'
@@ -63,7 +62,7 @@ export default function TravellerPicker({ adults, children, infants, cabinClass,
 
   return (
     <div 
-      className="bg-white rounded-xl w-[640px] z-50 p-6 cursor-default"
+      className="bg-white rounded-xl w-full max-w-[640px] max-h-[90vh] overflow-y-auto hidden-scrollbar z-50 p-4 sm:p-6 cursor-default flex flex-col"
       onClick={e => e.stopPropagation()}
     >
       {/* Adults Row */}
@@ -76,7 +75,7 @@ export default function TravellerPicker({ adults, children, infants, cabinClass,
       )}
 
       {/* Children and Infants Row */}
-      <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-6">
         {renderSelector(
           "CHILDREN (2y - 12y)",
           "on the day of travel",

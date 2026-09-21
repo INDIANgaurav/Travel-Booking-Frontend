@@ -6,11 +6,11 @@ import toast from 'react-hot-toast';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import Dropdown from '../../components/ui/Dropdown';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectCurrentUser, logout } from '../../store/authSlice';
+import {  selectCurrentUser, logout, logoutUserThunk } from '../../store/authSlice';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { LogOut, Users, ChevronDown, Check, Building2, ShieldCheck, MoreHorizontal, FileText, Briefcase, TrendingUp, Search } from 'lucide-react';
-
+import B2BMobileBottomNav from '../../components/layout/B2BMobileBottomNav';
 export interface Passenger {
   type: 'ADULT' | 'CHILD' | 'INFANT';
   title: string;
@@ -93,7 +93,7 @@ const B2BAgentCheckout: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUserThunk() as any);
     navigate('/b2b/login');
   };
 
@@ -1446,7 +1446,7 @@ const B2BAgentCheckout: React.FC = () => {
             </div>
 
             {/* Sticky Bottom Action Bar */}
-            <div className="sticky bottom-0 bg-[#f9fafc] p-4 px-6 flex justify-between items-center z-10 rounded-b-2xl">
+            <div className="sticky bottom-[70px] lg:bottom-0 bg-[#f9fafc] p-4 px-6 flex justify-between items-center z-10 rounded-b-2xl">
               <div className="flex flex-col">
                 <div className="text-sm font-black text-[#0c1a40]">
                   Total Payable <span className="text-emerald-500 text-lg ml-1">₹{(totalFare).toLocaleString('en-IN')}.00</span>
@@ -1473,6 +1473,8 @@ const B2BAgentCheckout: React.FC = () => {
           </div>
         </div>
       )}
+      
+      <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </div>
   );
 };

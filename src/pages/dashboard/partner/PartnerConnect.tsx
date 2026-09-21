@@ -126,8 +126,8 @@ export default function PartnerConnect() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="w-full lg:w-[55%] flex items-center justify-center p-8 lg:p-16">
-        <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+      <div className="w-full lg:w-[55%] flex items-center justify-center p-4 sm:p-8 lg:p-16">
+        <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           
           <div className="mb-8">
             <h2 className="text-2xl font-black text-gray-900">Register New Property</h2>
@@ -147,7 +147,7 @@ export default function PartnerConnect() {
                   <input type="text" name="name" required value={formData.name} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="e.g. Grand Taj Hotel" />
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">City *</label>
                     <input type="text" name="city" required value={formData.city} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Delhi" />
@@ -197,7 +197,7 @@ export default function PartnerConnect() {
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Upload Images (Max 5)</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
                     <input type="file" multiple accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     <UploadCloud size={40} className="text-gray-400 mb-3" />
                     <span className="text-sm font-medium text-gray-700">Click or drag images here</span>
@@ -205,11 +205,11 @@ export default function PartnerConnect() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 mt-6">
-                  <button type="button" onClick={() => setStep(1)} className="w-1/3 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-lg hover:bg-gray-200 transition">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
+                  <button type="button" onClick={() => setStep(1)} className="w-full sm:w-1/3 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-lg hover:bg-gray-200 transition order-2 sm:order-1">
                     Back
                   </button>
-                  <button type="submit" disabled={loading} className="w-2/3 bg-orange-500 text-white font-bold py-3.5 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 disabled:opacity-70">
+                  <button type="submit" disabled={loading} className="w-full sm:w-2/3 bg-orange-500 text-white font-bold py-3.5 rounded-lg hover:bg-orange-600 transition flex items-center justify-center gap-2 disabled:opacity-70 order-1 sm:order-2">
                     {loading ? 'Registering...' : 'List Property Now'}
                   </button>
                 </div>

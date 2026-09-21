@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store/store';
-import { logout } from '../../store/authSlice';
+import {  logout, logoutUserThunk } from '../../store/authSlice';
 import { ChevronDown, Check, Plane, Users, ArrowRightLeft, Calendar, FileText, Download, Briefcase, RefreshCw, X, Shield, Clock, TrendingUp, Building2, ShieldCheck, CreditCard, Compass, ArrowLeftRight, Search, LogOut, MoreHorizontal } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
@@ -13,6 +13,7 @@ import api from '../../services/api';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import B2BMobileBottomNav from '../../components/layout/B2BMobileBottomNav';
 
 const FALLBACK_CITIES = [
   { code: 'DEL', name: 'DELHI', airport: 'Indira Gandhi International Airport', country: 'India' },
@@ -166,7 +167,7 @@ const B2BAgentHomePage: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUserThunk() as any);
     sessionStorage.removeItem('b2bSearchState');
     navigate('/b2b/login');
   };
@@ -375,21 +376,21 @@ interface RecentSearch {
   return (
     <div className="min-h-screen font-sans text-gray-800 flex flex-col relative z-0">
             {/* B2B Premium Header */}
-      <header className="bg-[#0b1031] px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+      <header className="bg-[#0b1031] px-3 sm:px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
         {/* Subtle background glow effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
         </div>
         
         {/* Logo & Category Navigation */}
-        <div className="flex items-center gap-10 relative z-10">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
-            <div className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8" crossOrigin="anonymous" />
+        <div className="flex items-center gap-2 sm:gap-10 relative z-10 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
+            <div className="flex items-center justify-center bg-white p-1 sm:p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform shrink-0">
+              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
             </div>
-            <div>
-              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
-              <span className="block text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
+            <div className="hidden min-[380px]:block">
+              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="block text-[8px] sm:text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>
 
@@ -452,7 +453,7 @@ interface RecentSearch {
         </div>
 
         {/* Right Contacts & Agent Profile */}
-        <div className="flex items-center gap-5 relative z-10">
+        <div className="flex items-center gap-2 sm:gap-5 relative z-10">
           <div className="hidden lg:flex flex-col items-end">
             <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5">Support</span>
             <div className="flex items-center gap-1.5 text-blue-400 font-black text-xs bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
@@ -462,29 +463,29 @@ interface RecentSearch {
 
           <div 
             onClick={() => navigate('/b2b/dashboard/wallet')}
-            className="flex flex-col items-end cursor-pointer group"
+            className="flex flex-col items-end cursor-pointer group ml-1 sm:ml-2"
           >
-            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
-            <div className="flex items-center gap-1.5 text-green-400 font-black text-sm bg-green-500/10 px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+            <span className="hidden sm:block text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
+            <div className="flex items-center gap-1.5 text-green-400 font-black text-xs sm:text-sm bg-green-500/10 px-2 sm:px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
               <span>₹ {agentBalance.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
-          <div className="h-8 w-px bg-white/10 mx-1"></div>
+          <div className="hidden sm:block h-8 w-px bg-white/10 mx-1"></div>
 
           <div className="relative" ref={profileRef}>
             <div 
-              className="flex items-center gap-3 bg-white/5 px-2 py-1.5 pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              className="flex items-center gap-2 sm:gap-3 bg-white/5 px-1 sm:px-2 py-1 sm:py-1.5 pr-2 sm:pr-4 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
               onClick={() => setShowProfileMenu(!showProfileMenu)}
             >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-inner border border-white/20">
                 {agentInitial}
               </div>
               <div className="text-left leading-tight hidden sm:block">
                 <span className="block text-xs font-black text-white">{agentName}</span>
                 <span className="block text-[9px] text-blue-300 font-bold uppercase tracking-widest">{agentCode}</span>
               </div>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`hidden sm:block text-gray-400 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
             </div>
 
             {/* Profile Dropdown */}
@@ -515,7 +516,7 @@ interface RecentSearch {
       </header>
 
       {/* Main Search Engine Box (Matching Reference Screenshot 2) */}
-      <main className="w-full px-4 md:px-8 lg:px-12 xl:px-16 pt-10 pb-16 relative overflow-hidden flex-1 flex flex-col justify-start">
+      <main className="w-full px-4 md:px-8 lg:px-12 xl:px-16 pt-10 pb-24 lg:pb-16 relative overflow-hidden flex-1 flex flex-col justify-start">
         <InteractiveGridBackground theme="dark" />
         <div ref={searchBoxRef} className="bg-white rounded-xl border border-gray-300 p-6 pt-5 space-y-5 shadow-lg mx-auto max-w-[1400px] relative z-10 w-full hover:shadow-xl transition-shadow duration-300">
           
@@ -536,10 +537,10 @@ interface RecentSearch {
           </div>
 
           {/* Input Fields High-Density Row */}
-          <div className="flex items-center bg-gray-50 rounded-lg border border-gray-300 h-[64px] w-full relative group focus-within:border-blue-500 transition-colors">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center bg-gray-50 rounded-lg border border-gray-300 min-h-[64px] w-full relative group focus-within:border-blue-500 transition-colors">
             
             {/* Origin */}
-            <div className="flex-1 flex items-center gap-3 px-5 h-full border-r border-gray-300 relative bg-white rounded-l-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1 flex items-center gap-3 px-5 py-3 lg:py-0 min-h-[50px] lg:h-[64px] border-b lg:border-b-0 lg:border-r border-gray-300 relative bg-white rounded-t-lg lg:rounded-t-none lg:rounded-l-lg hover:bg-gray-50 transition-colors">
               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-blue-600">
                 <Plane size={16} />
               </div>
@@ -555,14 +556,14 @@ interface RecentSearch {
               <button 
                 type="button" 
                 onClick={() => { const temp = from; setFrom(to); setTo(temp); }}
-                className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition shadow-sm z-10 z-[70]"
+                className="absolute right-6 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition shadow-sm z-[70]"
               >
-                <ArrowLeftRight size={14} />
+                <ArrowLeftRight size={14} className="transform rotate-90 lg:rotate-0" />
               </button>
             </div>
 
             {/* Destination */}
-            <div className="flex-1 flex items-center gap-3 pl-8 pr-5 h-full border-r border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+            <div className="flex-1 flex items-center gap-3 px-5 lg:pl-8 lg:pr-5 py-3 lg:py-0 min-h-[50px] lg:h-[64px] border-b lg:border-b-0 lg:border-r border-gray-300 bg-white hover:bg-gray-50 transition-colors">
               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-blue-600">
                 <Plane size={16} className="transform rotate-90" />
               </div>
@@ -577,7 +578,7 @@ interface RecentSearch {
 
             {/* Departure Date */}
             <div 
-              className="flex-1 h-full border-r border-gray-300 relative flex items-center gap-3 px-5 cursor-pointer bg-white hover:bg-blue-50 transition-colors"
+              className="flex-1 min-h-[50px] lg:h-[64px] border-b lg:border-b-0 lg:border-r border-gray-300 relative flex items-center gap-3 px-5 py-3 lg:py-0 cursor-pointer bg-white hover:bg-blue-50 transition-colors"
               onClick={() => { setActiveDatePicker('depart'); setIsTravellerPickerOpen(false); }}
             >
               <Calendar size={16} className="text-gray-400" />
@@ -590,7 +591,12 @@ interface RecentSearch {
               
               {/* Calendar Popover (Depart) */}
               {activeDatePicker === 'depart' && (
-                <div className="absolute top-[100%] left-0 z-50">
+                <div 
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 lg:absolute lg:inset-auto lg:top-[100%] lg:left-0 lg:bg-transparent"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setActiveDatePicker(null);
+                  }}
+                >
                   <DualMonthCalendar 
                     checkIn={date ? new Date(date) : null} 
                     checkOut={null}
@@ -611,7 +617,7 @@ interface RecentSearch {
 
             {/* Return Date */}
             <div 
-              className={`flex-1 h-full border-r border-gray-300 relative flex items-center gap-3 px-5 cursor-pointer transition-colors ${tripType !== 'Round Trip' ? 'opacity-50 cursor-not-allowed bg-gray-100 pointer-events-none' : 'bg-white hover:bg-blue-50'}`}
+              className={`flex-1 min-h-[50px] lg:h-[64px] border-b lg:border-b-0 lg:border-r border-gray-300 relative flex items-center gap-3 px-5 py-3 lg:py-0 cursor-pointer transition-colors ${tripType !== 'Round Trip' ? 'opacity-50 cursor-not-allowed bg-gray-100 pointer-events-none' : 'bg-white hover:bg-blue-50'}`}
               onClick={() => {
                 if (tripType === 'Round Trip') { setActiveDatePicker('return'); setIsTravellerPickerOpen(false); }
               }}
@@ -626,7 +632,12 @@ interface RecentSearch {
 
               {/* Calendar Popover (Return) */}
               {activeDatePicker === 'return' && (
-                <div className="absolute top-[100%] left-0 z-50">
+                <div 
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 lg:absolute lg:inset-auto lg:top-[100%] lg:left-0 lg:bg-transparent"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setActiveDatePicker(null);
+                  }}
+                >
                   <DualMonthCalendar 
                     checkIn={returnDate && tripType === 'Round Trip' ? new Date(returnDate) : null}
                     checkOut={null}
@@ -646,7 +657,7 @@ interface RecentSearch {
             </div>
 
             {/* Travellers & Class */}
-            <div className="flex-1 h-full relative">
+            <div className="flex-1 min-h-[50px] lg:h-[64px] relative">
               <div 
                 className="w-full h-full flex items-center gap-3 px-5 cursor-pointer bg-white hover:bg-blue-50 transition-colors rounded-r-lg"
                 onClick={() => { setIsTravellerPickerOpen(true); setActiveDatePicker(null); }}
@@ -665,8 +676,14 @@ interface RecentSearch {
 
               {/* Traveller Popover */}
               {isTravellerPickerOpen && (
-                <div className="absolute top-[100%] right-0 mt-2 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 rounded-xl overflow-hidden bg-white">
-                  <TravellerPicker 
+                <div 
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 lg:absolute lg:inset-auto lg:top-[100%] lg:right-0 lg:mt-2 lg:shadow-[0_8px_30px_rgb(0,0,0,0.12)] lg:border lg:border-gray-200 lg:rounded-xl overflow-hidden lg:bg-white"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setIsTravellerPickerOpen(false);
+                  }}
+                >
+                  <div className="bg-white rounded-xl lg:rounded-none w-full max-w-sm lg:w-auto lg:max-w-none">
+                    <TravellerPicker 
                     adults={adults} 
                     children={children} 
                     infants={infants} 
@@ -676,12 +693,13 @@ interface RecentSearch {
                     }}
                     onClose={() => setIsTravellerPickerOpen(false)} 
                   />
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 gap-4">
             <div className="flex items-center gap-6">
               {/* Special Fares */}
               {/* Keep generic filters or add B2B specific ones */}
@@ -689,7 +707,7 @@ interface RecentSearch {
             {/* Search Button */}
             <button 
               onClick={() => handleSearch()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-lg font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto justify-center px-10 py-3.5 rounded-lg font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5"
             >
               <Search size={18} />
               <span>Search Flights</span>
@@ -848,6 +866,7 @@ interface RecentSearch {
           </div>
         </div>
       </div>
+      <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </div>
   );
 };

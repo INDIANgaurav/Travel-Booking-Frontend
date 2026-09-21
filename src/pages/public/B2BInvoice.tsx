@@ -246,17 +246,17 @@ const B2BInvoice: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40]">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40]">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Header Title Panel */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 md:px-6 py-4">
           <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">TAX INVOICE</h2>
         </div>
 
         {/* Filter Form Panel */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-end gap-6">
-          <div className="w-[250px]">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-end gap-4 md:gap-6">
+          <div className="w-full md:w-[250px]">
             <label className="block text-[11px] font-bold text-[#0c1a40] mb-2 uppercase tracking-wide">Product</label>
             <Dropdown 
               value={selectedProduct}
@@ -266,7 +266,7 @@ const B2BInvoice: React.FC = () => {
             />
           </div>
           
-          <div className="w-[200px]">
+          <div className="w-full md:w-[200px]">
             <label className="block text-[11px] font-bold text-[#0c1a40] mb-2 uppercase tracking-wide">From Date</label>
             <DOBCalendar 
               value={fromDate}
@@ -275,7 +275,7 @@ const B2BInvoice: React.FC = () => {
             />
           </div>
 
-          <div className="w-[200px]">
+          <div className="w-full md:w-[200px]">
             <label className="block text-[11px] font-bold text-[#0c1a40] mb-2 uppercase tracking-wide">To Date</label>
             <DOBCalendar 
               value={toDate}
@@ -287,7 +287,7 @@ const B2BInvoice: React.FC = () => {
           <button 
             onClick={handleSubmit}
             disabled={submitting}
-            className="bg-[#0b1031] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[42px] min-w-[120px] disabled:opacity-50"
+            className="bg-[#0b1031] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition h-[42px] w-full md:w-auto md:min-w-[120px] disabled:opacity-50"
           >
             {submitting ? 'Submitting...' : 'Submit'}
           </button>
@@ -295,7 +295,7 @@ const B2BInvoice: React.FC = () => {
 
         {/* Results Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-[300px]">
-          <div className="border-b border-gray-100 px-6 py-4">
+          <div className="border-b border-gray-100 px-4 md:px-6 py-4">
             <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">TAX INVOICE REQUESTS</h2>
           </div>
           
@@ -306,49 +306,99 @@ const B2BInvoice: React.FC = () => {
                <p className="text-amber-600 font-bold text-sm">No Records Found Yet...!</p>
              </div>
           ) : (
-             <div className="overflow-x-auto">
-               <table className="w-full text-left text-xs whitespace-nowrap">
-                 <thead className="bg-[#f8f9fc] text-[#0c1a40] font-bold uppercase tracking-wider">
-                   <tr>
-                     <th className="px-6 py-4">Product</th>
-                     <th className="px-6 py-4">From Date</th>
-                     <th className="px-6 py-4">To Date</th>
-                     <th className="px-6 py-4">Requested At</th>
-                     <th className="px-6 py-4">Status</th>
-                     <th className="px-6 py-4 text-right">Actions</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-gray-100 font-semibold text-gray-600">
-                   {invoices.map((inv: any, i) => (
-                     <tr key={i} className="hover:bg-blue-50/50 transition">
-                       <td className="px-6 py-4 uppercase">{inv.product}</td>
-                       <td className="px-6 py-4">{inv.fromDate}</td>
-                       <td className="px-6 py-4">{inv.toDate}</td>
-                       <td className="px-6 py-4">{inv.createdAt ? format(new Date(inv.createdAt), 'dd MMM yyyy, HH:mm') : ''}</td>
-                       <td className="px-6 py-4">
-                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${inv.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                           {inv.status || 'PENDING'}
-                         </span>
-                       </td>
-                       <td className="px-6 py-4 text-right flex justify-end gap-2">
-                         <button 
-                           onClick={() => setSelectedItem(inv)}
-                           className="px-4 py-1.5 bg-[#0c1a40] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition"
-                         >
-                           View Details
-                         </button>
-                         <button 
-                           onClick={() => setDeleteConfirmId(inv._id)}
-                           className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition"
-                         >
-                           Delete
-                         </button>
-                       </td>
+             <>
+               {/* Desktop Table */}
+               <div className="hidden md:block overflow-x-auto">
+                 <table className="w-full text-left text-xs whitespace-nowrap">
+                   <thead className="bg-[#f8f9fc] text-[#0c1a40] font-bold uppercase tracking-wider">
+                     <tr>
+                       <th className="px-6 py-4">Product</th>
+                       <th className="px-6 py-4">From Date</th>
+                       <th className="px-6 py-4">To Date</th>
+                       <th className="px-6 py-4">Requested At</th>
+                       <th className="px-6 py-4">Status</th>
+                       <th className="px-6 py-4 text-right">Actions</th>
                      </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
+                   </thead>
+                   <tbody className="divide-y divide-gray-100 font-semibold text-gray-600">
+                     {invoices.map((inv: any, i) => (
+                       <tr key={i} className="hover:bg-blue-50/50 transition">
+                         <td className="px-6 py-4 uppercase">{inv.product}</td>
+                         <td className="px-6 py-4">{inv.fromDate}</td>
+                         <td className="px-6 py-4">{inv.toDate}</td>
+                         <td className="px-6 py-4">{inv.createdAt ? format(new Date(inv.createdAt), 'dd MMM yyyy, HH:mm') : ''}</td>
+                         <td className="px-6 py-4">
+                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${inv.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                             {inv.status || 'PENDING'}
+                           </span>
+                         </td>
+                         <td className="px-6 py-4 text-right flex justify-end gap-2">
+                           <button 
+                             onClick={() => setSelectedItem(inv)}
+                             className="px-4 py-1.5 bg-[#0c1a40] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition"
+                           >
+                             View Details
+                           </button>
+                           <button 
+                             onClick={() => setDeleteConfirmId(inv._id)}
+                             className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition"
+                           >
+                             Delete
+                           </button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+
+               {/* Mobile Cards */}
+               <div className="md:hidden flex flex-col divide-y divide-gray-200 border-t border-gray-200">
+                 {invoices.map((inv: any, i) => (
+                   <div key={i} className="p-4 flex flex-col gap-3">
+                     <div className="flex justify-between items-start">
+                       <div>
+                         <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5">Product</p>
+                         <p className="font-black text-[#0c1a40] text-base uppercase">{inv.product}</p>
+                       </div>
+                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${inv.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                         {inv.status || 'PENDING'}
+                       </span>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-4">
+                       <div>
+                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">From Date</p>
+                         <p className="text-sm font-bold text-gray-800">{inv.fromDate}</p>
+                       </div>
+                       <div>
+                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">To Date</p>
+                         <p className="text-sm font-bold text-gray-800">{inv.toDate}</p>
+                       </div>
+                       <div className="col-span-2">
+                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Requested At</p>
+                         <p className="text-xs font-bold text-gray-800">{inv.createdAt ? format(new Date(inv.createdAt), 'dd MMM yyyy, HH:mm') : '-'}</p>
+                       </div>
+                     </div>
+                     
+                     <div className="flex gap-2 mt-1">
+                       <button 
+                         onClick={() => setSelectedItem(inv)}
+                         className="flex-1 py-2 bg-[#0c1a40] text-white text-xs font-bold rounded-lg hover:bg-blue-900 transition text-center"
+                       >
+                         View Details
+                       </button>
+                       <button 
+                         onClick={() => setDeleteConfirmId(inv._id)}
+                         className="px-4 py-2 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition"
+                       >
+                         Delete
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </>
           )}
         </div>
 
@@ -357,49 +407,49 @@ const B2BInvoice: React.FC = () => {
       {/* Details Modal */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#0c1a40]">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-[#0c1a40] shrink-0">
               <h3 className="text-lg font-bold text-white">Invoice Summary</h3>
               <button onClick={() => setSelectedItem(null)} className="text-white/70 hover:text-white">✕</button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Bookings</p>
-                  <p className="text-xl font-black text-[#0c1a40]">{selectedItem.totalBookings || 0}</p>
+            <div className="p-4 md:p-6 space-y-4 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="bg-gray-50 p-3 md:p-4 rounded-xl">
+                  <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Bookings</p>
+                  <p className="text-lg md:text-xl font-black text-[#0c1a40]">{selectedItem.totalBookings || 0}</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Sales</p>
-                  <p className="text-xl font-black text-[#0c1a40]">{selectedItem.currency || 'INR'} {(selectedItem.totalSalesAmount || 0).toLocaleString()}</p>
+                <div className="bg-gray-50 p-3 md:p-4 rounded-xl">
+                  <p className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total Sales</p>
+                  <p className="text-lg md:text-xl font-black text-[#0c1a40]">{selectedItem.currency || 'INR'} {(selectedItem.totalSalesAmount || 0).toLocaleString()}</p>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-xl col-span-2">
-                  <p className="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Estimated Taxes (5%)</p>
-                  <p className="text-xl font-black text-blue-700">{selectedItem.currency || 'INR'} {(selectedItem.totalTaxes || 0).toLocaleString()}</p>
+                <div className="bg-blue-50 p-3 md:p-4 rounded-xl col-span-2">
+                  <p className="text-[10px] md:text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Estimated Taxes (5%)</p>
+                  <p className="text-lg md:text-xl font-black text-blue-700">{selectedItem.currency || 'INR'} {(selectedItem.totalTaxes || 0).toLocaleString()}</p>
                 </div>
               </div>
               
-              <div className="text-xs text-gray-500 mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="text-[10px] md:text-xs text-gray-500 mt-4 p-3 md:p-4 bg-gray-50 rounded-xl border border-gray-100">
                 <p><strong>Note:</strong> This is an auto-generated summary based on your confirmed {selectedItem.product} bookings from {selectedItem.fromDate} to {selectedItem.toDate}. The final official PDF will be provided by the admin.</p>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+            <div className="p-4 md:p-6 border-t border-gray-100 flex flex-col sm:flex-row justify-end gap-3 shrink-0">
               <button 
                 onClick={() => handleDownloadExcel(selectedItem)}
-                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition"
+                className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition"
               >
                 Download Excel
               </button>
               <button 
                 onClick={() => handleDownloadPDF(selectedItem)}
-                className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition"
+                className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition"
               >
                 Download PDF
               </button>
               <button 
                 onClick={() => setSelectedItem(null)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition"
+                className="w-full sm:w-auto px-6 py-2.5 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition"
               >
                 Close
               </button>

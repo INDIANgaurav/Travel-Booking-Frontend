@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectCurrentUser } from '../store/authSlice';
+import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
 
 export default function AdminLayout() {
@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const handleLogout = () => {
     navigate('/');
     setTimeout(() => {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
     }, 0);
   };
 

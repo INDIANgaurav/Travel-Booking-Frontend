@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectCurrentUser } from '../store/authSlice';
+import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import { 
   LayoutDashboard, Users, Briefcase, CreditCard, 
   PackageOpen, DollarSign, LogOut, ShieldCheck, 
@@ -19,7 +19,7 @@ export default function SubAdminLayout() {
   const handleLogout = () => {
     navigate('/');
     setTimeout(() => {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
     }, 0);
   };
 

@@ -107,8 +107,8 @@ const B2BGstInvoice: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#fafbfd] p-6 text-[#0c1a40]">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+    <div className="flex-1 w-full bg-[#fafbfd] p-4 md:p-6 text-[#0c1a40] min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Tabs and Content Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
@@ -126,10 +126,10 @@ const B2BGstInvoice: React.FC = () => {
           </div>
 
           {activeTab === 'GST INPUT INVOICE' && (
-            <div className="p-8">
+            <div className="p-4 md:p-8">
               {/* Select Month / Year */}
-              <div className="flex gap-6 mb-8 border-b border-gray-50 pb-8">
-                <div className="w-[180px]">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-6 md:mb-8 border-b border-gray-50 pb-6 md:pb-8">
+                <div className="w-full md:w-[180px]">
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-2">GST Month</label>
                   <Dropdown 
                     value={month}
@@ -137,7 +137,7 @@ const B2BGstInvoice: React.FC = () => {
                     options={months}
                   />
                 </div>
-                <div className="w-[180px]">
+                <div className="w-full md:w-[180px]">
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-2">GST Year</label>
                   <Dropdown 
                     value={year}
@@ -148,7 +148,7 @@ const B2BGstInvoice: React.FC = () => {
               </div>
 
               {/* GST Info Details row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 border-b border-gray-50 pb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8 border-b border-gray-50 pb-6 md:pb-8">
                 <div>
                   <p className="text-[10px] font-bold text-gray-500 mb-1">{platformInfo?.companyName?.split(' ')[0] || 'TrippeChalo'} GST Number</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">{platformInfo?.gstn || '18AAJCT4798C1ZW'}</p>
@@ -168,7 +168,7 @@ const B2BGstInvoice: React.FC = () => {
               </div>
 
               {/* Amounts row */}
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-6 mb-8 border-b border-gray-50 pb-8 relative">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 md:gap-6 mb-6 md:mb-8 border-b border-gray-50 pb-6 md:pb-8 relative">
                 {fetching && (
                   <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
                     <span className="text-xs font-bold text-gray-500 animate-pulse">Calculating...</span>
@@ -201,31 +201,33 @@ const B2BGstInvoice: React.FC = () => {
               </div>
 
               {/* Inputs row */}
-              <div className="flex gap-6 mb-12">
-                <div className="w-[200px]">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-8 md:mb-12">
+                <div className="w-full md:w-[200px]">
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-2">GST Bill Number <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
                     value={billNumber}
                     onChange={(e) => setBillNumber(e.target.value)}
-                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-500 font-bold"
+                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-xs outline-none focus:border-blue-500 font-bold bg-white"
                   />
                 </div>
-                <div className="w-[200px]">
+                <div className="w-full md:w-[200px]">
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-2">GST Bill Date <span className="text-red-500">*</span></label>
-                  <DOBCalendar 
-                    value={billDate}
-                    onChange={setBillDate}
-                    placeholder="dd-mm-yyyy"
-                  />
+                  <div className="relative z-[60]">
+                    <DOBCalendar 
+                      value={billDate}
+                      onChange={setBillDate}
+                      placeholder="dd-mm-yyyy"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-center pb-8">
+              <div className="flex justify-center pb-4 md:pb-8">
                 <button 
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition disabled:opacity-50"
+                  className="bg-[#0b1031] text-white px-10 py-3 rounded-full text-sm font-bold shadow-md hover:bg-blue-900 transition disabled:opacity-50 w-full md:w-auto"
                 >
                   {loading ? 'Submitting...' : 'Submit'}
                 </button>

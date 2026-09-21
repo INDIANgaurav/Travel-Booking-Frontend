@@ -116,7 +116,7 @@ const SupplierLoginPage: React.FC = () => {
         </form>
 
         <div className="mt-4 text-left">
-          <Link to="/forgot-password" className="text-[11px] font-bold text-[#1e295b] hover:underline">
+          <Link to="/forgot-password?portal=supplier" className="text-[11px] font-bold text-[#1e295b] hover:underline">
             Forgot Password?
           </Link>
         </div>

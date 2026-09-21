@@ -1,6 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from './store';
+import { setAuthToken } from '../services/api';
 
 interface User {
   _id: string;
@@ -54,10 +55,21 @@ const loadUserFromStorage = () => {
 
 const initialState: AuthState = {
   user: loadUserFromStorage(),
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  token: null,
+  isAuthenticated: !!loadUserFromStorage(),
   showAgentOnboarding: false,
 };
+
+export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
+  try {
+    const api = (await import('../services/api')).default;
+    await api.post('/api/auth/logout');
+  } catch (e) {
+    console.error('Logout failed', e);
+  } finally {
+    dispatch(authSlice.actions.logout());
+  }
+});
 
 const authSlice = createSlice({
   name: 'auth',
@@ -70,16 +82,18 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      localStorage.setItem('token', action.payload.token);
+      setAuthToken(action.payload.token);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.removeItem('token'); // Cleanup old architecture token
       localStorage.removeItem('b2bSearchState');
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      setAuthToken(null);
       localStorage.removeItem('user');
+      localStorage.removeItem('token'); // Cleanup old architecture token
       localStorage.removeItem('b2bSearchState');
       localStorage.removeItem('b2bRecentSearches');
     },

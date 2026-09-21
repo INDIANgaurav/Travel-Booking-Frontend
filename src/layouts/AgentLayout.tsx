@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, Plane, Building2, User as UserIcon, FileText, Menu, ChevronRight, MessageSquare } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout, selectCurrentUser } from '../store/authSlice';
+import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 
 import TopNavbar from '../components/layout/TopNavbar';
 
@@ -17,7 +17,7 @@ export default function AgentLayout() {
   const handleLogout = () => {
     navigate('/');
     setTimeout(() => {
-      dispatch(logout());
+      dispatch(logoutUserThunk() as any);
     }, 0);
   };
 

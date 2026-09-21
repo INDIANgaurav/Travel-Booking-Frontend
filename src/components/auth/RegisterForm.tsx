@@ -175,9 +175,9 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
   }
 
   return (
-    <div className="animate-in slide-in-from-left-4 duration-300">
-      <h2 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h2>
-      <p className="text-sm text-gray-500 mb-6">
+    <div className="animate-in slide-in-from-left-4 duration-300 pb-2">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-0.5">Create Account</h2>
+      <p className="text-[13px] text-gray-500 mb-4">
         Sign up and start your adventure
       </p>
 
@@ -187,7 +187,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleRegisterSubmit} className="space-y-3">
+      <form onSubmit={handleRegisterSubmit} className="space-y-2">
         
 
           <div className="flex gap-4">
@@ -217,10 +217,10 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
           icon={<Mail size={18} />} 
         />
         
-        <div className="flex gap-4 w-full mb-4">
-          <div className="w-[120px] flex flex-col gap-1.5">
+        <div className="flex gap-4 w-full mb-2">
+          <div className="w-[90px] flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-700">Code</label>
-            <div className="h-[46px] flex items-center bg-gray-50 border border-gray-300 rounded-lg px-3 text-sm text-gray-900 font-medium">
+            <div className="bg-gray-50 border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 font-medium flex items-center h-full">
               🇮🇳 +91
             </div>
           </div>
@@ -269,9 +269,9 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 my-4">
-          <input type="checkbox" id="terms" className="rounded text-blue-600 focus:ring-blue-500" required />
-          <label htmlFor="terms" className="text-xs text-gray-600">
+        <div className="flex items-center gap-2 my-2.5">
+          <input type="checkbox" id="terms" className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" required />
+          <label htmlFor="terms" className="text-[11px] text-gray-600 leading-tight">
             I agree to the <Link to="/page/TermsConditions" target="_blank" className="text-blue-600 font-semibold hover:underline">Terms & Conditions</Link> and <Link to="/page/PrivacyPolicy" target="_blank" className="text-blue-600 font-semibold hover:underline">Privacy Policy</Link>
           </label>
         </div>
@@ -281,11 +281,11 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
         </Button>
       </form>
 
-      <div className="relative my-4">
+      <div className="relative my-3">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-200"></div>
         </div>
-        <div className="relative flex justify-center text-sm">
+        <div className="relative flex justify-center text-xs">
           <span className="px-2 bg-white text-gray-500">or continue with</span>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function RegisterForm({ onToggleMode }: RegisterFormProps) {
         Continue with Google
       </Button>
 
-      <div className="mt-8 text-center text-sm text-gray-600">
+      <div className="mt-4 text-center text-xs text-gray-600">
         Already have an account?{' '}
         <button onClick={onToggleMode} className="text-blue-600 font-semibold hover:underline">
           Log In

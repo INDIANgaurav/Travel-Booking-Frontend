@@ -90,6 +90,12 @@ export default function ChatBot() {
     if (isOpen) setShowPulse(false);
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleOpenMyra = () => setIsOpen(true);
+    window.addEventListener('open-myra-ai', handleOpenMyra);
+    return () => window.removeEventListener('open-myra-ai', handleOpenMyra);
+  }, []);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || isTyping) return;
 
@@ -163,10 +169,10 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button (Hidden on Mobile, now in Bottom Nav) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group"
+        className="hidden lg:block fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group"
         aria-label="Open AI Chat Assistant"
       >
         <div className={`relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-[0_8px_30px_rgba(37,99,235,0.45)] flex items-center justify-center transition-all duration-300 hover:shadow-[0_8px_40px_rgba(37,99,235,0.6)] hover:scale-105 ${isOpen ? 'rotate-0' : ''}`}>
@@ -205,39 +211,56 @@ export default function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div
-          className="fixed bottom-[80px] sm:bottom-[90px] right-4 sm:right-6 z-[9998] w-[calc(100vw-2rem)] sm:w-[380px] max-h-[80vh] sm:max-h-[560px] flex flex-col rounded-2xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.3)] border border-gray-200/80"
-          style={{ animation: 'chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#0b1031] via-[#131b4d] to-[#1a237e] px-5 py-4 flex items-center gap-3 shrink-0">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shadow-md">
-                <Bot size={22} className="text-white" />
-              </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0b1031]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-white font-bold text-sm tracking-wide">TrippeChalo AI</h3>
-             
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
-            >
-              <ChevronDown size={20} />
-            </button>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-50 to-white px-4 py-4 space-y-3" style={{ maxHeight: '340px' }}>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-                style={{ animation: 'msgFadeIn 0.3s ease forwards' }}
+        <>
+          {/* Mobile Overlay Background */}
+          <div className="lg:hidden fixed inset-0 bg-black/50 z-[9998] transition-opacity" onClick={() => setIsOpen(false)}></div>
+          
+          <div
+            className="fixed bottom-0 lg:bottom-[90px] right-0 lg:right-6 z-[9999] w-full lg:w-[380px] h-[85vh] lg:h-[560px] lg:max-h-[560px] flex flex-col rounded-t-[30px] lg:rounded-2xl bg-white overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.2)] lg:shadow-[0_25px_60px_rgba(0,0,0,0.3)] border-t border-gray-100 lg:border-gray-200/80"
+            style={{ animation: 'chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+          >
+            {/* Header */}
+            <div className="bg-white px-5 py-4 flex items-center justify-between shrink-0 relative">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
               >
-                {msg.sender === 'bot' && (
+                <X size={20} />
+              </button>
+              
+              <div className="flex items-center justify-center gap-2">
+                <Bot size={22} className="text-blue-600" />
+                <span className="text-xl font-black text-gray-800 tracking-tight">TrippeChalo AI</span>
+              </div>
+              
+              <button
+                className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition"
+              >
+                <div className="flex gap-1">
+                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                </div>
+              </button>
+            </div>
+
+            {/* Welcome Text (Mobile only for now) */}
+            <div className="px-5 pt-2 pb-4 bg-white shrink-0 lg:hidden">
+              <h2 className="text-3xl font-bold text-blue-500 mb-1">Hi, There</h2>
+              <p className="text-gray-800 text-sm leading-relaxed">
+                <strong>I'm TrippeChalo AI</strong> — your personal travel assistant. Let's plan your next trip together.
+              </p>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 lg:p-5 flex flex-col gap-4 bg-gray-50/50" style={{ scrollbarWidth: 'none' }}>
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex gap-2 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+                  style={{ animation: 'msgFadeIn 0.3s ease forwards' }}
+                >
+                  {msg.sender === 'bot' && (
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 mt-1 shadow-sm">
                     <Sparkles size={14} className="text-white" />
                   </div>
@@ -281,52 +304,31 @@ export default function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Replies */}
-          <div className="bg-white border-t border-gray-100 px-3 py-2.5 flex gap-2 overflow-x-auto shrink-0" style={{ scrollbarWidth: 'none' }}>
-            {QUICK_REPLIES.map((reply) => (
-              <button
-                key={reply}
-                onClick={() => handleQuickReply(reply)}
-                disabled={isTyping}
-                className={`whitespace-nowrap text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-colors shrink-0 ${
-                  isTyping
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 hover:border-blue-200'
-                }`}
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="bg-white border-t border-gray-200 px-3 py-3 flex items-center gap-2 shrink-0">
+          <form onSubmit={handleSubmit} className="bg-white border-t border-gray-100 px-4 py-4 flex items-center gap-3 shrink-0 rounded-t-[20px] shadow-[0_-5px_15px_rgba(0,0,0,0.02)]">
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 bg-gray-100 text-sm text-gray-800 px-4 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white border border-transparent focus:border-blue-200 transition-all placeholder:text-gray-400"
+              placeholder="Ask me anything"
+              className="flex-1 bg-transparent text-[15px] text-gray-800 px-2 py-1 outline-none placeholder:text-gray-400"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isTyping}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shrink-0 ${
                 inputValue.trim() && !isTyping
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg hover:scale-105'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-blue-600 text-white shadow-md hover:scale-105'
+                  : 'bg-blue-600/50 text-white/80 cursor-not-allowed'
               }`}
             >
-              <Send size={16} className={inputValue.trim() ? 'translate-x-[1px]' : ''} />
+              <Send size={16} className={inputValue.trim() ? '-translate-y-[1px]' : ''} style={{ transform: 'rotate(-45deg)' }} />
             </button>
           </form>
-
-          {/* Powered by footer */}
-          <div className="bg-gray-50 border-t border-gray-100 text-center py-1.5 shrink-0">
-            <span className="text-[9px] text-gray-400 font-medium tracking-wide">Powered by TrippeChalo AI</span>
-          </div>
         </div>
+        </>
       )}
 
       {/* Inline animations */}

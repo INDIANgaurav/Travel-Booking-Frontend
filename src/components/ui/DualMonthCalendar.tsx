@@ -184,7 +184,7 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 p-6 absolute top-full mt-2 left-0 z-50 w-[700px] hidden md:flex gap-8">
+    <div className="bg-white lg:rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 p-4 md:p-6 lg:absolute lg:top-full lg:mt-2 lg:left-0 lg:z-50 w-full sm:w-[350px] md:w-[700px] flex flex-col md:flex-row gap-4 md:gap-8 max-h-[90vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
       
       <button 
         onClick={handlePrevMonth} 
