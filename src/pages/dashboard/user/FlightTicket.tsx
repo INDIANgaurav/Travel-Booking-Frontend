@@ -174,8 +174,8 @@ export default function FlightTicket() {
       </div>
 
       {booking.type === 'HOTEL' ? (
-        <div id="ticket-content" className="w-full max-w-4xl bg-white p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl">
-          <div className="flex justify-between items-start mb-8 border-b-2 border-blue-500 pb-4">
+        <div id="ticket-content" className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-4 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-blue-600 mb-4">Hotel Booking Voucher</h1>
               <div className="text-sm text-gray-600 space-y-1">
@@ -196,8 +196,8 @@ export default function FlightTicket() {
               <h3 className="text-lg font-bold text-gray-800">{booking.details?.hotelName || 'Hotel Name'}</h3>
               <p className="text-sm text-gray-500 mt-1">{booking.details?.address || 'Hotel Address'}</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200 text-sm">
-              <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-200 text-sm">
+              <div className="p-4 border-r md:border-r-0 border-gray-200">
                 <p className="text-xs font-bold text-gray-400 uppercase mb-1">Check In</p>
                 <p className="font-bold text-gray-800">{booking.details?.checkIn || 'N/A'}</p>
               </div>
@@ -237,9 +237,9 @@ export default function FlightTicket() {
           </div>
         </div>
       ) : (
-        <div id="ticket-content" className="w-full max-w-5xl bg-white p-6 md:p-8 shadow-sm border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-sm text-black box-border">
+        <div id="ticket-content" className="w-full max-w-5xl bg-white p-6 md:p-8 shadow-sm border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-sm text-black box-border mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-start border-b-2 border-gray-300 pb-4 mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-gray-300 pb-4 mb-6 gap-4">
             <div>
               <h2 className="text-3xl font-black text-[#0b1031] tracking-tight flex items-center gap-2 mb-1">
                 <Plane size={28} className="text-blue-600" />
@@ -247,7 +247,7 @@ export default function FlightTicket() {
               </h2>
               <p className="text-[11px] text-gray-500 font-medium tracking-widest uppercase">E-Ticket / Reservation Voucher</p>
             </div>
-            <div className="text-right text-[11px] text-gray-700">
+            <div className="text-left md:text-right text-[11px] text-gray-700">
               <p className="font-bold text-gray-900 mb-1 uppercase">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
               <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
               <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
@@ -256,7 +256,7 @@ export default function FlightTicket() {
           </div>
 
           {/* Booking Info */}
-          <div className="flex justify-between items-start mb-6 text-[12px]">
+          <div className="flex flex-col md:flex-row justify-between items-start mb-6 text-[12px] gap-2">
             <div>
               <p>Agency Booking ID: <span className="font-bold">{agentRef}</span></p>
               <p>Booking Reference: <span className="font-bold">{displayPnr}</span></p>
@@ -268,51 +268,56 @@ export default function FlightTicket() {
           <div className="border-2 border-gray-300 rounded-sm overflow-hidden mb-8">
             {/* Flight Details */}
             <div>
-              <div className="bg-gray-200 px-3 py-1.5 flex justify-between items-center text-[10px] font-bold">
+              <div className="bg-gray-200 px-3 py-1.5 flex flex-wrap justify-between items-center text-[10px] font-bold gap-2">
                 <span className="uppercase">Flight Details</span>
-                <span className="uppercase tracking-wider">ALL TIMINGS MENTIONED ARE IN 24HRS FORMAT AND LOCAL AIRPORT TIMINGS AT THE DEPARTURE/ARRIVAL AIRPORT.</span>
+                <span className="uppercase tracking-wider text-[9px]">ALL TIMINGS MENTIONED ARE IN 24HRS FORMAT AND LOCAL AIRPORT TIMINGS AT THE DEPARTURE/ARRIVAL AIRPORT.</span>
               </div>
-              <table className="w-full text-left text-[11px] border-b border-gray-200">
-                <thead className="border-b border-gray-200 bg-white">
-                  <tr>
-                    <th className="p-3 font-normal text-gray-500">Flight</th>
-                    <th className="p-3 font-normal text-gray-500">Depart</th>
-                    <th className="p-3 font-normal text-gray-500">Arrive</th>
-                    <th className="p-3 font-normal text-gray-500 border-l border-gray-200">Duration/Stops</th>
-                    <th className="p-3 font-normal text-gray-500 border-l border-gray-200">Status</th>
-                  </tr>
-                </thead>
+              <div className="w-full">
+                <table className="w-full text-left text-[9px] md:text-[11px] border-b border-gray-200">
+                  <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
+                    <tr>
+                      <th className="p-1 md:p-3 font-normal text-gray-500 w-[20%]">Flight</th>
+                      <th className="p-1 md:p-3 font-normal text-gray-500 w-[25%]">Depart</th>
+                      <th className="p-1 md:p-3 font-normal text-gray-500 w-[25%]">Arrive</th>
+                      <th className="p-1 md:p-3 font-normal text-gray-500 border-l border-gray-200 w-[15%]">Duration/Stops</th>
+                      <th className="p-1 md:p-3 font-normal text-gray-500 border-l border-gray-200 w-[15%] text-center">Status</th>
+                    </tr>
+                  </thead>
                 <tbody>
                   <tr>
-                    <td className="p-3 align-top">
-                      <div className="flex gap-2 items-start">
-                        <div className="text-blue-500 font-bold text-xl leading-none"><Plane size={18}/></div>
+                    <td className="p-1 md:p-3 align-top">
+                      <div className="flex gap-1 md:gap-2 items-start">
+                        <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
                         <div>
-                          <p className="font-bold">{flightNo}</p>
-                          <p className="font-bold">{cabinClass}</p>
-                          <p className="text-gray-600">Aircraft Type-32Y</p>
-                          <p className="text-gray-600">Refundable</p>
+                          <p className="font-bold whitespace-nowrap">{flightNo}</p>
+                          <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
+                          <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
+                          <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 align-top">
-                      <p className="font-bold uppercase text-[12px]">{booking.details?.from} ({originCode})</p>
-                      <p className="font-bold">{depTime} <span className="font-normal text-gray-600">{travelDateStr}</span></p>
-                      <p className="text-gray-600">Terminal 1</p>
+                    <td className="p-1 md:p-3 align-top">
+                      <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.from} <span className="font-normal text-gray-500 hidden md:inline">({originCode})</span></p>
+                      <p className="font-bold whitespace-nowrap">{depTime}</p>
+                      <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{travelDateStr}</p>
+                      <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">Terminal 1</p>
                     </td>
-                    <td className="p-3 align-top">
-                      <p className="font-bold uppercase text-[12px]">{booking.details?.to} ({destCode})</p>
-                      <p className="font-bold">{arrTime} <span className="font-normal text-gray-600">{travelDateStr}</span></p>
+                    <td className="p-1 md:p-3 align-top">
+                      <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.to} <span className="font-normal text-gray-500 hidden md:inline">({destCode})</span></p>
+                      <p className="font-bold whitespace-nowrap">{arrTime}</p>
+                      <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{travelDateStr}</p>
                     </td>
-                    <td className="p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
-                      {flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'} / {leg ? 'Non-Stop' : 'Non-Stop'}
+                    <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
+                      <p className="whitespace-nowrap">{flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'}</p>
+                      <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">{leg ? 'Non-Stop' : 'Non-Stop'}</p>
                     </td>
-                    <td className="p-3 align-top border-l border-gray-200 font-medium capitalize">
-                      {booking.status.toLowerCase()}
+                    <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
+                      <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap capitalize">{booking.status.toLowerCase()}</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Passenger Details */}
@@ -321,13 +326,14 @@ export default function FlightTicket() {
                 <span className="uppercase">Passenger Details</span>
                 <span className="text-[9px] text-gray-700 font-semibold">( Phone: 9555934205 | Email: trippechaloindia@gmail.com )</span>
               </div>
-              <table className="w-full text-left text-[11px] table-fixed">
-                <thead className="border-b border-gray-200 bg-white">
+              <div className="w-full mt-1">
+                <table className="w-full text-left text-[9px] md:text-[11px]">
+                  <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
                   <tr>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-1/4 border-r border-gray-200">PNR</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-1/2 border-r border-gray-200">Passenger / Baggage Details</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] border-r border-gray-200">Seat</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] text-right">Status</th>
+                    <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>
+                    <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[50%] border-r border-gray-200">Passenger / Baggage Details</th>
+                    <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[15%] border-r border-gray-200 text-center">Seat</th>
+                    <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[15%] text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -338,25 +344,25 @@ export default function FlightTicket() {
                     const paxType = pax.type || pax.passengerType || (pax.name?.toLowerCase().includes('child') ? 'Child' : pax.name?.toLowerCase().includes('infant') ? 'Infant' : 'Adult');
                     return (
                       <tr key={i}>
-                        <td className="py-3 px-3 align-top border-r border-gray-200 overflow-hidden">
-                          <p className="mb-1 font-bold">{tktNo}</p>
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200 overflow-hidden">
+                          <p className="mb-1 font-bold whitespace-nowrap">{tktNo}</p>
                         </td>
-                        <td className="py-3 px-3 align-top border-r border-gray-200">
-                          <p className="font-bold text-[12px] uppercase">
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200">
+                          <p className="font-bold text-[9px] md:text-[12px] uppercase">
                             {(pax.gender === 'Male' ? 'Mr ' : pax.gender === 'Female' ? 'Mrs ' : '')}
                             {pax.name || pax.first_name + ' ' + pax.last_name} 
-                            <span className="text-[10px] font-normal lowercase ml-1"> {paxType}</span>
+                            <span className="text-[8px] md:text-[10px] font-normal lowercase ml-1 hidden md:inline"> {paxType}</span>
                           </p>
-                          <div className="mt-1.5 space-y-0.5">
-                            <p className="text-gray-700">Hand Baggage <span className="font-bold">Onward:</span> {handBaggage}</p>
-                            <p className="text-gray-700">CheckIn Baggage <span className="font-bold">Onward:</span> {checkinBaggage}</p>
+                          <div className="mt-1 md:mt-1.5 space-y-0.5 text-[8px] md:text-[10px]">
+                            <p className="text-gray-700 whitespace-nowrap"><span className="hidden md:inline">Hand Baggage </span><span className="font-bold">Onward:</span> {handBaggage}</p>
+                            <p className="text-gray-700 whitespace-nowrap"><span className="hidden md:inline">CheckIn Baggage </span><span className="font-bold">Onward:</span> {checkinBaggage}</p>
                           </div>
                         </td>
-                        <td className="py-3 px-3 align-top border-r border-gray-200 font-bold text-gray-800">
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200 font-bold text-gray-800 text-center">
                           {seatNo}
                         </td>
-                        <td className="py-3 px-3 align-top text-right font-medium capitalize">
-                          {paxConfirmation?.status || booking.status.toLowerCase()}
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top font-medium text-center">
+                          <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
                         </td>
                       </tr>
                     );
@@ -364,6 +370,7 @@ export default function FlightTicket() {
                 </tbody>
               </table>
             </div>
+          </div>
 
             {/* Payment Details */}
             <div>

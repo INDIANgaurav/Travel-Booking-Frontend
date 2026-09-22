@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Plane, Building2, Briefcase, User, ChevronDown, ArrowLeft, Heart, Menu, X, CreditCard, MessageSquare, ChevronRight, Globe } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -29,6 +29,20 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { unreadCount } = useAdminSocket();
   const isAdmin = user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN');
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -209,7 +223,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
             {/* Login / User Button */}
             <div className="ml-2 md:ml-4 flex items-center gap-4 relative">
               {isAuthenticated ? (
-                <div className="group relative py-2">
+                <div className="group relative py-2" ref={dropdownRef}>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }}
                     className={`flex items-center gap-2 p-1.5 md:px-4 md:py-2 rounded-full md:rounded-lg font-bold text-xs transition ${isDarkText ? 'bg-blue-50 hover:bg-blue-100 text-blue-700' : 'bg-white/20 hover:bg-white/30 text-white'}`}
@@ -274,52 +288,52 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         </div>
                       {(user?.roles?.includes('USER') || user?.role === 'USER' || (!user?.roles?.includes('B2B_AGENT') && !user?.roles?.includes('SUPER_ADMIN') && !user?.roles?.includes('SUPPLIER_AGENT') && user?.role !== 'B2B_AGENT' && user?.role !== 'SUPER_ADMIN' && user?.role !== 'SUPPLIER_AGENT' && user?.role !== 'SUB_ADMIN')) && (
                         <>
-                          <div onClick={() => { navigate('/dashboard/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/dashboard/profile'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
                           </div>
-                          <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/dashboard/wallet'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <CreditCard size={16} /> My Wallet
                           </div>
-                          <div onClick={() => { navigate('/dashboard/helpdesk'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/dashboard/helpdesk'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <MessageSquare size={16} /> Support Tickets
                           </div>
                         </>
                       )}
                       {(user?.roles?.includes('B2B_AGENT') || user?.roles?.includes('SELLER') || user?.roles?.includes('SUPPLIER_AGENT') || user?.role === 'B2B_AGENT' || user?.role === 'SELLER' || user?.role === 'SUPPLIER_AGENT') && (
-                        <div onClick={() => { navigate('/b2b/home'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                        <div onClick={() => { navigate('/b2b/home'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> B2B Dashboard
                         </div>
                       )}
                       {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN') || user?.role === 'SUPER_ADMIN' || user?.role === 'SUB_ADMIN') && (
                         <>
-                          <div onClick={() => { navigate('/admin/profile'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/profile'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
                           </div>
-                          <div onClick={() => { navigate('/dashboard/wallet'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/dashboard/wallet'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <CreditCard size={16} /> My Wallet
                           </div>
-                          <div onClick={() => { navigate('/admin/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/dashboard'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> My Dashboard
                           </div>
-                          <div onClick={() => { navigate('/admin/helpdesk'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/helpdesk'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <MessageSquare size={16} /> Support Tickets
                           </div>
-                          <div onClick={() => { navigate('/admin/bookings'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/bookings'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> Booking History
                           </div>
-                          <div onClick={() => { navigate('/admin/profile?tab=security'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/profile?tab=security'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Building2 size={16} /> Change Password
                           </div>
-                          <div onClick={() => { navigate('/admin/queue'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/queue'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> Pending Queue
                           </div>
-                          <div onClick={() => { navigate('/admin/ledger'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                          <div onClick={() => { navigate('/admin/ledger'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <CreditCard size={16} /> View Ledger
                           </div>
                         </>
                       )}
                       {(user?.roles?.includes('SUPPLIER_AGENT') || user?.roles?.includes('SUPPLIER_STAFF') || user?.roles?.includes('SUPPLIER_PORTAL_ONLY') || user?.role === 'SUPPLIER_AGENT' || user?.role === 'SUPPLIER_STAFF' || user?.role === 'SUPPLIER_PORTAL_ONLY') && (
-                        <div onClick={() => { navigate('/supplier-portal/dashboard'); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                        <div onClick={() => { navigate('/supplier-portal/dashboard'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                           <Briefcase size={16} /> Supplier Portal
                         </div>
                       )}

@@ -123,20 +123,25 @@ export default function BookingsPage() {
               return (
                 <div key={booking._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                   {/* Header */}
-                  <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded text-[10px] font-bold tracking-wider uppercase ${
-                        booking.status?.toUpperCase() === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
-                        booking.status?.toUpperCase() === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {booking.status?.toUpperCase()}
-                      </span>
-                      <span className="text-gray-500 text-xs font-medium">
-                        Booking ID: <span className="font-bold text-gray-700 uppercase">{booking.bookingId || booking._id.slice(-8)}</span>
-                      </span>
+                  <div className="p-3 md:p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 gap-2 sm:gap-0">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <span className={`px-2 py-1 md:px-3 rounded text-[9px] md:text-[10px] font-bold tracking-wider uppercase ${
+                          booking.status?.toUpperCase() === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                          booking.status?.toUpperCase() === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {booking.status?.toUpperCase()}
+                        </span>
+                        <span className="text-gray-500 text-[10px] md:text-xs font-medium">
+                          Booking ID: <span className="font-bold text-gray-700 uppercase">{booking.bookingId || booking._id.slice(-8)}</span>
+                        </span>
+                      </div>
+                      <div className="text-right sm:hidden">
+                        <span className="text-[13px] md:text-sm font-black text-gray-900">₹ {booking.totalAmount?.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right hidden sm:block">
                       <span className="text-sm font-black text-gray-900">₹ {booking.totalAmount?.toLocaleString()}</span>
                     </div>
                   </div>
@@ -200,37 +205,39 @@ export default function BookingsPage() {
                       </div>
                     </div>
 
-                    <div className="w-full md:w-auto flex flex-wrap justify-end gap-3 mt-4 md:mt-0">
+                    <div className="w-full md:w-auto grid grid-cols-2 md:flex flex-wrap md:justify-end gap-2 md:gap-3 mt-4 md:mt-0">
                       {activeTab === 'UPCOMING' && (
                         <button 
                           onClick={() => setCancellationBookingId(booking._id)}
-                          className="flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                          className="flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
                         >
                           Cancel Booking
                         </button>
                       )}
                       <button 
                         onClick={() => toggleExpand(booking._id)}
-                        className="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                        className="flex items-center justify-center gap-1 md:gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
                       >
-                        View Details {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        <span className="hidden md:inline">View Details</span>
+                        <span className="md:hidden">Details</span>
+                        {isExpanded ? <ChevronUp size={14} className="md:w-4 md:h-4" /> : <ChevronDown size={14} className="md:w-4 md:h-4" />}
                       </button>
                       {booking.status !== 'PENDING' && (
                         <>
                           <button 
                             onClick={() => setTicketModalBooking(booking)}
-                            className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                            className="flex items-center justify-center gap-1 md:gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
                           >
-                            <Ticket size={16} /> E-Ticket
+                            <Ticket size={14} className="md:w-4 md:h-4" /> E-Ticket
                           </button>
                           <button 
                             onClick={() => {
                               const basePath = user?.roles?.includes('B2B_AGENT') ? '/agent-portal' : user?.roles?.includes('SUPER_ADMIN') ? '/admin' : user?.roles?.includes('SUB_ADMIN') ? '/sub-admin' : '/dashboard';
                               navigate(`${basePath}/invoice/${booking._id}`);
                             }}
-                            className="flex items-center justify-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                            className="flex items-center justify-center gap-1 md:gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
                           >
-                            <FileText size={16} /> Invoice
+                            <FileText size={14} className="md:w-4 md:h-4" /> Invoice
                           </button>
                           {!isHotel && booking.status === 'CONFIRMED' && (
                             <button 
@@ -240,9 +247,9 @@ export default function BookingsPage() {
                                   window.open('https://www.google.com/search?q=web+check+in+' + booking.details?.airline, '_blank');
                                 }, 1500);
                               }}
-                              className="flex items-center justify-center gap-2 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-4 py-2 rounded-lg font-bold text-sm transition-colors"
+                              className="col-span-2 md:col-span-1 flex items-center justify-center gap-1 md:gap-2 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
                             >
-                              <Plane size={16} /> Web Check-in
+                              <Plane size={14} className="md:w-4 md:h-4" /> Web Check-in
                             </button>
                           )}
                         </>

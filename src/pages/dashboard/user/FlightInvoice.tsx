@@ -135,8 +135,8 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
       </div>
 
       {booking.type === 'HOTEL' ? (
-        <div className="w-full max-w-4xl bg-white p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl">
-          <div className="flex justify-between items-start mb-8 border-b-2 border-blue-500 pb-4">
+        <div className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-4 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-blue-600 mb-4">Hotel Booking Voucher</h1>
               <div className="text-sm text-gray-600 space-y-1">
@@ -157,8 +157,8 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
               <h3 className="text-lg font-bold text-gray-800">{booking.details?.hotelName || 'Hotel Name'}</h3>
               <p className="text-sm text-gray-500 mt-1">{booking.details?.address || 'Hotel Address'}</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200 text-sm">
-              <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-200 text-sm">
+              <div className="p-4 border-r md:border-r-0 border-gray-200">
                 <p className="text-xs font-bold text-gray-400 uppercase mb-1">Check In</p>
                 <p className="font-bold text-gray-800">{booking.details?.checkIn || 'N/A'}</p>
               </div>
@@ -198,54 +198,66 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-4xl bg-white p-8 shadow-lg print:shadow-none print:p-0 rounded-sm text-black">
-          <div className="grid grid-cols-2 gap-4 mb-4 text-[13px]">
-            <div>
-              <p className="font-bold text-lg mb-6 tracking-widest">{airlineName}</p>
+        <div className="w-full max-w-4xl bg-white p-6 md:p-8 shadow-lg print:shadow-none print:p-0 rounded-sm text-black mx-auto">
+          <div className="flex justify-between mb-4 text-[13px] gap-2 md:gap-6">
+            <div className="w-1/2">
+              <p className="font-bold text-lg mb-4 tracking-widest">{airlineName}</p>
               
-              <p className="text-gray-500 mb-0.5">Agency Booking ID</p>
-              <p className="font-bold">{agentRef}</p>
-
-              <p className="text-gray-500 mt-4 mb-0.5">Booking Reference</p>
-              <p className="font-bold">{displayPnr}</p>
-              
-              <p className="text-gray-500 mt-4 mb-0.5">Issue Date</p>
-              <p className="font-bold">{dateStr}</p>
-            </div>
-            <div className="flex justify-end items-start pr-4">
-              <div className="w-32 h-32 border border-gray-200 rounded p-1">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(displayPnr)}`} alt="QR" className="w-full h-full mix-blend-multiply" />
+              <div className="flex flex-col space-y-2 md:space-y-4">
+                <div>
+                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Agency Booking ID</p>
+                  <p className="font-bold">{agentRef}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Booking Reference</p>
+                  <p className="font-bold text-[12px] md:text-lg">{displayPnr}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Issue Date</p>
+                  <p className="font-bold">{dateStr}</p>
+                </div>
               </div>
+            </div>
+            <div className="w-1/2 flex flex-col items-end text-right">
+              <div className="text-[11px] text-gray-700">
+                <p className="font-bold text-gray-900 mb-1 uppercase text-[12px]">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+                <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
+                <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+                <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
+                <p>Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center mb-6 mt-2">
+            <div className="w-32 h-32 border border-gray-200 rounded p-1">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(displayPnr)}`} alt="QR" className="w-full h-full mix-blend-multiply" />
             </div>
           </div>
 
           <div className="border-t border-dashed border-gray-300 my-6"></div>
 
           {/* Customer & Booked By */}
-          <div className="flex justify-between text-[11px] mb-6 pr-16">
-            <div>
-              <p className="text-gray-500 mb-0.5">Customer Name</p>
+          <div className="flex flex-row justify-between text-[11px] mb-6 gap-4">
+            <div className="w-1/2">
+              <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Customer Name</p>
               <p className="font-bold text-[13px]">{passengers[0]?.name || booking.user?.name}</p>
-              <p className="text-gray-500 mt-2 mb-0.5">Booked By</p>
-              <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
             </div>
-            <div className="text-right text-[11px] text-gray-700">
-              <p className="font-bold text-gray-900 mb-1 uppercase">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
-              <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
-              <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
-              <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
-              <p>Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
+            <div className="w-1/2 text-right">
+              <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Booked By</p>
+              <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
             </div>
           </div>
 
           {/* Flight Table */}
           <div className="border border-black rounded-[4px] overflow-hidden mb-8">
-            <div className="flex justify-between items-center p-3 border-b border-black bg-white">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 border-b border-black bg-white gap-2">
               <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({travelDateStr.toUpperCase()})</p>
               <p className="text-[12px] text-gray-700">{flightNo}</p>
             </div>
-            <table className="w-full text-left text-[11px]">
-              <thead>
+            <div className="w-full">
+              <table className="w-full text-left text-[9px] md:text-[11px]">
+                <thead className="bg-white border-b border-gray-200">
                 <tr>
                   <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
                   <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
@@ -265,7 +277,8 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
                   )
                 })}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           <div className="text-[10px] text-gray-500 mt-12 text-center space-y-1">

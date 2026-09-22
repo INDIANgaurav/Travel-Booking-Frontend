@@ -126,21 +126,21 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
 
             {viewType === 'invoice' ? (
               <div className="w-full text-black">
-                <div className="flex justify-between items-start mb-4 text-[13px]">
+                <div className="flex justify-between items-start mb-4 text-[10px] md:text-[13px] gap-2 md:gap-6">
                   <div className="w-1/2">
-                    <p className="font-bold text-xl mb-6 tracking-widest uppercase text-blue-900">{airline}</p>
+                    <p className="font-bold text-[14px] md:text-xl mb-4 tracking-widest uppercase text-blue-900">{airline}</p>
                     
-                    <div className="flex flex-col space-y-4">
+                    <div className="flex flex-col space-y-2 md:space-y-4">
                       <div>
-                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Agency Booking ID</p>
+                        <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Agency Booking ID</p>
                         <p className="font-bold text-gray-900">{agentRef}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Booking Reference</p>
-                        <p className="font-bold text-gray-900">{displayPnr}</p>
+                        <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Booking Reference</p>
+                        <p className="font-bold text-gray-900 text-[12px] md:text-lg">{displayPnr}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 mb-1 text-[11px] uppercase tracking-wider">Issue Date</p>
+                        <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Issue Date</p>
                         <p className="font-bold text-gray-900">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}</p>
                       </div>
                     </div>
@@ -152,25 +152,28 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                       <p>First Floor, D 42, Greater Noida Expressway</p>
                       <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
                       <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
-                      <p>Phone: +91 95559 34205</p>
-                      <p>Email: trippechaloindia@gmail.com</p>
+                      <p>+91 95559 34205</p>
+                      <p>trippechaloindia@gmail.com</p>
                     </div>
-                    <div className="border border-gray-200 rounded p-2 bg-white shadow-sm inline-block">
-                      <Barcode value={displayPnr} width={1.5} height={30} displayValue={false} margin={0} />
-                      <div className="text-center text-[11px] mt-1 font-bold tracking-widest uppercase">{displayPnr}</div>
-                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-center mb-6">
+                  <div className="border border-gray-200 rounded p-2 bg-white shadow-sm inline-block">
+                    <Barcode value={displayPnr} width={1.5} height={30} displayValue={false} margin={0} />
+                    <div className="text-center text-[11px] mt-1 font-bold tracking-widest uppercase">{displayPnr}</div>
                   </div>
                 </div>
       
                 <div className="border-t-2 border-gray-200 my-6"></div>
       
                 {/* Customer & Booked By */}
-                <div className="flex justify-between text-[11px] mb-6">
-                  <div>
+                <div className="flex flex-row justify-between text-[11px] mb-6 gap-4">
+                  <div className="w-1/2">
                     <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Customer Name</p>
                     <p className="font-bold text-[13px]">{passengers[0]?.name || passengers[0]?.firstName || booking.user?.name}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="w-1/2 text-right">
                     <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Booked By</p>
                     <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
                   </div>
@@ -178,32 +181,34 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
 
                 {/* Flight Table */}
                 <div className="border border-black rounded-[4px] overflow-hidden mb-8">
-                  <div className="flex justify-between items-center p-3 border-b border-black bg-white">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 border-b border-black bg-white gap-2">
                     <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({dateStr.toUpperCase()})</p>
                     <p className="text-[12px] text-gray-700">{flightNo}</p>
                   </div>
-                  <table className="w-full text-left text-[11px]">
-                    <thead className="bg-white border-b border-gray-200">
-                      <tr>
-                        <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
-                        <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
-                        <th className="px-3 py-2 font-normal text-gray-600 w-1/6">Seat No.</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                      {passengers.map((pax: any, i: number) => {
-                        const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
-                        const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
-                        return (
-                          <tr key={i} className="border-b border-gray-100 last:border-b-0">
-                            <td className="px-3 py-3 font-bold text-[13px] uppercase">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
-                            <td className="px-3 py-3 text-gray-600">{tktNo}</td>
-                            <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full text-left text-[9px] md:text-[11px]">
+                      <thead className="bg-white border-b border-gray-200">
+                        <tr>
+                          <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
+                          <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
+                          <th className="px-3 py-2 font-normal text-gray-600 w-1/6">Seat No.</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {passengers.map((pax: any, i: number) => {
+                          const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
+                          const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                          return (
+                            <tr key={i} className="border-b border-gray-100 last:border-b-0">
+                              <td className="px-3 py-3 font-bold text-[13px] uppercase">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
+                              <td className="px-3 py-3 text-gray-600">{tktNo}</td>
+                              <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Payment Details */}
@@ -239,29 +244,29 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start mb-6 text-[11px] leading-relaxed gap-4">
+                <div className="flex flex-wrap justify-between items-start mb-6 text-[10px] md:text-[11px] leading-relaxed gap-y-6 text-left">
               {/* Left: Agency Details */}
-              <div className="w-1/3">
-                <p className="font-bold text-[13px] uppercase mb-1">TRIPPECHALO INDIA PRIVATE LIMITED</p>
+              <div className="w-1/2 md:w-1/3 order-1">
+                <p className="font-bold text-[11px] md:text-[13px] uppercase mb-1">TRIPPECHALO INDIA PRIVATE LIMITED</p>
                 <p>First Floor, D 42, Greater Noida Expressway</p>
                 <p>Sector 108, Noida, Uttar Pradesh - 201304</p>
                 <p className="font-bold mt-1">GSTIN: 09AAMCT8505A1ZB</p>
-                <p className="mt-1">Email : trippechaloindia@gmail.com</p>
-                <p className="font-bold text-[12px]">Mobile No : 9555934205</p>
-              </div>
-
-              {/* Center: Airline & PNR */}
-              <div className="w-1/3 flex flex-col items-center justify-center pt-2">
-                <p className="font-semibold text-gray-800">{airline}</p>
-                <div className="text-blue-500 my-1"><Plane size={32} /></div>
-                <h1 className="text-3xl font-black tracking-wider text-black mt-2">{displayPnr}</h1>
-                <p className="text-[12px] text-gray-500 mt-1">Booking Reference</p>
+                <p className="mt-1">trippechaloindia@gmail.com</p>
+                <p className="font-bold text-[11px] md:text-[12px]">9555934205</p>
               </div>
 
               {/* Right: Meta & Barcode */}
-              <div className="w-1/3 text-right">
-                <p>Agency Booking ID: <span className="font-bold">{agentRef}</span></p>
-                <p>Issued On: <span className="font-bold">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB')}</span></p>
+              <div className="w-1/2 md:w-1/3 text-right order-2 md:order-3 pl-2">
+                <p>Agency Booking ID: <br className="md:hidden" /><span className="font-bold">{agentRef}</span></p>
+                <p>Issued On: <br className="md:hidden" /><span className="font-bold">{issueDate.toLocaleDateString('en-GB')} {issueDate.toLocaleTimeString('en-GB')}</span></p>
+              </div>
+
+              {/* Center: Airline & PNR */}
+              <div className="w-full md:w-1/3 flex flex-col items-center justify-center pt-2 order-3 md:order-2 mt-2 md:mt-0 border-t md:border-t-0 border-gray-200 md:border-none pt-4 md:pt-2">
+                <p className="font-semibold text-gray-800">{airline}</p>
+                <div className="text-blue-500 my-1"><Plane size={32} /></div>
+                <h1 className="text-2xl md:text-3xl font-black tracking-wider text-black mt-2 break-all">{displayPnr}</h1>
+                <p className="text-[12px] text-gray-500 mt-1">Booking Reference</p>
               </div>
             </div>
 
@@ -273,47 +278,52 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                   <span className="uppercase">Flight Details</span>
                   <span className="text-[9px] text-gray-700 font-semibold">ALL TIMINGS IN 24HRS & LOCAL AIRPORT TIME</span>
                 </div>
-                <table className="w-full text-left text-[11px] border-b border-gray-200 table-fixed">
-                  <thead className="border-b border-gray-200 bg-white">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-left text-[9px] md:text-[11px] border-b border-gray-200">
+                    <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
+                      <tr>
+                        <th className="p-1 md:p-3 font-normal text-gray-500 w-[20%]">Flight</th>
+                        <th className="p-1 md:p-3 font-normal text-gray-500 w-[25%]">Depart</th>
+                        <th className="p-1 md:p-3 font-normal text-gray-500 w-[25%]">Arrive</th>
+                        <th className="p-1 md:p-3 font-normal text-gray-500 border-l border-gray-200 w-[15%]">Duration/Stops</th>
+                        <th className="p-1 md:p-3 font-normal text-gray-500 border-l border-gray-200 w-[15%] text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                     <tr>
-                      <th className="p-3 font-normal text-gray-500 w-1/4">Flight</th>
-                      <th className="p-3 font-normal text-gray-500 w-1/4">Depart</th>
-                      <th className="p-3 font-normal text-gray-500 w-1/4">Arrive</th>
-                      <th className="p-3 font-normal text-gray-500 border-l border-gray-200 w-1/8">Duration/Stops</th>
-                      <th className="p-3 font-normal text-gray-500 border-l border-gray-200 w-1/8">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  <tr>
-                    <td className="p-3 align-top">
-                      <div className="flex gap-2 items-start">
-                        <div className="text-blue-500 font-bold text-xl leading-none"><Plane size={18} /></div>
-                        <div>
-                          <p className="font-bold">{flightNo}</p>
-                          <p className="font-bold">{cabinClass}</p>
-                          <p className="text-gray-600">Aircraft Type-32Y</p>
-                          <p className="text-gray-600">Refundable</p>
+                      <td className="p-1 md:p-3 align-top">
+                        <div className="flex gap-1 md:gap-2 items-start">
+                          <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
+                          <div>
+                            <p className="font-bold whitespace-nowrap">{flightNo}</p>
+                            <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
+                            <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
+                            <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3 align-top">
-                      <p className="font-bold uppercase text-[12px]">{booking.details?.from} ({originCode})</p>
-                      <p className="font-bold">{depTime} <span className="font-normal text-gray-600">{dateStr}</span></p>
-                      <p className="text-gray-600">{leg?.origin_terminal ? `Terminal ${leg.origin_terminal}` : ''}</p>
-                    </td>
-                    <td className="p-3 align-top">
-                      <p className="font-bold uppercase text-[12px]">{booking.details?.to} ({destCode})</p>
-                      <p className="font-bold">{arrTime} <span className="font-normal text-gray-600">{dateStr}</span></p>
-                    </td>
-                    <td className="p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
-                      {flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'} / {flight?.legs?.length > 1 ? `${flight.legs.length - 1} Stop(s)` : 'Non-Stop'}
-                    </td>
-                    <td className="p-3 align-top border-l border-gray-200 font-medium">
-                      {booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      </td>
+                      <td className="p-1 md:p-3 align-top">
+                        <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.from} <span className="font-normal text-gray-500 hidden md:inline">({originCode})</span></p>
+                        <p className="font-bold whitespace-nowrap">{depTime}</p>
+                        <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
+                        <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">{leg?.origin_terminal ? `Terminal ${leg.origin_terminal}` : ''}</p>
+                      </td>
+                      <td className="p-1 md:p-3 align-top">
+                        <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.to} <span className="font-normal text-gray-500 hidden md:inline">({destCode})</span></p>
+                        <p className="font-bold whitespace-nowrap">{arrTime}</p>
+                        <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
+                      </td>
+                      <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
+                        <p className="whitespace-nowrap">{flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'}</p>
+                        <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">{flight?.legs?.length > 1 ? `${flight.legs.length - 1} Stop(s)` : 'Non-Stop'}</p>
+                      </td>
+                      <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
+                        <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Passenger Details */}
@@ -322,42 +332,45 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                 <span className="uppercase">Passenger Details</span>
                 <span className="text-[9px] text-gray-700 font-semibold">( Phone: 9555934205 | Email: trippechaloindia@gmail.com )</span>
               </div>
-              <table className="w-full text-left text-[11px] table-fixed">
-                <thead className="border-b border-gray-200 bg-white">
-                  <tr>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[55%] border-r border-gray-200">Passenger / Baggage Details</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] border-r border-gray-200">Seat</th>
-                    <th className="py-2 px-3 font-normal text-gray-500 w-[12.5%] text-right">Status</th>
-                  </tr>
-                </thead>
+              <div className="w-full overflow-x-auto mt-1">
+                <table className="w-full text-left text-[9px] md:text-[11px]">
+                  <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
+                    <tr>
+                      <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>
+                      <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[50%] border-r border-gray-200">Passenger / Baggage Details</th>
+                      <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[15%] border-r border-gray-200 text-center">Seat</th>
+                      <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[15%] text-center">Status</th>
+                    </tr>
+                  </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {passengers.map((pax: any, i: number) => {
                     const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
                     const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
                     const seatNo = booking.details?.seats?.[i] || pax.seat || 'Unassigned';
                     const paxType = pax.type || pax.passengerType || (pax.name?.toLowerCase().includes('child') ? 'Child' : pax.name?.toLowerCase().includes('infant') ? 'Infant' : 'Adult');
+                    const handBaggage = pax.handBaggage || '7kg (1 piece)';
+                    const checkinBaggage = pax.checkinBaggage || '15kg (1 piece)';
                     return (
                       <tr key={i}>
-                        <td className="py-3 px-3 align-top border-r border-gray-200 overflow-hidden">
-                          <p className="mb-1 font-bold">{tktNo}</p>
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200 overflow-hidden">
+                          <p className="mb-1 font-bold whitespace-nowrap">{tktNo}</p>
                         </td>
-                        <td className="py-3 px-3 align-top border-r border-gray-200">
-                          <p className="font-bold text-[12px] uppercase">
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200">
+                          <p className="font-bold text-[9px] md:text-[12px] uppercase">
                             {(pax.gender === 'Male' ? 'Mr ' : pax.gender === 'Female' ? 'Mrs ' : '')}
-                            {pax.name} 
-                            <span className="text-[10px] font-normal lowercase ml-1"> {paxType}</span>
+                            {pax.name || pax.first_name + ' ' + pax.last_name} 
+                            <span className="text-[8px] md:text-[10px] font-normal lowercase ml-1 hidden md:inline"> {paxType}</span>
                           </p>
-                          <div className="mt-1.5 space-y-0.5">
-                            <p className="text-gray-700">Hand Baggage <span className="font-bold">Onward:</span> 7kg (1 piece)</p>
-                            <p className="text-gray-700">CheckIn Baggage <span className="font-bold">Onward:</span> 15kg (1 piece)</p>
+                          <div className="mt-1 md:mt-1.5 space-y-0.5 text-[8px] md:text-[10px]">
+                            <p className="text-gray-700 whitespace-nowrap"><span className="hidden md:inline">Hand Baggage </span><span className="font-bold">Onward:</span> {handBaggage}</p>
+                            <p className="text-gray-700 whitespace-nowrap"><span className="hidden md:inline">CheckIn Baggage </span><span className="font-bold">Onward:</span> {checkinBaggage}</p>
                           </div>
                         </td>
-                        <td className="py-3 px-3 align-top border-r border-gray-200 font-bold text-gray-800">
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top border-r border-gray-200 font-bold text-gray-800 text-center">
                           {seatNo}
                         </td>
-                        <td className="py-3 px-3 align-top text-right font-medium">
-                          Confirmed
+                        <td className="py-1 px-1 md:py-3 md:px-3 align-top font-medium text-center">
+                          <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
                         </td>
                       </tr>
                     );
@@ -365,6 +378,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                 </tbody>
               </table>
             </div>
+          </div>
             {/* End of Content Box */}
             </div>
             </>
@@ -381,25 +395,26 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="bg-gray-100 px-6 py-4 rounded-b-lg flex justify-end gap-3 shrink-0 print:hidden">
+        <div className="bg-gray-100 px-3 md:px-6 py-3 rounded-b-lg flex flex-row justify-end gap-2 shrink-0 print:hidden text-[12px] md:text-[14px]">
           <button 
             onClick={(e) => { e.preventDefault(); setViewType(viewType === 'ticket' ? 'invoice' : 'ticket'); }}
-            className="px-6 py-2.5 rounded-lg font-medium text-blue-600 bg-white border border-blue-600 hover:bg-blue-50 transition mr-auto"
+            className="w-1/3 md:w-auto px-2 md:px-6 py-1.5 md:py-2.5 rounded-lg font-medium text-blue-600 bg-white border border-blue-600 hover:bg-blue-50 transition mr-auto"
           >
             {viewType === 'ticket' ? 'View Invoice' : 'View Ticket'}
           </button>
           <button 
             onClick={(e) => { e.preventDefault(); onClose(); }}
-            className="px-6 py-2.5 rounded-lg font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition"
+            className="w-1/3 md:w-auto px-2 md:px-6 py-1.5 md:py-2.5 rounded-lg font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button 
             onClick={(e) => { e.preventDefault(); handleDownloadPDF(); }}
-            className="px-6 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition flex items-center gap-2"
+            className="w-1/3 md:w-auto px-2 md:px-6 py-1.5 md:py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition flex items-center justify-center gap-1 md:gap-2"
           >
-            <Download size={18} />
-            Download {viewType === 'ticket' ? 'Ticket' : 'Invoice'}
+            <Download size={14} className="md:w-[18px] md:h-[18px]" />
+            <span className="hidden md:inline">Download {viewType === 'ticket' ? 'Ticket' : 'Invoice'}</span>
+            <span className="md:hidden">Download</span>
           </button>
         </div>
       </div>

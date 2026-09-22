@@ -159,7 +159,7 @@ export default function LandingPage() {
   const isNavWhite = isScrolled || isHovered;
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50 flex flex-col font-sans relative pb-24 lg:pb-0">
+    <div className={`min-h-[100dvh] bg-gray-50 flex flex-col font-sans relative ${isAuthenticated ? 'pb-24 lg:pb-0' : ''}`}>
       
       {/* Scroll Background Airplane */}
       <ScrollAirplane />
@@ -205,7 +205,7 @@ export default function LandingPage() {
               </h1>
             </div>
           {/* Top Tabs Pill */}
-          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-start lg:justify-between px-4 lg:px-6 py-4 lg:py-5 mx-auto relative z-30 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-20px] lg:mb-[-40px] overflow-x-auto gap-6 lg:gap-2 custom-scrollbar">
+          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-start lg:justify-between px-4 lg:px-6 py-4 lg:py-5 mx-auto relative z-30 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-20px] lg:mb-[-40px] overflow-x-auto gap-6 lg:gap-2 hidden-scrollbar">
             {[
               {name: 'Flights', icon: Plane}, {name: 'Hotels', icon: Building2}, {name: 'Villas & Homestays', icon: Map},
               {name: 'Holiday Packages', icon: Map}, {name: 'Trains', icon: Plane}, {name: 'Buses', icon: Bus},
@@ -888,7 +888,9 @@ export default function LandingPage() {
       {/* AI Chat Bot */}
       <ChatBot />
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav onProfileClick={() => isAuthenticated ? navigate('/dashboard/profile') : setIsLoginModalOpen(true)} />
+      {isAuthenticated && (
+        <MobileBottomNav onProfileClick={() => navigate('/dashboard/profile')} />
+      )}
     </div>
   );
 }
