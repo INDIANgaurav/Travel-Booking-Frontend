@@ -65,5 +65,15 @@ export const settingsApi = {
   getAgents: async () => {
     const response = await api.get('/api/settings/agents');
     return response.data;
+  },
+
+  // General Settings
+  getGeneralSettings: async () => {
+    const response = await api.get('/api/settings/general');
+    return response.data;
+  },
+  saveGeneralSettings: async (data: { bookingSessionTimerMinutes: number }) => {
+    const response = await api.post('/api/settings/general', data);
+    return response.data;
   }
 };

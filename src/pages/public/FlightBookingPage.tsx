@@ -6,6 +6,7 @@ import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefc
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
+import { settingsApi } from '../../api/settingsApi';
 import toast from 'react-hot-toast';
 
 export default function FlightBookingPage() {
@@ -35,13 +36,30 @@ export default function FlightBookingPage() {
       const remaining = Math.floor((expiresAt - Date.now()) / 1000);
       return remaining > 0 ? remaining : 0;
     }
-    return 10 * 60; // 10 Minutes default for non-series
+    return 10 * 60; // Temporary default
   });
 
   useEffect(() => {
-    if (!sessionStorage.getItem(storageKey)) {
-      sessionStorage.setItem(storageKey, (Date.now() + 10 * 60 * 1000).toString());
-    }
+    const initializeTimer = async () => {
+      if (sessionStorage.getItem(storageKey)) return;
+      
+      let timerMinutes = 10;
+      try {
+        const res = await settingsApi.getGeneralSettings();
+        if (res.success && res.data) {
+          timerMinutes = res.data.bookingSessionTimerMinutes || 10;
+        }
+      } catch (err) {
+        console.error('Failed to load session timer settings:', err);
+      }
+      
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, (Date.now() + timerMinutes * 60 * 1000).toString());
+        setTimeLeft(timerMinutes * 60);
+      }
+    };
+    
+    initializeTimer();
   }, [storageKey]);
   const [holdError, setHoldError] = useState('');
   
@@ -180,6 +198,13 @@ export default function FlightBookingPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [selectedOutbound, adultsCount, childrenCount, initialAdults, initialChildren]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      toast.error('Booking session expired. Please search again.', { duration: 5000 });
+      navigate('/');
+    }
+  }, [timeLeft, navigate]);
 
   const applyPromoCode = async () => {
     if (!promoCode) return;
@@ -396,6 +421,7 @@ export default function FlightBookingPage() {
           duration: selectedOutbound.durationMinutes,
           stops: selectedOutbound.stops,
           isSeriesFare: selectedOutbound.isSeriesFare || false,
+          segments: selectedOutbound.segments,
           passengers: passengers.map((p: any) => ({
             name: `${p.firstName} ${p.lastName}`,
             type: p.type,
@@ -555,27 +581,68 @@ export default function FlightBookingPage() {
                    </div>
                  </div>
 
-                 <div className="bg-[#f4f4f4] rounded p-4 mb-4 flex text-[14px] text-gray-800 font-medium relative">
-                   <div className="w-16 text-right font-bold text-[16px] leading-tight">
-                     {new Date(selectedOutbound.departureTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                     <br/><br/><br/>
-                     {new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                 {selectedOutbound.segments && selectedOutbound.segments.length > 1 ? (
+                   <div className="space-y-4 mb-4">
+                     {selectedOutbound.segments.map((segment: any, idx: number) => (
+                       <React.Fragment key={idx}>
+                         {idx > 0 && (
+                           <div className="flex justify-center my-2">
+                             <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold border border-amber-200">
+                               Change Plane at {selectedOutbound.segments![idx-1].destination} | Layover Time: {(() => {
+                                 const arr = new Date(selectedOutbound.segments![idx-1].arrivalTime).getTime();
+                                 const dep = new Date(segment.departureTime).getTime();
+                                 const mins = Math.floor((dep - arr) / 60000);
+                                 return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+                               })()}
+                             </div>
+                           </div>
+                         )}
+                         <div className="bg-[#f4f4f4] rounded p-4 flex text-[14px] text-gray-800 font-medium relative">
+                           <div className="w-16 text-right font-bold text-[16px] leading-tight">
+                             {new Date(segment.departureTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                             <br/><br/><br/>
+                             {new Date(segment.arrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                           </div>
+                           <div className="mx-4 flex flex-col items-center mt-1">
+                             <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
+                             <div className="w-px h-10 border-l border-dashed border-gray-400 my-1"></div>
+                             <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
+                           </div>
+                           <div className="flex-1">
+                             <div className="font-bold text-[14px] mb-6 uppercase">{segment.origin} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{segment.origin} Airport, Terminal {segment.departureTerminal || '1'}</span></div>
+                             <div className="font-bold text-[14px] uppercase">{segment.destination} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{segment.destination} Airport, Terminal {segment.arrivalTerminal || '1'}</span></div>
+                           </div>
+                           
+                           <div className="absolute top-4 right-4 flex items-center gap-1 opacity-50">
+                             <span className="text-[10px] bg-gray-200 px-1 rounded mr-2 font-bold">{segment.airline}-{segment.flightNo}</span>
+                           </div>
+                         </div>
+                       </React.Fragment>
+                     ))}
                    </div>
-                   <div className="mx-4 flex flex-col items-center mt-1">
-                     <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
-                     <div className="w-px h-10 border-l border-dashed border-gray-400 my-1"></div>
-                     <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
+                 ) : (
+                   <div className="bg-[#f4f4f4] rounded p-4 mb-4 flex text-[14px] text-gray-800 font-medium relative">
+                     <div className="w-16 text-right font-bold text-[16px] leading-tight">
+                       {new Date(selectedOutbound.departureTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                       <br/><br/><br/>
+                       {new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                     </div>
+                     <div className="mx-4 flex flex-col items-center mt-1">
+                       <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
+                       <div className="w-px h-10 border-l border-dashed border-gray-400 my-1"></div>
+                       <div className="w-2.5 h-2.5 rounded-full border-2 border-gray-400 bg-[#f4f4f4]"></div>
+                     </div>
+                     <div className="flex-1">
+                       <div className="font-bold text-[14px] mb-6 uppercase">{selectedOutbound.departureCity} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{selectedOutbound.departureAirportCode} Airport, Terminal {selectedOutbound.departureTerminal || (selectedOutbound.departureAirportCode === 'DEL' ? 'T1D' : selectedOutbound.departureAirportCode === 'BOM' ? 'T2' : 'T1')}</span></div>
+                       <div className="font-bold text-[14px] uppercase">{selectedOutbound.arrivalCity} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{selectedOutbound.arrivalAirportCode} Airport, Terminal {selectedOutbound.arrivalTerminal || (selectedOutbound.arrivalAirportCode === 'DEL' ? 'T1D' : selectedOutbound.arrivalAirportCode === 'BOM' ? 'T2' : 'T1')}</span></div>
+                     </div>
+                     
+                     <div className="absolute top-4 right-4 flex items-center gap-1 opacity-50">
+                       <span className="text-[16px]">🍽️</span>
+                       <span className="text-[16px]">🔌</span>
+                     </div>
                    </div>
-                   <div className="flex-1">
-                     <div className="font-bold text-[14px] mb-6 uppercase">{selectedOutbound.departureCity} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{selectedOutbound.departureAirportCode} Airport, Terminal {selectedOutbound.departureTerminal || (selectedOutbound.departureAirportCode === 'DEL' ? 'T1D' : selectedOutbound.departureAirportCode === 'BOM' ? 'T2' : 'T1')}</span></div>
-                     <div className="font-bold text-[14px] uppercase">{selectedOutbound.arrivalCity} <span className="text-[11px] font-normal text-gray-500 block mt-0.5">{selectedOutbound.arrivalAirportCode} Airport, Terminal {selectedOutbound.arrivalTerminal || (selectedOutbound.arrivalAirportCode === 'DEL' ? 'T1D' : selectedOutbound.arrivalAirportCode === 'BOM' ? 'T2' : 'T1')}</span></div>
-                   </div>
-                   
-                   <div className="absolute top-4 right-4 flex items-center gap-1 opacity-50">
-                     <span className="text-[16px]">🍽️</span>
-                     <span className="text-[16px]">🔌</span>
-                   </div>
-                 </div>
+                 )}
                  
                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-[12px] text-gray-800 font-bold border-t border-gray-100 pt-4 mb-2">
                     <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).cabinBaggage || 'Included'}</span></div>

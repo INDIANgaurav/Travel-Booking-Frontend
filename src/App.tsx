@@ -74,6 +74,7 @@ import AdminSMSSettings from './pages/dashboard/admin/settings/AdminSMSSettings'
 import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
 import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
 import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
+import AdminGeneralSettings from './pages/dashboard/admin/settings/AdminGeneralSettings'
 import AdminNotifications from './pages/dashboard/admin/AdminNotifications'
 import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
 import AdminGroupBookings from './pages/dashboard/admin/AdminGroupBookings'
@@ -350,6 +351,7 @@ function App() {
           <Route path="settings/roles" element={<AdminRoleMaster />} />
           <Route path="settings/pg-mapping" element={<AdminPGMapping />} />
           <Route path="settings/pages" element={<AdminDynamicPages />} />
+          <Route path="settings/general" element={<AdminGeneralSettings />} />
           
           {/* Reports */}
           <Route path="reports/passenger-calendar" element={<AdminPassengerCalendar />} />

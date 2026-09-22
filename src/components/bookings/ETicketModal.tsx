@@ -290,37 +290,88 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                       </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                      <td className="p-1 md:p-3 align-top">
-                        <div className="flex gap-1 md:gap-2 items-start">
-                          <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
-                          <div>
-                            <p className="font-bold whitespace-nowrap">{flightNo}</p>
-                            <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
-                            <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
-                            <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                    {booking.details?.segments && booking.details.segments.length > 0 ? (
+                      booking.details.segments.map((segment: any, idx: number) => (
+                        <React.Fragment key={idx}>
+                          {idx > 0 && (
+                            <tr>
+                              <td colSpan={5} className="bg-amber-50 text-amber-700 px-3 py-2 text-[10px] font-bold text-center border-y border-amber-200">
+                                Change Plane at {booking.details.segments[idx-1].destination} | Layover Time: {(() => {
+                                  const arr = new Date(booking.details.segments[idx-1].arrivalTime).getTime();
+                                  const dep = new Date(segment.departureTime).getTime();
+                                  const mins = Math.floor((dep - arr) / 60000);
+                                  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+                                })()}
+                              </td>
+                            </tr>
+                          )}
+                          <tr>
+                            <td className="p-1 md:p-3 align-top">
+                              <div className="flex gap-1 md:gap-2 items-start">
+                                <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
+                                <div>
+                                  <p className="font-bold whitespace-nowrap">{segment.airline} {segment.flightNo}</p>
+                                  <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
+                                  <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
+                                  <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-1 md:p-3 align-top">
+                              <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{segment.origin} <span className="font-normal text-gray-500 hidden md:inline">({segment.origin})</span></p>
+                              <p className="font-bold whitespace-nowrap">{new Date(segment.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                              <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{new Date(segment.departureTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                              <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">Terminal {segment.departureTerminal || '1'}</p>
+                            </td>
+                            <td className="p-1 md:p-3 align-top">
+                              <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{segment.destination} <span className="font-normal text-gray-500 hidden md:inline">({segment.destination})</span></p>
+                              <p className="font-bold whitespace-nowrap">{new Date(segment.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                              <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{new Date(segment.arrivalTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                              <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">Terminal {segment.arrivalTerminal || '1'}</p>
+                            </td>
+                            <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
+                              <p className="whitespace-nowrap">{Math.floor(segment.duration / 60)}h {segment.duration % 60}m</p>
+                              <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">Non-Stop</p>
+                            </td>
+                            <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
+                              <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="p-1 md:p-3 align-top">
+                          <div className="flex gap-1 md:gap-2 items-start">
+                            <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
+                            <div>
+                              <p className="font-bold whitespace-nowrap">{flightNo}</p>
+                              <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
+                              <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
+                              <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="p-1 md:p-3 align-top">
-                        <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.from} <span className="font-normal text-gray-500 hidden md:inline">({originCode})</span></p>
-                        <p className="font-bold whitespace-nowrap">{depTime}</p>
-                        <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
-                        <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">{leg?.origin_terminal ? `Terminal ${leg.origin_terminal}` : ''}</p>
-                      </td>
-                      <td className="p-1 md:p-3 align-top">
-                        <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.to} <span className="font-normal text-gray-500 hidden md:inline">({destCode})</span></p>
-                        <p className="font-bold whitespace-nowrap">{arrTime}</p>
-                        <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
-                      </td>
-                      <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
-                        <p className="whitespace-nowrap">{flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : '02:00'}</p>
-                        <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">{flight?.legs?.length > 1 ? `${flight.legs.length - 1} Stop(s)` : 'Non-Stop'}</p>
-                      </td>
-                      <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
-                        <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="p-1 md:p-3 align-top">
+                          <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.from} <span className="font-normal text-gray-500 hidden md:inline">({originCode})</span></p>
+                          <p className="font-bold whitespace-nowrap">{depTime}</p>
+                          <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
+                          <p className="text-gray-600 text-[8px] md:text-[11px] whitespace-nowrap">{leg?.origin_terminal ? `Terminal ${leg.origin_terminal}` : ''}</p>
+                        </td>
+                        <td className="p-1 md:p-3 align-top">
+                          <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.to} <span className="font-normal text-gray-500 hidden md:inline">({destCode})</span></p>
+                          <p className="font-bold whitespace-nowrap">{arrTime}</p>
+                          <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
+                        </td>
+                        <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
+                          <p className="whitespace-nowrap">{flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : (booking.details?.duration ? `${Math.floor(booking.details.duration / 60)}h ${booking.details.duration % 60}m` : '02:00')}</p>
+                          <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">{(leg && flight?.legs?.length > 1) ? `${flight.legs.length - 1} Stop(s)` : (booking.details?.stops > 0 ? `${booking.details.stops} Stop(s)` : 'Non-Stop')}</p>
+                        </td>
+                        <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
+                          <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

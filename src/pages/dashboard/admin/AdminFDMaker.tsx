@@ -152,6 +152,12 @@ const AdminSeriesFareMaker: React.FC = () => {
     closeBeforeDepartureHours: '' as number | ''
   });
 
+  const [isConnectingFlight, setIsConnectingFlight] = useState(false);
+  const [segments, setSegments] = useState([
+    { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' },
+    { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }
+  ]);
+
   useEffect(() => {
     if (newFare.departureTime && newFare.arrivalTime) {
       const [depH, depM] = newFare.departureTime.split(':').map(Number);
@@ -220,7 +226,19 @@ const AdminSeriesFareMaker: React.FC = () => {
   const handleCreateFare = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post('/api/series-fare', newFare);
+      const payload: any = { ...newFare };
+      if (isConnectingFlight) {
+        payload.segments = segments.filter(s => s.origin && s.destination && s.flightNo);
+        if (payload.segments.length > 0) {
+          payload.origin = payload.segments[0].origin;
+          payload.destination = payload.segments[payload.segments.length - 1].destination;
+          payload.flightNo = payload.segments.map((s: any) => s.flightNo).join(', ');
+          payload.departureTime = payload.segments[0].departureTime;
+          payload.arrivalTime = payload.segments[payload.segments.length - 1].arrivalTime;
+        }
+      }
+
+      const response = await api.post('/api/series-fare', payload);
       if (response.data) {
         setFares(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
       }
@@ -1141,60 +1159,140 @@ const AdminSeriesFareMaker: React.FC = () => {
 
                 <div className="bg-white">
                   <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start">
-                    <div className="font-bold text-gray-700 pt-1">Sector & Schedule</div>
-                    <div className="space-y-5">
-                      {/* Sub-row 1: Route */}
-                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No*</label>
-                          <input type="text" value={newFare.flightNo} onChange={e => setNewFare({ ...newFare, flightNo: e.target.value })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin*</label>
-                          <input type="text" value={newFare.origin} onChange={e => setNewFare({ ...newFare, origin: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
-                          <input type="text" placeholder="T1" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination*</label>
-                          <input type="text" value={newFare.destination} onChange={e => setNewFare({ ...newFare, destination: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
-                          <input type="text" placeholder="T2" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
+                    <div className="font-bold text-gray-700 pt-1">
+                      Sector & Schedule
+                      <div className="mt-4">
+                        <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
+                          <input 
+                            type="checkbox" 
+                            checked={isConnectingFlight} 
+                            onChange={(e) => setIsConnectingFlight(e.target.checked)} 
+                            className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                          />
+                          <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Is Connecting Flight?</span>
+                        </label>
                       </div>
-
-                      {/* Sub-row 2: Time */}
-                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
-                          <input type="text" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="e.g. 06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
-                          <input type="text" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="e.g. 23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Duration*</label>
-                          <input type="text" value={(newFare as any).duration || ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-600 mb-1">Stop Over</label>
-                          <input type="number" value={(newFare as any).stopOver ?? ''} onChange={e => setNewFare({ ...newFare, stopOver: e.target.value === '' ? '' : Number(e.target.value) } as any)} className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Day Change</label>
-                            <input type="number" value={(newFare as any).dayChange ?? ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
+                    </div>
+                    <div className="space-y-5">
+                      {!isConnectingFlight ? (
+                        <div className="space-y-5">
+                          {/* Sub-row 1: Route */}
+                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No*</label>
+                              <input type="text" value={newFare.flightNo} onChange={e => setNewFare({ ...newFare, flightNo: e.target.value })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin*</label>
+                              <input type="text" value={newFare.origin} onChange={e => setNewFare({ ...newFare, origin: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
+                              <input type="text" placeholder="T1" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination*</label>
+                              <input type="text" value={newFare.destination} onChange={e => setNewFare({ ...newFare, destination: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
+                              <input type="text" placeholder="T2" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
                           </div>
-                          <button type="button" className="w-9 h-9 bg-blue-600 hover:bg-[#155685] text-white rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-all" title="Add another flight">
-                            <Plus size={16} />
+
+                          {/* Sub-row 2: Time */}
+                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
+                              <input type="text" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="e.g. 06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
+                              <input type="text" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="e.g. 23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Duration*</label>
+                              <input type="text" value={(newFare as any).duration || ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Stop Over</label>
+                              <input type="number" value={(newFare as any).stopOver ?? ''} onChange={e => setNewFare({ ...newFare, stopOver: e.target.value === '' ? '' : Number(e.target.value) } as any)} className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <label className="block text-[10px] font-bold text-gray-600 mb-1">Day Change</label>
+                                <input type="number" value={(newFare as any).dayChange ?? ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
+                              </div>
+                              <button type="button" className="w-9 h-9 bg-blue-600 hover:bg-[#155685] text-white rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-all" title="Add another flight">
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {segments.map((seg, idx) => (
+                            <div key={idx} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative">
+                              <div className="absolute -left-3 -top-3 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md">
+                                {idx + 1}
+                              </div>
+                              {idx > 0 && (
+                                <button 
+                                  type="button" 
+                                  onClick={() => setSegments(segments.filter((_, i) => i !== idx))}
+                                  className="absolute -right-2 -top-2 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No*</label>
+                                  <input type="text" value={seg.flightNo} onChange={e => { const s = [...segments]; s[idx].flightNo = e.target.value; setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Airline Code*</label>
+                                  <input type="text" value={seg.airline} onChange={e => { const s = [...segments]; s[idx].airline = e.target.value.toUpperCase(); setSegments(s); }} placeholder="6E" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin*</label>
+                                  <input type="text" value={seg.origin} onChange={e => { const s = [...segments]; s[idx].origin = e.target.value.toUpperCase(); setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination*</label>
+                                  <input type="text" value={seg.destination} onChange={e => { const s = [...segments]; s[idx].destination = e.target.value.toUpperCase(); setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase outline-none" />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
+                                  <input type="text" value={seg.departureTime} onChange={e => { const s = [...segments]; s[idx].departureTime = e.target.value; setSegments(s); }} required placeholder="06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
+                                  <input type="text" value={seg.arrivalTime} onChange={e => { const s = [...segments]; s[idx].arrivalTime = e.target.value; setSegments(s); }} required placeholder="23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Dep Terminal</label>
+                                  <input type="text" value={seg.departureTerminal || ''} onChange={e => { const s = [...segments]; s[idx].departureTerminal = e.target.value.toUpperCase(); setSegments(s); }} placeholder="T1" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Arr Terminal</label>
+                                  <input type="text" value={seg.arrivalTerminal || ''} onChange={e => { const s = [...segments]; s[idx].arrivalTerminal = e.target.value.toUpperCase(); setSegments(s); }} placeholder="T2" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button 
+                            type="button" 
+                            onClick={() => setSegments([...segments, { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }])}
+                            className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <Plus size={14} /> Add Another Leg
                           </button>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>

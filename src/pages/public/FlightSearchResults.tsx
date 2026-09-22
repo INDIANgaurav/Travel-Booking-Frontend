@@ -37,6 +37,16 @@ interface Flight {
   nexus_query?: any;
   isSeriesFare?: boolean;
   agentCommission?: number;
+  segments?: {
+    origin: string;
+    destination: string;
+    airline: string;
+    flightNo: string;
+    departureTime: string;
+    arrivalTime: string;
+    departureTerminal?: string;
+    arrivalTerminal?: string;
+  }[];
 }
 
 const CITIES: Record<string, string> = {
@@ -897,6 +907,21 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
   const formatTime = (d: Date) => d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   const formatDuration = (mins: number) => `${Math.floor(mins / 60)}h ${mins % 60}m`;
 
+  const calculateLayover = (arrTime: string, depTime: string) => {
+    const arr = new Date(arrTime).getTime();
+    const dep = new Date(depTime).getTime();
+    const mins = Math.floor((dep - arr) / (1000 * 60));
+    if (mins < 0) return '0h 0m';
+    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  };
+
+  const getDuration = (arrTime: string, depTime: string) => {
+    const arr = new Date(arrTime).getTime();
+    const dep = new Date(depTime).getTime();
+    const mins = Math.floor((arr - dep) / (1000 * 60));
+    return mins > 0 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : '--';
+  };
+
   return (
     <div 
       onClick={onSelect}
@@ -905,44 +930,109 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
       <div className="flex items-center gap-2 mb-3">
         <img src={flight.airlineLogo} alt={flight.airline} className="w-5 h-5 object-contain" />
         <p className="font-bold text-gray-900 text-[13px]">{flight.airline}</p>
+        {flight.segments && flight.segments.length > 1 && (
+          <span className="ml-2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[9px] font-bold uppercase border border-purple-200">
+            {flight.segments.length - 1} Stop{flight.segments.length > 2 ? 's' : ''}
+          </span>
+        )}
       </div>
       
-      <div className="grid grid-cols-3 md:grid-cols-[1fr_1.5fr_1fr_1fr] items-center w-full gap-y-3 md:gap-y-0 relative">
-        {/* Departure */}
-        <div className="text-left">
-          <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(depTime)}</p>
-          <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.departureAirportCode || flight.departureCity}</p>
-          <p className="text-[9px] md:text-[10px] text-gray-400">{depTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-        </div>
-        
-        {/* Duration */}
-        <div className="flex flex-col items-center px-1 md:px-4">
-          <p className="text-[10px] md:text-[11px] text-gray-500 mb-1">{String(Math.floor(flight.durationMinutes / 60)).padStart(2, '0')}h {String(flight.durationMinutes % 60).padStart(2, '0')}m</p>
-          <div className="w-full h-[2px] bg-[#249995] relative flex items-center justify-center">
-            {flight.stops > 0 && <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#249995]"></div>}
-          </div>
-          <p className="text-[9px] md:text-[10px] text-gray-400 mt-1">{flight.stops === 0 ? 'Non stop' : `${flight.stops} stop`}</p>
-        </div>
+      {flight.segments && flight.segments.length > 1 ? (
+        <div className="flex flex-col gap-0 w-full relative">
+          {flight.segments.map((segment, idx) => {
+            const segDep = new Date(segment.departureTime);
+            const segArr = new Date(segment.arrivalTime);
+            return (
+              <React.Fragment key={idx}>
+                {idx > 0 && (
+                  <div className="flex justify-center py-4">
+                    <div className="bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-[10px] font-bold border border-amber-200 shadow-sm relative z-10">
+                      Change Plane at {flight.segments![idx-1].destination} | Layover Time: {calculateLayover(flight.segments![idx-1].arrivalTime, segment.departureTime)}
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 md:grid-cols-[1fr_1.5fr_1fr_1fr] items-center w-full gap-y-3 md:gap-y-0 relative">
+                  {/* Departure */}
+                  <div className="text-left">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-600">{segment.airline}-{segment.flightNo}</span>
+                    </div>
+                    <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segDep)}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 mt-1">{segment.origin}</p>
+                    <p className="text-[9px] md:text-[10px] text-gray-400">{segDep.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                  </div>
+                  
+                  {/* Duration */}
+                  <div className="flex flex-col items-center px-1 md:px-4">
+                    <p className="text-[10px] md:text-[11px] text-gray-500 mb-1">{getDuration(segment.arrivalTime, segment.departureTime)}</p>
+                    <div className="w-full h-[2px] bg-blue-200 relative flex items-center justify-center">
+                      <Plane size={12} className="text-blue-400 absolute" style={{ transform: 'rotate(90deg)' }} />
+                    </div>
+                  </div>
 
-        {/* Arrival */}
-        <div className="text-right md:text-left md:pl-2">
-          <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(arrTime)}</p>
-          <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.arrivalAirportCode || flight.arrivalCity}</p>
-          <p className="text-[9px] md:text-[10px] text-gray-400">{arrTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-        </div>
+                  {/* Arrival */}
+                  <div className="text-right md:text-left md:pl-2">
+                    <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segArr)}</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 mt-1">{segment.destination}</p>
+                    <p className="text-[9px] md:text-[10px] text-gray-400">{segArr.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                  </div>
 
-        {/* Price & Action */}
-        <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
-          <div className="flex flex-col items-start md:items-end">
-            <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
-            {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
-            <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
+                  {/* Price & Action (Only show on the first segment to save space) */}
+                  {idx === 0 ? (
+                    <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
+                      <div className="flex flex-col items-start md:items-end">
+                        <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
+                        {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
+                        <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
+                      </div>
+                      <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
+                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}
+                      </div>
+                    </div>
+                  ) : <div className="hidden md:block"></div>}
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 md:grid-cols-[1fr_1.5fr_1fr_1fr] items-center w-full gap-y-3 md:gap-y-0 relative">
+          {/* Departure */}
+          <div className="text-left">
+            <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(depTime)}</p>
+            <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.departureAirportCode || flight.departureCity}</p>
+            <p className="text-[9px] md:text-[10px] text-gray-400">{depTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
           </div>
-          <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
-            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}
+          
+          {/* Duration */}
+          <div className="flex flex-col items-center px-1 md:px-4">
+            <p className="text-[10px] md:text-[11px] text-gray-500 mb-1">{String(Math.floor(flight.durationMinutes / 60)).padStart(2, '0')}h {String(flight.durationMinutes % 60).padStart(2, '0')}m</p>
+            <div className="w-full h-[2px] bg-[#249995] relative flex items-center justify-center">
+              {flight.stops > 0 && <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#249995]"></div>}
+            </div>
+            <p className="text-[9px] md:text-[10px] text-gray-400 mt-1">{flight.stops === 0 ? 'Non stop' : `${flight.stops} stop`}</p>
+          </div>
+
+          {/* Arrival */}
+          <div className="text-right md:text-left md:pl-2">
+            <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(arrTime)}</p>
+            <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.arrivalAirportCode || flight.arrivalCity}</p>
+            <p className="text-[9px] md:text-[10px] text-gray-400">{arrTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+          </div>
+
+          {/* Price & Action */}
+          <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
+            <div className="flex flex-col items-start md:items-end">
+              <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
+              {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
+              <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
+            </div>
+            <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
+              {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

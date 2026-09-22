@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plane, ChevronUp, Clock, Info, X, Tag } from 'lucide-react';
 import api from '../../services/api';
+import { settingsApi } from '../../api/settingsApi';
 import toast from 'react-hot-toast';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import Dropdown from '../../components/ui/Dropdown';
@@ -35,13 +36,30 @@ const B2BAgentCheckout: React.FC = () => {
       const remaining = Math.floor((expiresAt - Date.now()) / 1000);
       return remaining > 0 ? remaining : 0;
     }
-    return 10 * 60; // 10 Minutes default
+    return 10 * 60; // Temporary default
   });
 
   useEffect(() => {
-    if (!sessionStorage.getItem(storageKey)) {
-      sessionStorage.setItem(storageKey, (Date.now() + 10 * 60 * 1000).toString());
-    }
+    const initializeTimer = async () => {
+      if (sessionStorage.getItem(storageKey)) return;
+      
+      let timerMinutes = 10;
+      try {
+        const res = await settingsApi.getGeneralSettings();
+        if (res.success && res.data) {
+          timerMinutes = res.data.bookingSessionTimerMinutes || 10;
+        }
+      } catch (err) {
+        console.error('Failed to load session timer settings:', err);
+      }
+      
+      if (!sessionStorage.getItem(storageKey)) {
+        sessionStorage.setItem(storageKey, (Date.now() + timerMinutes * 60 * 1000).toString());
+        setTimeLeft(timerMinutes * 60);
+      }
+    };
+    
+    initializeTimer();
   }, [storageKey]);
   const [holdError, setHoldError] = useState('');
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -303,7 +321,8 @@ const B2BAgentCheckout: React.FC = () => {
           to: flight.destination,
           arrivalTime: flight.arrivalTime,
           duration: flight.duration,
-          stops: flight.stops
+          stops: flight.stops,
+          segments: flight.segments
         }
       });
       
@@ -396,6 +415,13 @@ const B2BAgentCheckout: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [flight, adults, childrenCount, infants]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      toast.error('Booking session expired. Please search again.', { duration: 5000 });
+      navigate('/');
+    }
+  }, [timeLeft, navigate]);
 
   if (!flight) return null;
 
@@ -676,51 +702,110 @@ const B2BAgentCheckout: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 w-[25%]">
-                    <img src={flight.airlineLogo} alt="Airline" className="w-10 h-10 object-contain" />
-                    <div>
-                      <div className="font-black text-[#0c1a40]">{flight.airline.slice(0, 2).toUpperCase()}</div>
-                      <div className="text-[10px] text-gray-500 font-bold">{flight.flightNumber}</div>
+                {flight.segments && flight.segments.length > 1 ? (
+                  <div className="space-y-4">
+                    {flight.segments.map((segment: any, idx: number) => (
+                      <React.Fragment key={idx}>
+                        {idx > 0 && (
+                          <div className="flex justify-center my-2">
+                            <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold border border-amber-200">
+                              Change Plane at {flight.segments![idx-1].destination} | Layover Time: {(() => {
+                                const arr = new Date(flight.segments![idx-1].arrivalTime).getTime();
+                                const dep = new Date(segment.departureTime).getTime();
+                                const mins = Math.floor((dep - arr) / 60000);
+                                return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 w-[25%]">
+                            <img src={flight.airlineLogo} alt="Airline" className="w-10 h-10 object-contain" />
+                            <div>
+                              <div className="font-black text-[#0c1a40]">{segment.airline.slice(0, 2).toUpperCase()}</div>
+                              <div className="text-[10px] text-gray-500 font-bold">{segment.flightNo}</div>
+                            </div>
+                          </div>
+
+                          <div className="w-[75%] flex justify-between items-center">
+                            <div>
+                              <div className="text-lg font-black text-[#0c1a40]">
+                                {new Date(segment.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                              </div>
+                              <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
+                                {segment.origin} (T : {segment.departureTerminal || '1'})
+                              </div>
+                              <div className="text-[9px] text-gray-400">{new Date(segment.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                            </div>
+
+                            <div className="flex flex-col items-center flex-1 px-8">
+                              <div className="w-full flex items-center relative">
+                                <div className="w-full h-px bg-gray-300"></div>
+                                <Plane size={14} className="text-gray-400 absolute left-1/2 -ml-2 -mt-1 transform rotate-90" />
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-lg font-black text-[#0c1a40]">
+                                {new Date(segment.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                              </div>
+                              <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
+                                {segment.destination} (T : {segment.arrivalTerminal || '1'})
+                              </div>
+                              <div className="text-[9px] text-gray-400">{new Date(segment.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 w-[25%]">
+                      <img src={flight.airlineLogo} alt="Airline" className="w-10 h-10 object-contain" />
+                      <div>
+                        <div className="font-black text-[#0c1a40]">{flight.airline.slice(0, 2).toUpperCase()}</div>
+                        <div className="text-[10px] text-gray-500 font-bold">{flight.flightNumber}</div>
+                      </div>
+                    </div>
+
+                    <div className="w-[75%] flex justify-between items-center">
+                      <div>
+                        <div className="text-lg font-black text-[#0c1a40]">
+                          {new Date(flight.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        </div>
+                        <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
+                          {flight.departureCity === flight.departureAirportCode 
+                            ? flight.departureCity 
+                            : `${flight.departureCity} - ${flight.departureAirportCode}`} (T : {flight.departureTerminal || (flight.departureAirportCode === 'DEL' ? '1D' : flight.departureAirportCode === 'BOM' ? '2' : '1')})
+                        </div>
+                        <div className="text-[9px] text-gray-400">{new Date(flight.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      </div>
+
+                      <div className="flex flex-col items-center flex-1 px-8">
+                        <div className="text-[10px] text-gray-400 font-bold mb-1">
+                          {Math.floor(flight.durationMinutes / 60)}h {flight.durationMinutes % 60}m
+                        </div>
+                        <div className="w-full flex items-center relative">
+                          <div className="w-full h-px bg-gray-300"></div>
+                          <Plane size={14} className="text-gray-400 absolute left-1/2 -ml-2 -mt-1 transform rotate-90" />
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-lg font-black text-[#0c1a40]">
+                          {new Date(flight.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        </div>
+                        <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
+                          {flight.arrivalCity === flight.arrivalAirportCode 
+                            ? flight.arrivalCity 
+                            : `${flight.arrivalCity} - ${flight.arrivalAirportCode}`} (T : {flight.arrivalTerminal || (flight.arrivalAirportCode === 'DEL' ? '1D' : flight.arrivalAirportCode === 'BOM' ? '2' : '1')})
+                        </div>
+                        <div className="text-[9px] text-gray-400">{new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="w-[75%] flex justify-between items-center">
-                    <div>
-                      <div className="text-lg font-black text-[#0c1a40]">
-                        {new Date(flight.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                      </div>
-                      <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
-                        {flight.departureCity === flight.departureAirportCode 
-                          ? flight.departureCity 
-                          : `${flight.departureCity} - ${flight.departureAirportCode}`} (T : {flight.departureTerminal || (flight.departureAirportCode === 'DEL' ? '1D' : flight.departureAirportCode === 'BOM' ? '2' : '1')})
-                      </div>
-                      <div className="text-[9px] text-gray-400">{new Date(flight.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                    </div>
-
-                    <div className="flex flex-col items-center flex-1 px-8">
-                      <div className="text-[10px] text-gray-400 font-bold mb-1">
-                        {Math.floor(flight.durationMinutes / 60)}h {flight.durationMinutes % 60}m
-                      </div>
-                      <div className="w-full flex items-center relative">
-                        <div className="w-full h-px bg-gray-300"></div>
-                        <Plane size={14} className="text-gray-400 absolute left-1/2 -ml-2 -mt-1 transform rotate-90" />
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-lg font-black text-[#0c1a40]">
-                        {new Date(flight.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                      </div>
-                      <div className="text-[11px] font-bold text-[#0c1a40] uppercase">
-                        {flight.arrivalCity === flight.arrivalAirportCode 
-                          ? flight.arrivalCity 
-                          : `${flight.arrivalCity} - ${flight.arrivalAirportCode}`} (T : {flight.arrivalTerminal || (flight.arrivalAirportCode === 'DEL' ? '1D' : flight.arrivalAirportCode === 'BOM' ? '2' : '1')})
-                      </div>
-                      <div className="text-[9px] text-gray-400">{new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 <div className="mt-8 flex justify-between items-center">
                   <div className="bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">

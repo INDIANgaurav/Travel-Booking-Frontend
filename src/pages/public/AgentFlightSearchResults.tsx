@@ -38,6 +38,17 @@ interface Flight {
   cabinClass?: string;
   mealsIncluded?: boolean;
   isRefundable?: boolean;
+  segments?: {
+    origin: string;
+    destination: string;
+    airline: string;
+    flightNo: string;
+    departureTime: string;
+    arrivalTime: string;
+    duration: number;
+    departureTerminal?: string;
+    arrivalTerminal?: string;
+  }[];
 }
 
 export default function AgentFlightSearchResults(props: any) {
@@ -163,27 +174,70 @@ export default function AgentFlightSearchResults(props: any) {
                <p className="font-black text-gray-900 text-sm">{flight.airline}</p>
                <p className="text-[11px] text-gray-500 font-bold">{flight.flightNumber}</p>
              </div>
+             {flight.segments && flight.segments.length > 1 && (
+               <span className="ml-2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[9px] font-bold uppercase border border-purple-200">
+                 {flight.segments.length - 1} Stop{flight.segments.length > 2 ? 's' : ''}
+               </span>
+             )}
            </div>
            
-           <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? '' : 'md:w-[42%] md:gap-6 text-center'}`}>
-             <div className="text-left">
-               <p className="font-black text-lg text-gray-900">{formatTime(flight.departureTime)}</p>
-               <p className="text-[10px] text-gray-500 font-semibold">{flight.departureCity} ({flight.departureAirportCode})</p>
-             </div>
-             
-             <div className="flex-1 flex flex-col items-center">
-               <p className="text-[10px] font-bold text-gray-500 mb-1">{formatDuration(flight.durationMinutes)}</p>
-               <div className="w-full h-[2px] bg-gray-300 relative flex items-center justify-center">
-                 <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-               </div>
-               <p className="text-[10px] text-gray-500 mt-1 font-semibold">{flight.stops === 0 ? 'Non-Stop' : `${flight.stops} stop`}</p>
-             </div>
+           {flight.segments && flight.segments.length > 1 ? (
+             <div className={`flex flex-col w-full ${tripType === 'Round Trip' ? '' : 'md:w-[42%]'}`}>
+               {flight.segments.map((segment: any, idx: number) => {
+                 const segDep = new Date(segment.departureTime);
+                 const segArr = new Date(segment.arrivalTime);
+                 return (
+                   <React.Fragment key={idx}>
+                     {idx > 0 && (
+                       <div className="flex justify-center py-2">
+                         <div className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[9px] font-bold border border-amber-200">
+                           Change at {flight.segments![idx-1].destination}
+                         </div>
+                       </div>
+                     )}
+                     <div className="flex items-center justify-between w-full md:gap-6 text-center">
+                       <div className="text-left w-1/3">
+                         <div className="text-[9px] bg-gray-100 px-1 py-0.5 rounded text-gray-600 mb-1 inline-block">{segment.airline}-{segment.flightNo}</div>
+                         <p className="font-black text-lg text-gray-900 leading-tight">{formatTime(segment.departureTime)}</p>
+                         <p className="text-[10px] text-gray-500 font-semibold">{segment.origin}</p>
+                       </div>
+                       
+                       <div className="flex-1 flex flex-col items-center">
+                         <div className="w-full h-[2px] bg-blue-200 relative flex items-center justify-center">
+                           <Plane size={12} className="text-blue-400" style={{ transform: 'rotate(90deg)' }} />
+                         </div>
+                       </div>
 
-             <div className="text-right">
-               <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
-               <p className="text-[10px] text-gray-500 font-semibold">{flight.arrivalCity} ({flight.arrivalAirportCode})</p>
+                       <div className="text-right w-1/3">
+                         <p className="font-black text-lg text-gray-900 leading-tight mt-4">{formatTime(segment.arrivalTime)}</p>
+                         <p className="text-[10px] text-gray-500 font-semibold">{segment.destination}</p>
+                       </div>
+                     </div>
+                   </React.Fragment>
+                 );
+               })}
              </div>
-           </div>
+           ) : (
+             <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? '' : 'md:w-[42%] md:gap-6 text-center'}`}>
+               <div className="text-left">
+                 <p className="font-black text-lg text-gray-900">{formatTime(flight.departureTime)}</p>
+                 <p className="text-[10px] text-gray-500 font-semibold">{flight.departureCity} ({flight.departureAirportCode})</p>
+               </div>
+               
+               <div className="flex-1 flex flex-col items-center">
+                 <p className="text-[10px] font-bold text-gray-500 mb-1">{formatDuration(flight.durationMinutes)}</p>
+                 <div className="w-full h-[2px] bg-gray-300 relative flex items-center justify-center">
+                   <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                 </div>
+                 <p className="text-[10px] text-gray-500 mt-1 font-semibold">{flight.stops === 0 ? 'Non-Stop' : `${flight.stops} stop`}</p>
+               </div>
+
+               <div className="text-right">
+                 <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
+                 <p className="text-[10px] text-gray-500 font-semibold">{flight.arrivalCity} ({flight.arrivalAirportCode})</p>
+               </div>
+             </div>
+           )}
 
            <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? 'border-t border-gray-100 pt-3 mt-1' : 'md:w-[32%] md:flex-col md:items-end gap-2 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-gray-100 md:border-t-0'}`}>
              <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-0.5' : 'items-end gap-0.5'}`}>

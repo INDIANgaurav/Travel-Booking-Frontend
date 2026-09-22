@@ -146,7 +146,8 @@ export default function AdminLayout() {
             { name: 'SMS & Emails', path: '/admin/settings/sms-emails' },
             { name: 'Role Master', path: '/admin/settings/roles' },
             { name: 'PG User Mapping', path: '/admin/settings/pg-mapping' },
-            { name: 'Edit Footer Links', path: '/admin/settings/pages' }
+            { name: 'Edit Footer Links', path: '/admin/settings/pages' },
+            { name: 'General Settings', path: '/admin/settings/general' }
           ]
         },
       ]
