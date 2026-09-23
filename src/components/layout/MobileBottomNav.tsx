@@ -11,7 +11,7 @@ export default function MobileBottomNav({ onProfileClick }: { onProfileClick?: (
     { label: 'My Trips', icon: Briefcase, path: '/dashboard/bookings', action: () => navigate('/dashboard/bookings') },
     // Inject Myra AI in the middle
     { label: 'Offers', icon: Heart, path: '/dashboard/wishlist', action: () => navigate('/dashboard/wishlist') },
-    { label: 'Where2Go', icon: User, action: () => { if(onProfileClick) onProfileClick(); } },
+    { label: 'Profile', icon: User, action: () => { if(onProfileClick) { onProfileClick(); } else { navigate('/dashboard/profile'); } } },
   ];
 
   const handleMyraClick = () => {

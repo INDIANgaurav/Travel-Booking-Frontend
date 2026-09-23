@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Loader from '../../../components/common/Loader';
 import { ArrowLeft, Save } from 'lucide-react';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
+import Dropdown from '../../../components/ui/Dropdown';
 
 export default function ManageGroupBooking() {
   const { id } = useParams();
@@ -120,17 +121,18 @@ export default function ManageGroupBooking() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
                 <div>
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Title *</label>
-                  <select 
+                  <Dropdown 
                     value={p.title} 
-                    onChange={(e) => handleInputChange(index, 'title', e.target.value)}
-                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 bg-white"
-                  >
-                    <option value="Mr">Mr</option>
-                    <option value="Ms">Ms</option>
-                    <option value="Mrs">Mrs</option>
-                    <option value="Mstr">Mstr</option>
-                    <option value="Miss">Miss</option>
-                  </select>
+                    onChange={(val) => handleInputChange(index, 'title', val)}
+                    options={[
+                      { value: 'Mr', label: 'Mr' },
+                      { value: 'Ms', label: 'Ms' },
+                      { value: 'Mrs', label: 'Mrs' },
+                      { value: 'Mstr', label: 'Mstr' },
+                      { value: 'Miss', label: 'Miss' }
+                    ]}
+                    className="w-full h-[38px] border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 bg-white"
+                  />
                 </div>
                 
                 <div className="md:col-span-2">
@@ -157,14 +159,15 @@ export default function ManageGroupBooking() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Gender *</label>
-                  <select 
+                  <Dropdown 
                     value={p.gender} 
-                    onChange={(e) => handleInputChange(index, 'gender', e.target.value)}
-                    className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 bg-white"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                    onChange={(val) => handleInputChange(index, 'gender', val)}
+                    options={[
+                      { value: 'Male', label: 'Male' },
+                      { value: 'Female', label: 'Female' }
+                    ]}
+                    className="w-full h-[38px] border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 bg-white"
+                  />
                 </div>
 
                 <div className="md:col-span-2">

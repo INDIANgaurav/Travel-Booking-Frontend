@@ -83,7 +83,7 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
 
   return (
     <div 
-      className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 w-[380px] flex flex-col overflow-hidden cursor-default"
+      className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 w-[calc(100vw-48px)] sm:w-[380px] flex flex-col overflow-hidden cursor-default"
       onClick={e => e.stopPropagation()}
     >
       <div className="p-4 border-b border-gray-100 bg-gray-50">

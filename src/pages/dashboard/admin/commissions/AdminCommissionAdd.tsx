@@ -204,14 +204,15 @@ const AdminCommissionAdd = () => {
 
                   {/* PF (Mode) */}
                   <td className="px-4 py-3">
-                    <select
+                    <Dropdown
                       value={(matrix[`${fee.id}_pf`] as string) || '%'}
-                      onChange={e => handleMatrixChange(fee.id, 'pf', e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-50/50 border border-slate-200/80 rounded-xl text-sm font-semibold appearance-none focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all focus:bg-white"
-                    >
-                      <option value="%">% (Percent)</option>
-                      <option value="F">Flat Rate</option>
-                    </select>
+                      onChange={(val) => handleMatrixChange(fee.id, 'pf', val)}
+                      options={[
+                        { value: '%', label: '% (Percent)' },
+                        { value: 'F', label: 'Flat Rate' },
+                      ]}
+                      className="w-full bg-slate-50/50 border border-slate-200/80 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all focus:bg-white"
+                    />
                   </td>
 
                   {/* Gross */}

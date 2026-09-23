@@ -4,6 +4,7 @@ import api from '../../../services/api';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
+import Dropdown from '../../../components/ui/Dropdown';
 interface Traveller {
   _id?: string;
   firstName: string;
@@ -103,15 +104,16 @@ export default function TravellersPage() {
               
               <div className="w-full flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Gender</label>
-                <select 
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow h-[42px]"
+                <Dropdown 
                   value={gender}
-                  onChange={e => setGender(e.target.value as any)}
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+                  onChange={(val) => setGender(val as any)}
+                  options={[
+                    { value: 'Male', label: 'Male' },
+                    { value: 'Female', label: 'Female' },
+                    { value: 'Other', label: 'Other' }
+                  ]}
+                  className="w-full bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow h-[42px]"
+                />
               </div>
 
               <Input label="Passport Number (Optional)" value={passportNumber} onChange={e => setPassportNumber(e.target.value)} icon={<Hash size={18} />} />

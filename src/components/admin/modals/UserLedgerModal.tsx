@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, Search, Filter } from 'lucide-react';
 import api from '../../../services/api';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
+import Dropdown from '../../../components/ui/Dropdown';
 
 interface UserLedgerModalProps {
   isOpen: boolean;
@@ -94,12 +95,17 @@ export default function UserLedgerModal({ isOpen, onClose, user }: UserLedgerMod
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Category</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700">
-                <option value="ALL">-- ALL --</option>
-                <option value="FLIGHT">Flight</option>
-                <option value="HOTEL">Hotel</option>
-                <option value="TOPUP">Wallet Topup</option>
-              </select>
+              <Dropdown
+                value={category}
+                onChange={setCategory}
+                options={[
+                  { value: 'ALL', label: '-- ALL --' },
+                  { value: 'FLIGHT', label: 'Flight' },
+                  { value: 'HOTEL', label: 'Hotel' },
+                  { value: 'TOPUP', label: 'Wallet Topup' },
+                ]}
+                className="w-40 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700"
+              />
             </div>
             <button onClick={() => { setPage(1); fetchData(); }} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm">
               <Search size={16} /> {loading ? 'Fetching...' : 'Fetch'}

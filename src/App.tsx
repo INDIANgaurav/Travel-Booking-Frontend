@@ -10,6 +10,7 @@ import FlightTicket from './pages/dashboard/user/FlightTicket'
 import FlightInvoice from './pages/dashboard/user/FlightInvoice'
 import PlaceholderPage from './pages/dashboard/user/PlaceholderPage'
 import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
+import GlobalMobileBottomNav from './components/layout/GlobalMobileBottomNav'
 
 import BookingsPage from './pages/dashboard/user/BookingsPage'
 import ProfilePage from './pages/dashboard/user/ProfilePage'
@@ -168,7 +169,29 @@ function App() {
   return (
     <ConfirmProvider>
       <BrowserRouter>
-        <Toaster position="top-right" containerStyle={{ top: 80 }} />
+        <Toaster 
+          position="top-center" 
+          containerStyle={{ top: 76 }} 
+          toastOptions={{
+            style: {
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(0,0,0,0.05)',
+              color: '#1f2937',
+              borderRadius: '100px',
+              padding: '12px 24px',
+              boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
+              fontWeight: 600,
+              fontSize: '14px',
+            },
+            success: {
+              iconTheme: { primary: '#10b981', secondary: '#fff' },
+            },
+            error: {
+              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+            },
+          }}
+        />
       <AgentOnboardingModal isOpen={showAgentOnboarding} />
       <Routes>
         {/* Partner Routes */}
@@ -371,6 +394,7 @@ function App() {
           <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>
       </Routes>
+      <GlobalMobileBottomNav />
       </BrowserRouter>
     </ConfirmProvider>
   )

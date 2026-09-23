@@ -149,7 +149,7 @@ export default function AdminGroupBookings() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto bg-gray-50/50">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Agent Info Section */}
                 <div className="col-span-2 bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 mb-2">
                   <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl uppercase">

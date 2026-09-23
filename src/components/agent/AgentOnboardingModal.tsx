@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../store/authSlice';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import Dropdown from '../ui/Dropdown';
 
 interface AgentOnboardingModalProps {
   isOpen: boolean;
@@ -140,18 +141,18 @@ const AgentOnboardingModal: React.FC<AgentOnboardingModalProps> = ({ isOpen, onC
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Number of Your employee size?<span className="text-red-500">*</span></label>
-              <select 
-                name="employeeSize"
+              <Dropdown
                 value={formData.employeeSize}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-orange-200 rounded-md focus:outline-none focus:border-orange-500 bg-white"
-              >
-                <option value="">Select</option>
-                <option value="1-10">1-10</option>
-                <option value="11-50">11-50</option>
-                <option value="51-200">51-200</option>
-                <option value="200+">200+</option>
-              </select>
+                onChange={(val) => setFormData(prev => ({ ...prev, employeeSize: val }))}
+                options={[
+                  { value: '1-10', label: '1-10' },
+                  { value: '11-50', label: '11-50' },
+                  { value: '51-200', label: '51-200' },
+                  { value: '200+', label: '200+' }
+                ]}
+                placeholder="Select"
+                className="w-full border border-orange-200 rounded-md focus:outline-none focus:border-orange-500 bg-white"
+              />
             </div>
           </div>
 

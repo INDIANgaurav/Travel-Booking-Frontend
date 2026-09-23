@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Save, Loader2, Key, UserCog, CreditCard, FileText, Download, Shield, User, Briefcase, DollarSign, Globe, Lock, CheckCircle2, ChevronDown } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import Dropdown from '../ui/Dropdown';
 
 interface UserProfileFormProps {
   initialData: any;
@@ -103,13 +104,13 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
   return (
     <div className="bg-gray-50/30 rounded-2xl flex flex-col font-sans">
       {/* Modern Tabs */}
-      <div className="flex gap-2 p-2 bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+      <div className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
         {TABS.map(tab => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 py-2 px-1 sm:px-4 rounded-lg text-[10px] sm:text-sm font-bold transition-all text-center leading-tight ${
               activeTab === tab.id 
                 ? 'bg-[#0c1a40] text-white shadow-md' 
                 : 'bg-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
@@ -251,19 +252,19 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
 
                 <div className="lg:col-span-3 pt-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Profile Display Preference</label>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-2 sm:gap-4 mt-2">
                     {['Company Name', 'User Name', 'Show Both'].map(opt => (
-                      <label key={opt} onClick={() => handleChange('displayOnProfileIcon', opt)} className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40] bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
-                          {formData.displayOnProfileIcon === opt && <div className="w-2 h-2 rounded-full bg-[#0c1a40]" />}
+                      <label key={opt} onClick={() => handleChange('displayOnProfileIcon', opt)} className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-3 rounded-xl border-2 cursor-pointer transition-all flex-1 sm:flex-none justify-center ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40] bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+                        <div className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${formData.displayOnProfileIcon === opt ? 'border-[#0c1a40]' : 'border-gray-300'}`}>
+                          {formData.displayOnProfileIcon === opt && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#0c1a40]" />}
                         </div>
-                        <span className="text-sm font-bold text-gray-700">{opt}</span>
+                        <span className="text-[10px] sm:text-sm font-bold text-gray-700 text-center leading-tight">{opt}</span>
                       </label>
                     ))}
                     
-                    <label className="flex items-center gap-3 px-6 py-3 ml-auto rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors">
+                    <label className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors w-full sm:w-auto md:ml-auto">
                       <input type="checkbox" checked={formData.requiredTravelDate} onChange={e => handleChange('requiredTravelDate', e.target.checked)} className="w-4 h-4 text-[#0c1a40] rounded border-gray-300" />
-                      <span className="text-sm font-bold text-gray-700">Enforce Required Travel Date</span>
+                      <span className="text-xs sm:text-sm font-bold text-gray-700">Enforce Required Travel Date</span>
                     </label>
                   </div>
                 </div>
@@ -314,26 +315,30 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Business Type</label>
-                  <div className="relative custom-dropdown">
-                    <select value={formData.businessType} onChange={e => handleChange('businessType', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer">
-                      <option value="">--Select Business Type--</option>
-                      <option value="B2B">B2B</option>
-                      <option value="B2C">B2C</option>
-                      <option value="Supplier">Supplier</option>
-                    </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
+                  <Dropdown
+                    value={formData.businessType || ''}
+                    onChange={(val) => handleChange('businessType', val)}
+                    options={[
+                      { value: 'B2B', label: 'B2B' },
+                      { value: 'B2C', label: 'B2C' },
+                      { value: 'Supplier', label: 'Supplier' },
+                    ]}
+                    placeholder="--Select Business Type--"
+                    className="w-full bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">IATA</label>
-                  <div className="relative custom-dropdown">
-                    <select value={formData.iataCode} onChange={e => handleChange('iataCode', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer">
-                      <option value="">--Select IATA--</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  </div>
+                  <Dropdown
+                    value={formData.iataCode || ''}
+                    onChange={(val) => handleChange('iataCode', val)}
+                    options={[
+                      { value: 'Yes', label: 'Yes' },
+                      { value: 'No', label: 'No' },
+                    ]}
+                    placeholder="--Select IATA--"
+                    className="w-full bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Representative</label>
@@ -549,11 +554,11 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
         )}
 
         {/* --- ACTION BAR --- */}
-        <div className="mt-8 flex items-center justify-between p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+        <div className="mt-8 flex flex-col md:flex-row items-center md:justify-between gap-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 w-full justify-center md:justify-start">
             <CheckCircle2 size={16} /> All changes are automatically validated
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {activeTab === 'personal' && (
               <button
                 type="button"
@@ -566,7 +571,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                     toast.error(e.response?.data?.message || 'Failed to sync domain cache');
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
+                className="flex-1 sm:w-auto flex items-center justify-center gap-1.5 px-2 sm:px-6 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-[10px] sm:text-sm transition-colors shadow-md leading-tight text-center"
               >
                 Update Domain Cache
               </button>
@@ -574,9 +579,9 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-sm transition-colors shadow-md disabled:opacity-70"
+              className="flex-1 sm:w-auto flex items-center justify-center gap-1.5 px-4 sm:px-10 py-3 bg-[#0c1a40] hover:bg-[#0c1a40]/90 text-white font-bold rounded-xl text-[10px] sm:text-sm transition-colors shadow-md disabled:opacity-70 leading-tight text-center"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {isSaving ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" /> : null}
               Update
             </button>
           </div>

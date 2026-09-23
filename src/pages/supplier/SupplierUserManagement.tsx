@@ -3,6 +3,7 @@ import { Search, Plus, Edit2, Shield, UserCheck, X, Trash, Power } from 'lucide-
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import Dropdown from '../../components/ui/Dropdown';
 
 interface SupplierUser {
   id: string;
@@ -317,14 +318,15 @@ const SupplierUserManagement: React.FC = () => {
               {editingUser && (
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">Status</label>
-                  <select 
+                  <Dropdown 
                     value={formData.status}
-                    onChange={e => setFormData({...formData, status: e.target.value as any})}
-                    className="w-full text-sm px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="InActive">InActive</option>
-                  </select>
+                    onChange={(val) => setFormData({...formData, status: val as any})}
+                    options={[
+                      { value: 'Active', label: 'Active' },
+                      { value: 'InActive', label: 'InActive' }
+                    ]}
+                    className="w-full text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                  />
                 </div>
               )}
 

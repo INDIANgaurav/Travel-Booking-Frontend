@@ -308,7 +308,7 @@ export default function AdminLayout() {
       
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-[calc(100dvh-76px)] overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 h-[calc(100dvh-76px)] overflow-hidden relative pb-16 lg:pb-0">
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-slate-50 p-3 lg:p-4">
 

@@ -274,12 +274,16 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
 
                         {/* Items hidden on large screens but visible in dropdown */}
                         <div className="lg:hidden border-b border-gray-100 mb-2">
-                          <div onClick={() => { navigate('/dashboard/bookings'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <Briefcase size={16} /> My Trips
-                          </div>
-                          <div onClick={() => { navigate('/dashboard/wishlist'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <Heart size={16} className="text-[#ff4f4f] fill-[#ff4f4f]" /> Wishlist
-                          </div>
+                          {!isAdmin && (
+                            <>
+                              <div onClick={() => { navigate('/dashboard/bookings'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                                <Briefcase size={16} /> My Trips
+                              </div>
+                              <div onClick={() => { navigate('/dashboard/wishlist'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
+                                <Heart size={16} className="text-[#ff4f4f] fill-[#ff4f4f]" /> Wishlist
+                              </div>
+                            </>
+                          )}
                           {!isAdmin && user?.role !== 'B2B_AGENT' && (
                             <div onClick={() => { navigate('/partner/connect'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                               <Building2 size={16} className="text-orange-500" /> List Your Property
@@ -309,26 +313,11 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                           <div onClick={() => { navigate('/admin/profile'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <User size={16} /> My Profile
                           </div>
-                          <div onClick={() => { navigate('/dashboard/wallet'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <CreditCard size={16} /> My Wallet
-                          </div>
                           <div onClick={() => { navigate('/admin/dashboard'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Briefcase size={16} /> My Dashboard
                           </div>
-                          <div onClick={() => { navigate('/admin/helpdesk'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <MessageSquare size={16} /> Support Tickets
-                          </div>
-                          <div onClick={() => { navigate('/admin/bookings'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <Briefcase size={16} /> Booking History
-                          </div>
                           <div onClick={() => { navigate('/admin/profile?tab=security'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
                             <Building2 size={16} /> Change Password
-                          </div>
-                          <div onClick={() => { navigate('/admin/queue'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <Briefcase size={16} /> Pending Queue
-                          </div>
-                          <div onClick={() => { navigate('/admin/ledger'); setIsDropdownOpen(false); }} className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 cursor-pointer text-slate-700 font-medium text-sm transition-colors">
-                            <CreditCard size={16} /> View Ledger
                           </div>
                         </>
                       )}

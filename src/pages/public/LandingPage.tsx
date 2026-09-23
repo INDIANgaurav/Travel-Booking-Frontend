@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp, X, Check, EyeOff, Eye } from 'lucide-react';
-import MobileBottomNav from '../../components/layout/MobileBottomNav';
+
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
 import api from '../../services/api';
@@ -887,10 +887,6 @@ export default function LandingPage() {
 
       {/* AI Chat Bot */}
       <ChatBot />
-      {/* Mobile Bottom Navigation */}
-      {isAuthenticated && (
-        <MobileBottomNav onProfileClick={() => navigate('/dashboard/profile')} />
-      )}
     </div>
   );
 }

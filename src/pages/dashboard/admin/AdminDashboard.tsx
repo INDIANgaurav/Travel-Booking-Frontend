@@ -53,9 +53,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8 p-8 max-w-7xl mx-auto">
+    <div className="space-y-4 md:space-y-8 p-4 md:p-8 max-w-7xl mx-auto">
       {/* Header with Quick Actions */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Super Admin Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
@@ -101,8 +101,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Main Revenue Area Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col">
-          <div className="flex justify-between items-center mb-6">
+        <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Revenue Analytics</h2>
               <p className="text-xs text-gray-500">Monthly revenue breakdown (Current Year)</p>
@@ -180,9 +180,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Real-time Activity Feed */}
-        <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-[400px]">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Activity size={20} className="text-blue-600"/> Live Activity</h2>
+        <div className="lg:col-span-1 bg-white p-4 md:p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-gray-100 flex flex-col h-[400px]">
+          <div className="flex justify-between items-center mb-6 gap-2">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Activity size={20} className="text-blue-600 shrink-0"/> Live Activity</h2>
             <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse uppercase tracking-widest">Live</span>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">

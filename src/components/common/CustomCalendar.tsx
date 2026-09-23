@@ -194,7 +194,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
   };
 
   return (
-    <div className={`bg-white rounded-xl w-[340px] ${isOneWay ? 'sm:w-[340px]' : 'sm:w-[700px]'} shadow-2xl sm:shadow-none border border-gray-100 sm:border-none z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
+    <div className={`bg-white rounded-xl w-[calc(100vw-48px)] ${isOneWay ? 'sm:w-[340px]' : 'sm:w-[700px]'} shadow-2xl sm:shadow-none border border-gray-100 sm:border-none z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white">
         <div className="flex gap-4">
           <div className="font-bold text-gray-900 text-[18px]">

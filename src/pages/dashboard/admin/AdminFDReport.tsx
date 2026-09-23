@@ -3,6 +3,7 @@ import { Search, Download, Users, Plane, Calendar, UserCheck, Loader2, RefreshCw
 import api from '../../../services/api';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
 import toast from 'react-hot-toast';
+import Dropdown from '../../../components/ui/Dropdown';
 
 interface IPassenger {
   id: string;
@@ -120,17 +121,18 @@ export default function AdminFDReport() {
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-500 uppercase">Airline</label>
-            <select 
+            <Dropdown 
               value={airline}
-              onChange={(e) => setAirline(e.target.value)}
-              className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            >
-              <option value="">-- All Airlines --</option>
-              <option value="6E">IndiGo (6E)</option>
-              <option value="AI">Air India (AI)</option>
-              <option value="QP">Akasa Air (QP)</option>
-              <option value="SG">SpiceJet (SG)</option>
-            </select>
+              onChange={setAirline}
+              options={[
+                { value: '6E', label: 'IndiGo (6E)' },
+                { value: 'AI', label: 'Air India (AI)' },
+                { value: 'QP', label: 'Akasa Air (QP)' },
+                { value: 'SG', label: 'SpiceJet (SG)' }
+              ]}
+              placeholder="-- All Airlines --"
+              className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"
+            />
           </div>
           <div className="space-y-1 lg:col-span-2">
             <label className="text-[10px] font-bold text-gray-500 uppercase">PNR Reference</label>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import Dropdown from '../ui/Dropdown';
 
 interface CancellationModalProps {
   bookingId: string;
@@ -109,19 +110,16 @@ export default function CancellationModal({ bookingId, onClose, onSuccess }: Can
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Reason for cancellation <span className="text-red-500">*</span></label>
-                <select 
+                <Dropdown 
                   value={reason} 
-                  onChange={(e) => {
-                    setReason(e.target.value);
+                  onChange={(val) => {
+                    setReason(val);
                     if (error) setError('');
                   }}
+                  options={cancellationReasons.map(r => ({ value: r, label: r }))}
+                  placeholder="Select a reason"
                   className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none"
-                >
-                  <option value="" disabled>Select a reason</option>
-                  {cancellationReasons.map(r => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
+                />
                 {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
               </div>
 

@@ -407,12 +407,6 @@ export default function ProfilePage() {
               <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 lg:mb-8 pb-4 lg:pb-6 border-b border-gray-200/60">
                   <h2 className="text-xl lg:text-2xl font-black text-gray-900 tracking-tight">My Profile</h2>
-                  <button 
-                    onClick={() => handleUpdate()}
-                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 px-6 lg:px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
-                  >
-                    SAVE CHANGES
-                  </button>
                 </div>
 
             {/* General Information */}
@@ -555,6 +549,15 @@ export default function ProfilePage() {
                   />
                 </div>
                 </div>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button 
+                  onClick={() => handleUpdate()}
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 px-6 lg:px-8 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                >
+                  SAVE CHANGES
+                </button>
               </div>
             </>
           )}

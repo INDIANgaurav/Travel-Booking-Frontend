@@ -63,7 +63,7 @@ export default function AdminProfile() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row border-b border-gray-100">
           <button
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-2 px-6 py-4 font-medium text-sm transition-colors relative ${
@@ -90,7 +90,7 @@ export default function AdminProfile() {
           </button>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {activeTab === 'profile' ? (
             <div className="w-full">
               <UserProfileForm initialData={user} onSave={handleProfileSubmit} isSaving={loading} isAdminViewingSelf={true} />

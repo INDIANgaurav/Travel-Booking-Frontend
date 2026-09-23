@@ -80,7 +80,7 @@ export default function BookingsPage() {
 
         <div className="bg-white rounded-t-xl rounded-b-md shadow-lg border-b-4 border-blue-600 min-h-[500px]">
           {/* Tabs */}
-          <div className="flex border-b border-gray-200 px-6 pt-4 overflow-x-auto">
+          <div className="flex border-b border-gray-200 px-6 pt-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -99,14 +99,14 @@ export default function BookingsPage() {
 
           <div className="p-6 md:p-8 bg-[#f4f4f4] min-h-[420px] rounded-b-md">
             {filteredBookings.length === 0 ? (
-              <div className="bg-white p-10 md:p-20 rounded-lg text-center flex flex-col items-center justify-center min-h-[350px]">
+              <div className="bg-white p-6 md:p-20 rounded-lg text-center flex flex-col items-center justify-center min-h-[350px]">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                   <Briefcase size={40} className="text-gray-400" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-300 rounded-full"></div>
                   <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-gray-300 rounded-full"></div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Looks empty, you've no {activeTab.toLowerCase()} bookings.</h2>
-                <p className="text-gray-500 mb-8 font-medium">When you book a trip, you will see your itinerary here.</p>
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-2">Looks empty, you've no {activeTab.toLowerCase()} bookings.</h2>
+                <p className="text-sm md:text-base text-gray-500 mb-8 font-medium">When you book a trip, you will see your itinerary here.</p>
                 <button 
                   onClick={() => navigate('/')}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full transition shadow-md"

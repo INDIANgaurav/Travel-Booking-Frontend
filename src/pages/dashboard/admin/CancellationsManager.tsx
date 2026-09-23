@@ -141,7 +141,7 @@ const CancellationsManager: React.FC = () => {
             </div>
             
             <div className="p-6 overflow-y-auto max-h-[80vh]">
-              <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div>
                   <p className="text-xs text-gray-500 font-bold uppercase">Booking Ref</p>
                   <p className="font-bold text-[#171b3e] text-lg">{selectedRequest.bookingId}</p>
@@ -166,7 +166,7 @@ const CancellationsManager: React.FC = () => {
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <h4 className="font-bold text-[#171b3e] mb-4">Refund Calculation</h4>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">Supplier Penalty (₹)</label>
                     <input 
