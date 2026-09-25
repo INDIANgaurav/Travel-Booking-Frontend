@@ -48,6 +48,8 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+    // Initialize immediately on mount in case of mid-page reloads
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);

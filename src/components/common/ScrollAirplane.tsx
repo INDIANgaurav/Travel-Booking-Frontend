@@ -47,7 +47,6 @@ export default function ScrollAirplane() {
 
     // Start exactly at the navbar logo
     let d = `M ${startX} ${startY}`;
-    
     // First segment: gracefully exit the navbar logo moving bottom-left (coming from below)
     // We drop down rapidly to Y=300 so the plane quickly emerges from behind the sticky navbar.
     d += ` C ${startX - 50} ${startY + 150}, ${width * 0.3} ${200}, ${width * 0.5} ${300}`;

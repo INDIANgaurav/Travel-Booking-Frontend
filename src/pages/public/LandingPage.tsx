@@ -9,7 +9,7 @@ import LoginModal from '../../components/auth/LoginModal';
 import TopNavbar from '../../components/layout/TopNavbar';
 import ChatBot from '../../components/common/ChatBot';
 import ScrollAirplane from '../../components/common/ScrollAirplane';
-
+import InteractiveGlobe from '../../components/common/InteractiveGlobe';
 
 import CustomCalendar from '../../components/common/CustomCalendar';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
@@ -720,8 +720,78 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Popular Destinations Section with Enhanced Background */}
-      <div id="destinations" className="relative bg-[#f9f8ff] py-24 w-full overflow-hidden border-y border-gray-100">
+      {/* Global Network 3D Globe Section */}
+      <div
+        className="relative bg-[#0f172a] py-20 w-full border-t border-gray-800"
+        style={{
+          backgroundImage: `
+            radial-gradient(2px 2px at 10% 15%, rgba(255,255,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(2px 2px at 38% 22%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 50% 68%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(1px 1px at 62% 12%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(2px 2px at 75% 38%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 88% 55%, rgba(255,255,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 5% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(2px 2px at 15% 90%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 45% 95%, rgba(255,255,255,0.3) 0%, transparent 100%),
+            radial-gradient(2px 2px at 55% 5%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 70% 82%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 82% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(2px 2px at 92% 20%, rgba(255,255,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 96% 88%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 18% 35%, rgba(255,255,255,0.3) 0%, transparent 100%),
+            radial-gradient(2px 2px at 42% 55%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(1px 1px at 65% 62%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.6) 0%, transparent 100%)
+          `,
+          backgroundSize: "100% 100%",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-8">
+          
+          <div className="w-full md:w-1/2 z-10">
+            <h2 className="text-4xl font-black text-white mb-6">Seamless Travel Experience</h2>
+            <p className="text-gray-400 font-medium text-lg mb-8 leading-relaxed">
+              Discover a world of possibilities with TrippeChalo. We partner with top airlines and premium hotels to bring you an extensive network of travel options. From business trips to family vacations, our intuitive platform ensures your booking is secure, fast, and reliable.
+            </p>
+            
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check size={14} className="text-blue-400" />
+                </div>
+                <span className="text-gray-300">Curated premium travel inventory</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check size={14} className="text-blue-400" />
+                </div>
+                <span className="text-gray-300">Instant confirmations and secure payments</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check size={14} className="text-blue-400" />
+                </div>
+                <span className="text-gray-300">Dedicated support for B2B agents and partners</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Globe — fills available column width */}
+          <div className="w-full md:w-1/2 flex justify-center items-center py-4">
+            <div className="w-full" style={{ maxWidth: 480 }}>
+              <InteractiveGlobe />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      {/* Why Choose TrippeChalo Section */}
+      <div id="features-cards" className="relative bg-[#f9f8ff] py-24 w-full overflow-hidden border-y border-gray-100">
         
         {/* Decorative Dotted Path SVG in Background */}
         <svg className="absolute inset-0 w-full h-full text-[#e2d5f8] pointer-events-none z-0" preserveAspectRatio="none" viewBox="0 0 1000 300" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -746,79 +816,46 @@ export default function LandingPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-4xl font-black text-gray-900 mb-2">Popular Destinations</h2>
-              <p className="text-gray-500 font-medium">Explore our highly rated tour packages and places.</p>
-            </div>
-            <button onClick={() => setIsLoginModalOpen(true)} className="hidden md:flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 transition">
-              See all <ChevronRight size={18} />
-            </button>
-          </div>
-
-          {destinations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {destinations.map((dest, index) => {
-                const rotation = index % 2 === 0 ? 'hover:rotate-2' : 'hover:-rotate-2';
-                return (
-                  <div 
-                    key={dest.name} 
-                    onClick={() => setIsLoginModalOpen(true)}
-                    className={`relative z-20 group cursor-pointer rounded-xl bg-white p-3 pb-8 shadow-[0_10px_40px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 ${rotation} flex flex-col`}
-                  >
-                    <div className="h-48 overflow-hidden relative rounded-lg">
-                      <img 
-                        src={dest.imgUrl} 
-                        alt={dest.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent"></div>
-                      <h3 className="absolute bottom-4 left-4 text-white text-xl font-black tracking-wide">{dest.name}</h3>
-                    </div>
-                    <div className="pt-4 px-1 flex justify-between items-center">
-                      <p className="text-gray-500 text-sm font-medium">Starting from</p>
-                      <p className="text-lg font-black text-blue-600">₹{dest.price.toLocaleString()}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex gap-6 overflow-hidden opacity-50">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-64 w-full bg-white animate-pulse rounded-2xl p-3 pb-8"></div>)}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div id="features" className="relative bg-white py-24">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">Why Book With TrippeChalo?</h2>
-            <p className="text-gray-500">We provide the best booking experience for travelers and agents globally.</p>
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Why Travel With Us?</h2>
+            <p className="text-gray-500 font-medium">Experience the best in class travel booking with exclusive perks and peace of mind.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center relative z-20">
-            <div className="flex flex-col items-center group cursor-pointer">
-              <div className="w-20 h-20 bg-blue-50/50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-blue-100 transition-colors group-hover:scale-110 duration-300">
-                <Globe size={32} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Card 1 */}
+            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 flex flex-col items-center text-center border border-gray-50">
+              <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                <Globe size={32} className="text-blue-600 group-hover:text-white transition-colors duration-500" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2">Global Coverage</h3>
-              <p className="text-gray-500 leading-relaxed">Access to millions of flights and hotels worldwide at your fingertips.</p>
+              <h3 className="text-xl font-black text-gray-900 mb-3">Global Reach</h3>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium">Access millions of flights and hotels worldwide with unbeatable inventory.</p>
             </div>
-            <div className="flex flex-col items-center group cursor-pointer">
-              <div className="w-20 h-20 bg-green-50/50 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-green-100 transition-colors group-hover:scale-110 duration-300">
-                <CreditCard size={32} />
+
+            {/* Card 2 */}
+            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:-rotate-1 flex flex-col items-center text-center border border-gray-50">
+              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-6 group-hover:bg-green-500 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                <CreditCard size={32} className="text-green-600 group-hover:text-white transition-colors duration-500" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2">Best Price Guarantee</h3>
-              <p className="text-gray-500 leading-relaxed">We match prices. Find a lower price online and we will refund the difference.</p>
+              <h3 className="text-xl font-black text-gray-900 mb-3">Best Price Guarantee</h3>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium">We negotiate the best rates so you always get the most value for your money.</p>
             </div>
-            <div className="flex flex-col items-center group cursor-pointer">
-              <div className="w-20 h-20 bg-purple-50/50 text-purple-600 rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-purple-100 transition-colors group-hover:scale-110 duration-300">
-                <Shield size={32} />
+
+            {/* Card 3 */}
+            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 flex flex-col items-center text-center border border-gray-50">
+              <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                <Shield size={32} className="text-purple-600 group-hover:text-white transition-colors duration-500" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2">Secure Booking</h3>
-              <p className="text-gray-500 leading-relaxed">Your data and payments are protected with enterprise-grade security.</p>
+              <h3 className="text-xl font-black text-gray-900 mb-3">100% Secure</h3>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium">Your data and payments are protected with enterprise-grade security protocols.</p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:-rotate-1 flex flex-col items-center text-center border border-gray-50">
+              <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-orange-500 group-hover:scale-110 transition-all duration-500 shadow-sm">
+                <Smile size={32} className="text-orange-600 group-hover:text-white transition-colors duration-500" />
+              </div>
+              <h3 className="text-xl font-black text-gray-900 mb-3">24/7 Support</h3>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium">Our dedicated travel experts are always available to assist you on your journey.</p>
             </div>
           </div>
         </div>
