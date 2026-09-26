@@ -518,32 +518,53 @@ export default function FlightBookingPage() {
         </div>
       )}
 
-      <div className="bg-[#0a1930] text-white py-4 px-6 md:px-20 flex items-center justify-between shadow-md sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+      <div className="bg-[#0a1930] text-white py-4 px-4 md:px-20 flex items-center justify-between shadow-md sticky top-0 z-50">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate(-1)} 
-            className="p-2 rounded-full transition hover:bg-white/10 text-white"
+            className="p-1.5 md:p-2 rounded-full transition hover:bg-white/10 text-white"
             title="Go Back"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-black hidden sm:block">Complete your booking</h1>
+          
+          <div onClick={() => navigate('/')} className="flex items-center gap-2 cursor-pointer">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-black text-lg md:text-xl shadow-lg shadow-blue-500/30">
+              T
+            </div>
+            <span className="text-lg md:text-xl font-black text-white tracking-tight hidden sm:block">
+              Trippe<span className="text-blue-400">.</span>
+            </span>
+          </div>
+
+          <div className="h-5 w-px bg-white/20 hidden md:block mx-2"></div>
+          <h1 className="text-xl font-black hidden md:block">Complete booking</h1>
         </div>
-        <div className="hidden md:flex items-center space-x-6 text-[13px] text-gray-400">
-          <span 
-            className={`font-medium transition-colors ${bookingStep >= 1 ? 'text-white font-bold' : ''} ${maxStepReached >= 1 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
-            onClick={() => { if (maxStepReached >= 1) setBookingStep(1); }}
-          >Trip Summary</span>
-          <span>•</span>
-          <span 
-            className={`transition-colors ${bookingStep >= 2 ? 'text-white font-bold' : ''} ${maxStepReached >= 2 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
-            onClick={() => { if (maxStepReached >= 2) setBookingStep(2); }}
-          >Traveller Details</span>
-          <span>•</span>
-          <span 
-            className={`transition-colors ${bookingStep >= 3 ? 'text-white font-bold' : ''} ${maxStepReached >= 3 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
-            onClick={() => { if (maxStepReached >= 3) setBookingStep(3); }}
-          >Payment</span>
+
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="hidden lg:flex items-center space-x-6 text-[13px] text-gray-400">
+            <span 
+              className={`font-medium transition-colors ${bookingStep >= 1 ? 'text-white font-bold' : ''} ${maxStepReached >= 1 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+              onClick={() => { if (maxStepReached >= 1) setBookingStep(1); }}
+            >Trip Summary</span>
+            <span>•</span>
+            <span 
+              className={`transition-colors ${bookingStep >= 2 ? 'text-white font-bold' : ''} ${maxStepReached >= 2 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+              onClick={() => { if (maxStepReached >= 2) setBookingStep(2); }}
+            >Traveller Details</span>
+            <span>•</span>
+            <span 
+              className={`transition-colors ${bookingStep >= 3 ? 'text-white font-bold' : ''} ${maxStepReached >= 3 ? 'cursor-pointer hover:text-white' : 'cursor-not-allowed opacity-50'}`} 
+              onClick={() => { if (maxStepReached >= 3) setBookingStep(3); }}
+            >Payment</span>
+          </div>
+          
+          <div 
+            onClick={() => navigate(user ? '/dashboard/user/profile' : '/login')}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer text-white"
+          >
+            <User size={16} />
+          </div>
         </div>
       </div>
 
@@ -760,6 +781,9 @@ export default function FlightBookingPage() {
                                 const m = selectedOutboundDate.getMonth() - dobDate.getMonth();
                                 if (m < 0 || (m === 0 && selectedOutboundDate.getDate() < dobDate.getDate())) {
                                   age--;
+                                }
+                                if (p.type.toUpperCase() === 'ADULT' && age < 12) {
+                                  ageErrorMsg = 'Adults must be 12+ yrs old';
                                 }
                                 if (p.type.toUpperCase() === 'CHILD') {
                                   if (age < 2) ageErrorMsg = 'Must be at least 2 yrs (Book as Infant)';
@@ -1098,7 +1122,7 @@ export default function FlightBookingPage() {
       </div>
 
       {/* Bottom Sticky Timer Bar */}
-      <div className={`fixed bottom-20 lg:bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
+      <div className={`fixed bottom-[64px] lg:bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
         <Clock size={18} />
         {timeLeft <= 0 ? (
           'Your Session has Expired. Please restart your search.'
