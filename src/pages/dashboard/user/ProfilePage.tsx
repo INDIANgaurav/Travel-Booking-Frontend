@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { User, Users, Smartphone, LogOut, KeyRound, ChevronDown, Building2, Camera, Pencil } from 'lucide-react';
 import api from '../../../services/api';
 import { useDispatch, useSelector } from 'react-redux';
-import {  setCredentials, logout, logoutUserThunk, selectCurrentUser } from '../../../store/authSlice';
+import {  setCredentials, logout, logoutUserThunk, selectCurrentUser, updateProfileData } from '../../../store/authSlice';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import TopNavbar from '../../../components/layout/TopNavbar';
@@ -161,8 +161,7 @@ export default function ProfilePage() {
       });
       
       setProfile(prev => prev ? { ...prev, avatar: data.avatar } : null);
-      const token = localStorage.getItem('token');
-      if (token) dispatch(setCredentials({ user: data, token }));
+      dispatch(updateProfileData(data));
       
       toast.success('Profile picture updated! 📸');
     } catch (error: any) {
@@ -182,8 +181,7 @@ export default function ProfilePage() {
       const { data } = await api.delete('/api/users/profile-picture');
       
       setProfile(prev => prev ? { ...prev, avatar: '' } : null);
-      const token = localStorage.getItem('token');
-      if (token) dispatch(setCredentials({ user: data, token }));
+      dispatch(updateProfileData(data));
       
       toast.success('Profile picture deleted! 🗑️');
     } catch (error: any) {

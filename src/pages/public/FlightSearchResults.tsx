@@ -701,7 +701,7 @@ export default function FlightSearchResults() {
               (tripType === 'Round Trip' && selectedOutbound && selectedReturn) ||
               (tripType === 'One Way' && selectedOutbound)
             ) ? createPortal(
-              <div className="fixed bottom-6 left-0 w-full z-[30] pointer-events-none flex justify-center animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out px-4">
+              <div className="fixed bottom-24 lg:bottom-6 left-0 w-full z-[30] pointer-events-none flex justify-center animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out px-4">
                 <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-2xl md:rounded-full pointer-events-auto w-full max-w-[1000px] p-2 md:p-2.5 flex flex-col md:flex-row items-center justify-between gap-4">
                    
                   <div className="flex w-full md:w-auto items-center gap-4 flex-1 overflow-hidden px-2">

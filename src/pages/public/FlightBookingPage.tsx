@@ -1098,7 +1098,7 @@ export default function FlightBookingPage() {
       </div>
 
       {/* Bottom Sticky Timer Bar */}
-      <div className={`fixed bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
+      <div className={`fixed bottom-20 lg:bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
         <Clock size={18} />
         {timeLeft <= 0 ? (
           'Your Session has Expired. Please restart your search.'

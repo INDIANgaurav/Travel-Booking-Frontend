@@ -173,24 +173,28 @@ export default function InteractiveGlobe() {
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
     let targetZ = 3.5, currentZ = 3.5;
 
-    const onMouseDown = (e: MouseEvent) => {
+    const onMouseDown = (e: MouseEvent | TouchEvent) => {
       isDragging = true; dragStarted = false;
       autoRotate = false;
       if (resumeTimer) clearTimeout(resumeTimer);
-      prevX = e.clientX; prevY = e.clientY;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      prevX = clientX; prevY = clientY;
     };
     const onMouseUp = () => {
       isDragging = false;
       resumeTimer = setTimeout(() => { autoRotate = true; }, 5000);
     };
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent | TouchEvent) => {
       if (!isDragging) return;
-      const dx = e.clientX - prevX, dy = e.clientY - prevY;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - prevX, dy = clientY - prevY;
       if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragStarted = true;
       // Scale rotation speed by zoom level (currentZ)
       const speed = 0.0012 * currentZ;
       rotY += dx * speed; rotX += dy * speed;
-      prevX = e.clientX; prevY = e.clientY;
+      prevX = clientX; prevY = clientY;
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -198,11 +202,13 @@ export default function InteractiveGlobe() {
     };
 
     const raycaster = new THREE.Raycaster();
-    const onClick = (e: MouseEvent) => {
+    const onClick = (e: MouseEvent | TouchEvent) => {
       if (dragStarted) return;
+      const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as MouseEvent).clientX;
+      const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as MouseEvent).clientY;
       const rect = renderer.domElement.getBoundingClientRect();
-      const nx = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-      const ny = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+      const nx = ((clientX - rect.left) / rect.width)  * 2 - 1;
+      const ny = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
       const hits = raycaster.intersectObjects(markerMeshes.map(m => m.dot));
       if (hits.length) {
@@ -221,10 +227,14 @@ export default function InteractiveGlobe() {
     };
 
     mount.addEventListener("mousedown", onMouseDown);
+    mount.addEventListener("touchstart", onMouseDown, { passive: false });
     mount.addEventListener("click",     onClick);
+    mount.addEventListener("touchend",  onClick);
     mount.addEventListener("wheel",     onWheel, { passive: false });
     window.addEventListener("mouseup",  onMouseUp);
+    window.addEventListener("touchend", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("touchmove", onMouseMove, { passive: false });
 
     let frame = 0, t = 0;
     const animate = () => {
@@ -260,10 +270,14 @@ export default function InteractiveGlobe() {
       cancelAnimationFrame(frame);
       if (resumeTimer) clearTimeout(resumeTimer);
       mount.removeEventListener("mousedown", onMouseDown);
+      mount.removeEventListener("touchstart", onMouseDown);
       mount.removeEventListener("click",     onClick);
+      mount.removeEventListener("touchend",  onClick);
       mount.removeEventListener("wheel",     onWheel);
       window.removeEventListener("mouseup",  onMouseUp);
+      window.removeEventListener("touchend", onMouseUp);
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchmove", onMouseMove);
       renderer.dispose(); dotTex.dispose(); ringTex.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
