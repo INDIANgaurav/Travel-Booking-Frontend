@@ -18,8 +18,23 @@ const SupplierDashboardLayout: React.FC = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [showAnnouncementsDropdown, setShowAnnouncementsDropdown] = useState(false);
-  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
-  const [hasSeenAnnouncements, setHasSeenAnnouncements] = useState(false);
+  const [dismissedBanners, setDismissedBanners] = useState<string[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem('dismissedBanners') || '[]'); } catch { return []; }
+  });
+  const [seenAnnouncements, setSeenAnnouncements] = useState<string[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem('seenAnnouncements') || '[]'); } catch { return []; }
+  });
+
+  const urgentAnnouncements = announcements.filter(a => (a.type === 'ERROR' || a.type === 'WARNING') && !dismissedBanners.includes(a._id));
+  const hasUrgentAnnouncements = urgentAnnouncements.length > 0;
+  
+  const handleDismissBanner = () => {
+    const newDismissed = Array.from(new Set([...dismissedBanners, ...urgentAnnouncements.map(a => a._id)]));
+    setDismissedBanners(newDismissed);
+    sessionStorage.setItem('dismissedBanners', JSON.stringify(newDismissed));
+  };
+  
+  const unseenCount = announcements.filter(a => !seenAnnouncements.includes(a._id)).length;
 
   const profileRef = React.useRef<HTMLDivElement>(null);
   const announcementsRef = React.useRef<HTMLDivElement>(null);
@@ -78,10 +93,10 @@ const SupplierDashboardLayout: React.FC = () => {
   return (
     <div className="min-h-dvh bg-[#f1f5f9] flex flex-col font-sans text-gray-800">
       {/* Ticker / Banner for urgent announcements */}
-      {!isBannerDismissed && announcements.length > 0 && announcements.some(a => a.type === 'ERROR' || a.type === 'WARNING') && (
+      {hasUrgentAnnouncements && (
         <div className="w-full bg-red-600 text-white text-xs font-medium py-1.5 px-2 overflow-hidden relative flex items-center z-[60]">
           <button 
-            onClick={() => setIsBannerDismissed(true)} 
+            onClick={handleDismissBanner} 
             className="absolute right-2 z-10 p-1 bg-red-700/80 hover:bg-red-800 rounded text-white cursor-pointer shadow-sm backdrop-blur-sm transition-colors"
             title="Dismiss"
           >
@@ -92,7 +107,7 @@ const SupplierDashboardLayout: React.FC = () => {
             <div className="animate-[scrollText_25s_linear_infinite] flex whitespace-nowrap items-center hover:[animation-play-state:paused]">
               {/* First Set */}
               <div className="flex items-center gap-8 px-4">
-                {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                {urgentAnnouncements.map((a, i) => (
                   <span key={`a1-${i}`} className="flex items-center gap-2">
                     <AlertTriangle size={14} />
                     {a.title}: {a.message}
@@ -102,7 +117,7 @@ const SupplierDashboardLayout: React.FC = () => {
               </div>
               {/* Second Set (Duplicate for smooth loop) */}
               <div className="flex items-center gap-8 px-4">
-                {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                {urgentAnnouncements.map((a, i) => (
                   <span key={`a2-${i}`} className="flex items-center gap-2">
                     <AlertTriangle size={14} />
                     {a.title}: {a.message}
@@ -174,15 +189,17 @@ const SupplierDashboardLayout: React.FC = () => {
               onClick={() => {
                 setShowAnnouncementsDropdown(!showAnnouncementsDropdown);
                 if (!showAnnouncementsDropdown) {
-                  setHasSeenAnnouncements(true);
+                  const newSeen = Array.from(new Set([...seenAnnouncements, ...announcements.map(a => a._id)]));
+                  setSeenAnnouncements(newSeen);
+                  sessionStorage.setItem('seenAnnouncements', JSON.stringify(newSeen));
                 }
               }}
               className="relative p-2 rounded-full transition-colors hover:bg-white/10 text-white"
             >
               <Megaphone size={20} />
-              {announcements.length > 0 && !hasSeenAnnouncements && (
+              {unseenCount > 0 && (
                 <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#0b1031] min-w-[20px] text-center">
-                  {announcements.length}
+                  {unseenCount}
                 </span>
               )}
             </button>
