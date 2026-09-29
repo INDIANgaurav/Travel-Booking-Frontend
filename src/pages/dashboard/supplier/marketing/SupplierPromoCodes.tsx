@@ -112,19 +112,19 @@ const SupplierPromoCodes = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Tag className="h-6 w-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Promo Code Engine
           </h1>
-          <p className="text-gray-500 mt-1">Manage marketing discounts and flash sales</p>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Manage marketing discounts and flash sales</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full sm:w-auto">
           <button
             onClick={() => fetchPromosAndFlights()}
-            className="p-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
+            className="p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm cursor-pointer flex items-center justify-center"
             title="Refresh"
           >
             <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
@@ -139,7 +139,7 @@ const SupplierPromoCodes = () => {
               setEditingId(null);
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Create Promo

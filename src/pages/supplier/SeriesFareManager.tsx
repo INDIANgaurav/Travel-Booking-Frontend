@@ -361,15 +361,15 @@ const SeriesFareManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="bg-white border-l-4 border-[#0b1031] p-5 rounded-xl shadow-sm flex justify-between items-center">
+      <div className="bg-white border-l-4 border-[#0b1031] p-4 sm:p-5 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-black text-[#0b1031] tracking-wide uppercase">Series Fare Manager</h2>
+          <h2 className="text-lg sm:text-xl font-black text-[#0b1031] tracking-wide uppercase">Series Fare Manager</h2>
           <p className="text-xs text-gray-500 font-medium mt-1">Manage and update your flight inventory efficiently</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
           <button 
             onClick={() => setShowBulkUploadModal(true)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold text-sm transition-all shadow-md"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg flex justify-center items-center gap-2 font-bold text-sm transition-all shadow-md"
             title="Bulk Upload Fares"
           >
             <Upload size={18} />
@@ -377,7 +377,7 @@ const SeriesFareManager: React.FC = () => {
           </button>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-[#0b1031] hover:bg-blue-900 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold text-sm transition-all shadow-md"
+            className="w-full sm:w-auto bg-[#0b1031] hover:bg-blue-900 text-white px-5 py-2.5 rounded-lg flex justify-center items-center gap-2 font-bold text-sm transition-all shadow-md"
             title="Add New Series Fare"
           >
             <Plus size={18} />
@@ -727,7 +727,7 @@ const SeriesFareManager: React.FC = () => {
 
       {/* Create Series Fare Fullscreen Form Overlay */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-[#0b1031]/60 backdrop-blur-sm z-50 overflow-y-auto font-sans p-4 md:p-6 flex items-start justify-center">
+        <div className="fixed inset-0 bg-[#0b1031]/60 backdrop-blur-sm z-[100] overflow-y-auto font-sans p-2 sm:p-4 md:p-6 flex items-start justify-center">
           <div className="w-full max-w-6xl bg-white rounded-xl shadow-2xl border border-[#0b1031]/20 overflow-visible mb-12">
             {/* Header Bar */}
             <div className="bg-[#0b1031] text-white px-6 py-4 flex justify-between items-center">
@@ -744,9 +744,9 @@ const SeriesFareManager: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateFare} className="p-8 space-y-8 text-xs text-gray-800">
+            <form onSubmit={handleCreateFare} className="p-4 sm:p-8 space-y-8 text-xs text-gray-800">
               {/* SECTION 1: Travel Journey Details */}
-              <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-visible p-8">
+              <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-visible p-4 sm:p-8">
                 <div className="font-black text-sm text-[#0b1031] mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
                   <Plane size={18} className="text-[#0b1031]" />
                   Travel Journey Details

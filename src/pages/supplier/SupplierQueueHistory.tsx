@@ -158,7 +158,7 @@ const SupplierQueueHistory: React.FC = () => {
 
           {/* Search By row */}
           <div className="mt-4 flex items-center gap-2">
-            <div className="relative w-64">
+            <div className="relative w-full max-w-xs">
               <input
                 type="text"
                 placeholder="Search By"

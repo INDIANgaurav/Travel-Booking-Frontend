@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -103,6 +103,7 @@ export default function AdminLayout() {
       title: 'Marketing & Promos',
       items: [
         { name: 'Promo Codes', path: '/admin/marketing/promos', icon: <Tag size={20} /> },
+        { name: 'Announcements', path: '/admin/marketing/announcements', icon: <Megaphone size={20} /> },
       ]
     },
     {
@@ -226,17 +227,17 @@ export default function AdminLayout() {
                             if (!isSidebarOpen) setIsSidebarOpen(true);
                             toggleMenu(item.name);
                           }}
-                          className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
                             isActive 
                               ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
                               : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors flex-shrink-0`}>
                               {item.icon}
                             </span>
-                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide whitespace-nowrap">{item.name}</span>}
+                            {isSidebarOpen && <span className="font-medium text-[13px] tracking-wide truncate">{item.name}</span>}
                           </div>
                           {isSidebarOpen && (
                             <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -250,17 +251,17 @@ export default function AdminLayout() {
                               setIsSidebarOpen(false);
                             }
                           }}
-                          className={`flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
                             isActive 
                               ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
                               : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors`}>
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className={`${isActive ? 'text-blue-300' : 'text-blue-200/70 group-hover:text-blue-300'} transition-colors flex-shrink-0`}>
                               {item.icon}
                             </span>
-                            {isSidebarOpen && <span className="font-medium text-sm tracking-wide whitespace-nowrap">{item.name}</span>}
+                            {isSidebarOpen && <span className="font-medium text-[13px] tracking-wide truncate">{item.name}</span>}
                           </div>
                           {!isSidebarOpen && (
                             <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">

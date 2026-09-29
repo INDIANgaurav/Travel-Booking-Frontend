@@ -75,5 +75,27 @@ export const settingsApi = {
   saveGeneralSettings: async (data: { bookingSessionTimerMinutes: number }) => {
     const response = await api.post('/api/settings/general', data);
     return response.data;
+  },
+
+  // Announcements
+  getAnnouncements: async () => {
+    const response = await api.get('/api/settings/announcements');
+    return response.data;
+  },
+  getActiveAnnouncements: async () => {
+    const response = await api.get('/api/settings/announcements/active');
+    return response.data;
+  },
+  createAnnouncement: async (data: any) => {
+    const response = await api.post('/api/settings/announcements', data);
+    return response.data;
+  },
+  updateAnnouncement: async (id: string, data: any) => {
+    const response = await api.put(`/api/settings/announcements/${id}`, data);
+    return response.data;
+  },
+  deleteAnnouncement: async (id: string) => {
+    const response = await api.delete(`/api/settings/announcements/${id}`);
+    return response.data;
   }
 };

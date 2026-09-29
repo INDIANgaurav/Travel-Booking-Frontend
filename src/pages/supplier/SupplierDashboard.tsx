@@ -60,10 +60,10 @@ const SupplierDashboard: React.FC = () => {
         <h3 className="text-sm font-bold text-gray-800">Overall Summary</h3>
 
         {/* Time Period Selection */}
-        <div className="flex flex-wrap items-end gap-4 border-b border-gray-100 pb-5 relative z-50">
+        <div className="flex flex-wrap items-end gap-4 border-b border-gray-100 pb-5 relative z-10">
           <div className="flex flex-col gap-1.5 w-full sm:w-auto">
             <span className="text-[11px] font-bold tracking-wide text-gray-600">From Date</span>
-            <div className="w-full sm:w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-50">
+            <div className="w-full sm:w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-10">
               <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                 <DOBCalendar 
                   value={fromDate} 
@@ -75,7 +75,7 @@ const SupplierDashboard: React.FC = () => {
           
           <div className="flex flex-col gap-1.5 w-full sm:w-auto">
             <span className="text-[11px] font-bold tracking-wide text-gray-600">To Date</span>
-            <div className="w-full sm:w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-50">
+            <div className="w-full sm:w-[160px] h-[38px] border border-gray-200 rounded-lg relative bg-white flex items-center px-3 shadow-sm focus-within:border-emerald-500 transition-colors z-10">
               <div className="absolute inset-0 [&>div]:h-full [&>div>div:first-child]:h-full [&>div>div:first-child]:border-none [&>div>div:first-child]:bg-transparent">
                 <DOBCalendar 
                   value={toDate} 

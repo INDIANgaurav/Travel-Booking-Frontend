@@ -66,7 +66,7 @@ export default function InteractiveGlobe() {
   useEffect(() => {
     api.get("/api/cms/globe-stats")
       .then(r  => setMarkers(r.data))
-      .catch(() => setMarkers(FALLBACK));
+      .catch(() => setMarkers([]));
   }, []);
 
   // Measure real available width
@@ -86,7 +86,7 @@ export default function InteractiveGlobe() {
 
   useEffect(() => {
     const mount = mountRef.current;
-    if (!mount || markers.length === 0 || size === 0) return;
+    if (!mount || size === 0) return;
 
     const SIZE = size;
     const scene  = new THREE.Scene();

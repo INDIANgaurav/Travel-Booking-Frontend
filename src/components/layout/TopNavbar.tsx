@@ -6,7 +6,8 @@ import {  selectIsAuthenticated, selectCurrentUser, logout, logoutUserThunk } fr
 import LoginModal from '../auth/LoginModal';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useAdminSocket } from '../../hooks/useAdminSocket';
-import { Bell } from 'lucide-react';
+import { Bell, Megaphone, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { settingsApi } from '../../api/settingsApi';
 
 interface TopNavbarProps {
   onMenuClick?: () => void;
@@ -29,13 +30,38 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { unreadCount } = useAdminSocket();
   const isAdmin = user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN');
+  const isAgentOrSupplier = user?.roles?.includes('B2B_AGENT') || user?.roles?.includes('SUPPLIER_AGENT') || user?.roles?.includes('SUPPLIER_STAFF') || user?.roles?.includes('SELLER');
 
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [showAnnouncementsDropdown, setShowAnnouncementsDropdown] = useState(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const announcementsRef = useRef<HTMLDivElement>(null);
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      settingsApi.getActiveAnnouncements().then(res => {
+        if (res.data) {
+          // Filter announcements by target audience
+          const filtered = res.data.filter((a: any) => 
+            a.targetAudience === 'ALL' || 
+            (a.targetAudience === 'B2B' && user?.roles?.includes('B2B_AGENT')) ||
+            (a.targetAudience === 'B2C' && !isAgentOrSupplier && !isAdmin)
+          );
+          setAnnouncements(filtered);
+        }
+      }).catch(() => {});
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (announcementsRef.current && !announcementsRef.current.contains(event.target as Node)) {
+        setShowAnnouncementsDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -79,9 +105,55 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
 
   return (
     <>
-      <nav 
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b print:hidden ${navBgClass}`}
-      >
+      <div className="fixed top-0 left-0 w-full z-50 transition-all duration-300 print:hidden flex flex-col">
+        {/* Ticker / Banner for urgent announcements */}
+        {!isBannerDismissed && announcements.length > 0 && announcements.some(a => a.type === 'ERROR' || a.type === 'WARNING') && (
+          <div className="w-full bg-red-600 text-white text-xs font-medium py-1.5 px-2 overflow-hidden relative flex items-center">
+            <button 
+              onClick={() => setIsBannerDismissed(true)} 
+              className="absolute right-2 z-10 p-1 bg-red-700/80 hover:bg-red-800 rounded text-white cursor-pointer shadow-sm backdrop-blur-sm transition-colors"
+              title="Dismiss"
+            >
+              <X size={14} />
+            </button>
+            
+            <div className="flex-1 overflow-hidden mr-8 relative flex">
+              <div className="animate-[scrollText_25s_linear_infinite] flex whitespace-nowrap items-center hover:[animation-play-state:paused]">
+                {/* First Set */}
+                <div className="flex items-center gap-8 px-4">
+                  {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                    <span key={`a1-${i}`} className="flex items-center gap-2">
+                      <AlertTriangle size={14} />
+                      {a.title}: {a.message}
+                      {a.validUntil && ` (Valid till ${new Date(a.validUntil).toLocaleDateString()})`}
+                    </span>
+                  ))}
+                </div>
+                {/* Second Set (Duplicate for smooth loop) */}
+                <div className="flex items-center gap-8 px-4">
+                  {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                    <span key={`a2-${i}`} className="flex items-center gap-2">
+                      <AlertTriangle size={14} />
+                      {a.title}: {a.message}
+                      {a.validUntil && ` (Valid till ${new Date(a.validUntil).toLocaleDateString()})`}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <style>{`
+              @keyframes scrollText {
+                0% { transform: translateX(0%); }
+                100% { transform: translateX(-50%); }
+              }
+            `}</style>
+          </div>
+        )}
+        
+        <nav 
+          className={`w-full transition-all duration-300 border-b ${navBgClass}`}
+        >
         <div className={`${portalMode ? 'w-full' : 'max-w-[1200px] mx-auto'} px-6 flex justify-between items-center`}>
           
           {/* Back Button & Logo */}
@@ -222,6 +294,59 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
               </button>
             )}
 
+            {/* Agent Announcements */}
+            {isAuthenticated && (
+              <div className="relative" ref={announcementsRef}>
+                <button 
+                  onClick={() => setShowAnnouncementsDropdown(!showAnnouncementsDropdown)}
+                  className={`relative p-2 rounded-full transition-colors ml-2 ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+                >
+                  <Megaphone size={20} />
+                  {announcements.length > 0 && (
+                    <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white min-w-[20px] text-center">
+                      {announcements.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Announcements Dropdown */}
+                {showAnnouncementsDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                    <div className="bg-slate-50 border-b border-gray-100 px-4 py-3 flex justify-between items-center">
+                      <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Megaphone size={16} className="text-blue-600" />
+                        Announcements
+                      </h3>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{announcements.length} New</span>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {announcements.length === 0 ? (
+                        <div className="p-6 text-center text-gray-500 text-sm">No new announcements</div>
+                      ) : (
+                        announcements.map((a, i) => (
+                          <div key={i} className="p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors">
+                            <div className="flex gap-3">
+                              <div className="mt-0.5 flex-shrink-0">
+                                {a.type === 'INFO' && <Info size={16} className="text-blue-500" />}
+                                {a.type === 'WARNING' && <AlertTriangle size={16} className="text-amber-500" />}
+                                {a.type === 'SUCCESS' && <CheckCircle size={16} className="text-green-500" />}
+                                {a.type === 'ERROR' && <XCircle size={16} className="text-red-500" />}
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-800">{a.title}</h4>
+                                <p className="text-xs text-slate-600 mt-1 leading-relaxed">{a.message}</p>
+                                <span className="text-[10px] text-slate-400 mt-2 block">{new Date(a.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Login / User Button */}
             <div className="ml-2 md:ml-4 flex items-center gap-4 relative">
               {isAuthenticated ? (
@@ -356,7 +481,8 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
 
           </div>
         </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* Mobile Sidebar Drawer */}
       <div 

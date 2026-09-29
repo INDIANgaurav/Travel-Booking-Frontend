@@ -85,6 +85,7 @@ import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
 import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
 import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
 import AdminPromoCodes from './pages/dashboard/admin/marketing/AdminPromoCodes'
+import AdminAnnouncements from './pages/dashboard/admin/settings/AdminAnnouncements'
 import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
 import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
 import AdminCommissionList from './pages/dashboard/admin/commissions/AdminCommissionList'
@@ -256,6 +257,7 @@ function App() {
             <Route path="history" element={<SupplierBookingHistory />} />
             <Route path="ledger" element={<B2BAccountStatement />} />
             <Route path="series-queue" element={<SupplierQueueHistory />} />
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
@@ -363,6 +365,7 @@ function App() {
           <Route path="suppliers" element={<SupplierManagement />} />
           <Route path="cug-suppliers" element={<CugSuppliersManager />} />
           <Route path="marketing/promos" element={<AdminPromoCodes />} />
+          <Route path="marketing/announcements" element={<AdminAnnouncements />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="fd-maker" element={<AdminFDMaker />} />
           <Route path="fd-report" element={<AdminFDReport />} />

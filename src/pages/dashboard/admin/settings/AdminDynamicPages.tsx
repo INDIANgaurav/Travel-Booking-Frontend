@@ -113,7 +113,7 @@ export default function AdminDynamicPages() {
                   theme="snow" 
                   value={content} 
                   onChange={setContent} 
-                  className="h-64 border-none"
+                  className="h-64 border-none text-slate-900 [&_.ql-editor]:text-slate-900 [&_.ql-editor]:text-base [&_.ql-editor_*]:!text-slate-900"
                 />
               </div>
             )}

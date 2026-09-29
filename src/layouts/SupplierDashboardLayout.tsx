@@ -4,7 +4,9 @@ import { LayoutDashboard, Users, Tag, History, Layers, User, LogOut, Phone, Mail
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk, selectCurrentUser, setCredentials } from '../store/authSlice';
 import api from '../services/api';
+import { settingsApi } from '../api/settingsApi';
 import SupplierMobileBottomNav from '../components/layout/SupplierMobileBottomNav';
+import { Megaphone, Info, AlertTriangle, CheckCircle, XCircle, X } from 'lucide-react';
 
 const SupplierDashboardLayout: React.FC = () => {
   const dispatch = useDispatch();
@@ -13,8 +15,14 @@ const SupplierDashboardLayout: React.FC = () => {
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [showAnnouncementsDropdown, setShowAnnouncementsDropdown] = useState(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [hasSeenAnnouncements, setHasSeenAnnouncements] = useState(false);
 
   const profileRef = React.useRef<HTMLDivElement>(null);
+  const announcementsRef = React.useRef<HTMLDivElement>(null);
   
   React.useEffect(() => {
     const fetchBalance = async () => {
@@ -32,13 +40,26 @@ const SupplierDashboardLayout: React.FC = () => {
     };
     if (currentUser) {
       fetchBalance();
+      
+      settingsApi.getActiveAnnouncements().then(res => {
+        if (res.data) {
+          const filtered = res.data.filter((a: any) => {
+            const audience = Array.isArray(a.targetAudience) ? a.targetAudience : [a.targetAudience];
+            return audience.includes('ALL') || audience.includes('SUPPLIER');
+          });
+          setAnnouncements(filtered);
+        }
+      }).catch(() => {});
     }
-  }, []);
+  }, [currentUser]);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
+      }
+      if (announcementsRef.current && !announcementsRef.current.contains(event.target as Node)) {
+        setShowAnnouncementsDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -56,15 +77,66 @@ const SupplierDashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-dvh bg-[#f1f5f9] flex flex-col font-sans text-gray-800">
+      {/* Ticker / Banner for urgent announcements */}
+      {!isBannerDismissed && announcements.length > 0 && announcements.some(a => a.type === 'ERROR' || a.type === 'WARNING') && (
+        <div className="w-full bg-red-600 text-white text-xs font-medium py-1.5 px-2 overflow-hidden relative flex items-center z-[60]">
+          <button 
+            onClick={() => setIsBannerDismissed(true)} 
+            className="absolute right-2 z-10 p-1 bg-red-700/80 hover:bg-red-800 rounded text-white cursor-pointer shadow-sm backdrop-blur-sm transition-colors"
+            title="Dismiss"
+          >
+            <X size={14} />
+          </button>
+          
+          <div className="flex-1 overflow-hidden mr-8 relative flex">
+            <div className="animate-[scrollText_25s_linear_infinite] flex whitespace-nowrap items-center hover:[animation-play-state:paused]">
+              {/* First Set */}
+              <div className="flex items-center gap-8 px-4">
+                {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                  <span key={`a1-${i}`} className="flex items-center gap-2">
+                    <AlertTriangle size={14} />
+                    {a.title}: {a.message}
+                    {a.validUntil && ` (Valid till ${new Date(a.validUntil).toLocaleDateString()})`}
+                  </span>
+                ))}
+              </div>
+              {/* Second Set (Duplicate for smooth loop) */}
+              <div className="flex items-center gap-8 px-4">
+                {announcements.filter(a => a.type === 'ERROR' || a.type === 'WARNING').map((a, i) => (
+                  <span key={`a2-${i}`} className="flex items-center gap-2">
+                    <AlertTriangle size={14} />
+                    {a.title}: {a.message}
+                    {a.validUntil && ` (Valid till ${new Date(a.validUntil).toLocaleDateString()})`}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <style>{`
+            @keyframes scrollText {
+              0% { transform: translateX(0%); }
+              100% { transform: translateX(-50%); }
+            }
+          `}</style>
+        </div>
+      )}
       
       {/* Top Header - Dark Premium Theme */}
-      <header className="bg-[#0b1031] px-3 sm:px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10 relative">
+      <header className="bg-[#0b1031] px-3 sm:px-6 lg:px-10 py-3 flex justify-between items-center sticky top-0 z-50 shadow-xl border-b border-white/10">
         {/* Subtle background glow effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-10 relative z-10 shrink-0">
+          <button 
+            className="lg:hidden text-white p-1 hover:bg-white/10 rounded-lg transition"
+            onClick={() => setShowMobileMenu(true)}
+          >
+            <Layers size={24} />
+          </button>
+          
           <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/supplier-portal/dashboard')}>
             <div className="flex items-center justify-center bg-white p-1 sm:p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform shrink-0">
               <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
@@ -95,6 +167,65 @@ const SupplierDashboardLayout: React.FC = () => {
           </div>
 
           <div className="hidden sm:block h-8 w-px bg-white/10 mx-1"></div>
+
+          {/* Supplier Announcements */}
+          <div className="relative mr-1" ref={announcementsRef}>
+            <button 
+              onClick={() => {
+                setShowAnnouncementsDropdown(!showAnnouncementsDropdown);
+                if (!showAnnouncementsDropdown) {
+                  setHasSeenAnnouncements(true);
+                }
+              }}
+              className="relative p-2 rounded-full transition-colors hover:bg-white/10 text-white"
+            >
+              <Megaphone size={20} />
+              {announcements.length > 0 && !hasSeenAnnouncements && (
+                <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-[#0b1031] min-w-[20px] text-center">
+                  {announcements.length}
+                </span>
+              )}
+            </button>
+
+            {/* Announcements Dropdown */}
+            {showAnnouncementsDropdown && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden z-50 backdrop-blur-xl">
+                <div className="bg-white/5 border-b border-white/10 px-4 py-3 flex justify-between items-center">
+                  <h3 className="font-bold text-white flex items-center gap-2">
+                    <Megaphone size={16} className="text-blue-400" />
+                    Announcements
+                  </h3>
+                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold border border-blue-500/30">{announcements.length} New</span>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {announcements.length === 0 ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">No new announcements</div>
+                  ) : (
+                    announcements.map((a, i) => (
+                      <div key={i} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <div className="flex gap-3">
+                          <div className="mt-0.5 flex-shrink-0">
+                            {a.type === 'INFO' && <Info size={16} className="text-blue-400" />}
+                            {a.type === 'WARNING' && <AlertTriangle size={16} className="text-amber-400" />}
+                            {a.type === 'SUCCESS' && <CheckCircle size={16} className="text-green-400" />}
+                            {a.type === 'ERROR' && <XCircle size={16} className="text-red-400" />}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">{a.title}</h4>
+                            <p className="text-xs text-gray-400 mt-1 leading-relaxed">{a.message}</p>
+                            <span className="text-[10px] text-gray-500 mt-2 block">
+                              {new Date(a.createdAt).toLocaleDateString()}
+                              {a.validUntil && ` (Valid till ${new Date(a.validUntil).toLocaleDateString()})`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="relative" ref={profileRef}>
             <div 
@@ -240,7 +371,7 @@ const SupplierDashboardLayout: React.FC = () => {
       </nav>
 
       {/* Main View Area */}
-      <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 w-full max-w-[1600px] mx-auto">
+      <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 w-full max-w-[1600px] mx-auto z-0 relative">
         <Outlet />
       </main>
 
@@ -274,8 +405,51 @@ const SupplierDashboardLayout: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Menu Drawer */}
+      {showMobileMenu && (
+        <div className="fixed inset-0 z-[100] lg:hidden flex">
+          <div className="absolute inset-0 bg-[#0b1031]/80 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)}></div>
+          <div className="relative w-[80%] max-w-[300px] h-full bg-[#161c3f] border-r border-white/10 shadow-2xl flex flex-col animate-[fadeInLeft_0.3s_ease-out]">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b1031]">
+              <div className="flex items-center gap-2">
+                <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6" crossOrigin="anonymous" />
+                <span className="text-white font-black">MENU</span>
+              </div>
+              <button onClick={() => setShowMobileMenu(false)} className="text-gray-400 hover:text-white p-1">
+                <Layers size={20} className="rotate-45" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+              <NavLink to="/supplier-portal/dashboard" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <LayoutDashboard size={18} /> DASHBOARD
+              </NavLink>
+              <NavLink to="/supplier-portal/series-fare" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <Tag size={18} /> SERIES FARE
+              </NavLink>
+              <NavLink to="/supplier-portal/marketing/promos" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <Tag size={18} /> MARKETING & PROMOS
+              </NavLink>
+              {(currentUser?.roles?.includes('SUPPLIER_AGENT') || currentUser?.roles?.includes('SUPPLIER_STAFF') || currentUser?.roles?.includes('SUB_ADMIN') || currentUser?.roles?.includes('SUPER_ADMIN')) && (
+                <NavLink to="/supplier-portal/users" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                  <Users size={18} /> USER MANAGEMENT
+                </NavLink>
+              )}
+              <NavLink to="/supplier-portal/history" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <History size={18} /> HISTORY
+              </NavLink>
+              <NavLink to="/supplier-portal/ledger" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <Tag size={18} /> LEDGER
+              </NavLink>
+              <NavLink to="/supplier-portal/series-queue" onClick={() => setShowMobileMenu(false)} className={({ isActive }) => `px-4 py-3 text-sm font-bold flex items-center gap-3 rounded-xl transition-all ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                <Layers size={18} /> SERIES FARE QUEUE
+              </NavLink>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Bottom Nav */}
-      <SupplierMobileBottomNav onProfileClick={() => setShowProfileMenu(true)} />
+      <SupplierMobileBottomNav />
     </div>
   );
 };

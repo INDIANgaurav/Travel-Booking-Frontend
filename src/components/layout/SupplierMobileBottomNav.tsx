@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Tag, History, Users, Layers, User } from 'lucide-react';
 
-export default function SupplierMobileBottomNav({ onProfileClick }: { onProfileClick?: () => void }) {
+export default function SupplierMobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -10,7 +10,7 @@ export default function SupplierMobileBottomNav({ onProfileClick }: { onProfileC
     { label: 'Dashboard', icon: LayoutDashboard, path: '/supplier-portal/dashboard', action: () => navigate('/supplier-portal/dashboard') },
     { label: 'Series Fare', icon: Tag, path: '/supplier-portal/series-fare', action: () => navigate('/supplier-portal/series-fare') },
     { label: 'History', icon: History, path: '/supplier-portal/history', action: () => navigate('/supplier-portal/history') },
-    { label: 'Profile', icon: User, action: () => { if(onProfileClick) onProfileClick(); } },
+    { label: 'Profile', icon: User, path: '/supplier-portal/profile', action: () => navigate('/supplier-portal/profile') },
   ];
 
   return (

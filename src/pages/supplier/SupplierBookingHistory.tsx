@@ -257,7 +257,7 @@ const SupplierBookingHistory: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#0b1031] hover:bg-blue-900 text-white text-xs font-bold px-8 py-2.5 rounded transition-colors shadow-md disabled:opacity-60 flex items-center gap-2"
+                className="w-full md:w-auto bg-[#0b1031] hover:bg-blue-900 text-white text-xs font-bold px-8 py-2.5 rounded transition-colors shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 size={14} className="animate-spin" /> : null}
                 Submit
