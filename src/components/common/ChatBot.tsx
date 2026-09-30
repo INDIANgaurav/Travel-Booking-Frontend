@@ -9,6 +9,63 @@ interface Message {
   timestamp: Date;
 }
 
+const FlightWidget = () => (
+  <div className="mt-3 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] w-[260px] md:w-[280px]">
+    <div className="p-3 border-b border-gray-100">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2 font-black text-gray-900 text-lg">
+          <span>DEL</span>
+          <span className="text-gray-300">→</span>
+          <span>BOM</span>
+        </div>
+        <button className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full transition-colors">
+          View All
+        </button>
+      </div>
+      <div className="text-[10px] text-gray-500 font-medium">Oneway • Sat, 10 Oct 2026 • Economy</div>
+    </div>
+    <div className="p-3">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-red-600 flex items-center justify-center shrink-0">
+             <span className="text-white text-[8px] font-black">SJ</span>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-500">SpiceJet 802</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="font-black text-gray-900 text-lg leading-none">₹6,427</div>
+          <div className="text-[9px] text-gray-400">total fare</div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-center">
+          <div className="font-black text-gray-900 text-base">22:30</div>
+        </div>
+        <div className="flex-1 px-3">
+          <div className="text-[9px] text-gray-500 text-center mb-1">02h 20m</div>
+          <div className="w-full h-[2px] bg-gray-200 relative">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-500 rounded-full border-2 border-white"></div>
+          </div>
+          <div className="text-[9px] text-gray-400 text-center mt-1">Non Stop</div>
+        </div>
+        <div className="text-center">
+          <div className="font-black text-gray-900 text-base">00:50</div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button className="bg-[#f26f29] hover:bg-[#e05a16] text-white text-[11px] font-bold py-2 rounded-lg transition-colors">
+          Book Now
+        </button>
+        <button className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold py-2 rounded-lg transition-colors">
+          Lock Price
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const QUICK_REPLIES = [
   'Book a Flight',
   'Find Hotels',
@@ -19,6 +76,11 @@ const QUICK_REPLIES = [
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showIntroModal, setShowIntroModal] = useState(() => {
+    return localStorage.getItem('trippechalo_chat_intro_seen') !== 'true';
+  });
+  const [isIntroVisible, setIsIntroVisible] = useState(false); // Used to control when to show it on click
+
   const STORAGE_KEY = 'trippechalo_chat_state';
   const EXPIRY_TIME = 60 * 60 * 1000; // 1 hour
 
@@ -171,27 +233,38 @@ export default function ChatBot() {
     <>
       {/* Floating Chat Button (Hidden on Mobile, now in Bottom Nav) */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen && !isIntroVisible) {
+            if (showIntroModal) {
+              setIsIntroVisible(true);
+            } else {
+              setIsOpen(true);
+            }
+          } else {
+            setIsOpen(false);
+            setIsIntroVisible(false);
+          }
+        }}
         className="hidden lg:block fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group"
         aria-label="Open AI Chat Assistant"
       >
-        <div className={`relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-[0_8px_30px_rgba(37,99,235,0.45)] flex items-center justify-center transition-all duration-300 hover:shadow-[0_8px_40px_rgba(37,99,235,0.6)] hover:scale-105 ${isOpen ? 'rotate-0' : ''}`}>
+        <div className={`relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-[0_8px_30px_rgba(37,99,235,0.45)] flex items-center justify-center transition-all duration-300 hover:shadow-[0_8px_40px_rgba(37,99,235,0.6)] hover:scale-105 ${(isOpen || isIntroVisible) ? 'rotate-0' : ''}`}>
           <div className="relative w-full h-full flex items-center justify-center">
             <X 
               size={26} 
               className={`absolute text-white transition-all duration-300 ease-in-out ${
-                isOpen ? 'rotate-0 opacity-100 scale-100' : 'rotate-90 opacity-0 scale-50'
+                (isOpen || isIntroVisible) ? 'rotate-0 opacity-100 scale-100' : 'rotate-90 opacity-0 scale-50'
               }`} 
             />
             <MessageCircle 
               size={26} 
               className={`absolute text-white transition-all duration-300 ease-in-out ${
-                isOpen ? '-rotate-90 opacity-0 scale-50' : 'rotate-0 opacity-100 scale-100'
+                (isOpen || isIntroVisible) ? '-rotate-90 opacity-0 scale-50' : 'rotate-0 opacity-100 scale-100'
               }`} 
             />
           </div>
           {/* Pulse ring */}
-          {showPulse && !isOpen && (
+          {showPulse && !isOpen && !isIntroVisible && (
             <>
               <span className="absolute inset-0 rounded-full bg-blue-500 opacity-30 animate-ping" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -208,6 +281,57 @@ export default function ChatBot() {
           </div>
         )}
       </button>
+
+      {/* Intro Modal Window */}
+      {isIntroVisible && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-[9998] transition-opacity lg:hidden" onClick={() => setIsIntroVisible(false)}></div>
+          
+          <div 
+            className="fixed bottom-0 lg:bottom-[90px] right-0 lg:right-6 z-[9999] w-full lg:w-[360px] bg-gradient-to-br from-[#ebf5ff] via-white to-[#ebf5ff] flex flex-col items-center justify-center rounded-t-[30px] lg:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-blue-100 overflow-hidden"
+            style={{ animation: 'chatSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards', padding: '60px 20px' }}
+          >
+            <button
+              onClick={() => setIsIntroVisible(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-400 hover:bg-gray-500 text-white flex items-center justify-center transition-colors shadow-sm z-20"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
+
+            {/* Sparkles bg effect */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
+               <div className="absolute top-[25%] left-[25%] w-2 h-2 bg-purple-200 rounded-full blur-[1px]"></div>
+               <div className="absolute top-[35%] right-[25%] w-2 h-2 bg-blue-200 rounded-full blur-[1px]"></div>
+               <div className="absolute bottom-[35%] right-[20%] w-1.5 h-1.5 bg-indigo-300 rounded-full blur-[1px]"></div>
+               <div className="absolute bottom-[25%] left-[30%] w-2.5 h-2.5 bg-blue-300 rounded-full blur-[2px]"></div>
+            </div>
+
+            <div className="w-[100px] h-[100px] rounded-full bg-white border-[3px] border-blue-200 shadow-[0_10px_20px_rgba(0,0,0,0.05)] flex items-center justify-center mb-6 relative z-10">
+              <Bot size={46} className="text-[#147cf5]" strokeWidth={2} />
+              <Sparkles size={20} className="text-blue-400 absolute bottom-1 right-1" />
+            </div>
+
+            <div className="text-center relative z-10 w-full px-4">
+              <p className="text-gray-500 font-medium text-lg">Hi, I am</p>
+              <h2 className="text-[54px] font-black text-[#147cf5] mt-1 mb-3 tracking-tighter leading-none">Myra</h2>
+              <p className="text-gray-600 mb-2 font-medium">Your intelligent AI companion.</p>
+              <p className="text-gray-900 font-bold mb-10">Ask me anything — flights, stays, ideas.</p>
+
+              <button 
+                onClick={() => {
+                  setShowIntroModal(false);
+                  localStorage.setItem('trippechalo_chat_intro_seen', 'true');
+                  setIsIntroVisible(false);
+                  setIsOpen(true);
+                }}
+                className="bg-[#2a8bf2] hover:bg-blue-600 text-white font-black py-3.5 px-10 rounded-full shadow-[0_8px_20px_rgba(42,139,242,0.4)] transition-transform transform hover:-translate-y-1 text-lg"
+              >
+                Let's Chat
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
@@ -273,6 +397,12 @@ export default function ChatBot() {
                   }`}
                 >
                   {formatMessageText(msg.text)}
+                  
+                  {/* Fake Flight Widget Injection */}
+                  {msg.sender === 'bot' && (msg.text.toLowerCase().includes('delhi to mumbai') || msg.text.toLowerCase().includes('flight options')) && (
+                    <FlightWidget />
+                  )}
+
                   <div className={`text-[9px] mt-1.5 ${msg.sender === 'user' ? 'text-blue-200 text-right' : 'text-gray-400'}`}>
                     {msg.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                   </div>

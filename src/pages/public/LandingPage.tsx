@@ -60,8 +60,56 @@ export default function LandingPage() {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  const [topFlightRoutes, setTopFlightRoutes] = useState<any[]>([
+    { from: 'Delhi', to: 'Mumbai', codeFrom: 'DEL', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
+    { from: 'Mumbai', to: 'Delhi', codeFrom: 'BOM', codeTo: 'DEL', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80' },
+    { from: 'Delhi', to: 'Bangalore', codeFrom: 'DEL', codeTo: 'BLR', img: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=400&q=80' },
+    { from: 'Bangalore', to: 'Mumbai', codeFrom: 'BLR', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
+    { from: 'Mumbai', to: 'Goa', codeFrom: 'BOM', codeTo: 'GOI', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80' },
+    { from: 'Delhi', to: 'Goa', codeFrom: 'DEL', codeTo: 'GOI', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80' },
+    { from: 'Kolkata', to: 'Delhi', codeFrom: 'CCU', codeTo: 'DEL', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80' },
+    { from: 'Hyderabad', to: 'Mumbai', codeFrom: 'HYD', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
+    { from: 'Delhi', to: 'Dubai', codeFrom: 'DEL', codeTo: 'DXB', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80' }
+  ]);
 
-
+  useEffect(() => {
+    const fetchTopRoutes = async () => {
+      try {
+        const response = await api.get('/searches/flights/top-routes');
+        if (response.data && response.data.length > 0) {
+          const cityImages: Record<string, string> = {
+            'DEL': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80',
+            'BOM': 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80',
+            'BLR': 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=400&q=80',
+            'GOI': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80',
+            'CCU': 'https://images.unsplash.com/photo-1558431382-27e303142255?w=400&q=80',
+            'HYD': 'https://images.unsplash.com/photo-1582509653531-15b74dbf77c3?w=400&q=80',
+            'MAA': 'https://images.unsplash.com/photo-1582510003544-4d00b7f7415e?w=400&q=80',
+            'DXB': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80',
+            'JAI': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&q=80'
+          };
+          const dynamicRoutes = response.data.map((r: any) => ({
+            from: CITIES[r.codeFrom] || r.codeFrom,
+            to: CITIES[r.codeTo] || r.codeTo,
+            codeFrom: r.codeFrom,
+            codeTo: r.codeTo,
+            img: cityImages[r.codeTo] || cityImages[r.codeFrom] || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400&q=80'
+          }));
+          
+          if (dynamicRoutes.length < 9) {
+            const existingKeys = new Set(dynamicRoutes.map((r: any) => `${r.codeFrom}-${r.codeTo}`));
+            const filler = topFlightRoutes.filter(r => !existingKeys.has(`${r.codeFrom}-${r.codeTo}`));
+            setTopFlightRoutes([...dynamicRoutes, ...filler].slice(0, 9));
+          } else {
+            setTopFlightRoutes(dynamicRoutes.slice(0, 9));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch top routes:', error);
+      }
+    };
+    fetchTopRoutes();
+  }, []);
   const [searchFrom, setSearchFrom] = useState('DEL');
   const [searchTo, setSearchTo] = useState('BOM');
   const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
@@ -720,6 +768,50 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Top Flight Routes Section */}
+      <div className="bg-white py-20 w-full border-t border-gray-100 overflow-hidden relative">
+        {/* Subtle Map Background */}
+        <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-center bg-no-repeat bg-cover opacity-[0.04] pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">Top Flight Routes</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {topFlightRoutes.map((route, i) => (
+              <div 
+                key={i}
+                onClick={() => {
+                  const query = new URLSearchParams({
+                    tab: 'Flights',
+                    from: route.codeFrom,
+                    to: route.codeTo,
+                    date: getLocalISO(new Date(Date.now() + 86400000)),
+                    tripType: 'One Way',
+                    adults: '1', children: '0', infants: '0', cabinClass: 'Economy/ Premium Economy'
+                  }).toString();
+                  navigate(`/flights/search?${query}`);
+                }}
+                className="flex items-center gap-5 bg-white border border-gray-100 hover:border-blue-200 hover:shadow-xl p-3 md:p-4 rounded-2xl cursor-pointer transition-all duration-300 group transform hover:-translate-y-1"
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                  <img src={route.img} alt={route.to} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-gray-900 font-bold mb-1.5 md:text-lg">
+                    <span>{route.from}</span>
+                    <Plane size={14} className="text-gray-400 rotate-90" />
+                    <span>{route.to}</span>
+                  </div>
+                  <div className="text-sm font-bold text-blue-500 uppercase tracking-wide">
+                    {route.codeFrom}-{route.codeTo}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Global Network 3D Globe Section */}
       <div
         className="relative bg-[#0f172a] py-20 w-full border-t border-gray-800"
@@ -791,72 +883,86 @@ export default function LandingPage() {
 
 
       {/* Why Choose TrippeChalo Section */}
-      <div id="features-cards" className="relative bg-[#f9f8ff] py-24 w-full overflow-hidden border-y border-gray-100">
-        
-        {/* Decorative Dotted Path SVG in Background */}
-        <svg className="absolute inset-0 w-full h-full text-[#e2d5f8] pointer-events-none z-0" preserveAspectRatio="none" viewBox="0 0 1000 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M-100,150 Q 200,300 500,150 T 1100,150" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" />
-        </svg>
-
-        {/* Floating Decorative Badges in BG */}
-        <div className="absolute top-[10%] right-[10%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 4s infinite ease-in-out' }}>
-          <div className="bg-white rounded-full p-2.5 shadow-lg">
-            <Heart size={20} className="text-[#ff5c5c] fill-[#ff5c5c]" />
-          </div>
-        </div>
-        <div className="absolute top-[40%] left-[5%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 5s infinite ease-in-out', animationDelay: '1s' }}>
-           <div className="bg-white rounded-full p-2 shadow-lg flex items-center justify-center">
-             <Share2 size={16} className="text-[#4f80ff]" />
-           </div>
-        </div>
-        <div className="absolute bottom-[20%] right-[5%] z-0 flex flex-col items-center gap-1 opacity-60" style={{ animation: 'bounce 4.5s infinite ease-in-out', animationDelay: '2s' }}>
-           <div className="bg-white rounded-full p-2 shadow-lg flex items-center justify-center">
-             <ThumbsUp size={16} className="text-[#10b981]" />
-           </div>
-        </div>
-
+      <div id="features-cards" className="relative bg-white py-16 w-full overflow-hidden border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Why Travel With Us?</h2>
-            <p className="text-gray-500 font-medium">Experience the best in class travel booking with exclusive perks and peace of mind.</p>
+          <div className="flex flex-col md:flex-row items-center justify-between mb-12 border-b border-gray-200 pb-6">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">Why Book With Us?</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-gray-200">
             {/* Card 1 */}
-            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 flex flex-col items-center text-center border border-gray-50">
-              <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
-                <Globe size={32} className="text-blue-600 group-hover:text-white transition-colors duration-500" />
+            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
+              <div className="mb-4">
+                <Calendar size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-3">Global Reach</h3>
-              <p className="text-gray-500 text-sm leading-relaxed font-medium">Access millions of flights and hotels worldwide with unbeatable inventory.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Easy Booking</h3>
+              <p className="text-gray-500 text-xs leading-relaxed font-medium">We offer easy and convenient flight bookings with attractive offers.</p>
             </div>
 
             {/* Card 2 */}
-            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:-rotate-1 flex flex-col items-center text-center border border-gray-50">
-              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-6 group-hover:bg-green-500 group-hover:scale-110 transition-all duration-500 shadow-sm">
-                <CreditCard size={32} className="text-green-600 group-hover:text-white transition-colors duration-500" />
+            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
+              <div className="mb-4">
+                <CreditCard size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-3">Best Price Guarantee</h3>
-              <p className="text-gray-500 text-sm leading-relaxed font-medium">We negotiate the best rates so you always get the most value for your money.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Lowest Price</h3>
+              <p className="text-gray-500 text-xs leading-relaxed font-medium">We ensure low rates on hotel reservation, holiday packages and on flight tickets.</p>
             </div>
 
             {/* Card 3 */}
-            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:rotate-1 flex flex-col items-center text-center border border-gray-50">
-              <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:scale-110 transition-all duration-500 shadow-sm">
-                <Shield size={32} className="text-purple-600 group-hover:text-white transition-colors duration-500" />
+            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
+              <div className="mb-4">
+                <ArrowRightLeft size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-3">100% Secure</h3>
-              <p className="text-gray-500 text-sm leading-relaxed font-medium">Your data and payments are protected with enterprise-grade security protocols.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Instant Refund</h3>
+              <p className="text-gray-500 text-xs leading-relaxed font-medium">Get instant refunds effortlessly on your travel bookings with us.</p>
             </div>
 
             {/* Card 4 */}
-            <div className="relative z-20 group cursor-default rounded-2xl bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500 transform hover:-translate-y-2 hover:-rotate-1 flex flex-col items-center text-center border border-gray-50">
-              <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mb-6 group-hover:bg-orange-500 group-hover:scale-110 transition-all duration-500 shadow-sm">
-                <Smile size={32} className="text-orange-600 group-hover:text-white transition-colors duration-500" />
+            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
+              <div className="mb-4">
+                <Smile size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-3">24/7 Support</h3>
-              <p className="text-gray-500 text-sm leading-relaxed font-medium">Our dedicated travel experts are always available to assist you on your journey.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">24/7 Support</h3>
+              <p className="text-gray-500 text-xs leading-relaxed font-medium">Get assistance 24/7 on any kind of travel related query. We are happy to assist you.</p>
             </div>
+
+            {/* Card 5 */}
+            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
+              <div className="mb-4">
+                <Gift size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Exciting Deals</h3>
+              <p className="text-gray-500 text-xs leading-relaxed font-medium">Enjoy exciting deals on flights, hotels, buses, car rental and tour packages.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Flights, Hotels Info Section */}
+      <div className="bg-white pt-12 pb-4 w-full">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-black text-gray-900 mb-6 text-center">Search Flights, Hotels, Bus and Holiday Packages</h2>
+          <div className="text-gray-600 text-sm leading-relaxed space-y-4 max-w-5xl mx-auto text-center md:text-left">
+            <p>TrippeChalo is a rapidly growing travel platform in India, designed to be a trusted companion for all your journeys. With our "Travel Made Easy" approach, we are building a seamless ecosystem for flight bookings, hotels, buses, and holiday packages, delivering continuous value-added services along the way.</p>
+            <p>We understand that planning a trip can be overwhelming, so we have simplified the process to make it easy for you to find the perfect travel deals that suit your needs. Our intuitive website provides a wide range of options to choose from. Whether you're planning a family vacation, a solo adventure, or a business trip, we are constantly expanding to cover everything you need.</p>
+            <p>We believe in transparency and honesty in all our dealings. We do not charge any hidden fees, and our prices are highly competitive. With TrippeChalo, you can be assured of an honest booking experience. If you're looking for a hassle-free and affordable way to plan your next trip, you're at the right place.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Heritage Banner (Full width with top fade) */}
+      <div className="relative w-full h-[400px] md:h-[550px]">
+        {/* The background image */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-[center_40%]"></div>
+        
+        {/* Gradient fading from white at the top to transparent, then maybe dark at the bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        
+        <div className="relative z-10 w-full h-full max-w-7xl mx-auto px-6 flex flex-col justify-end pb-12">
+          <div className="text-center md:text-left md:ml-auto md:mr-0 md:max-w-xl">
+            <h3 className="text-4xl md:text-6xl font-black text-white mb-2 leading-tight">TrippeChalo</h3>
+            <h4 className="text-2xl md:text-3xl font-bold text-orange-200">Keeping India's Heritage Alive</h4>
           </div>
         </div>
       </div>
