@@ -71,6 +71,7 @@ import SupplierManagement from './pages/dashboard/admin/SupplierManagement'
 import CugSuppliersManager from './pages/dashboard/admin/CugSuppliersManager'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
 import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
+import AdminB2BPartners from './pages/dashboard/admin/AdminB2BPartners'
 import AdminSMSSettings from './pages/dashboard/admin/settings/AdminSMSSettings'
 import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
 import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
@@ -371,6 +372,7 @@ function App() {
           <Route path="fd-report" element={<AdminFDReport />} />
           <Route path="fd-archive" element={<AdminFDArchive />} />
           <Route path="fd-slow-moving" element={<AdminFDSlowMovingSector />} />
+          <Route path="b2b-partners" element={<AdminB2BPartners />} />
           <Route path="profile" element={<AdminProfile />} />
           
           <Route path="settings/sms-emails" element={<AdminSMSSettings />} />

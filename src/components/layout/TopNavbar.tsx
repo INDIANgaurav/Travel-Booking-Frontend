@@ -296,35 +296,37 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
               </>
             ) : null}
 
-            {/* Admin Notifications */}
-            {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN')) && (
-              <button 
-                onClick={() => navigate('/admin/notifications')}
-                className={`relative p-2 rounded-full transition-colors ml-2 ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
-              >
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white min-w-[20px] text-center">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {/* Agent Announcements */}
-            {isAuthenticated && (
-              <div className="relative" ref={announcementsRef}>
+            {/* Alerts Group */}
+            <div className="flex items-center gap-1">
+              {/* Admin Notifications */}
+              {(user?.roles?.includes('SUPER_ADMIN') || user?.roles?.includes('SUB_ADMIN')) && (
                 <button 
-                  onClick={() => {
-                    setShowAnnouncementsDropdown(!showAnnouncementsDropdown);
-                    if (!showAnnouncementsDropdown) {
-                      const newSeen = Array.from(new Set([...seenAnnouncements, ...announcements.map(a => a._id)]));
-                      setSeenAnnouncements(newSeen);
-                      sessionStorage.setItem('seenAnnouncements', JSON.stringify(newSeen));
-                    }
-                  }}
-                  className={`relative p-2 rounded-full transition-colors ml-2 ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+                  onClick={() => navigate('/admin/notifications')}
+                  className={`relative p-2 rounded-full transition-colors ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
                 >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white min-w-[20px] text-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Agent Announcements */}
+              {isAuthenticated && (
+                <div className="relative" ref={announcementsRef}>
+                  <button 
+                    onClick={() => {
+                      setShowAnnouncementsDropdown(!showAnnouncementsDropdown);
+                      if (!showAnnouncementsDropdown) {
+                        const newSeen = Array.from(new Set([...seenAnnouncements, ...announcements.map(a => a._id)]));
+                        setSeenAnnouncements(newSeen);
+                        sessionStorage.setItem('seenAnnouncements', JSON.stringify(newSeen));
+                      }
+                    }}
+                    className={`relative p-2 rounded-full transition-colors ${isDarkText ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-white/10 text-white'}`}
+                  >
                   <Megaphone size={20} />
                   {unseenCount > 0 && (
                     <span className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white min-w-[20px] text-center">
@@ -370,6 +372,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 )}
               </div>
             )}
+            </div>
 
             {/* Login / User Button */}
             <div className="ml-2 md:ml-4 flex items-center gap-4 relative">

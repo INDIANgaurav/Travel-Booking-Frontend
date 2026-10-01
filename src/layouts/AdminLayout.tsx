@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone, Server } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -140,6 +140,7 @@ export default function AdminLayout() {
       title: 'System',
       items: [
         { name: 'My Profile', path: '/admin/profile', icon: <UserIcon size={20} /> },
+        { name: 'API Partners (B2B)', path: '/admin/b2b-partners', icon: <Server size={20} /> },
         { 
           name: 'System Settings', 
           icon: <Settings size={20} />,
