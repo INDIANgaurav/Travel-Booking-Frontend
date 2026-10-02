@@ -5,15 +5,15 @@ import { Book, Code, Globe, Server, CheckCircle, Shield } from 'lucide-react';
 export default function B2BDocsPage() {
   const [searchParams] = useSearchParams();
   const partner = searchParams.get('partner') || 'Partner';
-  const testKey = searchParams.get('testKey') || '<YOUR_TEST_API_KEY>';
-  const liveKey = searchParams.get('liveKey') || '<YOUR_LIVE_API_KEY>';
+  const apiKey = searchParams.get('key') || '<YOUR_API_KEY>';
+  const env = searchParams.get('env') || 'test'; // 'test' or 'live'
 
   const [activeTab, setActiveTab] = useState('intro');
 
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans">
       {/* Sidebar */}
-      <div className="w-full md:w-64 bg-gray-50 border-r border-gray-200 h-screen sticky top-0 overflow-y-auto flex-shrink-0">
+      <div className="w-full md:w-64 bg-gray-50 border-r border-gray-200 h-screen sticky top-0 overflow-y-auto custom-scrollbar flex-shrink-0">
         <div className="p-6 border-b border-gray-200 bg-white">
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Trippe<span className="text-blue-600">Chalo</span></h1>
           <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wider">Flight Series API</p>
@@ -39,11 +39,11 @@ export default function B2BDocsPage() {
         </div>
       </div>
 
-      {/* Main Content Area (Split into Left details and Right code) */}
-      <div className="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         
-        {/* Middle Column (Content) */}
-        <div className="flex-1 overflow-y-auto p-8 lg:p-12 pb-24">
+        {/* Single Center Column */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 lg:p-12 lg:px-24 pb-24 max-w-5xl mx-auto w-full">
           {activeTab === 'intro' && (
             <div className="max-w-3xl animate-fade-in">
               <h2 className="text-3xl font-black text-gray-900 mb-6">Flight Series API</h2>
@@ -55,29 +55,31 @@ export default function B2BDocsPage() {
               <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Authentication</h3>
               <p className="text-gray-600 mb-4">
                 All API requests must be authenticated using the <code className="bg-gray-100 px-1.5 py-0.5 rounded text-pink-600 text-sm">x-api-key</code> header.
-                We provide two environments: Test and Live.
+                We provide a specific environment key for your integration.
               </p>
               
               <div className="space-y-4 mb-8">
-                <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-bold text-orange-800 flex items-center gap-2"><Shield size={16}/> Test Environment</h4>
+                {env === 'test' ? (
+                  <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-orange-800 flex items-center gap-2"><Shield size={16}/> Test Environment</h4>
+                    </div>
+                    <p className="text-sm text-orange-700 mb-3">Use this key for development and integration. Bookings made with this key will <strong>not</strong> deduct real wallet balance or actual inventory seats.</p>
+                    <code className="block bg-white p-3 rounded border border-orange-100 text-gray-800 text-xs font-mono break-all select-all">
+                      {apiKey}
+                    </code>
                   </div>
-                  <p className="text-sm text-orange-700 mb-3">Use this key for development and integration. Bookings made with this key will <strong>not</strong> deduct real wallet balance or actual inventory seats.</p>
-                  <code className="block bg-white p-3 rounded border border-orange-100 text-gray-800 text-xs font-mono break-all select-all">
-                    {testKey}
-                  </code>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-bold text-green-800 flex items-center gap-2"><Server size={16}/> Live Production Environment</h4>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-bold text-green-800 flex items-center gap-2"><Server size={16}/> Live Production Environment</h4>
+                    </div>
+                    <p className="text-sm text-green-700 mb-3">Use this key in your production environment. Bookings <strong>will deduct real wallet balance</strong> and reduce live available seats.</p>
+                    <code className="block bg-white p-3 rounded border border-green-100 text-gray-800 text-xs font-mono break-all select-all">
+                      {apiKey}
+                    </code>
                   </div>
-                  <p className="text-sm text-green-700 mb-3">Use this key in your production environment. Bookings <strong>will deduct real wallet balance</strong> and reduce live available seats.</p>
-                  <code className="block bg-white p-3 rounded border border-green-100 text-gray-800 text-xs font-mono break-all select-all">
-                    {liveKey}
-                  </code>
-                </div>
+                )}
               </div>
 
               <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Response Format</h3>
@@ -89,6 +91,22 @@ export default function B2BDocsPage() {
   "data": { ... } // or Array
 }`}
                 </pre>
+              </div>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Base URL</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-blue-400 break-all border border-gray-700">
+                    https://api.trippechalo.com/api/v1/b2b
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example cURL Request</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto code-scrollbar border border-gray-700 text-sm">
+<pre>{`curl --location 'https://api.trippechalo.com/api/v1/b2b/flights/search?origin=DEL&destination=GOI&date=2026-10-15' \\
+--header 'x-api-key: ${apiKey}'`}</pre>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -137,6 +155,41 @@ export default function B2BDocsPage() {
                   </tbody>
                 </table>
               </div>
+
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example Request</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto code-scrollbar border border-gray-700 text-sm">
+<pre>{`GET /api/v1/b2b/flights/search?origin=DEL&destination=GOI&date=2026-10-15
+Host: api.trippechalo.com
+x-api-key: ${apiKey}`}</pre>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Success Response</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-green-400 overflow-x-auto code-scrollbar border border-gray-700 text-sm">
+<pre>{`{
+  "success": true,
+  "data": [
+    {
+      "sfId": "651a2b...",
+      "airline": "IndiGo",
+      "flightNo": "6E-2022",
+      "origin": "DEL",
+      "destination": "GOI",
+      "departureTime": "10:00",
+      "arrivalTime": "12:30",
+      "fare": 5400,
+      "availableSeats": 15,
+      "checkinBaggage": "15 KG",
+      "cabinBaggage": "7 KG",
+      "isRefundable": false
+    }
+  ]
+}`}</pre>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -184,76 +237,14 @@ export default function B2BDocsPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-        </div>
 
-        {/* Right Column (Dark Theme Code snippets) */}
-        <div className="w-full lg:w-[450px] xl:w-[550px] bg-[#1e1e1e] flex-shrink-0 overflow-y-auto p-6 text-sm">
-          
-          {activeTab === 'intro' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Base URL</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-blue-400 break-all border border-gray-700">
-                  https://api.trippechalo.com/api/v1/b2b
-                </div>
-              </div>
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example cURL Request</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto border border-gray-700">
-<pre>{`curl --location 'https://api.trippechalo.com/api/v1/b2b/flights/search?origin=DEL&destination=GOI&date=2026-10-15' \\
---header 'x-api-key: ${testKey}'`}</pre>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'search' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example Request</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto border border-gray-700">
-<pre>{`GET /api/v1/b2b/flights/search?origin=DEL&destination=GOI&date=2026-10-15
-Host: api.trippechalo.com
-x-api-key: ${testKey}`}</pre>
-                </div>
-              </div>
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Success Response</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-green-400 overflow-x-auto border border-gray-700">
-<pre>{`{
-  "success": true,
-  "data": [
-    {
-      "sfId": "651a2b...",
-      "airline": "IndiGo",
-      "flightNo": "6E-2022",
-      "origin": "DEL",
-      "destination": "GOI",
-      "departureTime": "10:00",
-      "arrivalTime": "12:30",
-      "fare": 5400,
-      "availableSeats": 15,
-      "checkinBaggage": "15 KG",
-      "cabinBaggage": "7 KG",
-      "isRefundable": false
-    }
-  ]
-}`}</pre>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'book' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example Request</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto border border-gray-700">
+              <div className="mt-8 space-y-6">
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Example Request</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-gray-300 overflow-x-auto code-scrollbar border border-gray-700 text-sm">
 <pre>{`POST /api/v1/b2b/flights/book
 Host: api.trippechalo.com
-x-api-key: ${testKey}
+x-api-key: ${apiKey}
 Content-Type: application/json
 
 {
@@ -270,20 +261,21 @@ Content-Type: application/json
   "contactEmail": "john@example.com",
   "contactPhone": "9876543210"
 }`}</pre>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Success Response</p>
-                <div className="bg-[#2d2d2d] rounded-lg p-4 font-mono text-green-400 overflow-x-auto border border-gray-700">
+                <div>
+                  <p className="text-gray-400 font-bold mb-2 uppercase text-xs tracking-wider">Success Response</p>
+                  <div className="bg-[#1e1e1e] rounded-lg p-4 font-mono text-green-400 overflow-x-auto code-scrollbar border border-gray-700 text-sm">
 <pre>{`{
   "success": true,
   "data": {
-    "pnr": "TEST-482910",
-    "status": "TEST_CONFIRMED",
-    "message": "Booking successful in TEST mode.",
+    "pnr": "${env === 'test' ? 'TEST-' : ''}482910",
+    "status": "${env === 'test' ? 'TEST_CONFIRMED' : 'CONFIRMED'}",
+    "message": "${env === 'test' ? 'Booking successful in TEST mode.' : 'Booking confirmed successfully.'}",
     "passengers": [...]
   }
 }`}</pre>
+                  </div>
                 </div>
               </div>
             </div>

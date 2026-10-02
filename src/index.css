@@ -41,6 +41,44 @@
     scrollbar-width: none;  /* Firefox */
   }
 
+  /* Elegant thin scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  /* Dark scrollbar for code blocks */
+  .code-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .code-scrollbar::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 10px;
+  }
+  .code-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+  }
+  .code-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1e1e1e;
+  }
+
   /* Remove arrows/spinners from number inputs globally */
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {

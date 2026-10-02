@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, Download, ExternalLink } from 'lucide-react';
+import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, Download, ExternalLink, Edit } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -92,9 +92,10 @@ export default function AdminB2BPartners() {
     setIsDocsModalOpen(true);
   };
 
-  const openFullDocs = () => {
+  const openFullDocs = (env: 'test' | 'live') => {
     if (!selectedPartner) return;
-    const url = `/api-docs?partner=${encodeURIComponent(selectedPartner.companyName)}&testKey=${encodeURIComponent(selectedPartner.testApiKey)}&liveKey=${encodeURIComponent(selectedPartner.liveApiKey)}`;
+    const key = env === 'test' ? selectedPartner.testApiKey : selectedPartner.liveApiKey;
+    const url = `/api-docs?partner=${encodeURIComponent(selectedPartner.companyName)}&env=${env}&key=${encodeURIComponent(key)}`;
     window.open(url, '_blank');
   };
 
@@ -133,14 +134,26 @@ export default function AdminB2BPartners() {
                   <h3 className="font-bold text-lg text-gray-900">{partner.companyName}</h3>
                   <p className="text-sm text-gray-500">{partner.contactName} • {partner.email}</p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                  partner.status === 'Live' ? 'bg-green-100 text-green-700 border-green-200' :
-                  partner.status === 'Testing' ? 'bg-orange-100 text-orange-700 border-orange-200' :
-                  partner.status === 'Suspended' ? 'bg-red-100 text-red-700 border-red-200' :
-                  'bg-gray-100 text-gray-700 border-gray-200'
-                }`}>
-                  {partner.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    partner.status === 'Live' ? 'bg-green-100 text-green-700 border-green-200' :
+                    partner.status === 'Testing' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                    partner.status === 'Suspended' ? 'bg-red-100 text-red-700 border-red-200' :
+                    'bg-gray-100 text-gray-700 border-gray-200'
+                  }`}>
+                    {partner.status}
+                  </span>
+                  <button 
+                    onClick={() => {
+                      setFormData(partner);
+                      setIsAddModalOpen(true);
+                    }}
+                    className="p-1 text-gray-400 hover:text-blue-600 transition"
+                    title="Edit Partner"
+                  >
+                    <Edit size={16} />
+                  </button>
+                </div>
               </div>
               
               <div className="p-5 space-y-4">
@@ -237,9 +250,14 @@ export default function AdminB2BPartners() {
                 <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-2">Authentication Keys</h3>
                 
                 <div>
-                  <label className="flex justify-between text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
-                    <span>Test API Key</span>
-                    <span className="text-orange-500">Doesn't deduct real balance</span>
+                  <label className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <span>Test API Key</span>
+                      <span className="text-orange-500 lowercase normal-case text-[10px]">(Doesn't deduct real balance)</span>
+                    </div>
+                    <button onClick={() => openFullDocs('test')} className="text-blue-600 hover:text-blue-700 flex items-center gap-1 normal-case bg-blue-50 px-2 py-0.5 rounded">
+                      View Test Docs <ExternalLink size={12}/>
+                    </button>
                   </label>
                   <div className="flex">
                     <input 
@@ -258,9 +276,14 @@ export default function AdminB2BPartners() {
                 </div>
 
                 <div>
-                  <label className="flex justify-between text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
-                    <span>Live Production Key</span>
-                    <span className="text-green-600">Deducts real balance & seats</span>
+                  <label className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider mt-4">
+                    <div className="flex items-center gap-2">
+                      <span>Live Production Key</span>
+                      <span className="text-green-600 lowercase normal-case text-[10px]">(Deducts real balance)</span>
+                    </div>
+                    <button onClick={() => openFullDocs('live')} className="text-green-600 hover:text-green-700 flex items-center gap-1 normal-case bg-green-50 px-2 py-0.5 rounded">
+                      View Live Docs <ExternalLink size={12}/>
+                    </button>
                   </label>
                   <div className="flex">
                     <input 
@@ -283,12 +306,7 @@ export default function AdminB2BPartners() {
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                   <h3 className="font-bold text-gray-900">API Documentation Snippet</h3>
-                  <button 
-                    onClick={openFullDocs}
-                    className="flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition"
-                  >
-                    View Full Docs <ExternalLink size={14} />
-                  </button>
+                  <span className="text-xs text-gray-500">Use the buttons above to view full docs</span>
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-4 font-mono text-xs overflow-x-auto text-green-400">
