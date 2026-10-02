@@ -34,6 +34,7 @@ import RetailAgentLoginPage from './pages/public/RetailAgentLoginPage'
 import B2BAgentHomePage from './pages/public/B2BAgentHomePage'
 import B2BAgentCheckout from './pages/public/B2BAgentCheckout'
 import DynamicPageViewer from './pages/public/DynamicPageViewer'
+import B2BDocsPage from './pages/public/B2BDocsPage'
 import B2BAgentDashboard from './pages/public/B2BAgentDashboard'
 import B2BBankDetails from './pages/public/B2BBankDetails'
 import B2BWalletPage from './pages/public/B2BWalletPage'
@@ -213,6 +214,7 @@ function App() {
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
         <Route path="/inactive-account" element={<InactiveAccountPage />} />
         <Route path="/page/:pageName" element={<DynamicPageViewer />} />
+        <Route path="/api-docs" element={<B2BDocsPage />} />
 
         {/* New Agent Sign Up, Agent Login, Agent B2B Engine & Supplier Login Public Routes */}
         <Route path="/b2b/coming-soon" element={<FeatureComingSoonPage />} />

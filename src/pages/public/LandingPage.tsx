@@ -942,7 +942,7 @@ export default function LandingPage() {
       <div className="bg-white pt-12 pb-4 w-full">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-black text-gray-900 mb-6 text-center">Search Flights, Hotels, Bus and Holiday Packages</h2>
-          <div className="text-gray-600 text-sm leading-relaxed space-y-4 max-w-5xl mx-auto text-center md:text-left">
+          <div className="text-gray-600 text-sm leading-relaxed space-y-4 w-full text-center md:text-left">
             <p>TrippeChalo is a rapidly growing travel platform in India, designed to be a trusted companion for all your journeys. With our "Travel Made Easy" approach, we are building a seamless ecosystem for flight bookings, hotels, buses, and holiday packages, delivering continuous value-added services along the way.</p>
             <p>We understand that planning a trip can be overwhelming, so we have simplified the process to make it easy for you to find the perfect travel deals that suit your needs. Our intuitive website provides a wide range of options to choose from. Whether you're planning a family vacation, a solo adventure, or a business trip, we are constantly expanding to cover everything you need.</p>
             <p>We believe in transparency and honesty in all our dealings. We do not charge any hidden fees, and our prices are highly competitive. With TrippeChalo, you can be assured of an honest booking experience. If you're looking for a hassle-free and affordable way to plan your next trip, you're at the right place.</p>

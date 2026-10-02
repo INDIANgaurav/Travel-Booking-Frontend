@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff } from 'lucide-react';
+import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, Download, ExternalLink } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -92,6 +92,12 @@ export default function AdminB2BPartners() {
     setIsDocsModalOpen(true);
   };
 
+  const openFullDocs = () => {
+    if (!selectedPartner) return;
+    const url = `/api-docs?partner=${encodeURIComponent(selectedPartner.companyName)}&testKey=${encodeURIComponent(selectedPartner.testApiKey)}&liveKey=${encodeURIComponent(selectedPartner.liveApiKey)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -173,7 +179,7 @@ export default function AdminB2BPartners() {
             </div>
             <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name (e.g. MakeMyTrip)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
                 <input required type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -275,7 +281,15 @@ export default function AdminB2BPartners() {
 
               {/* Endpoints Doc */}
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-2">API Documentation Snippet</h3>
+                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                  <h3 className="font-bold text-gray-900">API Documentation Snippet</h3>
+                  <button 
+                    onClick={openFullDocs}
+                    className="flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition"
+                  >
+                    View Full Docs <ExternalLink size={14} />
+                  </button>
+                </div>
                 
                 <div className="bg-gray-900 rounded-lg p-4 font-mono text-xs overflow-x-auto text-green-400">
                   <div className="text-gray-400 mb-2">// Base URL</div>
@@ -300,8 +314,16 @@ export default function AdminB2BPartners() {
 {
   "sfId": "SF-12345",
   "passengers": [
-    { "name": "John Doe", "type": "ADT" }
-  ]
+    {
+      "title": "Mr",
+      "firstName": "John",
+      "lastName": "Doe",
+      "type": "ADT",
+      "gender": "M"
+    }
+  ],
+  "contactEmail": "agent@partner.com",
+  "contactPhone": "9876543210"
 }`}
                   </div>
                 </div>
