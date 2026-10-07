@@ -43,7 +43,13 @@ api.interceptors.response.use(
         // Dispatch event so Redux can update its state
         window.dispatchEvent(new CustomEvent('auth-token-refreshed', { detail: newToken }));
         
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        if (originalRequest.headers) {
+          if (typeof originalRequest.headers.set === 'function') {
+            originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
+          } else {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
+        }
         return api(originalRequest);
       } catch (refreshError) {
         setAuthToken(null);

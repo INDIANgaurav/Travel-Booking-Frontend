@@ -15,7 +15,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/api/admin/users?role=USER&page=${page}&limit=10`);
+      const { data } = await api.get(`/api/admin/users?page=${page}&limit=10`);
       setUsers(data.data || (Array.isArray(data) ? data : []));
       setTotalPages(data.totalPages || 1);
     } catch (error) {

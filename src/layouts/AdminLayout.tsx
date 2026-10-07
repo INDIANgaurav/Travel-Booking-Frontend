@@ -70,7 +70,7 @@ export default function AdminLayout() {
           icon: <Users size={20} />,
           subItems: [
             { name: 'Active Agents', path: '/admin/manage-users' },
-            { name: 'B2C Customers', path: '/admin/users' },
+            { name: 'User Management', path: '/admin/users' },
             { name: 'Pending Approvals', path: '/admin/pending-users' }
           ]
         },

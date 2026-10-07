@@ -19,6 +19,8 @@ interface IPassenger {
   passportExpiry: string;
   passportIssuance: string;
   remarks: string;
+  travelDate?: string;
+  bookingDate?: string;
 }
 
 interface IFDDetails {
@@ -40,8 +42,10 @@ export default function AdminFDReport() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pnrSearch) {
-      setError('Please enter a PNR or FARE ID to search.');
+    
+    // Allow search if at least one filter is applied
+    if (!pnrSearch && !fromDate && !toDate && !airline) {
+      setError('Please enter a PNR or select filters to search.');
       return;
     }
     
@@ -49,12 +53,18 @@ export default function AdminFDReport() {
     setError('');
     
     try {
-      // Assuming pnrSearch holds the sfId for the backend route
-      const { data } = await api.get(`/api/series-fare/report/manifest/${pnrSearch}`);
+      const { data } = await api.get(`/api/series-fare/report/manifest`, {
+        params: {
+          id: pnrSearch || undefined,
+          fromDate: fromDate || undefined,
+          toDate: toDate || undefined,
+          airline: airline || undefined
+        }
+      });
       setPassengers(data.manifest || []);
       setFdDetails(data.seriesFare || null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch manifest. Please check the ID.');
+      setError(err.response?.data?.message || 'Failed to fetch manifest. Please check the ID or filters.');
       setPassengers([]);
       setFdDetails(null);
     } finally {
@@ -65,11 +75,11 @@ export default function AdminFDReport() {
   const handleExportToExcel = () => {
     if (passengers.length === 0) return toast.error('No data to export');
     
-    const headers = ['Sr. No.', 'Pax ID', 'Title', 'First Name', 'Last Name', 'Gender', 'DOB', 'Type', 'PNR', 'Ticket ID', 'Passport No', 'Passport Expiry', 'Passport Issuance', 'Remarks'];
+    const headers = ['Sr. No.', 'Pax ID', 'Title', 'First Name', 'Last Name', 'Gender', 'DOB', 'Type', 'Booking Date', 'Travel Date', 'PNR', 'Ticket ID', 'Passport No', 'Passport Expiry', 'Passport Issuance', 'Remarks'];
     const csvContent = "data:text/csv;charset=utf-8," 
       + headers.join(",") + "\n"
       + passengers.map((p, index) => 
-          `${index + 1},${p.id},${p.title},${p.firstName},${p.lastName},${p.gender},${p.dob},${p.type},${p.pnr},${p.ticketId},${p.passportNo},${p.passportExpiry},${p.passportIssuance},${p.remarks}`
+          `${index + 1},${p.id},${p.title},${p.firstName},${p.lastName},${p.gender},${p.dob},${p.type},${p.bookingDate || '-'},${p.travelDate || '-'},${p.pnr},${p.ticketId},${p.passportNo},${p.passportExpiry},${p.passportIssuance},${p.remarks}`
         ).join("\n");
         
     const encodedUri = encodeURI(csvContent);
@@ -125,12 +135,14 @@ export default function AdminFDReport() {
               value={airline}
               onChange={setAirline}
               options={[
+                { value: '', label: 'All Airlines' },
                 { value: '6E', label: 'IndiGo (6E)' },
                 { value: 'AI', label: 'Air India (AI)' },
                 { value: 'QP', label: 'Akasa Air (QP)' },
                 { value: 'SG', label: 'SpiceJet (SG)' }
               ]}
               placeholder="-- All Airlines --"
+              isClearable
               className="w-full border border-gray-300 rounded-lg bg-gray-50 focus:bg-white outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs"
             />
           </div>
@@ -209,6 +221,8 @@ export default function AdminFDReport() {
                 <th className="p-3">GENDER</th>
                 <th className="p-3">TYPE</th>
                 <th className="p-3">DOB</th>
+                <th className="p-3 whitespace-nowrap">BOOKING DATE</th>
+                <th className="p-3 whitespace-nowrap">TRAVEL DATE</th>
                 <th className="p-3 text-center">PNR</th>
                 <th className="p-3">PASSPORT NO.</th>
                 <th className="p-3">PASSPORT EXP</th>
@@ -218,7 +232,7 @@ export default function AdminFDReport() {
             <tbody className="divide-y divide-gray-100">
               {passengers.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-gray-500 font-bold">No passengers found. Search for a valid FARE ID to see the manifest.</td>
+                  <td colSpan={13} className="p-8 text-center text-gray-500 font-bold">No passengers found. Search for a valid FARE ID to see the manifest.</td>
                 </tr>
               ) : passengers.map((pax, index) => (
                 <tr key={pax.id} className="hover:bg-blue-50/50 transition-colors">
@@ -235,6 +249,8 @@ export default function AdminFDReport() {
                     </span>
                   </td>
                   <td className="p-3 text-gray-600">{pax.dob || '-'}</td>
+                  <td className="p-3 text-gray-600 whitespace-nowrap">{pax.bookingDate || '-'}</td>
+                  <td className="p-3 text-gray-600 font-bold whitespace-nowrap">{pax.travelDate || '-'}</td>
                   <td className="p-3 text-center font-mono font-bold text-blue-600">{pax.pnr}</td>
                   <td className="p-3 text-gray-600">{pax.passportNo || '-'}</td>
                   <td className="p-3 text-gray-600">{pax.passportExpiry || '-'}</td>

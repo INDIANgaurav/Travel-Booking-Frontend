@@ -11,6 +11,7 @@ import FlightInvoice from './pages/dashboard/user/FlightInvoice'
 import PlaceholderPage from './pages/dashboard/user/PlaceholderPage'
 import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
 import GlobalMobileBottomNav from './components/layout/GlobalMobileBottomNav'
+import NetworkStatus from './components/common/NetworkStatus'
 
 import BookingsPage from './pages/dashboard/user/BookingsPage'
 import ProfilePage from './pages/dashboard/user/ProfilePage'
@@ -173,25 +174,31 @@ function App() {
     <ConfirmProvider>
       <BrowserRouter>
         <Toaster 
-          position="top-center" 
-          containerStyle={{ top: 76 }} 
+          position="bottom-right" 
+          containerStyle={{ zIndex: 999999 }}
           toastOptions={{
             style: {
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(0,0,0,0.05)',
-              color: '#1f2937',
-              borderRadius: '100px',
-              padding: '12px 24px',
-              boxShadow: '0 10px 30px -5px rgba(0,0,0,0.1)',
-              fontWeight: 600,
+              background: '#18181b', // zinc-900
+              border: '1px solid #27272a', // zinc-800
+              color: '#fafafa', // zinc-50
+              borderRadius: '12px',
+              padding: '12px 20px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              fontWeight: 500,
               fontSize: '14px',
+              letterSpacing: '-0.01em',
             },
             success: {
-              iconTheme: { primary: '#10b981', secondary: '#fff' },
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#18181b',
+              },
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#18181b',
+              },
             },
           }}
         />
@@ -402,6 +409,7 @@ function App() {
         </Route>
       </Routes>
       <GlobalMobileBottomNav />
+      <NetworkStatus />
       </BrowserRouter>
     </ConfirmProvider>
   )

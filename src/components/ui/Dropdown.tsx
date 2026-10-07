@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, X } from 'lucide-react';
 
 interface DropdownOption {
   value: string;
@@ -14,9 +14,10 @@ interface DropdownProps {
   placeholder?: string;
   className?: string;
   searchable?: boolean;
+  isClearable?: boolean;
 }
 
-export default function Dropdown({ value, onChange, options, placeholder = 'Select...', className = '', searchable = false }: DropdownProps) {
+export default function Dropdown({ value, onChange, options, placeholder = 'Select...', className = '', searchable = false, isClearable = false }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,7 +53,19 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
           {selectedOption?.icon}
           <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         </span>
-        <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-1 shrink-0">
+          {isClearable && value && (
+            <X
+              size={14}
+              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('');
+              }}
+            />
+          )}
+          <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
       {isOpen && (

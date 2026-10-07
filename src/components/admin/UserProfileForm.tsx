@@ -135,19 +135,19 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">First Name</label>
-                  <input type="text" value={formData.firstName} onChange={e => handleChange('firstName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.firstName} onChange={e => handleChange('firstName', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Last Name</label>
-                  <input type="text" value={formData.lastName} onChange={e => handleChange('lastName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.lastName} onChange={e => handleChange('lastName', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
-                  <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed" />
+                  <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100 border border-gray-200 shadow-sm rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Number</label>
-                  <input type="text" value={formData.phone} onChange={e => handleChange('phone', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.phone} onChange={e => handleChange('phone', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Access Level</label>
@@ -170,14 +170,14 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Wallet Balance</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                    <input type="text" value={formData.walletBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
+                    <input type="text" value={formData.walletBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100 border border-gray-200 shadow-sm rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Max Credit Limit</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                    <input type="text" value={formData.creditBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
+                    <input type="text" value={formData.creditBalance} disabled className="w-full pl-8 pr-4 py-3 bg-gray-100 border border-gray-200 shadow-sm rounded-xl text-sm font-black text-gray-500 cursor-not-allowed transition-all" />
                   </div>
                 </div>
               </div>
@@ -232,22 +232,22 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Search Timeout (Mins)</label>
-                  <input type="text" value={formData.resultExpiryTime} onChange={e => handleChange('resultExpiryTime', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
+                  <input type="text" value={formData.resultExpiryTime} onChange={e => handleChange('resultExpiryTime', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
                 </div>
                 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">OTP Validity Duration</label>
-                  <input type="text" value={formData.otpTime} onChange={e => handleChange('otpTime', e.target.value)} placeholder="e.g. 1440" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
+                  <input type="text" value={formData.otpTime} onChange={e => handleChange('otpTime', e.target.value)} placeholder="e.g. 1440" className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">IRCTC Auth ID</label>
-                  <input type="text" value={formData.irctcAgentId} onChange={e => handleChange('irctcAgentId', e.target.value)} placeholder="Auth ID..." className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
+                  <input type="text" value={formData.irctcAgentId} onChange={e => handleChange('irctcAgentId', e.target.value)} placeholder="Auth ID..." className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
                 </div>
                 
                 <div className="lg:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Shared API Domain</label>
-                  <input type="text" value={formData.extendedDomain} onChange={e => handleChange('extendedDomain', e.target.value)} placeholder="Enter extended domain URL..." className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
+                  <input type="text" value={formData.extendedDomain} onChange={e => handleChange('extendedDomain', e.target.value)} placeholder="Enter extended domain URL..." className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-purple-500/20 transition-all" />
                 </div>
 
                 <div className="lg:col-span-3 pt-2">
@@ -281,17 +281,17 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered Company</label>
-                  <div className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-black text-gray-800 uppercase">
+                  <div className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-black text-gray-800 uppercase">
                     {formData.companyName || 'Not Set'}
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Referred By</label>
-                  <input type="text" value={formData.referredBy} onChange={e => handleChange('referredBy', e.target.value)} placeholder="Referral Code/Name" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-orange-500/20 transition-all" />
+                  <input type="text" value={formData.referredBy} onChange={e => handleChange('referredBy', e.target.value)} placeholder="Referral Code/Name" className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-orange-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Manager / Reports To</label>
-                  <input type="text" value={formData.reportingTo} onChange={e => handleChange('reportingTo', e.target.value)} placeholder="Manager ID" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-orange-500/20 transition-all" />
+                  <input type="text" value={formData.reportingTo} onChange={e => handleChange('reportingTo', e.target.value)} placeholder="Manager ID" className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-orange-500/20 transition-all" />
                 </div>
               </div>
             </div>
@@ -307,11 +307,11 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Company</label>
-                  <input type="text" value={formData.companyName} onChange={e => handleChange('companyName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.companyName} onChange={e => handleChange('companyName', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Services</label>
-                  <input type="text" value={formData.services} onChange={e => handleChange('services', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.services} onChange={e => handleChange('services', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Business Type</label>
@@ -324,7 +324,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                       { value: 'Supplier', label: 'Supplier' },
                     ]}
                     placeholder="--Select Business Type--"
-                    className="w-full bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
@@ -337,60 +337,60 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
                       { value: 'No', label: 'No' },
                     ]}
                     placeholder="--Select IATA--"
-                    className="w-full bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Contact Representative</label>
-                  <input type="text" value={formData.contactRepresentative} onChange={e => handleChange('contactRepresentative', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.contactRepresentative} onChange={e => handleChange('contactRepresentative', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Name On PAN</label>
-                  <input type="text" value={formData.nameOnPan} onChange={e => handleChange('nameOnPan', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.nameOnPan} onChange={e => handleChange('nameOnPan', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">City</label>
-                  <input type="text" value={formData.city} onChange={e => handleChange('city', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.city} onChange={e => handleChange('city', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">State</label>
-                  <input type="text" value={formData.state} onChange={e => handleChange('state', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.state} onChange={e => handleChange('state', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comm Grp</label>
-                  <input type="text" value={formData.commGrp} onChange={e => handleChange('commGrp', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.commGrp} onChange={e => handleChange('commGrp', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Global Marquee Display</label>
-                  <textarea value={formData.marqueesDetail} onChange={e => handleChange('marqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                  <textarea value={formData.marqueesDetail} onChange={e => handleChange('marqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Youtube Url</label>
-                  <input type="text" value={formData.youtubeUrl} onChange={e => handleChange('youtubeUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.youtubeUrl} onChange={e => handleChange('youtubeUrl', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Linkdin Url</label>
-                  <input type="text" value={formData.linkedinUrl} onChange={e => handleChange('linkedinUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.linkedinUrl} onChange={e => handleChange('linkedinUrl', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Facebook Url</label>
-                  <input type="text" value={formData.facebookUrl} onChange={e => handleChange('facebookUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.facebookUrl} onChange={e => handleChange('facebookUrl', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">GST No</label>
-                  <input type="text" value={formData.gstn} onChange={e => handleChange('gstn', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.gstn} onChange={e => handleChange('gstn', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Address</label>
-                  <input type="text" value={formData.gstCompanyAddress} onChange={e => handleChange('gstCompanyAddress', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.gstCompanyAddress} onChange={e => handleChange('gstCompanyAddress', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Email</label>
-                  <input type="email" value={formData.gstEmail} onChange={e => handleChange('gstEmail', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="email" value={formData.gstEmail} onChange={e => handleChange('gstEmail', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">B2B Sales Fee</label>
-                  <input type="text" value={formData.cugPlatformSellingCharge} onChange={e => handleChange('cugPlatformSellingCharge', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.cugPlatformSellingCharge} onChange={e => handleChange('cugPlatformSellingCharge', e.target.value.replace(/[^0-9.]/g, ''))} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
               </div>
 
@@ -398,35 +398,35 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email</label>
-                  <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100/50 border-none rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed" />
+                  <input type="email" value={formData.email} disabled className="w-full px-4 py-3 bg-gray-100 border border-gray-200 shadow-sm rounded-xl text-sm font-medium text-gray-400 cursor-not-allowed" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sales Contact No.</label>
-                  <input type="text" value={formData.salesContactNo} onChange={e => handleChange('salesContactNo', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.salesContactNo} onChange={e => handleChange('salesContactNo', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Website</label>
-                  <input type="text" value={formData.website} onChange={e => handleChange('website', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.website} onChange={e => handleChange('website', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Office Phone</label>
-                  <input type="text" value={formData.officePhone} onChange={e => handleChange('officePhone', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.officePhone} onChange={e => handleChange('officePhone', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PAN No</label>
-                  <input type="text" value={formData.panNumber} onChange={e => handleChange('panNumber', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.panNumber} onChange={e => handleChange('panNumber', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Address</label>
-                  <input type="text" value={formData.officeAddress} onChange={e => handleChange('officeAddress', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.officeAddress} onChange={e => handleChange('officeAddress', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">PIN Code</label>
-                  <input type="text" value={formData.pincode} onChange={e => handleChange('pincode', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.pincode} onChange={e => handleChange('pincode', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Country</label>
-                  <input type="text" value={formData.country} onChange={e => handleChange('country', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.country} onChange={e => handleChange('country', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 
                 <div className="flex gap-6 py-2">
@@ -446,15 +446,15 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Custom B2B Marquee</label>
-                  <textarea value={formData.negoMarqueesDetail} onChange={e => handleChange('negoMarqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
+                  <textarea value={formData.negoMarqueesDetail} onChange={e => handleChange('negoMarqueesDetail', e.target.value)} rows={3} placeholder="please write here......" className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"></textarea>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Instagram Url</label>
-                  <input type="text" value={formData.instagramUrl} onChange={e => handleChange('instagramUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.instagramUrl} onChange={e => handleChange('instagramUrl', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Twitter Url</label>
-                  <input type="text" value={formData.twitterUrl} onChange={e => handleChange('twitterUrl', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.twitterUrl} onChange={e => handleChange('twitterUrl', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 
                 <div className="py-2">
@@ -466,15 +466,15 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Entity</label>
-                  <input type="text" value={formData.gstCompanyName} onChange={e => handleChange('gstCompanyName', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.gstCompanyName} onChange={e => handleChange('gstCompanyName', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Registered GST Phone</label>
-                  <input type="text" value={formData.gstContactNo} onChange={e => handleChange('gstContactNo', e.target.value)} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="text" value={formData.gstContactNo} onChange={e => handleChange('gstContactNo', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">B2B Purchasing Fee</label>
-                  <input type="number" value={formData.cugPlatformBuyingCharge} onChange={e => handleChange('cugPlatformBuyingCharge', Number(e.target.value))} className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
+                  <input type="number" value={formData.cugPlatformBuyingCharge} onChange={e => handleChange('cugPlatformBuyingCharge', Number(e.target.value))} className="w-full px-4 py-3 bg-white border border-gray-300 shadow-sm rounded-xl text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all" />
                 </div>
 
               </div>
@@ -521,11 +521,11 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
             <div className="overflow-x-auto rounded-xl border border-gray-200">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-blue-500 text-white text-xs uppercase tracking-wider">
-                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Sr No.</th>
-                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Doc Name</th>
-                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Doc Type</th>
-                    <th className="px-4 py-3 font-semibold border-r border-blue-400">Uploaded On</th>
+                  <tr className="bg-[#0c1a40] text-white text-xs uppercase tracking-wider">
+                    <th className="px-4 py-3 font-semibold border-r border-white/20">Sr No.</th>
+                    <th className="px-4 py-3 font-semibold border-r border-white/20">Doc Name</th>
+                    <th className="px-4 py-3 font-semibold border-r border-white/20">Doc Type</th>
+                    <th className="px-4 py-3 font-semibold border-r border-white/20">Uploaded On</th>
                     <th className="px-4 py-3 font-semibold text-center">Download</th>
                   </tr>
                 </thead>
@@ -554,10 +554,7 @@ export default function UserProfileForm({ initialData, onSave, isSaving, isAdmin
         )}
 
         {/* --- ACTION BAR --- */}
-        <div className="mt-8 flex flex-col md:flex-row items-center md:justify-between gap-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 w-full justify-center md:justify-start">
-            <CheckCircle2 size={16} /> All changes are automatically validated
-          </div>
+        <div className="mt-8 flex flex-col md:flex-row items-center md:justify-end gap-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="flex flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {activeTab === 'personal' && (
               <button
