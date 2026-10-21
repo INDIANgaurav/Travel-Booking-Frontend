@@ -8,6 +8,10 @@ interface B2BClient {
   companyName: string;
   contactName: string;
   email: string;
+  username?: string;
+  password?: string;
+  basicAuthKey?: string;
+  auth_channel?: string;
   testApiKey: string;
   liveApiKey: string;
   status: 'Pending' | 'Testing' | 'Live' | 'Suspended';
@@ -31,6 +35,8 @@ export default function AdminB2BPartners() {
     companyName: '',
     contactName: '',
     email: '',
+    username: '',
+    password: '',
     status: 'Testing',
     rateLimitPerMinute: 60,
     markupPercentage: 0
@@ -39,6 +45,7 @@ export default function AdminB2BPartners() {
   // UI state
   const [showTestKey, setShowTestKey] = useState(false);
   const [showLiveKey, setShowLiveKey] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchPartners = async () => {
     try {
@@ -70,6 +77,8 @@ export default function AdminB2BPartners() {
           companyName: '',
           contactName: '',
           email: '',
+          username: '',
+          password: '',
           status: 'Testing',
           rateLimitPerMinute: 60,
           markupPercentage: 0
@@ -85,10 +94,39 @@ export default function AdminB2BPartners() {
     toast.success('Copied to clipboard!');
   };
 
+  const copyWelcomeKit = (partner: B2BClient) => {
+    const text = `=========================================
+TrippeChalo B2B Flight API Sandbox Access
+=========================================
+Company: ${partner.companyName}
+Contact: ${partner.contactName} (${partner.email})
+
+1. GAPI / OAUTH2 CREDENTIALS:
+- Auth URL: https://api.trippechalo.com/api/v1/b2b/oauth2/tokens
+- Username / Client ID: ${partner.username || 'N/A'}
+- Password: ${partner.password || 'N/A'}
+- Auth Channel: ${partner.auth_channel || 'cugtest.trippechalo.com'}
+- Basic Auth Header: Basic ${partner.basicAuthKey || ''}
+
+2. DIRECT API KEY:
+- Test API Key (Header x-api-key): ${partner.testApiKey}
+
+3. CORE ENDPOINTS:
+- Sectors Query: GET /api/v1/b2b/search/sectors
+- Flight Search: POST /api/v1/b2b/search/flights
+- Flight Booking: POST /api/v1/b2b/flights/book
+
+Documentation & Postman Collection: Check your official onboarding package.
+=========================================`;
+    navigator.clipboard.writeText(text);
+    toast.success('Partner Welcome Kit copied to clipboard! Ready to share.');
+  };
+
   const openDocs = (partner: B2BClient) => {
     setSelectedPartner(partner);
     setShowTestKey(false);
     setShowLiveKey(false);
+    setShowPassword(false);
     setIsDocsModalOpen(true);
   };
 
@@ -145,7 +183,16 @@ export default function AdminB2BPartners() {
                   </span>
                   <button 
                     onClick={() => {
-                      setFormData(partner);
+                      setFormData({
+                        companyName: partner.companyName,
+                        contactName: partner.contactName,
+                        email: partner.email,
+                        username: partner.username || '',
+                        password: partner.password || '',
+                        status: partner.status,
+                        rateLimitPerMinute: partner.rateLimitPerMinute,
+                        markupPercentage: partner.markupPercentage
+                      });
                       setIsAddModalOpen(true);
                     }}
                     className="p-1 text-gray-400 hover:text-blue-600 transition"
@@ -198,15 +245,29 @@ export default function AdminB2BPartners() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-                  <input required type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
+                  <input required placeholder="Full Name" type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                  <input required type="email" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <input required placeholder="agent@company.com" type="email" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Custom Credentials (Optional - Leave blank to auto-generate)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Username (Client ID)</label>
+                    <input placeholder="Auto-generated if empty" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Password</label>
+                    <input placeholder="Auto-generated if empty" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                  </div>
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100">
                 <p className="text-sm font-bold text-gray-900 mb-3">API Configuration</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -237,17 +298,96 @@ export default function AdminB2BPartners() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h2 className="font-bold text-lg flex items-center gap-2">
-                <Key className="text-blue-600"/> API Credentials: {selectedPartner.companyName}
-              </h2>
+              <div>
+                <h2 className="font-bold text-lg flex items-center gap-2 text-gray-900">
+                  <Key className="text-blue-600"/> API Credentials: {selectedPartner.companyName}
+                </h2>
+                <p className="text-xs text-gray-500">{selectedPartner.contactName} ({selectedPartner.email})</p>
+              </div>
               <button onClick={() => setIsDocsModalOpen(false)} className="text-gray-500 hover:text-red-500"><XCircle size={20}/></button>
             </div>
             
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-gray-50">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 bg-gray-50">
               
-              {/* Credentials Card */}
+              {/* Quick Action Welcome Package Button */}
+              <div className="flex justify-between items-center bg-blue-50 border border-blue-200 rounded-xl p-3.5">
+                <div>
+                  <div className="font-bold text-sm text-blue-900">Partner Onboarding Kit</div>
+                  <div className="text-xs text-blue-600">Copy formatted credentials to send to partner via WhatsApp or Email.</div>
+                </div>
+                <button 
+                  onClick={() => copyWelcomeKit(selectedPartner)}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                >
+                  <Copy size={14}/> Copy Welcome Kit
+                </button>
+              </div>
+
+              {/* GAPI / Basic Auth Credentials Card */}
+              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-3.5">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                  <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                    <Activity size={16} className="text-emerald-600"/> GAPI / OAuth2 Authentication
+                  </h3>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                    POST /oauth2/tokens
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-gray-500 font-semibold mb-1">Username / Client ID</label>
+                    <div className="flex">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={selectedPartner.username || 'N/A'}
+                        className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-l-lg font-mono text-gray-900 select-all"
+                      />
+                      <button onClick={() => copyToClipboard(selectedPartner.username || '')} className="px-2.5 bg-gray-100 border border-l-0 border-gray-200 rounded-r-lg hover:bg-gray-200 text-gray-600">
+                        <Copy size={12}/>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-500 font-semibold mb-1">Password</label>
+                    <div className="flex">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        readOnly 
+                        value={selectedPartner.password || 'N/A'}
+                        className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-l-lg font-mono text-gray-900 select-all"
+                      />
+                      <button onClick={() => setShowPassword(!showPassword)} className="px-2 bg-gray-100 border border-l-0 border-gray-200 hover:bg-gray-200 text-gray-600">
+                        {showPassword ? <EyeOff size={12}/> : <Eye size={12}/>}
+                      </button>
+                      <button onClick={() => copyToClipboard(selectedPartner.password || '')} className="px-2.5 bg-gray-100 border border-l-0 border-gray-200 rounded-r-lg hover:bg-gray-200 text-gray-600">
+                        <Copy size={12}/>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-500 text-xs font-semibold mb-1">Basic Auth Key (Base64)</label>
+                  <div className="flex">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={`Basic ${selectedPartner.basicAuthKey || ''}`}
+                      className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-l-lg font-mono text-xs text-gray-900 select-all"
+                    />
+                    <button onClick={() => copyToClipboard(`Basic ${selectedPartner.basicAuthKey || ''}`)} className="px-3 bg-emerald-50 border border-l-0 border-emerald-200 rounded-r-lg hover:bg-emerald-100 text-emerald-700 font-semibold text-xs flex items-center gap-1">
+                      <Copy size={12}/> Copy Header
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Direct API Keys Card */}
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-2">Authentication Keys</h3>
+                <h3 className="font-bold text-gray-900 border-b border-gray-100 pb-2">Direct API Keys</h3>
                 
                 <div>
                   <label className="flex justify-between items-center text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
