@@ -15,9 +15,10 @@ interface DropdownProps {
   className?: string;
   searchable?: boolean;
   isClearable?: boolean;
+  direction?: 'top' | 'bottom' | 'auto';
 }
 
-export default function Dropdown({ value, onChange, options, placeholder = 'Select...', className = '', searchable = false, isClearable = false }: DropdownProps) {
+export default function Dropdown({ value, onChange, options, placeholder = 'Select...', className = '', searchable = false, isClearable = false, direction = 'bottom' }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,7 +70,12 @@ export default function Dropdown({ value, onChange, options, placeholder = 'Sele
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 origin-top">
+        <div className={`absolute z-50 w-full bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-in fade-in ${
+          direction === 'top' 
+            ? 'bottom-full mb-2 origin-bottom slide-in-from-bottom-2' 
+            : 'top-full mt-2 origin-top slide-in-from-top-2'
+        }`}>
+
           {searchable && (
             <div className="p-2 border-b border-gray-100">
               <input

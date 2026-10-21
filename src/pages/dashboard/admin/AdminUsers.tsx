@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Search, Trash2, X, AlertTriangle } from 'lucide-react';
+import { Search, Trash2, X, AlertTriangle, Plus } from 'lucide-react';
 import Loader from '../../../components/common/Loader';
 import RefreshButton from '../../../components/ui/RefreshButton';
+import CreateUserModal from '../../../components/admin/modals/CreateUserModal';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -47,6 +50,12 @@ export default function AdminUsers() {
     }
   };
 
+  const filteredUsers = users.filter((u: any) => 
+    (u.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (u.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.phone || '').includes(searchTerm)
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[70vh]">
@@ -68,10 +77,18 @@ export default function AdminUsers() {
             <input 
               type="text" 
               placeholder="Search users..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full md:w-64 pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
           <RefreshButton onClick={fetchUsers} loading={loading} count={users.length} />
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Plus size={18} /> Add User
+          </button>
         </div>
       </div>
       
@@ -88,7 +105,8 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100/80">
-              {users.map((user: any) => (
+              {filteredUsers.map((user: any) => (
+
                 <tr key={user._id} className="hover:bg-blue-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -203,8 +221,18 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
+
+      {/* Add User Modal */}
+      <CreateUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchUsers}
+        title="Add New User"
+        defaultRole="USER"
+      />
     </div>
   );
+
 }
 
 

@@ -54,7 +54,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-4 md:space-y-8 p-4 md:p-8 max-w-7xl mx-auto">
-      {/* Header with Quick Actions */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">Super Admin Dashboard</h1>
@@ -63,15 +63,8 @@ export default function AdminDashboard() {
             Real-time overview of your platform's performance
           </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigate('/admin/users')} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition shadow-sm">
-            + Add Agent
-          </button>
-          <button onClick={() => toast.error('Global Markups settings coming soon!')} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-sm shadow-blue-500/30">
-            Update Markups
-          </button>
-        </div>
       </div>
+
       
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

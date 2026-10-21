@@ -7,6 +7,7 @@ import Loader from '../../../components/common/Loader';
 import ManageRolesModal from '../../../components/admin/modals/ManageRolesModal';
 import AssignCreditModal from '../../../components/admin/modals/AssignCreditModal';
 import UserLedgerModal from '../../../components/admin/modals/UserLedgerModal';
+import CreateUserModal from '../../../components/admin/modals/CreateUserModal';
 import RefreshButton from '../../../components/ui/RefreshButton';
 import { useConfirm } from '../../../context/ConfirmContext';
 import Dropdown from '../../../components/ui/Dropdown';
@@ -17,15 +18,6 @@ export default function AdminManageUsers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '', role: 'USER' });
-  const [availableRoles, setAvailableRoles] = useState<any[]>([
-    { id: 'SUPER_ADMIN', label: 'Super Admin' },
-    { id: 'SUB_ADMIN', label: 'TRC Admin' },
-    { id: 'B2B_AGENT', label: 'TRC B2B' },
-    { id: 'SUPPLIER_AGENT', label: 'Supplier Agent' },
-    { id: 'USER', label: 'Normal User' }
-  ]);
   
   const navigate = useNavigate();
   
@@ -61,30 +53,8 @@ export default function AdminManageUsers() {
 
   useEffect(() => {
     fetchAgents();
-    
-    // Fetch dynamic roles for the Add Customer modal dropdown
-    const fetchDynamicRoles = async () => {
-      try {
-        const res = await api.get('/api/settings/roles');
-        if (res.data && res.data.success) {
-           const dynamicRoles = res.data.data.map((r: any) => ({
-             id: r.roleCode,
-             label: r.roleCode
-           }));
-           setAvailableRoles(prev => {
-             const merged = [...prev];
-             dynamicRoles.forEach((dr: any) => {
-               if (!merged.find(m => m.id === dr.id)) merged.push(dr);
-             });
-             return merged;
-           });
-        }
-      } catch (err) {
-        console.error('Failed to load dynamic roles', err);
-      }
-    };
-    fetchDynamicRoles();
   }, [page]);
+
 
   const handleApprove = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     try {
@@ -130,23 +100,6 @@ export default function AdminManageUsers() {
     navigate(`/admin/user-profile/${agent._id}`);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      const submissionData = { ...formData, name: formData.name || `${formData.firstName} ${formData.lastName}`.trim(), roles: [formData.role] };
-      await api.post('/api/admin/agents', submissionData);
-      toast.success('Agent created successfully');
-      setIsModalOpen(false);
-      setFormData({ firstName: '', lastName: '', name: '', email: '', phone: '', companyName: '', password: '', confirmPassword: '', address: '', city: '', role: 'B2B_AGENT' });
-      fetchAgents();
-    } catch (error: any) {
-      console.error('Error creating agent:', error);
-      toast.error(error.response?.data?.message || 'Failed to create agent');
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   const filteredAgents = agents.filter((agent: any) => 
     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -354,84 +307,14 @@ export default function AdminManageUsers() {
       </div>
 
       {/* Create Agent Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-4 bg-gray-50 border-b border-gray-100">
-              <h2 className="text-lg font-black text-gray-900 mx-auto w-full text-center tracking-wide">Add Customer</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-                disabled={isCreating}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-                        <form onSubmit={handleCreate} className="p-6 space-y-5">
-              <div className="bg-blue-500 text-white px-4 py-2 rounded-t-xl -mt-6 -mx-6 mb-4 font-bold">
-                Personal Details
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">First Name*</label>
-                  <input required type="text" placeholder="First Name" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value, name: e.target.value + ' ' + formData.lastName})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Last Name*</label>
-                  <input required type="text" placeholder="Last Name" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value, name: formData.firstName + ' ' + e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Mobile*</label>
-                  <input required type="tel" placeholder="Mobile" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Email Address*</label>
-                  <input required type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Address*</label>
-                  <input required type="text" placeholder="Address" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">City*</label>
-                  <input required type="text" placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Company Name</label>
-                  <input type="text" placeholder="Company/Agency (Optional)" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Password*</label>
-                  <input required type="password" placeholder="Enter Password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} minLength={6} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Confirm Password*</label>
-                  <input required type="password" placeholder="Confirm Password" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all bg-white" disabled={isCreating} minLength={6} />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Assign Role*</label>
-                  <Dropdown
-                    value={formData.role}
-                    onChange={(val) => setFormData({...formData, role: val})}
-                    options={availableRoles.map(r => ({ value: r.id, label: r.label }))}
-                    className="w-full bg-white border border-gray-200 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
+      <CreateUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchAgents}
+        title="Add New Agent"
+        defaultRole="B2B_AGENT"
+      />
 
-              <div className="pt-4 border-t border-gray-100 flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" disabled={isCreating}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={isCreating || (formData.password !== formData.confirmPassword)} className="px-8 py-2 bg-[#4285f4] hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-md disabled:opacity-50">
-                  {isCreating ? <Loader /> : 'Submit'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
             {/* View Verification Documents Modal */}
       {selectedDocsAgent && (

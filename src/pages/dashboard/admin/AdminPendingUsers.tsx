@@ -12,9 +12,6 @@ export default function AdminPendingUsers() {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', companyName: '', password: '' });
   
   const navigate = useNavigate();
   const [selectedDocsAgent, setSelectedDocsAgent] = useState<any | null>(null);
@@ -82,23 +79,6 @@ export default function AdminPendingUsers() {
     navigate(`/admin/user-profile/${agent._id}`);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      await api.post('/api/admin/agents', formData);
-      toast.success('Agent created successfully');
-      setIsModalOpen(false);
-      setFormData({ name: '', email: '', phone: '', companyName: '', password: '' });
-      fetchAgents();
-    } catch (error: any) {
-      console.error('Error creating agent:', error);
-      toast.error(error.response?.data?.message || 'Failed to create agent');
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   const filteredAgents = agents.filter((agent: any) => 
     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     agent.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -131,14 +111,9 @@ export default function AdminPendingUsers() {
             />
           </div>
           <RefreshButton onClick={fetchAgents} loading={loading} count={agents.length} />
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <Plus size={18} /> Add Agent
-          </button>
         </div>
       </div>
+
       
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -284,61 +259,7 @@ export default function AdminPendingUsers() {
         </div>
       </div>
 
-      {/* Create Agent Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-black text-gray-900">Add New Agent</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
-                disabled={isCreating}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Full Name <span className="text-red-500">*</span></label>
-                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Company Name <span className="text-red-500">*</span></label>
-                  <input required type="text" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white" disabled={isCreating} />
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Email Address <span className="text-red-500">*</span></label>
-                <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white" disabled={isCreating} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Phone Number <span className="text-red-500">*</span></label>
-                  <input required type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white" disabled={isCreating} />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Password <span className="text-red-500">*</span></label>
-                  <input required type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full px-4 py-2 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white" disabled={isCreating} minLength={6} />
-                </div>
-              </div>
-
-              <div className="pt-4 mt-2 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors" disabled={isCreating}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={isCreating} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-70 flex items-center gap-2">
-                  {isCreating ? <Loader /> : 'Create Agent'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
             {/* View Verification Documents Modal */}
       {selectedDocsAgent && (

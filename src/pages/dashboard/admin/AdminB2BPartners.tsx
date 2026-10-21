@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, Download, ExternalLink, Edit } from 'lucide-react';
+import { Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, Download, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -89,7 +89,26 @@ export default function AdminB2BPartners() {
     }
   };
 
+  const handleDeletePartner = async (partner: B2BClient) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to permanently delete "${partner.companyName}"?\n\nDeleting this partner will immediately revoke all API keys, access tokens, and API access.`
+    );
+    if (!isConfirmed) return;
+
+    try {
+      const res = await api.delete(`/api/admin/b2b-clients/${partner._id}`);
+      if (res.data.success) {
+        toast.success('B2B Partner deleted permanently and all access revoked.');
+        setPartners(prev => prev.filter(p => p._id !== partner._id));
+      }
+    } catch (error: any) {
+      console.error('Failed to delete partner', error);
+      toast.error(error.response?.data?.error || 'Failed to delete partner');
+    }
+  };
+
   const copyToClipboard = (text: string) => {
+
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');
   };
@@ -166,14 +185,14 @@ Documentation & Postman Collection: Check your official onboarding package.
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {partners.map(partner => (
-            <div key={partner._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
-              <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900">{partner.companyName}</h3>
-                  <p className="text-sm text-gray-500">{partner.contactName} • {partner.email}</p>
+            <div key={partner._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition flex flex-col justify-between h-full">
+              <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50/50 min-h-[92px]">
+                <div className="flex-1 pr-3 min-w-0">
+                  <h3 className="font-bold text-lg text-gray-900 truncate" title={partner.companyName}>{partner.companyName}</h3>
+                  <p className="text-sm text-gray-500 truncate mt-0.5" title={`${partner.contactName} • ${partner.email}`}>{partner.contactName} • {partner.email}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                     partner.status === 'Live' ? 'bg-green-100 text-green-700 border-green-200' :
                     partner.status === 'Testing' ? 'bg-orange-100 text-orange-700 border-orange-200' :
                     partner.status === 'Suspended' ? 'bg-red-100 text-red-700 border-red-200' :
@@ -195,15 +214,22 @@ Documentation & Postman Collection: Check your official onboarding package.
                       });
                       setIsAddModalOpen(true);
                     }}
-                    className="p-1 text-gray-400 hover:text-blue-600 transition"
+                    className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100 transition"
                     title="Edit Partner"
                   >
                     <Edit size={16} />
                   </button>
+                  <button 
+                    onClick={() => handleDeletePartner(partner)}
+                    className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition"
+                    title="Delete Partner & Revoke Access"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
               
-              <div className="p-5 space-y-4">
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                     <p className="text-xs text-gray-500 font-medium mb-1">API Wallet</p>
@@ -215,10 +241,10 @@ Documentation & Postman Collection: Check your official onboarding package.
                   </div>
                 </div>
                 
-                <div className="pt-2">
+                <div className="pt-2 mt-auto">
                   <button 
                     onClick={() => openDocs(partner)}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg transition text-sm font-medium"
+                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg transition text-sm font-medium shadow-sm"
                   >
                     <Key size={16} /> View Keys & Docs
                   </button>
@@ -239,17 +265,17 @@ Documentation & Postman Collection: Check your official onboarding package.
             </div>
             <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                <input required type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-gray-400 text-xs">(Optional)</span></label>
+                <input placeholder="e.g. Skyline Travels" type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-                  <input required placeholder="Full Name" type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name <span className="text-gray-400 text-xs">(Optional)</span></label>
+                  <input placeholder="Full Name" type="text" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                  <input required placeholder="agent@company.com" type="email" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email <span className="text-gray-400 text-xs">(Optional)</span></label>
+                  <input placeholder="agent@company.com" type="email" className="w-full p-2 border border-gray-300 rounded-lg" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                 </div>
               </div>
 
