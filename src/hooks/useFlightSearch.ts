@@ -25,6 +25,10 @@ export interface Flight {
   nexus_query?: any;
   isSeriesFare?: boolean;
   agentCommission?: number;
+  returnFlight?: any;
+  isRoundTripCombo?: boolean;
+  isRoundTripComboReturn?: boolean;
+  segments?: any[];
 }
 
 export const CITIES: Record<string, string> = {
@@ -112,22 +116,42 @@ export function useFlightSearch() {
       if (nonStopFilter) baseParams += `&stops=0`;
       if (morningFilter) baseParams += `&morningDeparture=true`;
 
-      const outRes = await api.get(`/api/searches/flights?from=${qFrom}&to=${qTo}&date=${getLocalISO(qDate)}&${baseParams}`);
-      setOutboundFlights(outRes.data);
-      if (outRes.data.length > 0) {
-        setSelectedOutbound(outRes.data[0]);
+      let outUrl = `/api/searches/flights?from=${qFrom}&to=${qTo}&date=${getLocalISO(qDate)}&${baseParams}`;
+      if (qTripType === 'Round Trip' && qReturnDate) {
+        outUrl += `&tripType=Round Trip&returnDate=${getLocalISO(qReturnDate)}`;
+      }
+
+      const outRes = await api.get(outUrl);
+      const fetchedOutbound = outRes.data || [];
+      setOutboundFlights(fetchedOutbound);
+      if (fetchedOutbound.length > 0) {
+        setSelectedOutbound(fetchedOutbound[0]);
         setSuggestedFlights([]);
       } else {
         const suggRes = await api.get(`/api/searches/flights?date=${getLocalISO(qDate)}`);
-        const sorted = suggRes.data.sort((a: Flight, b: Flight) => a.price - b.price).slice(0, 3);
+        const sorted = (suggRes.data || []).sort((a: Flight, b: Flight) => a.price - b.price).slice(0, 3);
         setSuggestedFlights(sorted);
       }
 
       if (qTripType === 'Round Trip' && qReturnDate) {
-        const retRes = await api.get(`/api/searches/flights?from=${qTo}&to=${qFrom}&date=${getLocalISO(qReturnDate)}&${baseParams}`);
-        setReturnFlights(retRes.data);
-        if (retRes.data.length > 0) {
-          setSelectedReturn(retRes.data[0]);
+        // 1. Collect paired combo return flights from the outbound round-trip response (e.g. GAPI)
+        const comboReturns = fetchedOutbound
+          .filter((f: any) => f.returnFlight)
+          .map((f: any) => f.returnFlight);
+
+        // 2. Fetch standard independent return flights
+        let standardReturns: any[] = [];
+        try {
+          const retRes = await api.get(`/api/searches/flights?from=${qTo}&to=${qFrom}&date=${getLocalISO(qReturnDate)}&${baseParams}`);
+          standardReturns = retRes.data || [];
+        } catch (e) {
+          console.error("Error fetching standard return flights:", e);
+        }
+
+        const allReturns = [...comboReturns, ...standardReturns];
+        setReturnFlights(allReturns);
+        if (allReturns.length > 0) {
+          setSelectedReturn(allReturns[0]);
         } else {
           setSelectedReturn(null);
         }

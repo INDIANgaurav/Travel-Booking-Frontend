@@ -37,6 +37,9 @@ interface Flight {
   nexus_query?: any;
   isSeriesFare?: boolean;
   agentCommission?: number;
+  returnFlight?: any;
+  isRoundTripCombo?: boolean;
+  isRoundTripComboReturn?: boolean;
   segments?: {
     origin: string;
     destination: string;
@@ -119,18 +122,18 @@ export default function FlightSearchResults() {
   const [sliderOffset, setSliderOffset] = useState(0);
 
   useEffect(() => {
-    const fetchCalendarPrices = async () => {
-      if (!from || !to) return;
-      try {
-        const { data } = await api.get(`/api/searches/calendar-prices?origin=${from}&destination=${to}`);
-        if (data) {
-          setCalendarPrices(data);
-        }
-      } catch (err) {
-        console.error('Error fetching calendar prices:', err);
-      }
-    };
-    fetchCalendarPrices();
+    // const fetchCalendarPrices = async () => {
+    //   if (!from || !to) return;
+    //   try {
+    //     const { data } = await api.get(`/api/searches/calendar-prices?origin=${from}&destination=${to}`);
+    //     if (data) {
+    //       setCalendarPrices(data);
+    //     }
+    //   } catch (err) {
+    //     console.error('Error fetching calendar prices:', err);
+    //   }
+    // };
+    // fetchCalendarPrices();
   }, [from, to]);
 
   // Redirect removed, all users get normal UI
@@ -718,7 +721,7 @@ export default function FlightSearchResults() {
                            <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                          </div>
                          <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                           <span>{selectedOutbound.airline}</span>
+                           <span>{selectedOutbound.airline} {selectedOutbound.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
                            <span className="text-blue-400 hover:text-blue-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
                          </div>
                        </div>
@@ -740,7 +743,7 @@ export default function FlightSearchResults() {
                                <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                              </div>
                              <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                               <span>{selectedReturn.airline}</span>
+                               <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
                                <span className="text-emerald-500 hover:text-emerald-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
                              </div>
                            </div>
@@ -929,7 +932,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
     >
       <div className="flex items-center gap-2 mb-3">
         <img src={flight.airlineLogo} alt={flight.airline} className="w-5 h-5 object-contain" />
-        <p className="font-bold text-gray-900 text-[13px]">{flight.airline}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="font-bold text-gray-900 text-[13px]">{flight.airline}</p>
+          {flight.flightNumber && (
+            <span className="text-[11px] text-gray-500 font-bold bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+              {flight.flightNumber}
+            </span>
+          )}
+        </div>
         {flight.segments && flight.segments.length > 1 && (
           <span className="ml-2 bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[9px] font-bold uppercase border border-purple-200">
             {flight.segments.length - 1} Stop{flight.segments.length > 2 ? 's' : ''}
@@ -980,11 +990,18 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
                   {/* Price & Action (Only show on the first segment to save space) */}
                   {idx === 0 ? (
                     <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
-                      <div className="flex flex-col items-start md:items-end">
-                        <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
-                        {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
-                        <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
-                      </div>
+                      {flight.isRoundTripComboReturn || (flight.price === 0 && (!displayPrice || displayPrice === 0)) ? (
+                        <div className="flex flex-col items-start md:items-end">
+                          <span className="font-black text-xs md:text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Included</span>
+                          <p className="text-[10px] text-gray-500 mt-0.5">Round-Trip Combo</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-start md:items-end">
+                          <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
+                          {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
+                          <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
+                        </div>
+                      )}
                       <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}
                       </div>
@@ -1022,11 +1039,18 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
 
           {/* Price & Action */}
           <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
-            <div className="flex flex-col items-start md:items-end">
-              <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
-              {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
-              <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
-            </div>
+            {flight.isRoundTripComboReturn || (flight.price === 0 && (!displayPrice || displayPrice === 0)) ? (
+              <div className="flex flex-col items-start md:items-end">
+                <span className="font-black text-xs md:text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Included</span>
+                <p className="text-[10px] text-gray-500 mt-0.5">Round-Trip Combo</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-start md:items-end">
+                <p className="font-black text-base md:text-[17px] text-gray-900">₹ {(displayPrice || flight.price).toLocaleString('en-IN')}</p>
+                {flight.price !== (displayPrice || flight.price) && <p className="text-[10px] text-red-500 line-through mb-1">₹ {flight.price.toLocaleString('en-IN')}</p>}
+                <p className="text-[10px] text-gray-500 mb-2 md:mb-2">/adult</p>
+              </div>
+            )}
             <div className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-[#008cff]' : 'border-gray-300 bg-white'}`}>
               {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#008cff]"></div>}
             </div>

@@ -174,7 +174,7 @@ function App() {
     <ConfirmProvider>
       <BrowserRouter>
         <Toaster 
-          position="bottom-right" 
+          position="top-right" 
           containerStyle={{ zIndex: 999999 }}
           toastOptions={{
             style: {
@@ -222,6 +222,8 @@ function App() {
         <Route path="/inactive-account" element={<InactiveAccountPage />} />
         <Route path="/page/:pageName" element={<DynamicPageViewer />} />
         <Route path="/api-docs" element={<B2BDocsPage />} />
+        <Route path="/ticket/:id" element={<FlightTicket />} />
+        <Route path="/invoice/:id" element={<FlightInvoice />} />
 
         {/* New Agent Sign Up, Agent Login, Agent B2B Engine & Supplier Login Public Routes */}
         <Route path="/b2b/coming-soon" element={<FeatureComingSoonPage />} />
@@ -275,7 +277,7 @@ function App() {
         <Route 
           path="/dashboard" 
           element={
-            <ProtectedRoute allowedRoles={['USER', 'SUPER_ADMIN', 'SUB_ADMIN']}>
+            <ProtectedRoute allowedRoles={['USER', 'SUPER_ADMIN', 'SUB_ADMIN', 'B2B_AGENT']}>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -285,6 +287,7 @@ function App() {
           <Route path="search" element={<SearchResultsPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="user/profile" element={<Navigate to="/dashboard/profile" replace />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="properties" element={<PropertiesPage />} />

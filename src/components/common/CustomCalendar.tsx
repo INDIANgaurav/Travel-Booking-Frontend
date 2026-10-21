@@ -36,13 +36,14 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
         setLoadingPrices(true);
       }
       
-      api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
-        .then(res => {
-          priceCache[key] = res.data;
-          setPrices(res.data);
-        })
-        .catch(err => console.error("[CustomCalendar] Error fetching calendar prices:", err))
-        .finally(() => setLoadingPrices(false));
+      // api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
+      //  .then(res => {
+      //    priceCache[key] = res.data;
+      //    setPrices(res.data);
+      //  })
+      //  .catch(err => console.error("[CustomCalendar] Error fetching calendar prices:", err))
+      //  .finally(() => setLoadingPrices(false));
+      setLoadingPrices(false);
     }
   }, [origin, destination]);
 
@@ -81,11 +82,11 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
     const startDayOfWeek = getDay(monthStart);
-    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="h-10 sm:h-14"></div>);
+    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="w-full h-6 sm:h-7"></div>);
     const totalCells = startDayOfWeek + days.length;
     const rowsNeeded = Math.ceil(totalCells / 7);
     const cellsNeeded = rowsNeeded * 7;
-    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="h-10 sm:h-14"></div>);
+    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="w-full h-6 sm:h-7"></div>);
     
     const allCells = [
       ...blanks,
@@ -136,7 +137,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           <div 
             key={day.toString()} 
             onClick={() => !isPast && onDateClick(day)}
-            className={`flex flex-col items-center justify-center h-10 sm:h-14 w-[calc(100%/7)] cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+            className={`flex flex-col items-center justify-center h-6 sm:h-7 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
           >
             {holiday && !isPast && (
               <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
@@ -145,19 +146,19 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
               </div>
             )}
             
-            <span className={`text-sm ${textClass}`}>{dateNum}</span>
+            <span className={`text-[11px] sm:text-xs font-semibold leading-none ${textClass}`}>{dateNum}</span>
             {!isPast && (
-              <div className="flex flex-col items-center mt-1 leading-none">
+              <div className="flex flex-col items-center leading-none">
                 {hasKnownPrice ? (
-                  <span className={`text-[9px] font-bold ${priceClass}`}>
+                  <span className={`text-[7px] sm:text-[8px] font-bold ${priceClass}`}>
                     {Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
                   </span>
                 ) : loadingPrices ? (
-                  <span className={`text-[9px] font-bold ${priceClass}`}>...</span>
+                  <span className={`text-[7px] sm:text-[8px] font-bold ${priceClass}`}>...</span>
                 ) : null}
                 
                 {holiday && (
-                  <span className="text-[7px] font-bold truncate text-center w-[90%] mt-[1px]" style={{ color: holiday.color }}>
+                  <span className="text-[6px] font-bold truncate text-center w-[90%]" style={{ color: holiday.color }}>
                     {holiday.name.substring(0, 5)}...
                   </span>
                 )}
@@ -166,73 +167,64 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           </div>
         );
       }),
-      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-[calc(100%/7)] h-10 sm:h-14"></div>)
+      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-full h-6 sm:h-7"></div>)
     ];
 
-    const mappedRows = [];
-    for (let i = 0; i < allCells.length; i += 7) {
-      mappedRows.push(
-        <div key={i} className="flex justify-between w-full mb-1">
-          {allCells.slice(i, i + 7)}
-        </div>
-      );
-    }
+    const mappedRows = (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', width: '100%' }}>
+        {allCells}
+      </div>
+    );
 
     return (
-      <div className={`flex-1 w-full sm:w-1/2 p-2 sm:p-4 ${isSecondMonth ? 'hidden sm:block' : ''}`}>
-        <h3 className="text-center font-bold text-gray-800 text-lg mb-6">
+      <div className={`flex-1 w-full sm:w-1/2 p-1.5 sm:p-2.5 ${isSecondMonth ? 'hidden sm:block' : ''}`}>
+        <h3 className="text-center font-bold text-gray-800 text-xs sm:text-sm mb-1">
           {format(monthToRender, 'MMMM yyyy')}
         </h3>
-        <div className="flex justify-between text-center text-xs font-semibold text-gray-400 mb-2">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d} className="w-[calc(100%/7)]">{d}</div>)}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', width: '100%' }} className="text-center text-[10px] font-semibold text-gray-400 mb-1">
+          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d} style={{ width: '100%' }}>{d}</div>)}
         </div>
-        <div className="flex flex-col">
-          {mappedRows}
-        </div>
+        {mappedRows}
       </div>
     );
   };
 
   return (
-    <div className={`bg-white rounded-xl w-[calc(100vw-48px)] ${isOneWay ? 'sm:w-[340px]' : 'sm:w-[700px]'} shadow-2xl sm:shadow-none border border-gray-100 sm:border-none z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white">
+    <div className={`bg-white rounded-xl w-[calc(100vw-32px)] sm:w-[580px] shadow-2xl border border-gray-200 z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
+      <div className="flex items-center justify-between px-3 py-1.5 bg-white border-b border-gray-100">
         <div className="flex gap-4">
-          <div className="font-bold text-gray-900 text-[18px]">
+          <div className="font-bold text-gray-900 text-xs sm:text-sm">
             {startDate ? format(startDate, 'd MMM yy') : 'Select Departure'} 
             {!isOneWay && (
               <>
-                <span className="mx-2 font-normal">-</span>
+                <span className="mx-2 font-normal text-gray-400">-</span>
                 {endDate ? format(endDate, 'd MMM yy') : 'Select Return'}
               </>
             )}
           </div>
         </div>
-        <button onClick={onClose} className="text-blue-600 font-bold hover:bg-blue-50 px-3 py-1 rounded-md transition text-sm">
+        <button onClick={onClose} className="text-blue-600 font-bold hover:bg-blue-50 px-2 py-0.5 rounded transition text-xs">
           DONE
         </button>
       </div>
       
-      <div className="relative flex flex-col sm:flex-row p-2 sm:p-4 pt-0 gap-2 sm:gap-4">
+      <div className="relative flex flex-col sm:flex-row p-1 sm:p-2 pt-0 gap-1 sm:gap-2">
         {/* Nav Arrows */}
         <button 
           onClick={handlePrevMonth}
-          className="absolute left-6 top-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition z-10"
+          className="absolute left-3 top-1.5 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition z-10"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={16} />
         </button>
         <button 
           onClick={handleNextMonth}
-          className="absolute right-6 top-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition z-10"
+          className="absolute right-3 top-1.5 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition z-10"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={16} />
         </button>
 
         {renderMonth(currentMonth, false)}
         {(!isOneWay || window.innerWidth >= 640) && renderMonth(addMonths(currentMonth, 1), true)}
-      </div>
-
-      <div className="px-6 py-3 bg-white border-t border-gray-100 text-[11px] text-gray-500 flex justify-between items-center">
-        <span>Showing our lowest prices in ₹</span>
       </div>
     </div>
   );

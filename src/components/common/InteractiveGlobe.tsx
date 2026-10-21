@@ -15,31 +15,31 @@ function latLngToVector3(lat: number, lng: number, r: number): THREE.Vector3 {
   );
 }
 
-/** Sharp crisp dot — NO blur/gradient */
+/** Sharp crisp dot with higher DPI */
 function makeDotTex(): THREE.CanvasTexture {
-  const sz = 64;
+  const sz = 128;
   const c  = document.createElement("canvas");
   c.width  = c.height = sz;
   const ctx = c.getContext("2d")!;
   ctx.clearRect(0, 0, sz, sz);
   ctx.beginPath();
-  ctx.arc(sz / 2, sz / 2, sz * 0.38, 0, Math.PI * 2);
-  ctx.fillStyle = "#ff4400";
+  ctx.arc(sz / 2, sz / 2, sz * 0.36, 0, Math.PI * 2);
+  ctx.fillStyle = "#ff5500";
   ctx.fill();
   return new THREE.CanvasTexture(c);
 }
 
 /** Thin ring — crisp circle outline */
 function makeRingTex(): THREE.CanvasTexture {
-  const sz  = 64;
+  const sz  = 128;
   const c   = document.createElement("canvas");
   c.width   = c.height = sz;
   const ctx = c.getContext("2d")!;
   ctx.clearRect(0, 0, sz, sz);
   ctx.beginPath();
   ctx.arc(sz / 2, sz / 2, sz * 0.42, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,140,0,0.9)";
-  ctx.lineWidth   = 4;
+  ctx.strokeStyle = "rgba(255,140,0,0.85)";
+  ctx.lineWidth   = 6;
   ctx.stroke();
   return new THREE.CanvasTexture(c);
 }
@@ -58,15 +58,16 @@ const FALLBACK: GlobeMarker[] = [
 export default function InteractiveGlobe() {
   const wrapRef  = useRef<HTMLDivElement>(null); // outer — measures available size
   const mountRef = useRef<HTMLDivElement>(null); // three.js canvas goes here
+  const tooltipRef = useRef<HTMLDivElement>(null); // directly updated in 60fps render loop
   const [markers,  setMarkers]  = useState<GlobeMarker[]>([]);
   const [loaded,   setLoaded]   = useState(false);
-  const [tooltip,  setTooltip]  = useState<Tooltip | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<{ city: string; count: number } | null>(null);
   const [size,     setSize]     = useState(0);
 
   useEffect(() => {
     api.get("/api/cms/globe-stats")
-      .then(r  => setMarkers(r.data))
-      .catch(() => setMarkers([]));
+      .then(r  => setMarkers(r.data?.length ? r.data : FALLBACK))
+      .catch(() => setMarkers(FALLBACK));
   }, []);
 
   // Measure real available width
@@ -142,14 +143,14 @@ export default function InteractiveGlobe() {
       const dot = new THREE.Sprite(new THREE.SpriteMaterial({
         map: dotTex, transparent: true, depthWrite: false, sizeAttenuation: true,
       }));
-      dot.scale.setScalar(0.045);
+      dot.scale.setScalar(0.024);
       dot.position.copy(localPos);
       globe.add(dot);
 
       const ring = new THREE.Sprite(new THREE.SpriteMaterial({
         map: ringTex, transparent: true, opacity: 0.8, depthWrite: false, sizeAttenuation: true,
       }));
-      ring.scale.setScalar(0.09);
+      ring.scale.setScalar(0.050);
       ring.position.copy(localPos);
       globe.add(ring);
 
@@ -201,6 +202,7 @@ export default function InteractiveGlobe() {
       targetZ = Math.max(1.6, Math.min(5.0, targetZ + e.deltaY * 0.003));
     };
 
+    let selectedMarker: ME | null = null;
     const raycaster = new THREE.Raycaster();
     const onClick = (e: MouseEvent | TouchEvent) => {
       if (dragStarted) return;
@@ -210,19 +212,19 @@ export default function InteractiveGlobe() {
       const nx = ((clientX - rect.left) / rect.width)  * 2 - 1;
       const ny = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
-      const hits = raycaster.intersectObjects(markerMeshes.map(m => m.dot));
+      
+      const clickTargets: THREE.Object3D[] = [];
+      markerMeshes.forEach(m => clickTargets.push(m.dot, m.ring));
+      const hits = raycaster.intersectObjects(clickTargets);
+
       if (hits.length) {
-        const entry = markerMeshes.find(m => m.dot === hits[0].object)!;
-        const wp    = new THREE.Vector3();
-        entry.dot.getWorldPosition(wp);
-        const proj  = wp.clone().project(camera);
-        setTooltip({
-          city: entry.data.city, count: entry.data.count,
-          x: (proj.x * .5 + .5) * SIZE,
-          y: (-proj.y * .5 + .5) * SIZE,
-        });
+        const hitObj = hits[0].object;
+        const entry = markerMeshes.find(m => m.dot === hitObj || m.ring === hitObj)!;
+        selectedMarker = entry;
+        setActiveTooltip({ city: entry.data.city, count: entry.data.count });
       } else {
-        setTooltip(null);
+        selectedMarker = null;
+        setActiveTooltip(null);
       }
     };
 
@@ -247,7 +249,15 @@ export default function InteractiveGlobe() {
       currentZ += (targetZ - currentZ) * 0.08;
       camera.position.z = currentZ;
 
+      // Dynamic zoom-responsive scaling:
+      // When zoomed in close, shrink markers in 3D so on-screen they remain tiny, sharp pins and don't obscure countries
+      const zoomRatio = currentZ / 3.5;
+      const dotScale = 0.024 * Math.max(0.22, Math.min(1.2, Math.pow(zoomRatio, 1.25)));
+      const ringScale = 0.050 * Math.max(0.22, Math.min(1.2, Math.pow(zoomRatio, 1.25)));
+
       markerMeshes.forEach(({ dot, ring, localPos }, i) => {
+        dot.scale.setScalar(dotScale);
+        ring.scale.setScalar(ringScale);
         const wp = localPos.clone();
         globe.localToWorld(wp);
         const toCam   = camera.position.clone().sub(wp).normalize();
@@ -261,6 +271,29 @@ export default function InteractiveGlobe() {
           (ring.material as THREE.SpriteMaterial).opacity = p;
         }
       });
+
+      // Update selected marker tooltip position in 3D world space every frame
+      if (selectedMarker && tooltipRef.current) {
+        const wp = selectedMarker.localPos.clone();
+        globe.localToWorld(wp);
+        const toCam = camera.position.clone().sub(wp).normalize();
+        const normal = wp.clone().normalize();
+        const isFacingCamera = normal.dot(toCam) > 0.08;
+
+        if (isFacingCamera) {
+          const proj = wp.clone().project(camera);
+          const screenX = (proj.x * 0.5 + 0.5) * SIZE;
+          const screenY = (-proj.y * 0.5 + 0.5) * SIZE;
+          tooltipRef.current.style.display = "block";
+          tooltipRef.current.style.left = `${screenX + 14}px`;
+          tooltipRef.current.style.top = `${screenY}px`;
+          tooltipRef.current.style.opacity = "1";
+        } else {
+          // Hide when rotated to the back of the earth
+          tooltipRef.current.style.opacity = "0";
+          tooltipRef.current.style.display = "none";
+        }
+      }
 
       renderer.render(scene, camera);
     };
@@ -295,13 +328,14 @@ export default function InteractiveGlobe() {
         className="w-full h-full cursor-grab active:cursor-grabbing rounded-full overflow-hidden"
         style={{ position: "relative", zIndex: 20 }}
       />
-      {tooltip && (
+      {activeTooltip && (
         <div
-          className="absolute pointer-events-none z-30 bg-[#0f172a] text-white text-xs px-3 py-2 rounded-xl shadow-xl border border-orange-500/40 whitespace-nowrap"
-          style={{ left: tooltip.x + 14, top: tooltip.y, transform: "translateY(-50%)" }}
+          ref={tooltipRef}
+          className="absolute pointer-events-none z-30 bg-[#0f172a] text-white text-xs px-3 py-2 rounded-xl shadow-xl border border-orange-500/40 whitespace-nowrap transition-opacity duration-75"
+          style={{ left: 0, top: 0, transform: "translateY(-50%)", display: "none", opacity: 0 }}
         >
-          <div className="text-orange-400 font-bold text-sm">{tooltip.city}</div>
-          <div className="text-gray-400">{tooltip.count} booking{tooltip.count !== 1 ? "s" : ""}</div>
+          <div className="text-orange-400 font-bold text-sm">{activeTooltip.city}</div>
+          <div className="text-gray-400">{activeTooltip.count} booking{activeTooltip.count !== 1 ? "s" : ""}</div>
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-orange-500 rotate-45" />
         </div>
       )}

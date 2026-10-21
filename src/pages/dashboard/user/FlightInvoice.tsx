@@ -61,16 +61,30 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
   const nexusData = booking.details?.nexus_response?._data;
   const flight = nexusData?.booking_items?.[0]?.flight;
   const leg = flight?.legs?.[0];
+  const gapiSector = booking.details?.gapi_booking_details?.FlightBookingSecotorDetails?.[0] || booking.details?.gapi_booking_details;
   
-  const flightNo = leg ? `${leg.airline} ${leg.flight_number}` : `FL-${Math.floor(Math.random() * 900) + 100}`;
-  const airlineName = booking.details?.airline || leg?.airline || 'JAPCGH';
+  const flightNo = leg 
+    ? `${leg.airline} ${leg.flight_number}` 
+    : (booking.details?.flightNo || (gapiSector?.airlines && gapiSector?.flightnumber ? `${gapiSector.airlines}-${gapiSector.flightnumber}` : '6E-333'));
+  const airlineName = leg?.airline_name || booking.details?.airline || gapiSector?.airlines || 'IndiGo';
   
   // Create a 3-letter code from city name (mock logic)
   const getAirportCode = (city: string) => city ? city.substring(0, 3).toUpperCase() : 'XXX';
   const originCode = booking.type === 'FLIGHT' ? (leg?.origin || getAirportCode(booking.details?.from)) : '';
   const destCode = booking.type === 'FLIGHT' ? (leg?.destination || getAirportCode(booking.details?.to)) : '';
-  const dateStr = new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const travelDateStr = nexusData?.travel_date ? new Date(nexusData.travel_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : dateStr;
+  const issueDate = new Date(booking.createdAt);
+  const dateStr = issueDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  
+  const rawDepTime = 
+    booking.date ||
+    booking.details?.departureTime || 
+    booking.details?.date || 
+    gapiSector?.departuredate || 
+    leg?.departure_time || 
+    nexusData?.travel_date;
+
+  const travelDateObj = rawDepTime ? new Date(rawDepTime) : issueDate;
+  const travelDateStr = travelDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   
   const pnr = nexusData?.booking_reference || booking.details?.pnr || booking.bookingId;
   const displayPnr = pnr ? pnr.toUpperCase() : 'N/A';
@@ -113,21 +127,29 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
         ) : (
           <div></div>
         )}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate(`/dashboard/ticket/${booking._id || actualId}`)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold shadow-md transition-colors text-sm"
+          >
+            <Plane size={17} />
+            View E-Ticket
+          </button>
+
           <button 
             onClick={handlePrint}
-            className={`flex items-center gap-2 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-colors ${booking.type === 'HOTEL' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-800 hover:bg-gray-900'}`}
+            className={`flex items-center gap-2 text-white px-5 py-2 rounded-lg font-semibold shadow-md transition-colors text-sm ${booking.type === 'HOTEL' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-800 hover:bg-gray-900'}`}
           >
-            <Printer size={18} />
+            <Printer size={17} />
             Print Invoice
           </button>
           
           {booking.type === 'FLIGHT' && booking.status === 'CONFIRMED' && (
             <button 
               onClick={handleWebCheckIn}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-colors"
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-semibold shadow-md transition-colors text-sm"
             >
-              <Plane size={18} />
+              <Plane size={17} />
               Web Check-in
             </button>
           )}
@@ -229,11 +251,6 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
             </div>
           </div>
           
-          <div className="flex justify-center mb-6 mt-2">
-            <div className="w-32 h-32 border border-gray-200 rounded p-1">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(displayPnr)}`} alt="QR" className="w-full h-full mix-blend-multiply" />
-            </div>
-          </div>
 
           <div className="border-t border-dashed border-gray-300 my-6"></div>
 
@@ -267,7 +284,7 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
               <tbody>
                 {passengers.map((pax: any, i: number) => {
                   const paxConfirmation = nexusData?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
-                  const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                  const tktNo = paxConfirmation?.pnr || pax.airlinepnr || pax.pnr || displayPnr;
                   return (
                     <tr key={i}>
                       <td className="px-3 py-3 font-bold text-[13px]">{pax.name || pax.firstName + ' ' + pax.lastName}</td>

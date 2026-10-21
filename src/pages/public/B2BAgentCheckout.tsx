@@ -127,9 +127,12 @@ const B2BAgentCheckout: React.FC = () => {
   const childrenCount = location.state?.children || 0;
   const infants = location.state?.infants || 0;
 
-  const requireDob = flight?.inputRequirements?.dob?.required;
-  // For International flights, Nexus requires DOB. We'll use this to also ask for Passport.
-  const requirePassport = flight?.inputRequirements?.passport?.required || requireDob;
+  const indianAirports = new Set(['DEL','BOM','NMI','BLR','MAA','CCU','HYD','AMD','PNQ','GOI','GOX','COK','TRV','CCJ','JAI','ATQ','LKO','BBI','PAT','GAU','IXB','IXZ','IXC','SXR','VNS','BHO','IDR','NAG','RPR','BDQ','STV']);
+  const isInternational = flight && (!indianAirports.has(flight.departureAirportCode) || !indianAirports.has(flight.arrivalAirportCode));
+
+  const requireDob = true;
+  // For International flights, Passport is required.
+  const requirePassport = flight?.inputRequirements?.passport?.required || isInternational;
 
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
@@ -914,7 +917,7 @@ const B2BAgentCheckout: React.FC = () => {
                           />
                         </div>
 
-                        {(p.type === 'CHILD' || p.type === 'INFANT' || flight?.inputRequirements?.dob?.required) && (
+                        {(p.type === 'CHILD' || p.type === 'INFANT' || requireDob) && (
                           <div className="relative">
                             <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Date of Birth</label>
                             {(() => {
@@ -926,6 +929,9 @@ const B2BAgentCheckout: React.FC = () => {
                                 const m = flightDate.getMonth() - dobDate.getMonth();
                                 if (m < 0 || (m === 0 && flightDate.getDate() < dobDate.getDate())) {
                                   age--;
+                                }
+                                if (p.type === 'ADULT' && age < 12) {
+                                  ageErrorMsg = 'Adults must be 12+ yrs old';
                                 }
                                 if (p.type === 'CHILD') {
                                   if (age < 2) ageErrorMsg = 'Must be at least 2 yrs (Book as Infant)';
@@ -945,6 +951,14 @@ const B2BAgentCheckout: React.FC = () => {
                                       value={p.dob || ''} 
                                       onChange={(val) => handlePassengerChange(idx, 'dob', val)} 
                                       placeholder="Select DOB"
+                                      maxDate={new Date()}
+                                      initialDate={
+                                        p.type === 'ADULT' 
+                                          ? new Date(new Date().getFullYear() - 25, 0, 1)
+                                          : p.type === 'CHILD'
+                                            ? new Date(new Date().getFullYear() - 6, 0, 1)
+                                            : new Date()
+                                      }
                                     />
                                   </div>
                                   {isError && (

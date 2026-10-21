@@ -88,16 +88,79 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
   const getAirportCode = (city: string) => city ? city.substring(0, 3).toUpperCase() : 'XXX';
   const originCode = leg?.origin || getAirportCode(booking.details?.from);
   const destCode = leg?.destination || getAirportCode(booking.details?.to);
-  const travelDate = nexusData?.travel_date ? new Date(nexusData.travel_date) : (booking.details?.date ? new Date(booking.details.date) : new Date(booking.createdAt));
-  const dateStr = travelDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const gapiSector = booking.details?.gapi_booking_details?.FlightBookingSecotorDetails?.[0] || booking.details?.gapi_booking_details;
+
+  const rawDepTime = 
+    booking.date ||
+    booking.details?.departureTime || 
+    booking.details?.date || 
+    gapiSector?.departuredate || 
+    leg?.departure_time || 
+    nexusData?.travel_date;
+
+  const rawArrTime = 
+    booking.details?.arrivalTime || 
+    gapiSector?.arrivaldate || 
+    leg?.arrival_time;
+
+  const travelDateObj = rawDepTime ? new Date(rawDepTime) : new Date(booking.createdAt);
+  const arrDateObj = rawArrTime ? new Date(rawArrTime) : travelDateObj;
+
+  const dateStr = travelDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const arrDateStr = arrDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   
-  const depTime = leg?.departure_time ? new Date(leg.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : (booking.details?.date ? new Date(booking.details.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '13:50');
-  const arrTime = leg?.arrival_time ? new Date(leg.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : (booking.details?.arrivalTime ? new Date(booking.details.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '15:50');
-  
-  const handBaggage = flight?.cabin_baggage || '7kg (1 piece)';
-  const checkinBaggage = flight?.checkin_baggage || '15kg (1 piece)';
+  const depTime = rawDepTime 
+    ? new Date(rawDepTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) 
+    : '13:00';
+    
+  const arrTime = rawArrTime 
+    ? new Date(rawArrTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) 
+    : '15:00';
+
+  const isNonRefundable = Boolean(
+    booking.details?.isSeriesFare ||
+    booking.details?.refundable === 'Non Refundable' ||
+    gapiSector?.refundable === 'Non Refundable' ||
+    booking.details?.refundable === false
+  );
+
+  const handBaggage = flight?.cabin_baggage || (booking.details as any)?.cabinBaggage || '7kg (1 piece)';
+  const checkinBaggage = flight?.checkin_baggage || (booking.details as any)?.checkinBaggage || '15kg (1 piece)';
   
   const issueDate = new Date(booking.createdAt);
+
+  // Normalize segments to support 1D arrays, 2D arrays (GAPI), and nested structures
+  const rawSegments = booking.details?.segments || [];
+  const flattenedSegments = Array.isArray(rawSegments) ? rawSegments.flat(2).filter(Boolean) : [];
+  const normalizedSegments = flattenedSegments.map((s: any) => {
+    const airlineName = typeof s.airline === 'object' 
+      ? (s.airline?.airlineName || s.airline?.airlineCode || booking.details?.airline || '')
+      : (s.airline || booking.details?.airline || '');
+    
+    const flightNum = typeof s.airline === 'object'
+      ? ((s.airline?.airlineCode ? s.airline.airlineCode + '-' : '') + (s.airline?.flightNumber || ''))
+      : (s.flightNo || s.flightNumber || booking.details?.flightNo || '');
+
+    const originCode = s.origin?.airport?.airportCode || s.origin?.airportCode || (typeof s.origin === 'string' ? s.origin : booking.details?.from || '');
+    const destCode = s.destination?.airport?.airportCode || s.destination?.airportCode || (typeof s.destination === 'string' ? s.destination : booking.details?.to || '');
+
+    const depTimeVal = s.origin?.depTime || s.origin?.departuredate || s.departureTime || booking.details?.departureTime;
+    const arrTimeVal = s.destination?.arrTime || s.destination?.arrivaldate || s.arrivalTime || booking.details?.arrivalTime;
+
+    const durationVal = Number(s.duration || booking.details?.duration || 0);
+
+    return {
+      airline: airlineName.trim(),
+      flightNo: flightNum.trim(),
+      origin: originCode,
+      destination: destCode,
+      departureTime: depTimeVal,
+      arrivalTime: arrTimeVal,
+      duration: durationVal,
+      departureTerminal: s.departureTerminal || s.origin?.terminal || s.origin?.airport?.terminal || '1',
+      arrivalTerminal: s.arrivalTerminal || s.destination?.terminal || s.destination?.airport?.terminal || '1'
+    };
+  }).filter((s: any) => s.origin && s.destination && s.departureTime && !isNaN(new Date(s.departureTime).getTime()));
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center py-6 px-4 z-50 overflow-hidden">
@@ -197,7 +260,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                       <tbody className="bg-white">
                         {passengers.map((pax: any, i: number) => {
                           const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
-                          const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                          const tktNo = paxConfirmation?.pnr || pax.airlinepnr || pax.pnr || displayPnr;
                           return (
                             <tr key={i} className="border-b border-gray-100 last:border-b-0">
                               <td className="px-3 py-3 font-bold text-[13px] uppercase">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
@@ -290,30 +353,49 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                       </tr>
                     </thead>
                     <tbody>
-                    {booking.details?.segments && booking.details.segments.length > 0 ? (
-                      booking.details.segments.map((segment: any, idx: number) => (
+                    {normalizedSegments && normalizedSegments.length > 0 ? (
+                      normalizedSegments.map((segment: any, idx: number) => (
                         <React.Fragment key={idx}>
-                          {idx > 0 && (
-                            <tr>
-                              <td colSpan={5} className="bg-amber-50 text-amber-700 px-3 py-2 text-[10px] font-bold text-center border-y border-amber-200">
-                                Change Plane at {booking.details.segments[idx-1].destination} | Layover Time: {(() => {
-                                  const arr = new Date(booking.details.segments[idx-1].arrivalTime).getTime();
-                                  const dep = new Date(segment.departureTime).getTime();
-                                  const mins = Math.floor((dep - arr) / 60000);
-                                  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-                                })()}
-                              </td>
-                            </tr>
-                          )}
+                          {idx > 0 && (() => {
+                            const prevSeg = normalizedSegments[idx - 1];
+                            const arr = new Date(prevSeg.arrivalTime).getTime();
+                            const dep = new Date(segment.departureTime).getTime();
+                            const mins = Math.floor((dep - arr) / 60000);
+                            const isReturnFlight = mins > 18 * 60;
+
+                            if (isReturnFlight) {
+                              return (
+                                <tr>
+                                  <td colSpan={5} className="bg-blue-50 text-blue-800 px-4 py-2 text-[10px] md:text-[11px] font-bold text-center border-y border-blue-200">
+                                    ✈️ Return Journey: {segment.origin} ➔ {normalizedSegments[normalizedSegments.length - 1]?.destination || segment.destination} | {new Date(segment.departureTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  </td>
+                                </tr>
+                              );
+                            }
+
+                            return (
+                              <tr>
+                                <td colSpan={5} className="bg-amber-50 text-amber-700 px-3 py-2 text-[10px] font-bold text-center border-y border-amber-200">
+                                  Change Plane at {prevSeg.destination} | Layover Time: {Math.floor(mins / 60)}h {mins % 60}m
+                                </td>
+                              </tr>
+                            );
+                          })()}
                           <tr>
                             <td className="p-1 md:p-3 align-top">
                               <div className="flex gap-1 md:gap-2 items-start">
                                 <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
                                 <div>
-                                  <p className="font-bold whitespace-nowrap">{segment.airline} {segment.flightNo}</p>
+                                  <p className="font-bold whitespace-nowrap">{(() => {
+                                    const GAPI_MAP: Record<string, string> = { 'AI': 'Air India', '6E': 'IndiGo', 'SG': 'SpiceJet', 'IX': 'Air India Express', 'UK': 'Vistara', 'QP': 'Akasa Air' };
+                                    const airRaw = (segment.airline || '').trim();
+                                    const airName = GAPI_MAP[airRaw.toUpperCase()] || airRaw;
+                                    const flNo = segment.flightNo || '';
+                                    return flNo.startsWith(airName) ? flNo : `${airName} ${flNo}`;
+                                  })()}</p>
                                   <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
                                   <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
-                                  <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                                  <p className="text-gray-600 text-[8px] md:text-[11px]">{isNonRefundable ? 'Non-Refundable' : 'Refundable'}</p>
                                 </div>
                               </div>
                             </td>
@@ -331,7 +413,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                             </td>
                             <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
                               <p className="whitespace-nowrap">{Math.floor(segment.duration / 60)}h {segment.duration % 60}m</p>
-                              <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">Non-Stop</p>
+                              <p className="text-gray-500 text-[8px] md:text-[11px] whitespace-nowrap">{segment.stops !== undefined ? (segment.stops === 0 ? 'Non-Stop' : `${segment.stops} Stop(s)`) : 'Non-Stop'}</p>
                             </td>
                             <td className="p-1 md:p-3 align-top border-l border-gray-200 font-medium text-center">
                               <span className="bg-green-100 text-green-700 px-1 py-0.5 md:px-2 md:py-1 rounded text-[8px] md:text-[11px] whitespace-nowrap">{booking.status === 'CONFIRMED' ? 'Confirmed' : booking.status}</span>
@@ -345,10 +427,10 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                           <div className="flex gap-1 md:gap-2 items-start">
                             <div className="text-blue-500 font-bold text-lg md:text-xl leading-none"><Plane size={16} className="md:w-[18px] md:h-[18px]" /></div>
                             <div>
-                              <p className="font-bold whitespace-nowrap">{flightNo}</p>
+                              <p className="font-bold whitespace-nowrap">{airline} {flightNo}</p>
                               <p className="font-bold text-[8px] md:text-[11px]">{cabinClass}</p>
                               <p className="text-gray-600 text-[8px] md:text-[11px] hidden md:block">Aircraft Type-32Y</p>
-                              <p className="text-gray-600 text-[8px] md:text-[11px]">Refundable</p>
+                              <p className="text-gray-600 text-[8px] md:text-[11px]">{isNonRefundable ? 'Non-Refundable' : 'Refundable'}</p>
                             </div>
                           </div>
                         </td>
@@ -361,7 +443,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                         <td className="p-1 md:p-3 align-top">
                           <p className="font-bold uppercase text-[9px] md:text-[12px] whitespace-nowrap">{booking.details?.to} <span className="font-normal text-gray-500 hidden md:inline">({destCode})</span></p>
                           <p className="font-bold whitespace-nowrap">{arrTime}</p>
-                          <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{dateStr}</p>
+                          <p className="font-normal text-gray-600 whitespace-nowrap text-[8px] md:text-[11px]">{arrDateStr}</p>
                         </td>
                         <td className="p-1 md:p-3 align-top border-l border-gray-200 text-blue-600 font-medium">
                           <p className="whitespace-nowrap">{flight?.duration ? `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m` : (booking.details?.duration ? `${Math.floor(booking.details.duration / 60)}h ${booking.details.duration % 60}m` : '02:00')}</p>
@@ -396,7 +478,7 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {passengers.map((pax: any, i: number) => {
                     const paxConfirmation = booking.details?.nexus_response?._data?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
-                    const tktNo = paxConfirmation?.pnr || `${displayPnr}${i}`;
+                    const tktNo = paxConfirmation?.pnr || pax.airlinepnr || pax.pnr || displayPnr;
                     const seatNo = booking.details?.seats?.[i] || pax.seat || 'Unassigned';
                     const paxType = pax.type || pax.passengerType || (pax.name?.toLowerCase().includes('child') ? 'Child' : pax.name?.toLowerCase().includes('infant') ? 'Infant' : 'Adult');
                     const handBaggage = pax.handBaggage || '7kg (1 piece)';

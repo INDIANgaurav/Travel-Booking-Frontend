@@ -419,7 +419,7 @@ export default function LandingPage() {
                   </div>
 
                   {activeDatePicker === 'depart' && (
-                    <div className="absolute top-[100%] left-0 sm:left-[-100px] z-50 mt-2 sm:mt-0" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] left-0 sm:left-[-80px] z-50 mt-1 sm:mt-0" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={departureDate} 
                         endDate={null}
@@ -436,7 +436,7 @@ export default function LandingPage() {
                   )}
 
                   {activeDatePicker === 'return' && (
-                    <div className="absolute top-[100%] right-0 sm:left-[-100px] sm:right-auto z-50 mt-2 sm:mt-0" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] right-0 sm:left-[-80px] sm:right-auto z-50 mt-1 sm:mt-0" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={returnDate} 
                         endDate={null}

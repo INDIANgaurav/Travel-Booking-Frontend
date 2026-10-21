@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated, updateProfileData } from '../../store/authSlice';
-import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft, Clock } from 'lucide-react';
+import { Calendar, User, Search, MapPin, CheckCircle, ChevronDown, Check, Briefcase, Plus, ArrowRight, Plane, Coffee, Shield, Armchair, ArrowLeft, Clock, X } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import api from '../../services/api';
@@ -27,6 +27,32 @@ export default function FlightBookingPage() {
   const [showQuickTopup, setShowQuickTopup] = useState(false);
   const [topupAmount, setTopupAmount] = useState('');
   const [isToppingUp, setIsToppingUp] = useState(false);
+  const [showFareRulesModal, setShowFareRulesModal] = useState(false);
+
+  // Refundable & Fare Rules detection from API
+  const isNonRefundable = Boolean(
+    selectedOutbound?.isSeriesFare ||
+    selectedOutbound?.refundable === false ||
+    selectedOutbound?.refundable === 'Non Refundable' ||
+    selectedOutbound?.refundable === 'NON_REFUNDABLE' ||
+    selectedOutbound?.refundable === 'No' ||
+    (typeof selectedOutbound?.refundable === 'string' && selectedOutbound?.refundable.toLowerCase().includes('non'))
+  );
+
+  const isRefundable = Boolean(
+    selectedOutbound?.refundable === true ||
+    selectedOutbound?.refundable === 'Refundable' ||
+    selectedOutbound?.refundable === 'REFUNDABLE' ||
+    selectedOutbound?.refundable === 'Yes' ||
+    (typeof selectedOutbound?.refundable === 'string' && selectedOutbound?.refundable.toLowerCase() === 'refundable')
+  );
+
+  const hasFareRules = Boolean(
+    (selectedOutbound?.fareRules && selectedOutbound.fareRules.length > 0) ||
+    selectedOutbound?.refundable !== undefined ||
+    selectedOutbound?.isSeriesFare ||
+    selectedOutbound?.isGapiFare
+  );
 
   const storageKey = `bookingTimer_${selectedOutbound?._id || 'new'}`;
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -73,7 +99,7 @@ export default function FlightBookingPage() {
   const indianAirports = new Set(['DEL','BOM','NMI','BLR','MAA','CCU','HYD','AMD','PNQ','GOI','GOX','COK','TRV','CCJ','JAI','ATQ','LKO','BBI','PAT','GAU','IXB','IXZ','IXC','SXR','VNS','BHO','IDR','NAG','RPR','BDQ','STV']);
   const isInternational = selectedOutbound && (!indianAirports.has(selectedOutbound.departureAirportCode) || !indianAirports.has(selectedOutbound.arrivalAirportCode));
 
-  const requireDob = selectedOutbound?.inputRequirements?.dob?.required || isInternational;
+  const requireDob = true; // Required for all domestic & international passengers
   const requirePassport = selectedOutbound?.inputRequirements?.passport?.required || isInternational;
   const [showErrors, setShowErrors] = useState(false);
 
@@ -86,6 +112,8 @@ export default function FlightBookingPage() {
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isIssuingTicket, setIsIssuingTicket] = useState(false);
+  const [issuingStage, setIssuingStage] = useState<'verifying' | 'securing' | 'finalizing'>('verifying');
   const [paymentMethod, setPaymentMethod] = useState<'RAZORPAY' | 'WALLET'>('RAZORPAY');
   const [showWalletConfirm, setShowWalletConfirm] = useState(false);
 
@@ -330,12 +358,27 @@ export default function FlightBookingPage() {
 
   const validateAndContinueToPayment = () => {
     setShowErrors(true);
-    // Basic fields validation
     const isValid = passengers.every((p: any) => {
       const hasName = p.title !== '' && p.firstName && p.lastName;
       const dobValid = (p.type === 'Child' || p.type === 'Infant' || requireDob) ? !!p.dob : true;
       const passportValid = requirePassport ? (!!p.passportNumber && !!p.passportExpiry) : true;
-      return hasName && dobValid && passportValid;
+      
+      let ageValid = true;
+      if (p.dob && selectedOutbound?.departureTime) {
+        const flightDate = new Date(selectedOutbound.departureTime);
+        const dobDate = new Date(p.dob);
+        let age = flightDate.getFullYear() - dobDate.getFullYear();
+        const m = flightDate.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && flightDate.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        const paxType = (p.type || '').toUpperCase();
+        if (paxType === 'ADULT' && age < 12) ageValid = false;
+        if (paxType === 'CHILD' && (age < 2 || age >= 12)) ageValid = false;
+        if (paxType === 'INFANT' && age >= 2) ageValid = false;
+      }
+
+      return hasName && dobValid && passportValid && ageValid;
     });
 
     if (!isValid) {
@@ -388,20 +431,21 @@ export default function FlightBookingPage() {
           return;
         }
       }
-      // Check availability before payment (Only for Nexus flights)
-      if (!selectedOutbound.isSeriesFare) {
-        try {
-          await api.post('/api/searches/flights/check', {
-            query: selectedOutbound.nexus_query,
-            flight_keys: [selectedOutbound._id],
-            total_price: selectedOutbound.price,
-            currency: 'INR'
-          });
-        } catch (err: any) {
-          toast.error(err.response?.data?.message || 'Flight is no longer available. Please search again.');
-          setIsProcessing(false);
-          return;
+      // Dynamic Availability Check (Backend handles supplier routing)
+      try {
+        const checkRes = await api.post('/api/searches/flights/check', {
+          flight: selectedOutbound
+        });
+        if (checkRes.data?.resultSessionId) {
+          selectedOutbound.resultSessionId = checkRes.data.resultSessionId;
         }
+        if (checkRes.data?.searchSessionId) {
+          selectedOutbound.searchSessionId = checkRes.data.searchSessionId;
+        }
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || 'Flight is no longer available. Please search again.');
+        setIsProcessing(false);
+        return;
       }
 
       const generatedPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -417,11 +461,20 @@ export default function FlightBookingPage() {
           flightNo: selectedOutbound.flightNumber,
           from: selectedOutbound.departureAirportCode,
           to: selectedOutbound.arrivalAirportCode,
+          departureTime: selectedOutbound.departureTime,
+          date: selectedOutbound.departureTime,
           arrivalTime: selectedOutbound.arrivalTime,
           duration: selectedOutbound.durationMinutes,
           stops: selectedOutbound.stops,
           isSeriesFare: selectedOutbound.isSeriesFare || false,
-          segments: selectedOutbound.segments,
+          isGapiFare: Boolean(selectedOutbound.isGapiFare || selectedOutbound._id?.startsWith('GAPI_')),
+          resultSessionId: selectedOutbound.resultSessionId,
+          searchSessionId: selectedOutbound.searchSessionId,
+          segments: selectedOutbound.allSegments || (
+            tripType === 'Round Trip' && selectedReturn?.segments
+              ? [...(selectedOutbound.segments || []), ...(selectedReturn.segments || [])]
+              : selectedOutbound.segments
+          ),
           passengers: passengers.map((p: any) => ({
             name: `${p.firstName} ${p.lastName}`,
             type: p.type,
@@ -443,15 +496,22 @@ export default function FlightBookingPage() {
       });
 
       if (paymentMethod === 'WALLET') {
+        setIsIssuingTicket(true);
+        setIssuingStage('securing');
         if (data.apiFailed) {
           toast.error(data.message || 'Booking failed. Refund has been initiated.');
           setIsProcessing(false);
+          setIsIssuingTicket(false);
           return;
         }
+        setIssuingStage('finalizing');
         toast.success('Payment successful! Booking confirmed using Wallet.');
         sessionStorage.removeItem(storageKey);
-        navigate(`/dashboard/invoice/${data.booking._id}`);
-        setIsProcessing(false);
+        setTimeout(() => {
+          navigate(`/dashboard/ticket/${data.booking._id}`);
+          setIsProcessing(false);
+          setIsIssuingTicket(false);
+        }, 1000);
         return;
       }
 
@@ -459,27 +519,55 @@ export default function FlightBookingPage() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
         amount: data.amount,
         currency: data.currency,
-        name: 'Travel Booking App',
+        name: 'TrippeChalo',
         description: 'Flight Booking Transaction',
         order_id: data.orderId,
         handler: async function (response: any) {
           try {
-            await api.post('/api/bookings/payment/verify', {
+            setIsIssuingTicket(true);
+            setIssuingStage('verifying');
+
+            setTimeout(() => {
+              setIssuingStage('securing');
+            }, 1200);
+
+            const verifyRes = await api.post('/api/bookings/payment/verify', {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature
             });
             
-            toast.success('Payment successful! Booking confirmed.');
+            if (verifyRes.data.apiFailed) {
+              toast.error(verifyRes.data.message || 'Payment successful but flight booking API failed. Full refund initiated.');
+              setIsProcessing(false);
+              setIsIssuingTicket(false);
+              return;
+            }
+
+            setIssuingStage('finalizing');
+            toast.success('Payment successful! Flight ticket issued.');
             sessionStorage.removeItem(storageKey);
-            navigate(`/dashboard/invoice/${data.booking._id}`);
+            
+            setTimeout(() => {
+              navigate(`/dashboard/ticket/${data.booking._id}`);
+              setIsProcessing(false);
+              setIsIssuingTicket(false);
+            }, 1200);
           } catch (error) {
             toast.error('Payment verification failed.');
+            setIsProcessing(false);
+            setIsIssuingTicket(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            setIsIssuingTicket(false);
           }
         },
         prefill: {
-          name: passengers[0]?.name || 'Test User',
-          email: contactEmail || 'test@example.com',
+          name: passengers[0]?.name || (passengers[0]?.firstName ? `${passengers[0].firstName} ${passengers[0].lastName || ''}` : 'Traveller'),
+          email: contactEmail || 'user@example.com',
           contact: contactPhone || '9999999999'
         },
         theme: {
@@ -528,12 +616,12 @@ export default function FlightBookingPage() {
             <ArrowLeft size={20} />
           </button>
           
-          <div onClick={() => navigate('/')} className="flex items-center gap-2 cursor-pointer">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-black text-lg md:text-xl shadow-lg shadow-blue-500/30">
-              T
+          <div onClick={() => navigate('/')} className="flex items-center gap-2.5 cursor-pointer">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+              <Plane size={18} />
             </div>
-            <span className="text-lg md:text-xl font-black text-white tracking-tight hidden sm:block">
-              Trippe<span className="text-blue-400">.</span>
+            <span className="text-xl md:text-2xl font-black text-white tracking-tight">
+              Trippe<span className="text-blue-400">Chalo</span>
             </span>
           </div>
 
@@ -560,8 +648,19 @@ export default function FlightBookingPage() {
           </div>
           
           <div 
-            onClick={() => navigate(user ? '/dashboard/user/profile' : '/login')}
+            onClick={() => {
+              if (!user) {
+                navigate('/login');
+              } else if (user.roles?.includes('SUPER_ADMIN') || user.roles?.includes('SUB_ADMIN')) {
+                navigate('/admin/profile');
+              } else if (user.roles?.includes('B2B_AGENT') || user.roles?.includes('SELLER')) {
+                navigate('/b2b/profile');
+              } else {
+                navigate('/dashboard/profile');
+              }
+            }}
             className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer text-white"
+            title="My Profile"
           >
             <User size={16} />
           </div>
@@ -579,7 +678,15 @@ export default function FlightBookingPage() {
             <div className="bg-white shadow-sm rounded border border-gray-200 overflow-hidden">
                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                  <h2 className="text-[20px] font-bold text-gray-900">{selectedOutbound.departureCity} → {selectedOutbound.arrivalCity}</h2>
-                 <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">CANCELLATION FEES APPLY</span>
+                 {isNonRefundable ? (
+                   <span className="bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold px-2.5 py-0.5 rounded">
+                     NON-REFUNDABLE
+                   </span>
+                 ) : isRefundable ? (
+                   <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-0.5 rounded">
+                     REFUNDABLE (FEES APPLY)
+                   </span>
+                 ) : null}
                </div>
                
                <div className="p-4">
@@ -588,7 +695,14 @@ export default function FlightBookingPage() {
                      <span className="text-gray-900 font-bold">{new Date(selectedOutbound.departureTime).toLocaleDateString('en-GB', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                      <span className="text-gray-500 font-normal ml-2">Non Stop · {Math.floor(selectedOutbound.durationMinutes / 60)}h {selectedOutbound.durationMinutes % 60}m</span>
                    </div>
-                   <span className="text-blue-500 text-[12px] font-bold cursor-pointer hover:underline">View Fare Rules</span>
+                   {hasFareRules && (
+                     <span 
+                       onClick={() => setShowFareRulesModal(true)}
+                       className="text-blue-600 hover:text-blue-700 text-[12px] font-bold cursor-pointer hover:underline"
+                     >
+                       View Fare Rules
+                     </span>
+                   )}
                  </div>
 
                  <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
@@ -803,6 +917,14 @@ export default function FlightBookingPage() {
                                       value={p.dob || ''} 
                                       onChange={(val) => handlePassengerChange(idx, 'dob', val)} 
                                       placeholder="Select DOB"
+                                      maxDate={new Date()}
+                                      initialDate={
+                                        p.type.toUpperCase() === 'ADULT' 
+                                          ? new Date(new Date().getFullYear() - 25, 0, 1)
+                                          : p.type.toUpperCase() === 'CHILD'
+                                            ? new Date(new Date().getFullYear() - 6, 0, 1)
+                                            : new Date()
+                                      }
                                     />
                                   </div>
                                   {isError && (
@@ -1181,6 +1303,130 @@ export default function FlightBookingPage() {
         </div>
       )}
 
+      {/* Fare Rules Modal */}
+      {showFareRulesModal && selectedOutbound && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[115] flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 overflow-hidden my-8">
+            {/* Header */}
+            <div className="bg-[#0c182d] text-white px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                  <Plane size={15} />
+                </div>
+                <h3 className="text-sm font-black tracking-wide uppercase">Fare Rules & Airline Policy</h3>
+              </div>
+              <button 
+                onClick={() => setShowFareRulesModal(false)}
+                className="w-7 h-7 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Flight Sector Sub-header */}
+            <div className="bg-blue-50/70 px-6 py-3 border-b border-blue-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#0c1a40] font-bold">
+                <span>{selectedOutbound.departureCity} ({selectedOutbound.departureAirportCode})</span>
+                <span>→</span>
+                <span>{selectedOutbound.arrivalCity} ({selectedOutbound.arrivalAirportCode})</span>
+                <span className="text-gray-500 font-normal">| {new Date(selectedOutbound.departureTime).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              <div className="text-gray-700 font-semibold flex items-center gap-2">
+                <span>{selectedOutbound.airline}</span>
+                <span className="bg-white text-gray-700 px-2 py-0.5 rounded border border-blue-200 text-[11px] font-bold">{selectedOutbound.flightNumber}</span>
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
+              {/* Refundability & Cancellation */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  1. Cancellation Policy
+                </h4>
+                <div className={`p-4 rounded-xl border text-xs font-medium ${isNonRefundable ? 'bg-red-50/60 border-red-200 text-red-900' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900'}`}>
+                  <div className="font-bold flex items-center gap-2 mb-1.5 text-sm">
+                    <span className={`w-2.5 h-2.5 rounded-full ${isNonRefundable ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                    {isNonRefundable ? 'Non-Refundable Ticket' : 'Refundable with Cancellation Charges'}
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-gray-700">
+                    {isNonRefundable 
+                      ? 'This fare is strictly non-refundable upon cancellation. In the event of a cancellation, no refund of base fare or fuel surcharges will be issued. Government statutory taxes may be claimed as per prevailing DGCA / airline norms.' 
+                      : 'Cancellations initiated at least 4 hours before departure will be refunded after deducting standard airline cancellation penalties and service fees. No refund is granted for no-shows or cancellations within 4 hours of departure.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Reschedule / Date Change */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  2. Date Change & Reschedule Policy
+                </h4>
+                <div className="p-4 rounded-xl border bg-gray-50 border-gray-200 text-xs font-medium text-gray-800">
+                  <div className="font-bold mb-1 text-sm text-[#0c1a40]">
+                    {isNonRefundable ? 'Fixed Schedule (Non-Changeable)' : 'Date Change Allowed with Fare Difference'}
+                  </div>
+                  <p className="text-[12px] text-gray-600 leading-relaxed">
+                    {isNonRefundable 
+                      ? 'Fixed departures, series fares, and promotional fares do not allow date, flight, or name alterations.' 
+                      : 'Applicable airline date change penalty plus any difference between the original fare and the new flight fare will be charged.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Baggage Allowance */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  3. Baggage Allowance
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center gap-3">
+                    <div className="text-2xl">🎒</div>
+                    <div>
+                      <div className="text-gray-500 text-[10px] uppercase font-bold">Cabin Baggage</div>
+                      <div className="font-bold text-gray-900 text-sm mt-0.5">{(selectedOutbound as any).cabinBaggage || '7 Kg'} / Passenger</div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center gap-3">
+                    <div className="text-2xl">🧳</div>
+                    <div>
+                      <div className="text-gray-500 text-[10px] uppercase font-bold">Check-In Baggage</div>
+                      <div className="font-bold text-gray-900 text-sm mt-0.5">{(selectedOutbound as any).checkinBaggage || '15 Kg'} / Passenger</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* API Fare Rules if present */}
+              {selectedOutbound?.fareRules && selectedOutbound.fareRules.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                    4. Airline Specific Fare Rules
+                  </h4>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2 text-gray-700">
+                    {selectedOutbound.fareRules.map((rule: any, idx: number) => (
+                      <div key={idx} className="leading-relaxed">
+                        {rule.fareRuleDetail || rule.rule || (typeof rule === 'string' ? rule : JSON.stringify(rule))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setShowFareRulesModal(false)}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Quick Wallet Topup Modal */}
       {showQuickTopup && (
         <div className="fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1211,6 +1457,77 @@ export default function FlightBookingPage() {
             >
               {isToppingUp ? 'Processing...' : 'Pay with Razorpay'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Live Booking & Ticket Issuing Overlay */}
+      {isIssuingTicket && (
+        <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-blue-100 text-center relative overflow-hidden">
+            {/* Top decorative gradient bar */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 animate-pulse" />
+
+            {/* Glowing Plane Icon */}
+            <div className="relative w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-60" />
+              <div className="relative w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                <Plane className="w-8 h-8 animate-bounce" />
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">
+              Issuing Your Flight Ticket
+            </h3>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+              Please do not close or refresh this page. We are finalizing your live reservation with the airline.
+            </p>
+
+            {/* Step Progress Tracker */}
+            <div className="space-y-3 text-left bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  ✓
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Payment Processed</p>
+                  <p className="text-[11px] text-gray-500">Transaction approved successfully</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
+                  issuingStage === 'securing' || issuingStage === 'finalizing'
+                    ? 'bg-blue-600 text-white animate-pulse'
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {issuingStage === 'finalizing' ? '✓' : '2'}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Securing Airline PNR & Seats</p>
+                  <p className="text-[11px] text-gray-500">Connecting directly to carrier system</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all ${
+                  issuingStage === 'finalizing'
+                    ? 'bg-green-600 text-white animate-pulse'
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {issuingStage === 'finalizing' ? '✓' : '3'}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">Generating Official E-Ticket & Invoice</p>
+                  <p className="text-[11px] text-gray-500">Preparing confirmed travel voucher</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 text-xs font-semibold text-blue-600">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
+              Almost done, redirecting to your E-Ticket...
+            </div>
           </div>
         </div>
       )}

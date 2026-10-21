@@ -265,6 +265,7 @@ interface RecentSearch {
           from: searchFrom,
           to: searchTo,
           date: searchDate,
+          returnDate: searchTripType === 'Round Trip' ? searchReturnDate : undefined,
           adults: searchAdults,
           children: searchChildren,
           infants: searchInfants,
@@ -280,8 +281,13 @@ interface RecentSearch {
         setSelectedOutbound(flightsData[0]);
       }
 
-      // Return flights (swap from/to, use returnDate)
+      // Return flights
       if (searchTripType === 'Round Trip' && searchReturnDate) {
+        const comboReturns = flightsData
+          .filter((f: any) => f.returnFlight)
+          .map((f: any) => f.returnFlight);
+
+        let retFlightsData: any[] = [];
         try {
           const returnResponse = await api.get('/api/searches/flights', {
             params: {
@@ -296,14 +302,15 @@ interface RecentSearch {
               passengers: searchAdults + searchChildren + searchInfants
             }
           });
-          const retFlightsData = returnResponse.data || [];
-          setReturnFlightsData(retFlightsData);
-          if (retFlightsData.length > 0) {
-            setSelectedReturn(retFlightsData[0]);
-          }
+          retFlightsData = returnResponse.data || [];
         } catch (e) {
           console.error("Error fetching return flights:", e);
-          setReturnFlightsData([]);
+        }
+
+        const allReturns = [...comboReturns, ...retFlightsData];
+        setReturnFlightsData(allReturns);
+        if (allReturns.length > 0) {
+          setSelectedReturn(allReturns[0]);
         }
       } else {
         setReturnFlightsData([]);

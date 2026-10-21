@@ -62,11 +62,37 @@ export default function DOBCalendar({ value, onChange, minDate, maxDate, initial
 
   const startingDayIndex = getDay(startOfMonth(currentMonth));
   
-  const years = [];
   const currentYear = new Date().getFullYear();
-  for (let i = currentYear; i >= currentYear - 100; i--) {
+  
+  // Support both future dates (Passport Expiry up to +25 years) and past dates (DOB down to -100 years)
+  const maxYear = Math.max(
+    currentYear + 25,
+    maxDate ? getYear(maxDate) : 0,
+    initialDate ? getYear(initialDate) : 0,
+    selectedDate ? getYear(selectedDate) : 0
+  );
+  
+  const minYear = Math.min(
+    currentYear - 100,
+    minDate ? getYear(minDate) : currentYear - 100,
+    selectedDate ? getYear(selectedDate) : currentYear
+  );
+
+  const years: number[] = [];
+  for (let i = maxYear; i >= minYear; i--) {
     years.push(i);
   }
+
+  const yearListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isYearOpen && yearListRef.current) {
+      const activeEl = yearListRef.current.querySelector('.active-year') as HTMLElement;
+      if (activeEl) {
+        yearListRef.current.scrollTop = activeEl.offsetTop - (yearListRef.current.clientHeight / 2) + (activeEl.clientHeight / 2);
+      }
+    }
+  }, [isYearOpen]);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -131,11 +157,14 @@ export default function DOBCalendar({ value, onChange, minDate, maxDate, initial
                   <ChevronDown size={14} className="text-gray-400" />
                 </div>
                 {isYearOpen && (
-                  <div className="absolute top-6 -left-6 bg-white border border-gray-200 rounded-md shadow-lg w-[80px] max-h-[220px] overflow-y-auto z-50 custom-scrollbar py-1">
+                  <div 
+                    ref={yearListRef}
+                    className="absolute top-6 -left-6 bg-white border border-gray-200 rounded-md shadow-lg w-[80px] max-h-[220px] overflow-y-auto z-50 custom-scrollbar py-1"
+                  >
                     {years.map(y => (
                       <div 
                         key={y} 
-                        className={`px-3 py-1.5 text-xs text-center cursor-pointer hover:bg-blue-50 hover:text-blue-600 ${getYear(currentMonth) === y ? 'bg-blue-50 text-blue-600 font-bold' : 'font-medium'}`}
+                        className={`px-3 py-1.5 text-xs text-center cursor-pointer hover:bg-blue-50 hover:text-blue-600 ${getYear(currentMonth) === y ? 'bg-blue-50 text-blue-600 font-bold active-year' : 'font-medium'}`}
                         onClick={() => { setCurrentMonth(setYear(currentMonth, y)); setIsYearOpen(false); }}
                       >
                         {y}
