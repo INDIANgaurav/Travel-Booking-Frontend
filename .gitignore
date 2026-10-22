@@ -38,3 +38,9 @@ out/
 *.njsproj
 *.sln
 *.sw?
+
+# Confidential Docs
+docs/
+*.doc
+*.docx
+*.pdf

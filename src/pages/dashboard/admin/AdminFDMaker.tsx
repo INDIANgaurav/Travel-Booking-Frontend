@@ -31,6 +31,7 @@ interface ISeriesFare {
   status: 'Active' | 'Inactive' | 'SoldOut';
   supplierName?: string;
   supplierId?: string;
+  isTestFlight?: boolean;
 }
 
 const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
@@ -116,6 +117,7 @@ const AdminSeriesFareMaker: React.FC = () => {
   const [suppliersList, setSuppliersList] = useState<{value: string, label: string}[]>([{ value: 'All', label: 'All Suppliers' }]);
   const [travelTypeFilter, setTravelTypeFilter] = useState('All');
   const [moreOptionsFilter, setMoreOptionsFilter] = useState('Active');
+  const [flightModeFilter, setFlightModeFilter] = useState<'All' | 'LIVE' | 'TEST'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
@@ -127,6 +129,7 @@ const AdminSeriesFareMaker: React.FC = () => {
   const [bulkUploading, setBulkUploading] = useState(false);
   const [travelClassAdd, setTravelClassAdd] = useState('ECONOMY');
   const [newFare, setNewFare] = useState({
+    isTestFlight: false,
     airline: '',
     airlinePnr: '',
     bookingType: 'ONE_WAY' as 'ONE_WAY' | 'ROUND_TRIP',
@@ -209,6 +212,8 @@ const AdminSeriesFareMaker: React.FC = () => {
       if (airlineFilter) params.append('airline', airlineFilter);
       if (supplierFilter !== 'All') params.append('supplierName', supplierFilter);
       if (moreOptionsFilter === 'Active') params.append('status', 'Active');
+      if (flightModeFilter === 'LIVE') params.append('isTestFlight', 'false');
+      if (flightModeFilter === 'TEST') params.append('isTestFlight', 'true');
       
       const response = await api.get(`/api/series-fare?${params.toString()}`);
       if (Array.isArray(response.data)) {
@@ -241,6 +246,7 @@ const AdminSeriesFareMaker: React.FC = () => {
       const response = await api.post('/api/series-fare', payload);
       if (response.data) {
         setFares(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
+        toast.success(newFare.isTestFlight ? 'Test Flight (Sandbox 999 seats) created!' : 'Live Series Fare created successfully!');
       }
     } catch (err) {
       const mockCreated: ISeriesFare = {
@@ -250,6 +256,7 @@ const AdminSeriesFareMaker: React.FC = () => {
         status: 'Active' as const
       };
       setFares(prev => [mockCreated, ...(Array.isArray(prev) ? prev : [])]);
+      toast.success('Series fare created locally!');
     }
     setShowAddModal(false);
   };
@@ -408,6 +415,8 @@ const AdminSeriesFareMaker: React.FC = () => {
 
   const filteredFares = safeFares.filter(f => {
     if (airlineFilter && !f.airline.toLowerCase().includes(airlineFilter.toLowerCase())) return false;
+    if (flightModeFilter === 'LIVE' && f.isTestFlight === true) return false;
+    if (flightModeFilter === 'TEST' && f.isTestFlight !== true) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return f.sfId.toLowerCase().includes(q) || f.airlinePnr.toLowerCase().includes(q) || f.origin.toLowerCase().includes(q) || f.destination.toLowerCase().includes(q);
@@ -500,7 +509,7 @@ const AdminSeriesFareMaker: React.FC = () => {
 
       {/* Filter Toolbar */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(5,1fr)_auto] gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(6,1fr)_auto] gap-4">
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Travel Date</label>
             <DOBCalendar 
@@ -553,6 +562,19 @@ const AdminSeriesFareMaker: React.FC = () => {
                 { value: 'Expired', label: 'Show Expired' },
                 { value: 'SoldOut', label: 'Show Sold Out' },
                 { value: 'All', label: 'Show All' }
+              ]}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-gray-700 mb-1">Mode / Environment</label>
+            <Dropdown 
+              value={flightModeFilter}
+              onChange={(val: any) => setFlightModeFilter(val)}
+              options={[
+                { value: 'All', label: 'All Modes' },
+                { value: 'LIVE', label: 'Live Inventory' },
+                { value: 'TEST', label: 'Sandbox Test (999)' }
               ]}
             />
           </div>
@@ -645,9 +667,20 @@ const AdminSeriesFareMaker: React.FC = () => {
                         />
                       </td>
                       <td className="p-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : fare.status === 'SoldOut' ? 'bg-purple-50 text-purple-600 border-purple-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
-                          {fare.status}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : fare.status === 'SoldOut' ? 'bg-purple-50 text-purple-600 border-purple-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
+                            {fare.status}
+                          </span>
+                          {fare.isTestFlight ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 tracking-tight" title="Test Flight for B2B Sandbox Testing">
+                              TEST (999)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 tracking-tight" title="Commercial Live Flight">
+                              LIVE
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col">
@@ -951,7 +984,62 @@ const AdminSeriesFareMaker: React.FC = () => {
                   <Plane size={18} className="text-blue-600" />
                   Travel Journey Details
                 </div>
-                <div className="space-y-8">
+                <div className="space-y-6">
+                  {/* Flight Environment / Mode Selector */}
+                  <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/70 p-4 rounded-xl border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-gray-900">Flight Environment:</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${
+                          newFare.isTestFlight 
+                            ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                            : 'bg-blue-100 text-blue-800 border-blue-300'
+                        }`}>
+                          {newFare.isTestFlight ? 'SANDBOX TEST (API Testing Only • Auto 999 Seats)' : 'LIVE PRODUCTION (Real Flight Inventory)'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600">
+                        {newFare.isTestFlight 
+                          ? 'This flight will ONLY appear in Sandbox API queries. Partner test bookings will not deduct real balance or block commercial seats.' 
+                          : 'This flight is live for public customer bookings and production B2B partner APIs.'}
+                      </p>
+                    </div>
+                    <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1 shrink-0 shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => setNewFare({
+                          ...newFare,
+                          isTestFlight: false,
+                          totalSeats: newFare.totalSeats === 999 ? 10 : newFare.totalSeats,
+                          availableSeats: newFare.availableSeats === 999 ? 10 : newFare.availableSeats
+                        })}
+                        className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
+                          !newFare.isTestFlight
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        Live Flight
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewFare({
+                          ...newFare,
+                          isTestFlight: true,
+                          totalSeats: 999,
+                          availableSeats: 999
+                        })}
+                        className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
+                          newFare.isTestFlight
+                            ? 'bg-amber-500 text-white shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        Test Flight (999 Seats)
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Row 1: Journey Type */}
                   <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start">
                     <div className="font-bold text-gray-700 pt-1">Journey Type</div>

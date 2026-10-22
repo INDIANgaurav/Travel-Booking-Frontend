@@ -13,13 +13,17 @@ interface CreateUserModalProps {
   defaultRole?: string;
 }
 
-const DEFAULT_ROLES = [
+const AGENT_ONLY_ROLES = [
+  { id: 'B2B_AGENT', label: 'B2B Agent' },
+  { id: 'SUPPLIER_AGENT', label: 'Supplier Agent' },
+  { id: 'SUPPLIER_STAFF', label: 'Supplier Staff' }
+];
+
+const PLATFORM_USER_ROLES = [
   { id: 'USER', label: 'Normal User (B2C)' },
   { id: 'B2B_AGENT', label: 'B2B Agent' },
-  { id: 'SUB_ADMIN', label: 'TRC Admin / Staff' },
   { id: 'SUPPLIER_AGENT', label: 'Supplier Agent' },
-  { id: 'SUPPLIER_STAFF', label: 'Supplier Staff' },
-  { id: 'SUPER_ADMIN', label: 'Super Admin' }
+  { id: 'SUB_ADMIN', label: 'TRC Admin / Staff' }
 ];
 
 export default function CreateUserModal({
@@ -29,6 +33,9 @@ export default function CreateUserModal({
   title,
   defaultRole = 'B2B_AGENT'
 }: CreateUserModalProps) {
+  const isAgentModal = defaultRole === 'B2B_AGENT' || defaultRole === 'SUPPLIER_AGENT' || defaultRole === 'SUPPLIER_STAFF' || Boolean(title?.toLowerCase().includes('agent'));
+  const initialRoles = isAgentModal ? AGENT_ONLY_ROLES : PLATFORM_USER_ROLES;
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -42,23 +49,37 @@ export default function CreateUserModal({
     role: defaultRole
   });
 
-  const [availableRoles, setAvailableRoles] = useState(DEFAULT_ROLES);
+  const [availableRoles, setAvailableRoles] = useState(initialRoles);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(prev => ({ ...prev, role: defaultRole }));
+      const activeRole = isAgentModal ? (defaultRole || 'B2B_AGENT') : defaultRole;
+      setFormData(prev => ({ ...prev, role: activeRole }));
+      setAvailableRoles(initialRoles);
       
-      // Fetch dynamic roles from settings if available
+      // Fetch dynamic roles if available, but NEVER allow SUPER_ADMIN, and restrict to agents for agent modal
       const fetchDynamicRoles = async () => {
         try {
           const res = await api.get('/api/settings/roles');
           if (res.data && res.data.success) {
-            const dynamic = res.data.data.map((r: any) => ({
-              id: r.roleCode,
-              label: r.roleDesc ? `${r.roleCode} (${r.roleDesc})` : r.roleCode
-            }));
+            const dynamic = res.data.data
+              .filter((r: any) => {
+                const code = (r.roleCode || '').toUpperCase();
+                // Never expose Super Admin in any user creation modal
+                if (code.includes('SUPER_ADMIN')) return false;
+                // If it's an agent modal, only allow agent/staff roles
+                if (isAgentModal) {
+                  return code.includes('AGENT') || code.includes('STAFF');
+                }
+                return true;
+              })
+              .map((r: any) => ({
+                id: r.roleCode,
+                label: r.roleDesc ? `${r.roleCode} (${r.roleDesc})` : r.roleCode
+              }));
+
             setAvailableRoles(prev => {
               const merged = [...prev];
               dynamic.forEach((dr: any) => {
@@ -73,7 +94,7 @@ export default function CreateUserModal({
       };
       fetchDynamicRoles();
     }
-  }, [isOpen, defaultRole]);
+  }, [isOpen, defaultRole, isAgentModal]);
 
   if (!isOpen) return null;
 
