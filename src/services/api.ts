@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-  ? `http://${window.location.hostname}:5000`
+const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+  ? 'https://travel-go-backend-ozbw.onrender.com'
   : 'http://localhost:5000';
 
 const api = axios.create({

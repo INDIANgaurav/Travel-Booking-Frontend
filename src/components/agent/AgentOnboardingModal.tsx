@@ -3,7 +3,7 @@ import { X, Building2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../store/authSlice';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../services/api';
 import Dropdown from '../ui/Dropdown';
 
 interface AgentOnboardingModalProps {
@@ -41,9 +41,7 @@ const AgentOnboardingModal: React.FC<AgentOnboardingModalProps> = ({ isOpen, onC
 
     try {
       setLoading(true);
-      const res = await axios.put('http://localhost:5000/api/users/agent/onboarding', formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await api.put('/api/users/agent/onboarding', formData);
       
       // Update local storage and redux
       const updatedUser = res.data.user;

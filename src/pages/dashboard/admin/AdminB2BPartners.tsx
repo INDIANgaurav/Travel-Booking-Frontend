@@ -208,10 +208,10 @@ Note: Keep these credentials safe. Do not share publicly.
 
 
   const getServerUrl = () => {
-    if (window.location.port === '5173') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return `${window.location.protocol}//${window.location.hostname}:5000`;
     }
-    return window.location.origin;
+    return import.meta.env.VITE_API_URL || 'https://travel-go-backend-ozbw.onrender.com';
   };
 
   const generateDocumentHtml = (partner: B2BClient, env: 'test' | 'live' = 'test') => {

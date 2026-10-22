@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-  ? `${window.location.protocol}//${window.location.hostname}:5000`
+const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+  ? 'https://travel-go-backend-ozbw.onrender.com'
   : 'http://localhost:5000';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || defaultBaseUrl;
