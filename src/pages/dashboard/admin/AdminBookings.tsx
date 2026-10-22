@@ -42,8 +42,25 @@ export default function AdminBookings() {
   }
 
   const filteredBookings = bookings.filter((booking: any) => {
-    const matchesSearch = (booking.bookingId || booking._id).toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'ALL' || booking.type === filterType;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = (booking.bookingId || booking._id || '').toLowerCase().includes(term) ||
+      (booking.user?.name || '').toLowerCase().includes(term) ||
+      (booking.user?.email || '').toLowerCase().includes(term) ||
+      (booking.details?.pnr || '').toLowerCase().includes(term);
+
+    const isTest = Boolean(booking.isTestBooking || booking.details?.isTestBooking || (booking.bookingId && booking.bookingId.includes('B2B')));
+
+    let matchesFilter = true;
+    if (filterType === 'TEST') {
+      matchesFilter = isTest;
+    } else if (filterType === 'FLIGHT') {
+      matchesFilter = booking.type === 'FLIGHT' && !isTest;
+    } else if (filterType === 'HOTEL') {
+      matchesFilter = booking.type === 'HOTEL' && !isTest;
+    } else {
+      matchesFilter = true;
+    }
+
     const matchesStatus = statusFilter === 'ALL' || booking.status === statusFilter;
     return matchesSearch && matchesFilter && matchesStatus;
   });
@@ -71,14 +88,30 @@ export default function AdminBookings() {
       
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex gap-2">
-            {['ALL', 'FLIGHT', 'HOTEL'].map(type => (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'FLIGHT', label: 'Flights' },
+              { id: 'HOTEL', label: 'Hotels' },
+              { id: 'TEST', label: 'Test Bookings' }
+            ].map(tab => (
               <button 
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${filterType === type ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                key={tab.id}
+                onClick={() => setFilterType(tab.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  filterType === tab.id 
+                    ? tab.id === 'TEST' 
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-blue-600 text-white shadow-sm' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                {type === 'ALL' ? 'All' : type === 'FLIGHT' ? 'Flights' : 'Hotels'}
+                {tab.label}
+                {tab.id === 'TEST' && (
+                  <span className="text-[10px] px-1.5 py-0.2 bg-amber-200 text-amber-900 rounded font-black">
+                    B2B
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -121,12 +154,26 @@ export default function AdminBookings() {
                   <td colSpan={8} className="px-6 py-12 text-center text-gray-500">No bookings found matching your criteria.</td>
                 </tr>
               ) : (
-                filteredBookings.map((booking: any) => (
+                filteredBookings.map((booking: any) => {
+                  const isTest = Boolean(booking.isTestBooking || booking.details?.isTestBooking || (booking.bookingId && booking.bookingId.includes('B2B')));
+                  return (
                   <tr key={booking._id} className="hover:bg-blue-50/50 transition-colors group">
                   <td className="px-6 py-4 align-middle whitespace-nowrap">
-                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded border border-blue-100 uppercase inline-block">
-                      {booking.bookingId || booking._id.slice(-8)}
-                    </span>
+                    <div className="flex flex-col gap-1 items-start">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded border border-blue-100 uppercase inline-block">
+                          {booking.bookingId || booking._id.slice(-8)}
+                        </span>
+                        {isTest && (
+                          <span className="text-[10px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">
+                            TEST
+                          </span>
+                        )}
+                      </div>
+                      {booking.details?.pnr && (
+                        <span className="text-[11px] font-mono text-gray-500">PNR: {booking.details.pnr}</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 align-middle whitespace-nowrap">
                     <div className="flex flex-col justify-center">
@@ -215,7 +262,9 @@ export default function AdminBookings() {
                     )}
                   </td>
                 </tr>
-              )))}
+                  );
+                })
+              )}
             </tbody>
           </table></div>{/* Pagination Controls */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
