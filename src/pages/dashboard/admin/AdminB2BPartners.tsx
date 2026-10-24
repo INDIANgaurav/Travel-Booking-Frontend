@@ -612,11 +612,11 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><strong>TC-01 (Mandatory)</strong></td>
-        <td><strong>Solo Adult Oneway Booking</strong></td>
+        <td><strong>Solo Adult Oneway Booking (Domestic)</strong></td>
         <td>
-          • Adults: 1<br/>
-          • Name: Mr. Rohan Sharma (ADULT)<br/>
-          • Route: DEL ➔ BOM
+          • Adults: 1 (Mr. Rohan Sharma)<br/>
+          • Route: DEL ➔ BOM (Domestic Sector)<br/>
+          • Note: <em>No passport required for domestic</em>
         </td>
         <td>
           Status returns <code>CONFIRMED</code> with unique PNR (e.g. <code>TEST-XXXXXX</code>). Ticket record verified in database.
@@ -624,14 +624,15 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><strong>TC-02 (Mandatory)</strong></td>
-        <td><strong>Multi-Pax Family Booking (2 Adults + 1 Child + 1 Infant)</strong></td>
+        <td><strong>Multi-Pax Family Booking (2 Adults + 1 Child + 1 Infant - Domestic)</strong></td>
         <td>
           • Adults: 2 (Mr. Rohan Sharma, Mrs. Priya Sharma)<br/>
           • Children: 1 (Mstr. Aarav Sharma, Age 7, DOB provided)<br/>
-          • Infants: 1 (Miss Anaya Sharma, Age 1, DOB provided)
+          • Infants: 1 (Miss Anaya Sharma, Age 1, DOB provided)<br/>
+          • Route: DEL ➔ BOM (Domestic - No passport needed)
         </td>
         <td>
-          Status returns <code>CONFIRMED</code>. Manifest must verify all 4 passengers ticketed under a single master PNR with correct passenger types.
+          Status returns <code>CONFIRMED</code>. Manifest must verify all 4 passengers ticketed under a single master PNR with correct passenger age categories.
         </td>
       </tr>
       <tr>
@@ -928,16 +929,26 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
-  <h2>4. PASSENGER MANIFEST DATA DICTIONARY</h2>
-  <p>Every element in the <code>passengers</code> array must conform to the following enterprise schema:</p>
+  <h2>4. PASSENGER MANIFEST & SECTOR RULES (DOMESTIC VS INTERNATIONAL)</h2>
+  
+  <div style="background-color: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+    <strong style="color: #1e3a8a; font-size: 10.5pt;">✈️ SECTOR SPECIFICATION: DOMESTIC VS INTERNATIONAL FLIGHTS</strong><br/>
+    <p style="margin: 6px 0 0 0; font-size: 9.5pt; color: #1e293b; line-height: 1.6;">
+      • <strong>DOMESTIC FLIGHTS (India Sectors - e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
+      Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>STRICTLY NOT REQUIRED</strong>. Adult Date of Birth (<code>dob</code>) is also optional for Adults. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child/Infant to verify age).<br/><br/>
+      • <strong>INTERNATIONAL FLIGHTS:</strong><br/>
+      Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and <code>dob</code> are <strong>MANDATORY</strong> for all passengers as per civil aviation regulations.
+    </p>
+  </div>
 
+  <h3>4.1 Field-by-Field Manifest Data Dictionary</h3>
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 18%;">Field</th>
-        <th style="width: 14%;">Type</th>
-        <th style="width: 14%;">Requirement</th>
-        <th style="width: 22%;">Allowed Values</th>
+        <th style="width: 15%;">Field</th>
+        <th style="width: 12%;">Type</th>
+        <th style="width: 22%;">Domestic Flights</th>
+        <th style="width: 22%;">International Flights</th>
         <th>Rules & Validation Description</th>
       </tr>
     </thead>
@@ -946,62 +957,65 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><code>title</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory</span></td>
         <td><code>"Mr"</code>, <code>"Mrs"</code>, <code>"Ms"</code>, <code>"Mstr"</code>, <code>"Miss"</code></td>
-        <td>Passenger salutation. Use <code>"Mstr"</code> / <code>"Miss"</code> for children/infants.</td>
       </tr>
       <tr>
         <td><code>firstName</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Alphabetical string</td>
-        <td>First / Given name as displayed on government photo ID / passport.</td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>Given name as displayed on Govt photo ID (Aadhaar/Voter ID/Passport)</td>
       </tr>
       <tr>
         <td><code>lastName</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Alphabetical string</td>
-        <td>Last / Surname as displayed on government photo ID / passport.</td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>Last name / Surname as displayed on Govt photo ID</td>
       </tr>
       <tr>
         <td><code>type</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td><code>"ADULT"</code>, <code>"CHILD"</code>, <code>"INFANT"</code></td>
-        <td><code>ADULT</code>: 12+ years<br/><code>CHILD</code>: 2 to 11 years<br/><code>INFANT</code>: Under 2 years</td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td><code>"ADULT"</code> (12+ yrs), <code>"CHILD"</code> (2-11 yrs), <code>"INFANT"</code> (&lt;2 yrs)</td>
       </tr>
       <tr>
         <td><code>gender</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory</span></td>
         <td><code>"Male"</code>, <code>"Female"</code></td>
-        <td>Gender specification</td>
       </tr>
       <tr>
         <td><code>dob</code></td>
         <td>String</td>
-        <td><span class="badge-opt">Optional / Req for CHD</span></td>
-        <td><code>YYYY-MM-DD</code></td>
-        <td>Date of birth. <strong>Mandatory</strong> for <code>CHILD</code> and <code>INFANT</code> categories.</td>
+        <td><span class="badge-opt">Required ONLY for Child & Infant</span><br/><span style="font-size: 8pt; color: #64748b;">(Not needed for Adults)</span></td>
+        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
+        <td>Date of birth (<code>YYYY-MM-DD</code>). In domestic flights, strictly required for CHD and INF to confirm fare qualification.</td>
       </tr>
       <tr>
         <td><code>passportNo</code></td>
         <td>String</td>
-        <td><span class="badge-opt">Optional</span></td>
-        <td>Alphanumeric</td>
-        <td>Mandatory for international flights. Optional for domestic flights.</td>
+        <td><span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8pt;">NOT REQUIRED (Omit)</span></td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>Passport alphanumeric number. Only required when booking international sectors.</td>
       </tr>
       <tr>
         <td><code>passportExpiry</code></td>
         <td>String</td>
-        <td><span class="badge-opt">Optional</span></td>
-        <td><code>YYYY-MM-DD</code></td>
-        <td>Passport expiration date (must have 6+ months validity for intl travel).</td>
+        <td><span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8pt;">NOT REQUIRED (Omit)</span></td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>Passport expiration date (<code>YYYY-MM-DD</code>). Must have 6+ months validity.</td>
       </tr>
     </tbody>
   </table>
 
-  <p><strong>Standard Multi-Passenger Booking Request (2 Adults + 1 Child + 1 Infant):</strong></p>
+  <h3>4.2 Standard Domestic Booking Request (2 Adults + 1 Child + 1 Infant)</h3>
+  <p style="font-size: 9pt; color: #475569;">
+    Notice that for domestic flights, <strong>no passport fields are sent</strong>, and <code>dob</code> is only provided for Child and Infant:
+  </p>
   <div class="code-box">{
   "sfId": "SF-TC-C1A-20261210",
   "passengers": [
@@ -1010,16 +1024,14 @@ Note: Keep these credentials safe. Do not share publicly.
       "firstName": "Rohan",
       "lastName": "Sharma",
       "type": "ADULT",
-      "gender": "Male",
-      "dob": "1990-05-15"
+      "gender": "Male"
     },
     {
       "title": "Mrs",
       "firstName": "Priya",
       "lastName": "Sharma",
       "type": "ADULT",
-      "gender": "Female",
-      "dob": "1992-08-22"
+      "gender": "Female"
     },
     {
       "title": "Mstr",
@@ -1036,6 +1048,33 @@ Note: Keep these credentials safe. Do not share publicly.
       "type": "INFANT",
       "gender": "Female",
       "dob": "2025-06-14"
+    }
+  ]
+}</div>
+
+  <h3>4.3 International Booking Request (When Sector is International)</h3>
+  <div class="code-box">{
+  "sfId": "SF-TC-INT-20261210",
+  "passengers": [
+    {
+      "title": "Mr",
+      "firstName": "Rohan",
+      "lastName": "Sharma",
+      "type": "ADULT",
+      "gender": "Male",
+      "dob": "1990-05-15",
+      "passportNo": "TC8892101",
+      "passportExpiry": "2032-08-31"
+    },
+    {
+      "title": "Mrs",
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "type": "ADULT",
+      "gender": "Female",
+      "dob": "1992-08-22",
+      "passportNo": "TC8892102",
+      "passportExpiry": "2032-08-31"
     }
   ]
 }</div>
@@ -1376,28 +1415,29 @@ Note: Keep these credentials safe. Do not share publicly.
                 </div>
               </div>
               
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                      <p className="text-[11px] text-gray-500 font-medium mb-0.5">API Wallet</p>
-                      <p className="font-bold text-gray-900 text-sm">₹{partner.apiWalletBalance.toLocaleString('en-IN')}</p>
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <p className="text-[11px] text-gray-500 font-semibold mb-0.5">API Wallet</p>
+                      <p className="font-extrabold text-gray-900 text-sm">₹{partner.apiWalletBalance.toLocaleString('en-IN')}</p>
                     </div>
-                    <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                      <p className="text-[11px] text-gray-500 font-medium mb-0.5">Added Markup</p>
-                      <p className="font-bold text-gray-900 text-sm">{partner.markupPercentage}%</p>
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Added Markup</p>
+                      <p className="font-extrabold text-gray-900 text-sm">{partner.markupPercentage}%</p>
                     </div>
                   </div>
 
                   {/* Partner Bookings Stat Pill */}
-                  <div className="bg-blue-50/70 border border-blue-100/90 rounded-lg p-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs text-blue-900 font-semibold">
-                      <Ticket size={14} className="text-blue-600" />
+                  <div className="bg-blue-50/70 border border-blue-100/90 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-blue-900 font-semibold">
+                      <Ticket size={15} className="text-blue-600" />
                       <span>Partner Bookings</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <span className="font-bold text-blue-950">{(partner.totalBookings ?? 0)} Total</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-extrabold text-blue-950">{(partner.totalBookings ?? 0)} Total</span>
                       {(partner.testBookings ?? 0) > 0 && (
-                        <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200">
+                        <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-200">
                           {partner.testBookings} Test
                         </span>
                       )}
@@ -1405,15 +1445,15 @@ Note: Keep these credentials safe. Do not share publicly.
                   </div>
                 </div>
                 
-                <div className="pt-2 mt-auto space-y-2">
+                <div className="pt-2 mt-auto space-y-2.5">
                   {/* Primary View Bookings & Verify Button */}
                   <button 
                     onClick={() => openBookingsModal(partner)}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 rounded-lg transition text-xs font-bold shadow-xs cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2.5 px-3 rounded-xl transition text-xs font-bold shadow-xs hover:shadow-sm cursor-pointer"
                   >
                     <Ticket size={14} /> View Bookings & Verify
                     {(partner.totalBookings ?? 0) > 0 && (
-                      <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white/25 text-white font-black">
+                      <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-white/25 text-white font-black">
                         {partner.totalBookings}
                       </span>
                     )}
@@ -1421,35 +1461,36 @@ Note: Keep these credentials safe. Do not share publicly.
 
                   <button 
                     onClick={() => openDocs(partner)}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-1.5 rounded-lg transition text-xs font-medium shadow-xs cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2 px-3 rounded-xl transition text-xs font-medium shadow-xs cursor-pointer"
                   >
                     <Key size={13} /> View Keys & Docs
                   </button>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-3 gap-2">
                     <button 
                       onClick={() => downloadCustomizedDoc(partner, partner.status === 'Live' ? 'live' : 'test')}
-                      className="flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 py-1.5 px-1 rounded-lg transition text-xs font-semibold cursor-pointer"
+                      className="flex items-center justify-center gap-1.5 bg-blue-50/80 hover:bg-blue-100 text-blue-700 border border-blue-200/80 py-2 px-2 rounded-xl transition text-xs font-semibold cursor-pointer"
                       title="Download Microsoft Word (.doc) specification"
                     >
-                      <FileText size={12} /> Word (.doc)
+                      <FileText size={13} /> Word (.doc)
                     </button>
                     <button 
                       onClick={() => printOrDownloadPdf(partner, partner.status === 'Live' ? 'live' : 'test')}
-                      className="flex items-center justify-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 py-1.5 px-1 rounded-lg transition text-xs font-semibold cursor-pointer"
+                      className="flex items-center justify-center gap-1.5 bg-purple-50/80 hover:bg-purple-100 text-purple-700 border border-purple-200/80 py-2 px-2 rounded-xl transition text-xs font-semibold cursor-pointer"
                       title="Open print preview / Save as PDF"
                     >
-                      <Printer size={12} /> PDF
+                      <Printer size={13} /> PDF
                     </button>
                     <button 
                       onClick={() => downloadCustomizedPostman(partner, partner.status === 'Live' ? 'live' : 'test')}
-                      className="flex items-center justify-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 py-1.5 px-1 rounded-lg transition text-xs font-semibold cursor-pointer"
+                      className="flex items-center justify-center gap-1.5 bg-amber-50/80 hover:bg-amber-100 text-amber-700 border border-amber-200/80 py-2 px-2 rounded-xl transition text-xs font-semibold cursor-pointer"
                       title="Download pre-configured Postman JSON collection"
                     >
-                      <Download size={12} /> Postman
+                      <Download size={13} /> Postman
                     </button>
                   </div>
                 </div>
               </div>
+            </div>
           ))}
         </div>
       )}
@@ -1989,9 +2030,6 @@ Note: Keep these credentials safe. Do not share publicly.
                       ? `No bookings match your search term "${bookingSearchQuery}".`
                       : `This partner has not executed any ${bookingFilterTab === 'TEST' ? 'test' : bookingFilterTab === 'LIVE' ? 'live' : ''} flight bookings yet.`}
                   </p>
-                  <p className="text-[11px] text-blue-600 mt-3 font-mono">
-                    Endpoint: POST /api/v1/b2b/flights/book
-                  </p>
                 </div>
               ) : (
                 // DATE WISE LIST (Sorted descending, latest on top!)
@@ -2037,7 +2075,7 @@ Note: Keep these credentials safe. Do not share publicly.
                               {/* Booking Top Info Row */}
                               <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2 bg-gray-50/40 rounded-t-xl">
                                 <div className="flex items-center gap-2">
-                                  {/* PNR with Click to Copy & Verified Check */}
+                                  {/* PNR with Click to Copy */}
                                   <div className="flex items-center gap-1.5 bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-1 rounded-md font-mono text-xs font-bold">
                                     <span>PNR: {pnr}</span>
                                     <button 
@@ -2048,11 +2086,6 @@ Note: Keep these credentials safe. Do not share publicly.
                                       <Copy size={11} />
                                     </button>
                                   </div>
-
-                                  {/* Verified in Database Badge */}
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                                    <CheckCircle size={11} /> DB Verified
-                                  </span>
 
                                   {/* Test vs Live Pill */}
                                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
@@ -2137,18 +2170,14 @@ Note: Keep these credentials safe. Do not share publicly.
                                   )}
                                 </div>
 
-                                {/* Verification Action Row */}
-                                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-                                  <div className="flex items-center gap-1 text-[11px] text-gray-500">
-                                    <CheckCheck size={13} className="text-emerald-600" />
-                                    <span>Record matched with Partner User Account & API Client ID</span>
-                                  </div>
+                                {/* Action Row */}
+                                <div className="pt-2 border-t border-gray-100 flex items-center justify-end">
                                   <button
                                     onClick={() => copyVerificationSnippet(booking)}
-                                    className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                                    title="Copy verification summary to paste into email or chat"
+                                    className="px-2.5 py-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                                    title="Copy booking details to clipboard"
                                   >
-                                    <Copy size={12} /> Copy Verification Report
+                                    <Copy size={12} /> Copy Details
                                   </button>
                                 </div>
                               </div>
