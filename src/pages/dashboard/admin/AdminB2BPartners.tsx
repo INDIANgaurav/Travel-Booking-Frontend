@@ -339,12 +339,12 @@ Note: Keep these credentials safe. Do not share publicly.
     return import.meta.env.VITE_API_URL || 'https://travel-go-backend-ozbw.onrender.com';
   };
 
-  const generateDocumentHtml = (partner: B2BClient, env: 'test' | 'live' = 'test') => {
+  const generateDocumentHtml = (partner: B2BClient, env: 'test' | 'live' = 'test', isDocDownload: boolean = false) => {
     const serverUrl = getServerUrl();
     const isLive = env === 'live';
     const apiKey = isLive ? partner.liveApiKey : partner.testApiKey;
     const envBadge = isLive ? 'PRODUCTION (LIVE)' : 'SANDBOX (TESTING & UAT)';
-    const envColor = isLive ? '#10b981' : '#f59e0b';
+    const envColor = isLive ? '#15803d' : '#b45309';
     const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
     return `<!DOCTYPE html>
@@ -370,138 +370,100 @@ Note: Keep these credentials safe. Do not share publicly.
       page: WordSection1;
     }
     @media print {
-      body { margin: 0; padding: 15px; }
+      body { margin: 0; padding: 20px; }
       .no-print { display: none !important; }
     }
     body {
-      font-family: 'Segoe UI', Calibri, Arial, sans-serif;
-      font-size: 10pt;
-      line-height: 1.55;
-      color: #1e293b;
-      margin: 15px;
+      font-family: 'Segoe UI', Calibri, Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #0f172a;
+      margin: 20px;
       background-color: #ffffff;
     }
-    .header-box {
-      background: linear-gradient(135deg, #0a2540 0%, #1e3a8a 100%);
-      color: #ffffff;
-      padding: 24px 28px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      border-bottom: 4px solid #3b82f6;
-    }
-    .header-org {
-      font-size: 10pt;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #93c5fd;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .header-title {
-      font-size: 21pt;
-      font-weight: 800;
-      color: #ffffff;
-      margin: 0 0 6px 0;
-      line-height: 1.2;
-    }
-    .header-subtitle {
-      font-size: 11pt;
-      color: #cbd5e1;
-      margin: 0;
-      font-weight: 400;
-    }
-    .meta-table {
-      width: 100%;
-      margin-top: 16px;
-      border-top: 1px solid #334155;
-      padding-top: 12px;
-    }
-    .meta-table td {
-      padding: 3px 0;
-      font-size: 9.5pt;
-      color: #cbd5e1;
-    }
-    .alert-box {
-      padding: 12px 18px;
-      border-radius: 6px;
-      margin: 16px 0;
-      border-left: 5px solid ${envColor};
-      background-color: ${isLive ? '#f0fdf4' : '#fffbeb'};
-      color: ${isLive ? '#166534' : '#92400e'};
-      font-size: 9.5pt;
-      line-height: 1.5;
-    }
     h2 {
-      color: #0f172a;
-      font-size: 13pt;
+      color: #0f2b48;
+      font-size: 14pt;
       font-weight: 800;
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 5px;
-      margin-top: 28px;
-      margin-bottom: 12px;
+      border-bottom: 2.5px solid #1e3a8a;
+      padding-bottom: 6px;
+      margin-top: 32px;
+      margin-bottom: 14px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     h3 {
       color: #1e40af;
-      font-size: 11pt;
+      font-size: 12.5pt;
       font-weight: 700;
-      margin-top: 20px;
+      margin-top: 22px;
       margin-bottom: 8px;
     }
+    .alert-box {
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 18px 0;
+      border-left: 5px solid ${envColor};
+      background-color: ${isLive ? '#f0fdf4' : '#fffbeb'};
+      color: ${isLive ? '#14532d' : '#854d0e'};
+      font-size: 10.5pt;
+      line-height: 1.55;
+    }
     .code-box {
-      background-color: #0f172a;
-      color: #38bdf8;
+      background-color: #f8fafc;
+      color: #0f172a;
       padding: 14px 18px;
       border-radius: 6px;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 9pt;
+      font-size: 10.5pt;
       white-space: pre-wrap;
       word-break: break-all;
-      margin: 8px 0 16px 0;
-      line-height: 1.45;
-      border: 1px solid #1e293b;
+      margin: 10px 0 18px 0;
+      line-height: 1.55;
+      border: 1.5px solid #cbd5e1;
+      font-weight: 500;
     }
     table.data-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 12px 0 18px 0;
-      font-size: 9.5pt;
+      margin: 14px 0 20px 0;
+      font-size: 10.5pt;
     }
     table.data-table th {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-      padding: 8px 10px;
+      background-color: #1e3a8a;
+      color: #ffffff;
+      border: 1px solid #0f2b48;
+      padding: 10px 12px;
       font-weight: 700;
       text-align: left;
     }
     table.data-table td {
       border: 1px solid #cbd5e1;
-      padding: 7px 10px;
+      padding: 9px 12px;
       vertical-align: top;
+      color: #1e293b;
     }
     table.data-table tr:nth-child(even) td {
       background-color: #f8fafc;
     }
     .badge {
       display: inline-block;
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 4px;
-      font-size: 8.5pt;
+      font-size: 9pt;
       font-weight: 700;
     }
     .badge-post { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
     .badge-get { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     .badge-env { background-color: ${isLive ? '#dcfce7' : '#fef3c7'}; color: ${isLive ? '#15803d' : '#92400e'}; border: 1px solid ${isLive ? '#bbf7d0' : '#fde68a'}; }
-    .badge-req { background-color: #fee2e2; color: #b91c1c; font-size: 8pt; padding: 1px 5px; border-radius: 3px; font-weight: bold; }
-    .badge-opt { background-color: #f1f5f9; color: #64748b; font-size: 8pt; padding: 1px 5px; border-radius: 3px; }
+    .badge-req { background-color: #fee2e2; color: #b91c1c; font-size: 8.5pt; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+    .badge-opt { background-color: #f1f5f9; color: #64748b; font-size: 8.5pt; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
     .footer-note {
       margin-top: 40px;
-      padding-top: 15px;
-      border-top: 1px solid #e2e8f0;
-      font-size: 8.5pt;
-      color: #64748b;
+      padding-top: 18px;
+      border-top: 1.5px solid #cbd5e1;
+      font-size: 9.5pt;
+      color: #475569;
       text-align: center;
       line-height: 1.6;
     }
@@ -509,46 +471,58 @@ Note: Keep these credentials safe. Do not share publicly.
 </head>
 <body>
 <div class="WordSection1">
-  <div class="no-print" style="margin-bottom: 20px; padding: 12px 18px; background: #0f172a; color: #ffffff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+  ${!isDocDownload ? `
+  <div class="no-print" style="margin-bottom: 22px; padding: 14px 20px; background-color: #0f2b48; color: #ffffff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
     <div>
-      <strong style="color: #60a5fa; font-size: 14px;">📄 TrippeChalo B2B Flight API Specification (${envBadge})</strong>
-      <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">In the print preview dialog, select <strong>"Save as PDF"</strong> under Destination to export.</div>
+      <strong style="color: #60a5fa; font-size: 15px;">TrippeChalo B2B Flight API Specification (${envBadge})</strong>
+      <div style="font-size: 12px; color: #cbd5e1; margin-top: 3px;">In the browser print preview dialog, select "Save as PDF" under Destination to export.</div>
     </div>
-    <div style="display: flex; gap: 8px;">
-      <button onclick="window.print()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;">🖨️ Print / Save as PDF</button>
-      <button onclick="window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;">Close Preview</button>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="window.print()" style="background-color: #2563eb; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">Print / Save as PDF</button>
+      <button onclick="window.close()" style="background-color: #334155; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">Close Preview</button>
     </div>
   </div>
+  ` : ''}
 
-  <!-- Corporate Header -->
-  <div class="header-box">
-    <div class="header-org">TRIPPECHALO INDIA PRIVATE LIMITED • B2B DISTRIBUTION</div>
-    <div class="header-title">B2B FLIGHT DISTRIBUTION API</div>
-    <div class="header-subtitle">Enterprise Technical Interface Specification & UAT Certification Guide</div>
-    <table class="meta-table">
-      <tr>
-        <td style="width: 140px; font-weight: bold; color: #94a3b8;">Partner Organization:</td>
-        <td style="color: #ffffff; font-weight: bold;">${partner.companyName}</td>
-        <td style="width: 130px; font-weight: bold; color: #94a3b8;">Environment:</td>
-        <td><span class="badge badge-env">${envBadge}</span></td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold; color: #94a3b8;">Technical Contact:</td>
-        <td>${partner.contactName} (${partner.email})</td>
-        <td style="font-weight: bold; color: #94a3b8;">Interface Protocol:</td>
-        <td>REST API (JSON over HTTPS)</td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold; color: #94a3b8;">Assigned Client ID:</td>
-        <td style="color: #60a5fa; font-weight: bold;">${partner.username || 'N/A'}</td>
-        <td style="font-weight: bold; color: #94a3b8;">Document Version:</td>
-        <td>2.4.0 (Enterprise Release) • ${formattedDate}</td>
-      </tr>
-    </table>
-  </div>
+  <!-- Corporate Header Table (100% Word & Web Compatible) -->
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background-color: #0f2b48; border-bottom: 4px solid #2563eb;" bgcolor="#0f2b48">
+    <tr>
+      <td style="padding: 24px 28px; background-color: #0f2b48; color: #ffffff;" bgcolor="#0f2b48">
+        <div style="font-size: 11pt; letter-spacing: 2px; text-transform: uppercase; color: #93c5fd; font-weight: 700; margin-bottom: 6px;">
+          TRIPPECHALO INDIA PRIVATE LIMITED &bull; B2B AIRLINE DISTRIBUTION
+        </div>
+        <div style="font-size: 22pt; font-weight: 800; color: #ffffff; margin: 0 0 6px 0; line-height: 1.2;">
+          B2B FLIGHT DISTRIBUTION API
+        </div>
+        <div style="font-size: 12pt; color: #e2e8f0; margin: 0; font-weight: 500;">
+          Enterprise Technical Interface Specification (${isLive ? 'COMMERCIAL PRODUCTION ENVIRONMENT' : 'SANDBOX SIMULATION ENVIRONMENT'})
+        </div>
+        <table style="width: 100%; margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; font-size: 10.5pt; color: #e2e8f0;">
+          <tr>
+            <td style="width: 160px; font-weight: bold; color: #cbd5e1;">Partner Organization:</td>
+            <td style="color: #ffffff; font-weight: bold;">${partner.companyName}</td>
+            <td style="width: 140px; font-weight: bold; color: #cbd5e1;">Environment:</td>
+            <td><strong style="color: ${isLive ? '#86efac' : '#fde047'}; font-size: 11pt;">${envBadge}</strong></td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; color: #cbd5e1;">Technical Contact:</td>
+            <td style="color: #ffffff;">${partner.contactName} (${partner.email})</td>
+            <td style="font-weight: bold; color: #cbd5e1;">Interface Protocol:</td>
+            <td style="color: #ffffff;">REST API (JSON over HTTPS)</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; color: #cbd5e1;">Assigned Client ID:</td>
+            <td style="color: #93c5fd; font-weight: bold;">${partner.username || 'N/A'}</td>
+            <td style="font-weight: bold; color: #cbd5e1;">Document Version:</td>
+            <td style="color: #ffffff;">2.5.0 (Release) &bull; ${formattedDate}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 
   <h2>1. INTEGRATION CREDENTIALS & HOST CONFIGURATION</h2>
-  <p>The following pre-configured credentials have been provisioned for <strong>${partner.companyName}</strong>. All requests must be dispatched over secure TLS 1.3/HTTPS.</p>
+  <p>The following pre-configured credentials have been provisioned for <strong>${partner.companyName}</strong>. All requests must be dispatched over secure TLS 1.3 / HTTPS.</p>
 
   <table class="data-table">
     <thead>
@@ -561,23 +535,23 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><strong>Server Base URL</strong></td>
-        <td><code style="color: #2563eb; font-weight: bold;">${serverUrl}</code></td>
-        <td>Root endpoint for all API transactions</td>
+        <td><code style="color: #1e40af; font-weight: bold; font-size: 11pt;">${serverUrl}</code></td>
+        <td>Root gateway endpoint for all API transactions</td>
       </tr>
       <tr>
         <td><strong>Username (Client ID)</strong></td>
-        <td><code style="font-weight: bold;">${partner.username || 'N/A'}</code></td>
+        <td><code style="font-weight: bold; font-size: 11pt;">${partner.username || 'N/A'}</code></td>
         <td>Used in Step 1 OAuth token generation</td>
       </tr>
       <tr>
         <td><strong>Password (Secret)</strong></td>
-        <td><code style="font-weight: bold;">${partner.password || 'N/A'}</code></td>
+        <td><code style="font-weight: bold; font-size: 11pt;">${partner.password || 'N/A'}</code></td>
         <td>Used in Step 1 OAuth token generation</td>
       </tr>
       <tr>
         <td><strong>API Key (${isLive ? 'Production Key' : 'Sandbox Test Key'})</strong></td>
-        <td><code style="color: #d97706; font-weight: bold;">${apiKey}</code></td>
-        <td>Can be supplied as <code>x-api-key</code> in HTTP headers</td>
+        <td><code style="color: #b45309; font-weight: bold; font-size: 10.5pt;">${apiKey}</code></td>
+        <td>Supplied as <code>x-api-key</code> in HTTP request headers</td>
       </tr>
       <tr>
         <td><strong>Authentication Channel</strong></td>
@@ -589,15 +563,56 @@ Note: Keep these credentials safe. Do not share publicly.
 
   <div class="alert-box">
     ${isLive ? `
-      <strong>⚠️ COMMERCIAL PRODUCTION NOTICE:</strong><br/>
-      You are connected to the <strong>LIVE PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here deduct real aircraft inventory from live airline series and decrement actual commercial funds from your TrippeChalo API Wallet. Ensure wallet balance is funded prior to issuing bookings.
+      <strong>[COMMERCIAL PRODUCTION ENVIRONMENT]</strong><br/>
+      You are connected to the <strong>LIVE COMMERCIAL PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here reserve real physical seats from commercial airline series and decrement actual commercial funds from your TrippeChalo API Wallet. Ensure your wallet balance is funded prior to issuing bookings.
     ` : `
-      <strong>ℹ️ SANDBOX TESTING & CERTIFICATION NOTICE:</strong><br/>
-      You are currently accessing the <strong>SANDBOX SIMULATION ENVIRONMENT</strong>. All flight search and booking transactions simulate inventory confirmation without debiting real funds or blocking physical airline seats. Complete the mandatory UAT test scenarios described below to qualify for production rollout.
+      <strong>[SANDBOX SIMULATION ENVIRONMENT]</strong><br/>
+      You are currently accessing the <strong>SANDBOX SIMULATION ENVIRONMENT</strong>. All flight search and booking transactions simulate inventory confirmation without debiting real funds or blocking physical airline seats. Complete the test scenarios described below to qualify for production rollout.
     `}
   </div>
 
-  <h2>2. MANDATORY UAT TEST SCENARIOS & CERTIFICATION CRITERIA</h2>
+  ${isLive ? `
+  <h2>2. COMMERCIAL PRODUCTION POLICIES & WALLET OPERATIONS</h2>
+  <p>The endpoints and credentials in Section 1 connect directly to the <strong>LIVE COMMERCIAL PRODUCTION ENVIRONMENT</strong>. Real airline inventory is reserved, and commercial funds are deducted in real time. Please review the following operating guidelines:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Operational Domain</th>
+        <th style="width: 35%;">Standard Operating Rule</th>
+        <th style="width: 40%;">Description & Instructions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Wallet Pre-Funding Requirement</strong></td>
+        <td>Sufficient API Wallet Balance</td>
+        <td>Before issuing bookings, your TrippeChalo API Wallet must maintain sufficient balance to cover gross booking value. Bookings with insufficient wallet balance return HTTP 402 Payment Required.</td>
+      </tr>
+      <tr>
+        <td><strong>Real-Time Seat Confirmation</strong></td>
+        <td>Live Carrier PNR Generation</td>
+        <td>Every confirmed booking request reserves real seats with commercial carriers (IndiGo, Air India, SpiceJet, etc.) and generates an authentic airline PNR instantly.</td>
+      </tr>
+      <tr>
+        <td><strong>No Testing in Production</strong></td>
+        <td>Live Passenger Traffic Only</td>
+        <td>Do not dispatch dummy or synthetic passenger manifests to Live endpoints. Real ticket fares will be charged. All exploratory tests must be conducted in the Sandbox environment.</td>
+      </tr>
+      <tr>
+        <td><strong>Cancellations & Ticket Voids</strong></td>
+        <td>Standard Airline Cancellation Rules</td>
+        <td>Cancellations can be submitted via the B2B portal or cancellation endpoints. Net refundable amounts after airline charges are refunded directly into your API wallet.</td>
+      </tr>
+      <tr>
+        <td><strong>Technical NOC Support</strong></td>
+        <td>24/7 Operations Desk: api-support@trippechalo.com</td>
+        <td>Priority 24/7 support for schedule changes, flight delivery, and critical booking status inquiries.</td>
+      </tr>
+    </tbody>
+  </table>
+  ` : `
+  <h2>2. MANDATORY UAT TEST SCENARIOS (SANDBOX CERTIFICATION)</h2>
   <p>Before <strong>${partner.companyName}</strong> can be approved and promoted to the Live Production environment, your development team must execute the following <strong>4 mandatory test scenarios</strong> in Sandbox mode and provide the generated PNR records for audit:</p>
 
   <table class="data-table">
@@ -614,9 +629,9 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><strong>TC-01 (Mandatory)</strong></td>
         <td><strong>Solo Adult Oneway Booking (Domestic)</strong></td>
         <td>
-          • Adults: 1 (Mr. Rohan Sharma)<br/>
-          • Route: DEL ➔ BOM (Domestic Sector)<br/>
-          • Note: <em>No passport required for domestic</em>
+          &bull; Adults: 1 (Mr. Rohan Sharma)<br/>
+          &bull; Route: DEL to BOM (Domestic Sector)<br/>
+          &bull; Note: <em>No passport required for domestic</em>
         </td>
         <td>
           Status returns <code>CONFIRMED</code> with unique PNR (e.g. <code>TEST-XXXXXX</code>). Ticket record verified in database.
@@ -626,10 +641,10 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><strong>TC-02 (Mandatory)</strong></td>
         <td><strong>Multi-Pax Family Booking (2 Adults + 1 Child + 1 Infant - Domestic)</strong></td>
         <td>
-          • Adults: 2 (Mr. Rohan Sharma, Mrs. Priya Sharma)<br/>
-          • Children: 1 (Mstr. Aarav Sharma, Age 7, DOB provided)<br/>
-          • Infants: 1 (Miss Anaya Sharma, Age 1, DOB provided)<br/>
-          • Route: DEL ➔ BOM (Domestic - No passport needed)
+          &bull; Adults: 2 (Mr. Rohan Sharma, Mrs. Priya Sharma)<br/>
+          &bull; Children: 1 (Mstr. Aarav Sharma, Age 7, DOB provided)<br/>
+          &bull; Infants: 1 (Miss Anaya Sharma, Age 1, DOB provided)<br/>
+          &bull; Route: DEL to BOM (Domestic - No passport needed)
         </td>
         <td>
           Status returns <code>CONFIRMED</code>. Manifest must verify all 4 passengers ticketed under a single master PNR with correct passenger age categories.
@@ -639,8 +654,8 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><strong>TC-03 (Mandatory)</strong></td>
         <td><strong>Route Discovery & Dynamic Flight Search</strong></td>
         <td>
-          • Call <code>GET /search/sectors</code><br/>
-          • Call <code>POST /search/flights</code> for sector DEL ➔ BOM
+          &bull; Call <code>GET /search/sectors</code><br/>
+          &bull; Call <code>POST /search/flights</code> for sector DEL to BOM
         </td>
         <td>
           Retrieves active sectors list and returns available Series Fare flight items with seat counts and baggage rules.
@@ -650,7 +665,7 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><strong>TC-04 (Mandatory)</strong></td>
         <td><strong>Seat Depletion & Boundary Test</strong></td>
         <td>
-          • Request booking with passenger count exceeding remaining flight seats.
+          &bull; Request booking with passenger count exceeding remaining flight seats.
         </td>
         <td>
           System gracefully rejects with HTTP 400 Bad Request and message: <code>"Not enough seats available"</code>.
@@ -659,15 +674,16 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
-  <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px 16px; margin: 14px 0;">
-    <strong style="color: #1e3a8a;">📋 How to Submit for Admin Verification & Production Sign-off:</strong><br/>
-    <span style="font-size: 9pt; color: #475569;">
+  <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 14px 18px; margin: 14px 0;">
+    <strong style="color: #1e3a8a; font-size: 11pt;">How to Submit for Admin Verification & Production Sign-off:</strong><br/>
+    <span style="font-size: 10.5pt; color: #334155; line-height: 1.6;">
       1. Run the test calls from your application or Postman using your sandbox credentials.<br/>
-      2. Record the generated <strong>PNR numbers</strong> (e.g. <code>TEST-204554</code>) and <strong>Booking IDs</strong> (e.g. <code>BK-B2B-TEST-204554</code>).<br/>
+      2. Record the generated <strong>PNR numbers</strong> (e.g. <code>TEST-204554</code>) and <strong>Booking IDs</strong>.<br/>
       3. Email the PNR list to <strong>api-support@trippechalo.com</strong> or inform your TrippeChalo Integration Manager.<br/>
       4. The TrippeChalo Operations Team will verify the bookings in our <strong>Admin Verification Console</strong> and immediately upgrade your partner status to <strong>Live Production</strong>.
     </span>
   </div>
+  `}
 
   <h2>3. API ENDPOINTS DETAILED SPECIFICATION</h2>
 
@@ -735,9 +751,9 @@ Note: Keep these credentials safe. Do not share publicly.
     "environment": "${isLive ? 'PRODUCTION' : 'SANDBOX'}"
   }
 }</div>
-  <p style="font-size: 9pt; color: #64748b;">
+  <p style="font-size: 10pt; color: #475569;">
     <strong>Token Usage Rule:</strong> Pass the returned <code>tokenId</code> in all subsequent requests within the HTTP Header as:<br/>
-    <code style="color: #0f172a; font-weight: bold;">Authorization: Bearer &lt;tokenId&gt;</code>. Token validity is <strong>24 hours</strong>.
+    <code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">Authorization: Bearer &lt;tokenId&gt;</code>. Token validity is <strong>24 hours</strong>.
   </p>
 
   <h3>3.2 Step 2: Route & Sector Discovery Method</h3>
@@ -931,14 +947,12 @@ Note: Keep these credentials safe. Do not share publicly.
 
   <h2>4. PASSENGER MANIFEST & SECTOR RULES (DOMESTIC VS INTERNATIONAL)</h2>
   
-  <div style="background-color: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
-    <strong style="color: #1e3a8a; font-size: 10.5pt;">✈️ SECTOR SPECIFICATION: DOMESTIC VS INTERNATIONAL FLIGHTS</strong><br/>
-    <p style="margin: 6px 0 0 0; font-size: 9.5pt; color: #1e293b; line-height: 1.6;">
-      • <strong>DOMESTIC FLIGHTS (India Sectors - e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
-      Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>STRICTLY NOT REQUIRED</strong>. Adult Date of Birth (<code>dob</code>) is also optional for Adults. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child/Infant to verify age).<br/><br/>
-      • <strong>INTERNATIONAL FLIGHTS:</strong><br/>
-      Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and <code>dob</code> are <strong>MANDATORY</strong> for all passengers as per civil aviation regulations.
-    </p>
+  <div class="alert-box">
+    <strong>[SECTOR SPECIFICATION: DOMESTIC VS INTERNATIONAL FLIGHTS]</strong><br/>
+    &bull; <strong>DOMESTIC FLIGHTS (India Sectors - e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
+    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>STRICTLY NOT REQUIRED (OMIT)</strong>. Adult Date of Birth (<code>dob</code>) is also optional for Adults. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child and Infant to confirm age category).<br/><br/>
+    &bull; <strong>INTERNATIONAL FLIGHTS:</strong><br/>
+    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and <code>dob</code> are <strong>MANDATORY</strong> for all passengers as per civil aviation regulations.
   </div>
 
   <h3>4.1 Field-by-Field Manifest Data Dictionary</h3>
@@ -965,7 +979,7 @@ Note: Keep these credentials safe. Do not share publicly.
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Given name as displayed on Govt photo ID (Aadhaar/Voter ID/Passport)</td>
+        <td>Given name as displayed on Govt photo ID (Aadhaar / Voter ID / Passport)</td>
       </tr>
       <tr>
         <td><code>lastName</code></td>
@@ -991,21 +1005,21 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><code>dob</code></td>
         <td>String</td>
-        <td><span class="badge-opt">Required ONLY for Child & Infant</span><br/><span style="font-size: 8pt; color: #64748b;">(Not needed for Adults)</span></td>
+        <td><span class="badge-opt">Required ONLY for Child & Infant</span><br/><span style="font-size: 8.5pt; color: #64748b;">(Not needed for Adults)</span></td>
         <td><span class="badge-req">Mandatory for ALL Pax</span></td>
         <td>Date of birth (<code>YYYY-MM-DD</code>). In domestic flights, strictly required for CHD and INF to confirm fare qualification.</td>
       </tr>
       <tr>
         <td><code>passportNo</code></td>
         <td>String</td>
-        <td><span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8pt;">NOT REQUIRED (Omit)</span></td>
+        <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
         <td><span class="badge-req">Mandatory</span></td>
         <td>Passport alphanumeric number. Only required when booking international sectors.</td>
       </tr>
       <tr>
         <td><code>passportExpiry</code></td>
         <td>String</td>
-        <td><span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8pt;">NOT REQUIRED (Omit)</span></td>
+        <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
         <td><span class="badge-req">Mandatory</span></td>
         <td>Passport expiration date (<code>YYYY-MM-DD</code>). Must have 6+ months validity.</td>
       </tr>
@@ -1013,7 +1027,7 @@ Note: Keep these credentials safe. Do not share publicly.
   </table>
 
   <h3>4.2 Standard Domestic Booking Request (2 Adults + 1 Child + 1 Infant)</h3>
-  <p style="font-size: 9pt; color: #475569;">
+  <p style="font-size: 10pt; color: #475569;">
     Notice that for domestic flights, <strong>no passport fields are sent</strong>, and <code>dob</code> is only provided for Child and Infant:
   </p>
   <div class="code-box">{
@@ -1156,7 +1170,7 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
-  <h2>6. TECHNICAL SUPPORT & GO-LIVE ASSISTANCE</h2>
+  <h2>6. TECHNICAL SUPPORT & OPERATIONS DESK</h2>
   <table class="data-table">
     <tr>
       <td style="width: 30%; font-weight: bold; background-color: #f1f5f9;">API Operations Desk</td>
@@ -1168,12 +1182,12 @@ Note: Keep these credentials safe. Do not share publicly.
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Escalation SLA</td>
-      <td>Sandbox UAT Verification: Within 2 Business Hours</td>
+      <td>${isLive ? 'Commercial Production SLA: Within 15 Minutes' : 'Sandbox UAT Verification: Within 2 Business Hours'}</td>
     </tr>
   </table>
 
   <div class="footer-note">
-    <strong>TRIPPECHALO INDIA PRIVATE LIMITED</strong> • AIRLINE DISTRIBUTION & API GATEWAY<br/>
+    <strong>TRIPPECHALO INDIA PRIVATE LIMITED</strong> &bull; AIRLINE DISTRIBUTION & API GATEWAY<br/>
     This technical document is prepared exclusively for <strong>${partner.companyName}</strong>. Distribution or disclosure to unauthorized third parties is strictly prohibited.
   </div>
 </div>
@@ -1183,7 +1197,7 @@ Note: Keep these credentials safe. Do not share publicly.
 
   const downloadCustomizedDoc = (partner: B2BClient, env: 'test' | 'live' = 'test') => {
     const isLive = env === 'live';
-    const htmlContent = generateDocumentHtml(partner, env);
+    const htmlContent = generateDocumentHtml(partner, env, true);
     const blob = new Blob(['\ufeff', htmlContent], {
       type: 'application/msword;charset=utf-8;'
     });
@@ -1195,7 +1209,7 @@ Note: Keep these credentials safe. Do not share publicly.
   };
 
   const printOrDownloadPdf = (partner: B2BClient, env: 'test' | 'live' = 'test') => {
-    const html = generateDocumentHtml(partner, env);
+    const html = generateDocumentHtml(partner, env, false);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('Please allow popups to open the print/PDF preview');
@@ -1239,7 +1253,7 @@ Note: Keep these credentials safe. Do not share publicly.
                 "var token = jsonData.tokenId || (jsonData.data && jsonData.data.tokenId);",
                 "if (token) {",
                 "    pm.collectionVariables.set('tokenId', token);",
-                "    console.log('✅ TokenId saved: ' + token);",
+                "    console.log('Session TokenId saved successfully: ' + token);",
                 "}"
               ],
               type: "text/javascript"
@@ -1256,7 +1270,10 @@ Note: Keep these credentials safe. Do not share publicly.
           name: "2. Flight Sector Method (GET /search/sectors)",
           request: {
             method: "GET",
-            header: [{ key: "Authorization", value: "Bearer {{tokenId}}", type: "text" }],
+            header: [
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" }
+            ],
             url: { raw: "{{baseUrl}}/search/sectors", host: ["{{baseUrl}}"], path: ["search", "sectors"] }
           }
         },
@@ -1265,7 +1282,8 @@ Note: Keep these credentials safe. Do not share publicly.
           request: {
             method: "POST",
             header: [
-              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text" },
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" },
               { key: "Content-Type", value: "application/json", type: "text" }
             ],
             body: {
@@ -1280,12 +1298,13 @@ Note: Keep these credentials safe. Do not share publicly.
           request: {
             method: "POST",
             header: [
-              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text" },
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" },
               { key: "Content-Type", value: "application/json", type: "text" }
             ],
             body: {
               mode: "raw",
-              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\",\n      \"dob\": \"1992-06-15\",\n      \"passportNo\": \"TC8892101\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"1994-09-24\",\n      \"passportNo\": \"TC8892102\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2017-11-12\",\n      \"passportNo\": \"TC8892103\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-04-18\",\n      \"passportNo\": \"TC8892104\",\n      \"passportExpiry\": \"2032-08-31\"\n    }\n  ]\n}"
+              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-05-14\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-04-18\"\n    }\n  ],\n  \"contactEmail\": \"agent@partner.com\",\n  \"contactPhone\": \"9876543210\"\n}"
             },
             url: { raw: "{{baseUrl}}/flights/book", host: ["{{baseUrl}}"], path: ["flights", "book"] }
           }
@@ -1854,42 +1873,42 @@ Note: Keep these credentials safe. Do not share publicly.
               {/* Endpoints Doc */}
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                  <h3 className="font-bold text-gray-900">API Documentation Snippet</h3>
-                  <span className="text-xs text-gray-500">Use the buttons above to view full docs</span>
+                  <h3 className="font-bold text-gray-900">API Interface Reference</h3>
+                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">Dual Authentication Supported</span>
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-4 font-mono text-xs overflow-x-auto text-green-400">
-                  <div className="text-gray-400 mb-2">// Base URL</div>
-                  <div className="mb-4">https://api.trippechalo.com/api/v1/b2b</div>
+                  <div className="text-gray-400 mb-1">// Gateway Base URL</div>
+                  <div className="mb-3 text-emerald-300 font-bold">{getServerUrl()}/api/v1/b2b</div>
                   
-                  <div className="text-gray-400 mb-2">// 1. Search Flights</div>
-                  <div className="text-blue-400 mb-1">GET /flights/search?origin=DEL&destination=GOI&date=2026-10-15</div>
-                  <div className="mb-4 text-gray-300">
-                    Headers: <br/>
-                    <span className="text-pink-400">x-api-key:</span> {'<YOUR_API_KEY>'}
+                  <div className="text-gray-400 mb-1">// Supported Headers (Choose either Method A or Method B):</div>
+                  <div className="mb-3 text-gray-300 bg-gray-800/80 p-2.5 rounded border border-gray-700">
+                    <div><span className="text-amber-400 font-bold">Method A (Direct Key):</span> <span className="text-pink-400">x-api-key:</span> {'<YOUR_API_KEY>'}</div>
+                    <div className="mt-1"><span className="text-blue-400 font-bold">Method B (OAuth Session):</span> <span className="text-pink-400">Authorization:</span> Bearer {'<YOUR_TOKEN_ID>'} <span className="text-gray-400">(or <span className="text-pink-400">tokenId:</span> {'<YOUR_TOKEN_ID>'})</span></div>
                   </div>
 
-                  <div className="text-gray-400 mb-2">// 2. Book Flight</div>
-                  <div className="text-yellow-400 mb-1">POST /flights/book</div>
-                  <div className="mb-1 text-gray-300">
-                    Headers: <br/>
-                    <span className="text-pink-400">x-api-key:</span> {'<YOUR_API_KEY>'} <br/>
+                  <div className="text-gray-400 mb-1">// 1. Search Flights</div>
+                  <div className="text-blue-400 mb-3 font-semibold">GET /flights/search?origin=DEL&destination=BOM&date=2026-11-15</div>
+
+                  <div className="text-gray-400 mb-1">// 2. Book Flight (Domestic Passenger Manifest)</div>
+                  <div className="text-yellow-400 mb-1 font-semibold">POST /flights/book</div>
+                  <div className="mb-2 text-gray-300">
                     <span className="text-pink-400">Content-Type:</span> application/json
                   </div>
                   <div className="text-gray-300 whitespace-pre">
 {`Body:
 {
-  "sfId": "SF-12345",
+  "sfId": "SF-TC-C1A-20261115",
   "passengers": [
     {
       "title": "Mr",
-      "firstName": "John",
-      "lastName": "Doe",
-      "type": "ADT",
-      "gender": "M"
+      "firstName": "Rohan",
+      "lastName": "Sharma",
+      "type": "ADULT",
+      "gender": "MALE"
     }
   ],
-  "contactEmail": "agent@partner.com",
+  "contactEmail": "${selectedPartner.email}",
   "contactPhone": "9876543210"
 }`}
                   </div>
