@@ -409,17 +409,16 @@ Note: Keep these credentials safe. Do not share publicly.
       font-size: 10.5pt;
       line-height: 1.55;
     }
-    .code-box {
+    pre.code-box {
       background-color: #f8fafc;
       color: #0f172a;
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-radius: 6px;
       font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 10.5pt;
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin: 10px 0 18px 0;
-      line-height: 1.55;
+      font-size: 9.5pt;
+      white-space: pre;
+      margin: 10px 0 16px 0;
+      line-height: 1.45;
       border: 1.5px solid #cbd5e1;
       font-weight: 500;
     }
@@ -430,7 +429,7 @@ Note: Keep these credentials safe. Do not share publicly.
       font-size: 10.5pt;
     }
     table.data-table th {
-      background-color: #1e3a8a;
+      background-color: #0f2b48;
       color: #ffffff;
       border: 1px solid #0f2b48;
       padding: 10px 12px;
@@ -485,19 +484,19 @@ Note: Keep these credentials safe. Do not share publicly.
   ` : ''}
 
   <!-- Corporate Header Table (100% Word & Web Compatible) -->
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background-color: #0f2b48; border-bottom: 4px solid #2563eb;" bgcolor="#0f2b48">
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 18px; background-color: #0f2b48; border-bottom: 4px solid #2563eb;" bgcolor="#0f2b48">
     <tr>
-      <td style="padding: 24px 28px; background-color: #0f2b48; color: #ffffff;" bgcolor="#0f2b48">
+      <td style="padding: 26px 30px; background-color: #0f2b48; color: #ffffff;" bgcolor="#0f2b48">
         <div style="font-size: 11pt; letter-spacing: 2px; text-transform: uppercase; color: #93c5fd; font-weight: 700; margin-bottom: 6px;">
-          TRIPPECHALO INDIA PRIVATE LIMITED &bull; B2B AIRLINE DISTRIBUTION
+          TRIPPECHALO INDIA PRIVATE LIMITED &bull; B2B AIRLINE DISTRIBUTION & GDS GATEWAY
         </div>
-        <div style="font-size: 22pt; font-weight: 800; color: #ffffff; margin: 0 0 6px 0; line-height: 1.2;">
+        <div style="font-size: 23pt; font-weight: 800; color: #ffffff; margin: 0 0 6px 0; line-height: 1.2;">
           B2B FLIGHT DISTRIBUTION API
         </div>
         <div style="font-size: 12pt; color: #e2e8f0; margin: 0; font-weight: 500;">
-          Enterprise Technical Interface Specification (${isLive ? 'COMMERCIAL PRODUCTION ENVIRONMENT' : 'SANDBOX SIMULATION ENVIRONMENT'})
+          Enterprise Technical Interface Specification & UAT Certification Guide (${isLive ? 'COMMERCIAL PRODUCTION ENVIRONMENT' : 'SANDBOX SIMULATION ENVIRONMENT'})
         </div>
-        <table style="width: 100%; margin-top: 16px; border-top: 1px solid #334155; padding-top: 12px; font-size: 10.5pt; color: #e2e8f0;">
+        <table style="width: 100%; margin-top: 18px; border-top: 1px solid #334155; padding-top: 14px; font-size: 10.5pt; color: #e2e8f0;">
           <tr>
             <td style="width: 160px; font-weight: bold; color: #cbd5e1;">Partner Organization:</td>
             <td style="color: #ffffff; font-weight: bold;">${partner.companyName}</td>
@@ -508,35 +507,67 @@ Note: Keep these credentials safe. Do not share publicly.
             <td style="font-weight: bold; color: #cbd5e1;">Technical Contact:</td>
             <td style="color: #ffffff;">${partner.contactName} (${partner.email})</td>
             <td style="font-weight: bold; color: #cbd5e1;">Interface Protocol:</td>
-            <td style="color: #ffffff;">REST API (JSON over HTTPS)</td>
+            <td style="color: #ffffff;">REST API (JSON over HTTPS / TLS 1.3)</td>
           </tr>
           <tr>
             <td style="font-weight: bold; color: #cbd5e1;">Assigned Client ID:</td>
             <td style="color: #93c5fd; font-weight: bold;">${partner.username || 'N/A'}</td>
             <td style="font-weight: bold; color: #cbd5e1;">Document Version:</td>
-            <td style="color: #ffffff;">2.5.0 (Release) &bull; ${formattedDate}</td>
+            <td style="color: #ffffff;">2.6.0 (Enterprise Release) &bull; ${formattedDate}</td>
           </tr>
         </table>
       </td>
     </tr>
   </table>
 
+  <!-- Document Control Block -->
+  <table class="data-table" style="margin-top: 0; margin-bottom: 22px;">
+    <tbody>
+      <tr style="background-color: #f1f5f9;">
+        <td style="width: 25%; font-weight: bold;">Document ID</td>
+        <td style="width: 25%; font-family: monospace; font-weight: bold; color: #1e3a8a;">TC-SPEC-B2B-2026-V2.6</td>
+        <td style="width: 25%; font-weight: bold;">Classification</td>
+        <td style="width: 25%;"><span style="color: #b91c1c; font-weight: bold; font-size: 9.5pt;">CONFIDENTIAL / B2B PARTNER RESTRICTED</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;">GDS Engine</td>
+        <td>TrippeChalo SeriesFare GDS Engine v4.2</td>
+        <td style="font-weight: bold;">Security Standard</td>
+        <td>OAuth 2.0 / HMAC-SHA256 / 24h Bearer Sessions</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;">Target Partner</td>
+        <td><strong>${partner.companyName}</strong></td>
+        <td style="font-weight: bold;">Routing Channel</td>
+        <td><code>${partner.auth_channel || 'cugtest.trippechalo.com'}</code></td>
+      </tr>
+    </tbody>
+  </table>
+
   <h2>1. INTEGRATION CREDENTIALS & HOST CONFIGURATION</h2>
   <p>The following pre-configured credentials have been provisioned for <strong>${partner.companyName}</strong>. All requests must be dispatched over secure TLS 1.3 / HTTPS.</p>
+
+  <div class="alert-box">
+    <strong style="font-size: 11pt;">[OPERATIONAL DIRECTIVE: GATEWAY HOST RESOLUTION &bull; {{URL}} VARIABLE]</strong><br/>
+    Throughout this technical interface specification, the placeholder variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway Host URL.<br/><br/>
+    &bull; <strong>Company Production Gateway URL:</strong> <code style="font-weight: bold; color: #15803d; font-size: 11pt;">https://api.trippechalo.com</code><br/>
+    &bull; <strong>Company Sandbox / Staging Gateway URL:</strong> <code style="font-weight: bold; color: #b45309; font-size: 11pt;">https://sandbox-api.trippechalo.com</code><br/><br/>
+    <em>Note: In your application configuration, environment settings, or Postman environment variables, define your host variable <code>{{URL}}</code> as shown above. In all endpoint paths throughout this document (e.g. <code>{{URL}}/api/v1/b2b/oauth2/tokens</code>), substitute <code>{{URL}}</code> with your active environment host.</em>
+  </div>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 25%;">Parameter</th>
+        <th style="width: 25%;">Configuration Parameter</th>
         <th style="width: 35%;">Configured Value</th>
         <th style="width: 40%;">Description & Usage</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Server Base URL</strong></td>
-        <td><code style="color: #1e40af; font-weight: bold; font-size: 11pt;">${serverUrl}</code></td>
-        <td>Root gateway endpoint for all API transactions</td>
+        <td><strong>Gateway Base Variable</strong></td>
+        <td><code style="color: #1e40af; font-weight: bold; font-size: 11pt;">{{URL}}</code></td>
+        <td>Resolves to <code>${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}</code></td>
       </tr>
       <tr>
         <td><strong>Username (Client ID)</strong></td>
@@ -571,10 +602,48 @@ Note: Keep these credentials safe. Do not share publicly.
     `}
   </div>
 
-  ${isLive ? `
-  <h2>2. COMMERCIAL PRODUCTION POLICIES & WALLET OPERATIONS</h2>
-  <p>The endpoints and credentials in Section 1 connect directly to the <strong>LIVE COMMERCIAL PRODUCTION ENVIRONMENT</strong>. Real airline inventory is reserved, and commercial funds are deducted in real time. Please review the following operating guidelines:</p>
+  <h2>2. INTEGRATION ARCHITECTURE & OPERATING POLICIES</h2>
+  <p>The TrippeChalo B2B Flight API operates as a high-throughput, low-latency airline distribution gateway structured into four distinct transaction stages:</p>
 
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 12%;">Stage</th>
+        <th style="width: 15%;">Method & Path</th>
+        <th style="width: 35%;">Functional Responsibility</th>
+        <th style="width: 38%;">Aviation SLA & Guarantees</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Stage 1</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>/oauth2/tokens</code></td>
+        <td>Session Authentication & Bearer Token Generation</td>
+        <td>Token valid for 24 Hours (86,400s). Response SLA: &lt; 150ms</td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2</strong></td>
+        <td><span class="badge badge-get">GET</span> <code>/search/sectors</code></td>
+        <td>Commercial Airline Route & Corridor Discovery</td>
+        <td>Returns available active city pairs, minimum fares, and flight series</td>
+      </tr>
+      <tr>
+        <td><strong>Stage 3</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>/search/flights</code></td>
+        <td>Live Seat Availability, Pricing & Baggage Query</td>
+        <td>Real-time flight series query. Latency SLA: &lt; 350ms</td>
+      </tr>
+      <tr>
+        <td><strong>Stage 4</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>/flights/book</code></td>
+        <td>Instant Airline PNR Reservation & Ticket Issuance</td>
+        <td>Synchronous carrier seat decrement & authentic PNR. Latency SLA: &lt; 800ms</td>
+      </tr>
+    </tbody>
+  </table>
+
+  ${isLive ? `
+  <h3>2.1 Commercial Production Policies & Wallet Operations</h3>
   <table class="data-table">
     <thead>
       <tr>
@@ -612,7 +681,7 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
   ` : `
-  <h2>2. MANDATORY UAT TEST SCENARIOS (SANDBOX CERTIFICATION)</h2>
+  <h3>2.1 Mandatory UAT Test Scenarios (Sandbox Certification)</h3>
   <p>Before <strong>${partner.companyName}</strong> can be approved and promoted to the Live Production environment, your development team must execute the following <strong>4 mandatory test scenarios</strong> in Sandbox mode and provide the generated PNR records for audit:</p>
 
   <table class="data-table">
@@ -691,7 +760,7 @@ Note: Keep these credentials safe. Do not share publicly.
   <table class="data-table">
     <tr>
       <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">Endpoint URL</td>
-      <td><code>${serverUrl}/api/v1/b2b/oauth2/tokens</code> &nbsp;<em>(Alias: <code>${serverUrl}/api/v1/b2b/auth/token</code>)</em></td>
+      <td><code>{{URL}}/api/v1/b2b/oauth2/tokens</code> &nbsp;<em>(Alias: <code>{{URL}}/api/v1/b2b/auth/token</code>)</em></td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">HTTP Method</td>
@@ -722,7 +791,7 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><code>username</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Assigned Client ID (e.g. <code>${partner.username || 'mmt1122'}</code>)</td>
+        <td>Assigned Client ID (e.g. <code>${partner.username || 'YOUR_CLIENT_ID'}</code>)</td>
       </tr>
       <tr>
         <td><code>password</code></td>
@@ -734,13 +803,13 @@ Note: Keep these credentials safe. Do not share publicly.
   </table>
 
   <p><strong>Sample Request Payload:</strong></p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "username": "${partner.username || 'YOUR_USERNAME'}",
   "password": "${partner.password || 'YOUR_PASSWORD'}"
-}</div>
+}</pre>
 
   <p><strong>Sample Response Payload (HTTP 200 OK):</strong></p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "success": true,
   "status": "SUCCESS",
   "tokenId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJZCI6IjZhZGEzMDkyMzI5OWY2MGQ4ODNlZTUyNCI...",
@@ -750,17 +819,17 @@ Note: Keep these credentials safe. Do not share publicly.
     "expiresIn": 86400,
     "environment": "${isLive ? 'PRODUCTION' : 'SANDBOX'}"
   }
-}</div>
+}</pre>
   <p style="font-size: 10pt; color: #475569;">
     <strong>Token Usage Rule:</strong> Pass the returned <code>tokenId</code> in all subsequent requests within the HTTP Header as:<br/>
-    <code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">Authorization: Bearer &lt;tokenId&gt;</code>. Token validity is <strong>24 hours</strong>.
+    <code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(or &nbsp;<code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">tokenId: &lt;tokenId&gt;</code>). Token validity is <strong>24 hours</strong>.
   </p>
 
   <h3>3.2 Step 2: Route & Sector Discovery Method</h3>
   <table class="data-table">
     <tr>
       <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">Endpoint URL</td>
-      <td><code>${serverUrl}/api/v1/b2b/search/sectors</code></td>
+      <td><code>{{URL}}/api/v1/b2b/search/sectors</code></td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">HTTP Method</td>
@@ -768,12 +837,12 @@ Note: Keep these credentials safe. Do not share publicly.
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
-      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: ${apiKey}</code>)</em></td>
+      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(Alternative: <code>x-api-key: ${apiKey}</code>)</em></td>
     </tr>
   </table>
 
   <p><strong>Sample Response Payload (HTTP 200 OK):</strong></p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "success": true,
   "status": "SUCCESS",
   "count": 4,
@@ -782,7 +851,11 @@ Note: Keep these credentials safe. Do not share publicly.
       "origin": "DEL",
       "destination": "BOM",
       "airline": "IndiGo",
-      "availableDates": ["2026-12-10", "2026-12-11", "2026-12-12"],
+      "availableDates": [
+        "2026-12-10",
+        "2026-12-11",
+        "2026-12-12"
+      ],
       "minFare": 4200,
       "totalFlights": 12
     },
@@ -790,18 +863,21 @@ Note: Keep these credentials safe. Do not share publicly.
       "origin": "DEL",
       "destination": "BLR",
       "airline": "Air India",
-      "availableDates": ["2026-12-15", "2026-12-16"],
+      "availableDates": [
+        "2026-12-15",
+        "2026-12-16"
+      ],
       "minFare": 4800,
       "totalFlights": 8
     }
   ]
-}</div>
+}</pre>
 
   <h3>3.3 Step 3: Flight Inventory Search Method</h3>
   <table class="data-table">
     <tr>
       <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">Endpoint URL</td>
-      <td><code>${serverUrl}/api/v1/b2b/search/flights</code></td>
+      <td><code>{{URL}}/api/v1/b2b/search/flights</code></td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">HTTP Method</td>
@@ -811,7 +887,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: ${apiKey}</code>)</em>
       </td>
     </tr>
   </table>
@@ -867,17 +943,17 @@ Note: Keep these credentials safe. Do not share publicly.
   </table>
 
   <p><strong>Sample Search Request Payload:</strong></p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "origin": "DEL",
   "destination": "BOM",
   "travelDate": "2026-12-10",
   "adults": 2,
   "children": 1,
   "infants": 1
-}</div>
+}</pre>
 
   <p><strong>Sample Search Response Payload (HTTP 200 OK):</strong></p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "success": true,
   "count": 1,
   "data": [
@@ -898,13 +974,13 @@ Note: Keep these credentials safe. Do not share publicly.
       "isRefundable": false
     }
   ]
-}</div>
+}</pre>
 
   <h3>3.4 Step 4: Flight Booking & PNR Creation Method</h3>
   <table class="data-table">
     <tr>
       <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">Endpoint URL</td>
-      <td><code>${serverUrl}/api/v1/b2b/flights/book</code></td>
+      <td><code>{{URL}}/api/v1/b2b/flights/book</code></td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">HTTP Method</td>
@@ -914,7 +990,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: ${apiKey}</code>)</em>
       </td>
     </tr>
   </table>
@@ -942,20 +1018,87 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><span class="badge-req">Mandatory</span></td>
         <td>Array of Passenger Objects matching passenger categories (min 1 passenger)</td>
       </tr>
+      <tr>
+        <td><code>contactEmail</code></td>
+        <td>String</td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>Partner agent operational email for flight schedule updates</td>
+      </tr>
+      <tr>
+        <td><code>contactPhone</code></td>
+        <td>String</td>
+        <td><span class="badge-req">Mandatory</span></td>
+        <td>10-digit agent / guest mobile phone number</td>
+      </tr>
     </tbody>
   </table>
 
-  <h2>4. PASSENGER MANIFEST & SECTOR RULES (DOMESTIC VS INTERNATIONAL)</h2>
+  <h2>4. PASSENGER MANIFEST STANDARDS & SECTOR RULES</h2>
   
   <div class="alert-box">
-    <strong>[SECTOR SPECIFICATION: DOMESTIC VS INTERNATIONAL FLIGHTS]</strong><br/>
+    <strong style="font-size: 11pt;">[CIVIL AVIATION DIRECTIVE: DOMESTIC VS INTERNATIONAL FLIGHTS]</strong><br/>
     &bull; <strong>DOMESTIC FLIGHTS (India Sectors - e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
     Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>STRICTLY NOT REQUIRED (OMIT)</strong>. Adult Date of Birth (<code>dob</code>) is also optional for Adults. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child and Infant to confirm age category).<br/><br/>
     &bull; <strong>INTERNATIONAL FLIGHTS:</strong><br/>
-    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and <code>dob</code> are <strong>MANDATORY</strong> for all passengers as per civil aviation regulations.
+    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and Date of Birth (<code>dob</code>) are <strong>MANDATORY FOR ALL PASSENGERS</strong> as per Civil Aviation authority mandates.
   </div>
 
-  <h3>4.1 Field-by-Field Manifest Data Dictionary</h3>
+  <h3>4.1 Certified UAT Test Manifest - 4 Passengers (Domestic & International)</h3>
+  <p>Use the following pre-validated passenger test identities when conducting testing or integration certification:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Pax #</th>
+        <th style="width: 14%;">Category</th>
+        <th style="width: 22%;">Name & Gender</th>
+        <th style="width: 14%;">Date of Birth</th>
+        <th style="width: 14%;">Passport Number</th>
+        <th style="width: 14%;">Passport Expiry</th>
+        <th style="width: 14%;">Domestic Rule</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Pax 1</strong></td>
+        <td><span class="badge-req">ADULT</span> (Lead)</td>
+        <td><strong>Mr. Rohan Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
+        <td><code>1990-05-15</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892101</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 2</strong></td>
+        <td><span class="badge-req">ADULT</span></td>
+        <td><strong>Mrs. Priya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
+        <td><code>1992-08-22</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892102</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 3</strong></td>
+        <td><span class="badge-opt">CHILD</span> (Age 7)</td>
+        <td><strong>Mstr. Aarav Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
+        <td><code>2018-03-10</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892103</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 4</strong></td>
+        <td><span class="badge-opt">INFANT</span> (Age 1)</td>
+        <td><strong>Miss Anaya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
+        <td><code>2025-06-14</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892104</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Field-by-Field Manifest Data Dictionary</h3>
   <table class="data-table">
     <thead>
       <tr>
@@ -1013,24 +1156,24 @@ Note: Keep these credentials safe. Do not share publicly.
         <td><code>passportNo</code></td>
         <td>String</td>
         <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
-        <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
         <td>Passport alphanumeric number. Only required when booking international sectors.</td>
       </tr>
       <tr>
         <td><code>passportExpiry</code></td>
         <td>String</td>
         <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
-        <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
         <td>Passport expiration date (<code>YYYY-MM-DD</code>). Must have 6+ months validity.</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>4.2 Standard Domestic Booking Request (2 Adults + 1 Child + 1 Infant)</h3>
+  <h3>4.3 Standard Domestic Booking Request (4 Passengers: 2 Adults + 1 Child + 1 Infant)</h3>
   <p style="font-size: 10pt; color: #475569;">
     Notice that for domestic flights, <strong>no passport fields are sent</strong>, and <code>dob</code> is only provided for Child and Infant:
   </p>
-  <div class="code-box">{
+  <pre class="code-box">{
   "sfId": "SF-TC-C1A-20261210",
   "passengers": [
     {
@@ -1063,11 +1206,16 @@ Note: Keep these credentials safe. Do not share publicly.
       "gender": "Female",
       "dob": "2025-06-14"
     }
-  ]
-}</div>
+  ],
+  "contactEmail": "${partner.email}",
+  "contactPhone": "9876543210"
+}</pre>
 
-  <h3>4.3 International Booking Request (When Sector is International)</h3>
-  <div class="code-box">{
+  <h3>4.4 International Booking Request (All 4 Passengers with Passports & DOBs)</h3>
+  <p style="font-size: 10pt; color: #475569;">
+    When booking international sectors, Civil Aviation rules mandate complete passport details and dates of birth for all passengers:
+  </p>
+  <pre class="code-box">{
   "sfId": "SF-TC-INT-20261210",
   "passengers": [
     {
@@ -1089,12 +1237,34 @@ Note: Keep these credentials safe. Do not share publicly.
       "dob": "1992-08-22",
       "passportNo": "TC8892102",
       "passportExpiry": "2032-08-31"
+    },
+    {
+      "title": "Mstr",
+      "firstName": "Aarav",
+      "lastName": "Sharma",
+      "type": "CHILD",
+      "gender": "Male",
+      "dob": "2018-03-10",
+      "passportNo": "TC8892103",
+      "passportExpiry": "2032-08-31"
+    },
+    {
+      "title": "Miss",
+      "firstName": "Anaya",
+      "lastName": "Sharma",
+      "type": "INFANT",
+      "gender": "Female",
+      "dob": "2025-06-14",
+      "passportNo": "TC8892104",
+      "passportExpiry": "2032-08-31"
     }
-  ]
-}</div>
+  ],
+  "contactEmail": "${partner.email}",
+  "contactPhone": "9876543210"
+}</pre>
 
-  <p><strong>Sample Booking Confirmation Response Payload (HTTP 200 OK):</strong></p>
-  <div class="code-box">{
+  <h3>4.5 Sample Booking Confirmation Response (HTTP 200 OK)</h3>
+  <pre class="code-box">{
   "success": true,
   "data": {
     "pnr": "TC${Math.floor(100000 + Math.random() * 900000)}",
@@ -1114,13 +1284,37 @@ Note: Keep these credentials safe. Do not share publicly.
       "totalFare": 13500
     },
     "passengers": [
-      { "title": "Mr", "firstName": "Rohan", "lastName": "Sharma", "type": "ADULT", "gender": "Male" },
-      { "title": "Mrs", "firstName": "Priya", "lastName": "Sharma", "type": "ADULT", "gender": "Female" },
-      { "title": "Mstr", "firstName": "Aarav", "lastName": "Sharma", "type": "CHILD", "gender": "Male" },
-      { "title": "Miss", "firstName": "Anaya", "lastName": "Sharma", "type": "INFANT", "gender": "Female" }
+      {
+        "title": "Mr",
+        "firstName": "Rohan",
+        "lastName": "Sharma",
+        "type": "ADULT",
+        "gender": "Male"
+      },
+      {
+        "title": "Mrs",
+        "firstName": "Priya",
+        "lastName": "Sharma",
+        "type": "ADULT",
+        "gender": "Female"
+      },
+      {
+        "title": "Mstr",
+        "firstName": "Aarav",
+        "lastName": "Sharma",
+        "type": "CHILD",
+        "gender": "Male"
+      },
+      {
+        "title": "Miss",
+        "firstName": "Anaya",
+        "lastName": "Sharma",
+        "type": "INFANT",
+        "gender": "Female"
+      }
     ]
   }
-}</div>
+}</pre>
 
   <h2>5. STANDARD HTTP STATUS CODES & EXCEPTION DICTIONARY</h2>
   <table class="data-table">
@@ -1163,6 +1357,11 @@ Note: Keep these credentials safe. Do not share publicly.
         <td>The requested <code>sfId</code> is either inactive, does not exist, or has been sold out.</td>
       </tr>
       <tr>
+        <td><code>429 Too Many Requests</code></td>
+        <td><code>RATE_LIMIT_EXCEEDED</code></td>
+        <td>Partner request quota exceeded (60 req/min). Throttle outgoing API requests.</td>
+      </tr>
+      <tr>
         <td><code>500 Server Error</code></td>
         <td><code>INTERNAL_ERROR</code></td>
         <td>Unexpected gateway condition. Contact technical operations team immediately with timestamp.</td>
@@ -1170,7 +1369,7 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
-  <h2>6. TECHNICAL SUPPORT & OPERATIONS DESK</h2>
+  <h2>6. TECHNICAL SUPPORT, SLA & OPERATIONS DESK</h2>
   <table class="data-table">
     <tr>
       <td style="width: 30%; font-weight: bold; background-color: #f1f5f9;">API Operations Desk</td>
@@ -1181,8 +1380,12 @@ Note: Keep these credentials safe. Do not share publicly.
       <td>TrippeChalo B2B Technical Integration Cell</td>
     </tr>
     <tr>
-      <td style="font-weight: bold; background-color: #f1f5f9;">Escalation SLA</td>
-      <td>${isLive ? 'Commercial Production SLA: Within 15 Minutes' : 'Sandbox UAT Verification: Within 2 Business Hours'}</td>
+      <td style="font-weight: bold; background-color: #f1f5f9;">Production Escalation SLA</td>
+      <td>${isLive ? 'Critical Production P1 Incidents: Within 15 Minutes' : 'Sandbox UAT Verification: Within 2 Business Hours'}</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">Uptime SLA Guarantee</td>
+      <td>99.95% Availability across Tier-3 Cloud Infrastructure</td>
     </tr>
   </table>
 
@@ -1235,7 +1438,8 @@ Note: Keep these credentials safe. Do not share publicly.
         schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
       },
       variable: [
-        { key: "baseUrl", value: `${serverUrl}/api/v1/b2b`, type: "string" },
+        { key: "URL", value: serverUrl, type: "string", description: "Company Gateway Host URL" },
+        { key: "baseUrl", value: "{{URL}}/api/v1/b2b", type: "string", description: "B2B Root Gateway Endpoint" },
         { key: "username", value: partner.username || "", type: "string" },
         { key: "password", value: partner.password || "", type: "string" },
         { key: "apiKey", value: apiKey || "", type: "string" },
@@ -1294,7 +1498,7 @@ Note: Keep these credentials safe. Do not share publicly.
           }
         },
         {
-          name: "4. Flight Booking Method (POST /flights/book)",
+          name: "4. Flight Booking Method (Domestic - No Passports)",
           request: {
             method: "POST",
             header: [
@@ -1304,7 +1508,23 @@ Note: Keep these credentials safe. Do not share publicly.
             ],
             body: {
               mode: "raw",
-              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-05-14\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-04-18\"\n    }\n  ],\n  \"contactEmail\": \"agent@partner.com\",\n  \"contactPhone\": \"9876543210\"\n}"
+              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-03-10\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-06-14\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
+            },
+            url: { raw: "{{baseUrl}}/flights/book", host: ["{{baseUrl}}"], path: ["flights", "book"] }
+          }
+        },
+        {
+          name: "5. Flight Booking Method (International - 4 Passports & DOBs)",
+          request: {
+            method: "POST",
+            header: [
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" },
+              { key: "Content-Type", value: "application/json", type: "text" }
+            ],
+            body: {
+              mode: "raw",
+              raw: "{\n  \"sfId\": \"SF-TC-INT-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\",\n      \"dob\": \"1990-05-15\",\n      \"passportNo\": \"TC8892101\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"1992-08-22\",\n      \"passportNo\": \"TC8892102\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-03-10\",\n      \"passportNo\": \"TC8892103\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-06-14\",\n      \"passportNo\": \"TC8892104\",\n      \"passportExpiry\": \"2032-08-31\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
             },
             url: { raw: "{{baseUrl}}/flights/book", host: ["{{baseUrl}}"], path: ["flights", "book"] }
           }
