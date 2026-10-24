@@ -520,39 +520,15 @@ Note: Keep these credentials safe. Do not share publicly.
     </tr>
   </table>
 
-  <!-- Document Control Block -->
-  <table class="data-table" style="margin-top: 0; margin-bottom: 22px;">
-    <tbody>
-      <tr style="background-color: #f1f5f9;">
-        <td style="width: 25%; font-weight: bold;">Document ID</td>
-        <td style="width: 25%; font-family: monospace; font-weight: bold; color: #1e3a8a;">TC-SPEC-B2B-2026-V2.6</td>
-        <td style="width: 25%; font-weight: bold;">Classification</td>
-        <td style="width: 25%;"><span style="color: #b91c1c; font-weight: bold; font-size: 9.5pt;">CONFIDENTIAL / B2B PARTNER RESTRICTED</span></td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">GDS Engine</td>
-        <td>TrippeChalo SeriesFare GDS Engine v4.2</td>
-        <td style="font-weight: bold;">Security Standard</td>
-        <td>OAuth 2.0 / HMAC-SHA256 / 24h Bearer Sessions</td>
-      </tr>
-      <tr>
-        <td style="font-weight: bold;">Target Partner</td>
-        <td><strong>${partner.companyName}</strong></td>
-        <td style="font-weight: bold;">Routing Channel</td>
-        <td><code>${partner.auth_channel || 'cugtest.trippechalo.com'}</code></td>
-      </tr>
-    </tbody>
-  </table>
-
   <h2>1. INTEGRATION CREDENTIALS & HOST CONFIGURATION</h2>
   <p>The following pre-configured credentials have been provisioned for <strong>${partner.companyName}</strong>. All requests must be dispatched over secure TLS 1.3 / HTTPS.</p>
 
   <div class="alert-box">
-    <strong style="font-size: 11pt;">[OPERATIONAL DIRECTIVE: GATEWAY HOST RESOLUTION &bull; {{URL}} VARIABLE]</strong><br/>
-    Throughout this technical interface specification, the placeholder variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway Host URL.<br/><br/>
+    <strong style="font-size: 11pt;">[GATEWAY HOST CONFIGURATION &bull; {{URL}} VARIABLE]</strong><br/>
+    Throughout this specification, the variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway Host URL.<br/><br/>
     &bull; <strong>Company Production Gateway URL:</strong> <code style="font-weight: bold; color: #15803d; font-size: 11pt;">https://api.trippechalo.com</code><br/>
     &bull; <strong>Company Sandbox / Staging Gateway URL:</strong> <code style="font-weight: bold; color: #b45309; font-size: 11pt;">https://sandbox-api.trippechalo.com</code><br/><br/>
-    <em>Note: In your application configuration, environment settings, or Postman environment variables, define your host variable <code>{{URL}}</code> as shown above. In all endpoint paths throughout this document (e.g. <code>{{URL}}/api/v1/b2b/oauth2/tokens</code>), substitute <code>{{URL}}</code> with your active environment host.</em>
+    <em>In your application or Postman environment variables, configure <code>{{URL}}</code> to your active environment host. All endpoint paths (e.g. <code>{{URL}}/api/v1/b2b/auth/token</code>) resolve against this gateway.</em>
   </div>
 
   <table class="data-table">
@@ -572,22 +548,17 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><strong>Username (Client ID)</strong></td>
         <td><code style="font-weight: bold; font-size: 11pt;">${partner.username || 'N/A'}</code></td>
-        <td>Used in Step 1 OAuth token generation</td>
+        <td>Used in Step 1 session authentication</td>
       </tr>
       <tr>
         <td><strong>Password (Secret)</strong></td>
         <td><code style="font-weight: bold; font-size: 11pt;">${partner.password || 'N/A'}</code></td>
-        <td>Used in Step 1 OAuth token generation</td>
+        <td>Used in Step 1 session authentication</td>
       </tr>
       <tr>
         <td><strong>API Key (${isLive ? 'Production Key' : 'Sandbox Test Key'})</strong></td>
         <td><code style="color: #b45309; font-weight: bold; font-size: 10.5pt;">${apiKey}</code></td>
         <td>Supplied as <code>x-api-key</code> in HTTP request headers</td>
-      </tr>
-      <tr>
-        <td><strong>Authentication Channel</strong></td>
-        <td><code>${partner.auth_channel || 'cugtest.trippechalo.com'}</code></td>
-        <td>Authorized B2B client routing channel</td>
       </tr>
     </tbody>
   </table>
@@ -617,7 +588,7 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><strong>Stage 1</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>/oauth2/tokens</code></td>
+        <td><span class="badge badge-post">POST</span> <code>/auth/token</code></td>
         <td>Session Authentication & Bearer Token Generation</td>
         <td>Token valid for 24 Hours (86,400s). Response SLA: &lt; 150ms</td>
       </tr>
@@ -674,9 +645,9 @@ Note: Keep these credentials safe. Do not share publicly.
         <td>Cancellations can be submitted via the B2B portal or cancellation endpoints. Net refundable amounts after airline charges are refunded directly into your API wallet.</td>
       </tr>
       <tr>
-        <td><strong>Technical NOC Support</strong></td>
-        <td>24/7 Operations Desk: api-support@trippechalo.com</td>
-        <td>Priority 24/7 support for schedule changes, flight delivery, and critical booking status inquiries.</td>
+        <td><strong>Technical Support Desk</strong></td>
+        <td>Dedicated Integration Desk</td>
+        <td>Priority support for schedule changes, flight delivery, and critical booking status inquiries through your Account Manager.</td>
       </tr>
     </tbody>
   </table>
@@ -748,8 +719,8 @@ Note: Keep these credentials safe. Do not share publicly.
     <span style="font-size: 10.5pt; color: #334155; line-height: 1.6;">
       1. Run the test calls from your application or Postman using your sandbox credentials.<br/>
       2. Record the generated <strong>PNR numbers</strong> (e.g. <code>TEST-204554</code>) and <strong>Booking IDs</strong>.<br/>
-      3. Email the PNR list to <strong>api-support@trippechalo.com</strong> or inform your TrippeChalo Integration Manager.<br/>
-      4. The TrippeChalo Operations Team will verify the bookings in our <strong>Admin Verification Console</strong> and immediately upgrade your partner status to <strong>Live Production</strong>.
+      3. Share the generated PNR list directly with your TrippeChalo Integration Manager or Account Lead.<br/>
+      4. The TrippeChalo Operations Team will verify the bookings in the <strong>Admin Verification Console</strong> and immediately upgrade your partner status to <strong>Live Production</strong>.
     </span>
   </div>
   `}
@@ -760,7 +731,7 @@ Note: Keep these credentials safe. Do not share publicly.
   <table class="data-table">
     <tr>
       <td style="width: 25%; font-weight: bold; background-color: #f1f5f9;">Endpoint URL</td>
-      <td><code>{{URL}}/api/v1/b2b/oauth2/tokens</code> &nbsp;<em>(Alias: <code>{{URL}}/api/v1/b2b/auth/token</code>)</em></td>
+      <td><code>{{URL}}/api/v1/b2b/auth/token</code></td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">HTTP Method</td>
@@ -837,7 +808,7 @@ Note: Keep these credentials safe. Do not share publicly.
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
-      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(Alternative: <code>x-api-key: ${apiKey}</code>)</em></td>
+      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em></td>
     </tr>
   </table>
 
@@ -887,7 +858,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: ${apiKey}</code>)</em>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em>
       </td>
     </tr>
   </table>
@@ -990,7 +961,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: ${apiKey}</code>)</em>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em>
       </td>
     </tr>
   </table>
@@ -1372,8 +1343,8 @@ Note: Keep these credentials safe. Do not share publicly.
   <h2>6. TECHNICAL SUPPORT, SLA & OPERATIONS DESK</h2>
   <table class="data-table">
     <tr>
-      <td style="width: 30%; font-weight: bold; background-color: #f1f5f9;">API Operations Desk</td>
-      <td><code>api-support@trippechalo.com</code></td>
+      <td style="width: 30%; font-weight: bold; background-color: #f1f5f9;">Technical Support Desk</td>
+      <td>TrippeChalo Dedicated Account Manager & Operations Desk</td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Account Technical Manager</td>
@@ -1448,7 +1419,7 @@ Note: Keep these credentials safe. Do not share publicly.
       ],
       item: [
         {
-          name: "1. Authenticate Method (POST /oauth2/tokens)",
+          name: "1. Authenticate Method (POST /auth/token)",
           event: [{
             listen: "test",
             script: {
@@ -1467,7 +1438,7 @@ Note: Keep these credentials safe. Do not share publicly.
             method: "POST",
             header: [{ key: "Content-Type", value: "application/json", type: "text" }],
             body: { mode: "raw", raw: "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}" },
-            url: { raw: "{{baseUrl}}/oauth2/tokens", host: ["{{baseUrl}}"], path: ["oauth2", "tokens"] }
+            url: { raw: "{{baseUrl}}/auth/token", host: ["{{baseUrl}}"], path: ["auth", "token"] }
           }
         },
         {
@@ -1975,10 +1946,10 @@ Note: Keep these credentials safe. Do not share publicly.
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-3.5">
                 <div className="flex justify-between items-center border-b border-gray-100 pb-2">
                   <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                    <Activity size={16} className="text-emerald-600"/> GAPI / OAuth2 Authentication
+                    <Activity size={16} className="text-emerald-600"/> API Session Authentication
                   </h3>
                   <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    POST /oauth2/tokens
+                    POST /auth/token
                   </span>
                 </div>
 
