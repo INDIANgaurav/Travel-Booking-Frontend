@@ -1510,11 +1510,12 @@ Note: Keep these credentials safe. Do not share publicly.
             header: [
               { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
               { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" },
+              { key: "Idempotency-Key", value: "idemp-{{$timestamp}}", type: "text", description: "UUID to prevent double charge" },
               { key: "Content-Type", value: "application/json", type: "text" }
             ],
             body: {
               mode: "raw",
-              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-03-10\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-06-14\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
+              raw: "{\n  \"sfId\": \"SF-TC-C1A-20261210\",\n  \"clientBookingRef\": \"MMT-BK-{{$timestamp}}\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-03-10\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-06-14\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
             },
             url: { raw: "{{baseUrl}}/flights/book", host: ["{{baseUrl}}"], path: ["flights", "book"] }
           }
@@ -1526,13 +1527,36 @@ Note: Keep these credentials safe. Do not share publicly.
             header: [
               { key: "Authorization", value: "Bearer {{tokenId}}", type: "text", description: "Standard OAuth Bearer session token" },
               { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true, description: "Alternative: Direct API Key" },
+              { key: "Idempotency-Key", value: "idemp-intl-{{$timestamp}}", type: "text", description: "UUID to prevent double charge" },
               { key: "Content-Type", value: "application/json", type: "text" }
             ],
             body: {
               mode: "raw",
-              raw: "{\n  \"sfId\": \"SF-TC-INT-20261210\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\",\n      \"dob\": \"1990-05-15\",\n      \"passportNo\": \"TC8892101\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"1992-08-22\",\n      \"passportNo\": \"TC8892102\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mstr\",\n      \"firstName\": \"Aarav\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"CHILD\",\n      \"gender\": \"MALE\",\n      \"dob\": \"2018-03-10\",\n      \"passportNo\": \"TC8892103\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Miss\",\n      \"firstName\": \"Anaya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"INFANT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"2025-06-14\",\n      \"passportNo\": \"TC8892104\",\n      \"passportExpiry\": \"2032-08-31\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
+              raw: "{\n  \"sfId\": \"SF-TC-INT-20261210\",\n  \"clientBookingRef\": \"MMT-INT-{{$timestamp}}\",\n  \"passengers\": [\n    {\n      \"title\": \"Mr\",\n      \"firstName\": \"Rohan\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"MALE\",\n      \"dob\": \"1990-05-15\",\n      \"passportNo\": \"TC8892101\",\n      \"passportExpiry\": \"2032-08-31\"\n    },\n    {\n      \"title\": \"Mrs\",\n      \"firstName\": \"Priya\",\n      \"lastName\": \"Sharma\",\n      \"type\": \"ADULT\",\n      \"gender\": \"FEMALE\",\n      \"dob\": \"1992-08-22\",\n      \"passportNo\": \"TC8892102\",\n      \"passportExpiry\": \"2032-08-31\"\n    }\n  ],\n  \"contactEmail\": \"" + partner.email + "\",\n  \"contactPhone\": \"9876543210\"\n}"
             },
             url: { raw: "{{baseUrl}}/flights/book", host: ["{{baseUrl}}"], path: ["flights", "book"] }
+          }
+        },
+        {
+          name: "6. Retrieve Booking Details (GET /flights/booking/:id)",
+          request: {
+            method: "GET",
+            header: [
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true }
+            ],
+            url: { raw: "{{baseUrl}}/flights/booking/BK-B2B-SAMPLE", host: ["{{baseUrl}}"], path: ["flights", "booking", "BK-B2B-SAMPLE"] }
+          }
+        },
+        {
+          name: "7. Series Fare Cancellation Policy (GET /flights/cancellation-policy)",
+          request: {
+            method: "GET",
+            header: [
+              { key: "Authorization", value: "Bearer {{tokenId}}", type: "text" },
+              { key: "x-api-key", value: "{{apiKey}}", type: "text", disabled: true }
+            ],
+            url: { raw: "{{baseUrl}}/flights/cancellation-policy", host: ["{{baseUrl}}"], path: ["flights", "cancellation-policy"] }
           }
         }
       ]
@@ -1544,6 +1568,11 @@ Note: Keep these credentials safe. Do not share publicly.
     link.download = `TrippeChalo_India_Postman_${isLive ? 'LIVE' : 'SANDBOX'}_${partner.companyName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
     link.click();
     toast.success(`${isLive ? 'Live Production' : 'Sandbox Test'} Postman Collection downloaded for ${partner.companyName}!`);
+  };
+
+  const downloadOpenApiSpec = () => {
+    const serverUrl = getServerUrl();
+    window.open(`${serverUrl}/api/v1/b2b/docs/openapi.json`, '_blank');
   };
 
   const openDocs = (partner: B2BClient) => {
