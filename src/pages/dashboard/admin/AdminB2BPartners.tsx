@@ -699,49 +699,54 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><strong>TC-01</strong></td>
-        <td><strong>Single Adult Domestic Booking</strong></td>
+        <td><strong>Domestic Direct (Non-Stop, 4 Passengers)</strong></td>
         <td>
-          &bull; 1 Adult (Mr. Rohan Sharma)<br/>
-          &bull; Sector: DEL to BOM (Domestic)<br/>
-          &bull; <em>No passport needed for domestic</em>
+          &bull; <strong>sfId: TC-DOM-DIR</strong><br/>
+          &bull; Sector: DEL to BOM (Air India AI-101, Non-Stop)<br/>
+          &bull; 4 Passengers: 2 Adults + 1 Child + 1 Infant<br/>
+          &bull; <em>Dedicated physical seat for all 4 passengers (No passports required)</em>
         </td>
         <td>
-          Returns <code>201 Created</code> with domestic PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).
+          Returns <code>201 Created</code> with <strong>4 seats allocated</strong> under domestic PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).
         </td>
       </tr>
       <tr>
         <td><strong>TC-02</strong></td>
-        <td><strong>Family Booking (4 Passengers - Domestic)</strong></td>
+        <td><strong>International Direct (Non-Stop, 4 Passengers)</strong></td>
         <td>
-          &bull; 2 Adults + 1 Child + 1 Infant<br/>
-          &bull; Sector: DEL to BOM (Domestic)<br/>
-          &bull; <em>Infant gets flat nominal fee (₹1,500) & does not consume physical seat</em>
+          &bull; <strong>sfId: TC-INT-DIR</strong><br/>
+          &bull; Sector: DEL to DXB (IndiGo 6E-1401, Non-Stop)<br/>
+          &bull; 4 Passengers: 2 Adults + 1 Child + 1 Infant<br/>
+          &bull; <em>Passports & DOBs provided for all 4 passengers (Dedicated physical seats)</em>
         </td>
         <td>
-          Returns <code>201 Created</code> with full per-passenger fare breakdown under single master PNR starting with <strong><code>TESTDOM</code></strong>.
+          Returns <code>201 Created</code> with <strong>4 seats allocated</strong> under international PNR starting with <strong><code>TESTINT</code></strong> and masked passports (e.g. <code>Z1****67</code>).
         </td>
       </tr>
       <tr>
         <td><strong>TC-03</strong></td>
-        <td><strong>International Booking (With Passports)</strong></td>
+        <td><strong>Domestic 1-Stop (Connecting, 4 Passengers)</strong></td>
         <td>
-          &bull; <strong>sfId: TC-TEST-INTL</strong><br/>
-          &bull; Sector: DEL to DXB (IndiGo 6E-1401)<br/>
-          &bull; Passports & DOBs provided for all passengers
+          &bull; <strong>sfId: TC-DOM-1STOP</strong><br/>
+          &bull; Sector: DEL to GOI via BOM (IndiGo 6E-205 / 6E-512, 1-Stop)<br/>
+          &bull; 4 Passengers: 2 Adults + 1 Child + 1 Infant<br/>
+          &bull; <em>Dedicated physical seats allocated across both flight segments</em>
         </td>
         <td>
-          Returns <code>201 Created</code> with international PNR starting with <strong><code>TESTINT</code></strong> and PII masked (e.g. <code>Z1****67</code>).
+          Returns <code>201 Created</code> with <strong>4 seats allocated</strong> under domestic PNR starting with <strong><code>TESTDOM</code></strong> and 2 connecting segments.
         </td>
       </tr>
       <tr>
         <td><strong>TC-04</strong></td>
-        <td><strong>Concurrency & Out-of-Stock Test</strong></td>
+        <td><strong>International 1-Stop (Connecting, 4 Passengers)</strong></td>
         <td>
-          &bull; <strong>sfId: TC-TEST-SEAT1</strong> (Only 1 seat available)<br/>
-          &bull; Concurrently send 2 booking requests for this flight
+          &bull; <strong>sfId: TC-INT-1STOP</strong><br/>
+          &bull; Sector: DEL to DXB via BOM (Air India AI-652 / AI-983, 1-Stop)<br/>
+          &bull; 4 Passengers: 2 Adults + 1 Child + 1 Infant<br/>
+          &bull; <em>Passports provided for all 4 passengers (Dedicated physical seats)</em>
         </td>
         <td>
-          First request succeeds with <code>201 Created</code>. Second request is blocked by Atomic CAS and rejected with <strong>HTTP 409 Conflict</strong>: <code>"SEATS_NOT_AVAILABLE"</code>.
+          Returns <code>201 Created</code> with <strong>4 seats allocated</strong> under international PNR starting with <strong><code>TESTINT</code></strong> and 2 connecting segments.
         </td>
       </tr>
     </tbody>
@@ -1295,7 +1300,7 @@ Note: Keep these credentials safe. Do not share publicly.
     "clientBookingRef": "MMT-BK-2026-9921",
     "totalAmount": 9900,
     "currency": "INR",
-    "seatsAllocated": 3,
+    "seatsAllocated": 4,
     "pricingBreakdown": {
       "adultCount": 2,
       "unitAdultFare": 4200,

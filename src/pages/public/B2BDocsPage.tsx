@@ -427,7 +427,7 @@ export default function B2BDocsPage() {
                     <td className="p-3 font-bold text-amber-600">422 Unprocessable</td>
                     <td className="p-3 font-bold">INFANT_COUNT_EXCEEDED</td>
                     <td className="p-3 font-sans">Infants count is greater than adults count</td>
-                    <td className="p-3 font-sans">Enforce 1 infant per adult on lap rule</td>
+                    <td className="p-3 font-sans">Enforce 1 infant per accompanying adult</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-bold text-amber-600">429 Too Many Req</td>
@@ -514,7 +514,7 @@ export default function B2BDocsPage() {
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="font-bold text-amber-800 block text-base">INFANT (INF)</span>
                   <p className="text-xs text-slate-500 mt-1">Age &lt; 2 years as on travel date</p>
-                  <p className="text-xs text-slate-700 mt-2 font-medium">Flat nominal fee (₹1,500 domestic, ₹2,500 intl). <strong>Does NOT consume seat</strong> (travels on adult lap).</p>
+                  <p className="text-xs text-slate-700 mt-2 font-medium">Flat nominal fee (₹1,500 domestic, ₹2,500 intl). <strong>Consumes 1 dedicated seat</strong> (individual physical seat allocated in inventory).</p>
                 </div>
               </div>
             </div>
@@ -632,9 +632,9 @@ export default function B2BDocsPage() {
   "origin": "DEL",
   "destination": "BOM",
   "date": "2026-12-15",
-  "adults": 1,
-  "children": 0,
-  "infants": 0
+  "adults": 2,
+  "children": 1,
+  "infants": 1
 }`}
             </div>
 
@@ -645,7 +645,7 @@ export default function B2BDocsPage() {
   "statusCode": 200,
   "data": [
     {
-      "sfId": "TC-TEST-SEAT1",
+      "sfId": "TC-DOM-DIR",
       "airline": "Air India",
       "flightNo": "AI-101",
       "origin": "DEL",
@@ -653,7 +653,7 @@ export default function B2BDocsPage() {
       "travelDate": "2026-12-15",
       "departureTime": "07:00 (IST)",
       "arrivalTime": "09:15 (IST)",
-      "availableSeats": 1,
+      "availableSeats": 50,
       "isRefundable": false,
       "pricing": {
         "currency": "INR",
@@ -692,18 +692,18 @@ export default function B2BDocsPage() {
               <h2 className="text-2xl font-black text-slate-900 font-mono">/flights/book</h2>
             </div>
             <p className="text-slate-600 text-sm">
-              Confirm flight booking using Atomic CAS seat decrement. Include header <code className="bg-slate-200 px-1 rounded font-mono">Idempotency-Key</code> to protect against duplicate charging upon network timeout retries.
+              Confirm flight booking using Atomic CAS seat decrement. Include header <code className="bg-slate-200 px-1 rounded font-mono">Idempotency-Key</code> to protect against duplicate charging upon network timeout retries. Every passenger (including infant) receives 1 dedicated physical seat.
             </p>
 
             <div className="bg-slate-900 rounded-xl p-5 text-slate-200 font-mono text-xs overflow-x-auto">
-              <p className="text-slate-400 mb-2">// Headers & Request Payload</p>
+              <p className="text-slate-400 mb-2">// Headers & Request Payload (4 Passengers)</p>
               <p className="text-blue-400 mb-3">
                 Authorization: Bearer &lt;token&gt;<br />
                 Idempotency-Key: 7d6e4b21-4f18-4b72-9b22-421710ec9471<br />
                 Content-Type: application/json
               </p>
 {`{
-  "sfId": "TC-TEST-SEAT1",
+  "sfId": "TC-DOM-DIR",
   "clientBookingRef": "MMT-BK-2026-9921",
   "contactDetails": {
     "email": "operations@partner.com",
@@ -712,11 +712,35 @@ export default function B2BDocsPage() {
   "passengers": [
     {
       "title": "Mr",
-      "firstName": "Rahul",
+      "firstName": "Rohan",
       "lastName": "Sharma",
       "type": "ADULT",
       "gender": "Male",
-      "dob": "1990-08-14"
+      "dob": "1990-05-15"
+    },
+    {
+      "title": "Mrs",
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "type": "ADULT",
+      "gender": "Female",
+      "dob": "1992-08-22"
+    },
+    {
+      "title": "Mstr",
+      "firstName": "Aarav",
+      "lastName": "Sharma",
+      "type": "CHILD",
+      "gender": "Male",
+      "dob": "2018-03-10"
+    },
+    {
+      "title": "Miss",
+      "firstName": "Anaya",
+      "lastName": "Sharma",
+      "type": "INFANT",
+      "gender": "Female",
+      "dob": "2025-06-14"
     }
   ]
 }`}
@@ -733,11 +757,11 @@ export default function B2BDocsPage() {
     "status": "CONFIRMED",
     "idempotencyReplay": false,
     "clientBookingRef": "MMT-BK-2026-9921",
-    "totalAmount": 4200,
+    "totalAmount": 14100,
     "currency": "INR",
-    "seatsAllocated": 1,
+    "seatsAllocated": 4,
     "flight": {
-      "sfId": "TC-TEST-SEAT1",
+      "sfId": "TC-DOM-DIR",
       "airline": "Air India",
       "flightNo": "AI-101",
       "origin": "DEL",
@@ -747,13 +771,10 @@ export default function B2BDocsPage() {
       "arrivalTime": "09:15 (IST)"
     },
     "passengers": [
-      {
-        "title": "Mr",
-        "firstName": "RAHUL",
-        "lastName": "SHARMA",
-        "type": "ADULT",
-        "gender": "Male"
-      }
+      { "title": "Mr", "firstName": "ROHAN", "lastName": "SHARMA", "type": "ADULT", "seat": "12A" },
+      { "title": "Mrs", "firstName": "PRIYA", "lastName": "SHARMA", "type": "ADULT", "seat": "12B" },
+      { "title": "Mstr", "firstName": "AARAV", "lastName": "SHARMA", "type": "CHILD", "seat": "12C" },
+      { "title": "Miss", "firstName": "ANAYA", "lastName": "SHARMA", "type": "INFANT", "seat": "12D" }
     ]
   }
 }`}
@@ -780,7 +801,7 @@ export default function B2BDocsPage() {
     "pnr": "${isLive ? 'TC8291' : 'TESTDOM821942'}",
     "status": "CONFIRMED",
     "clientBookingRef": "MMT-BK-2026-9921",
-    "totalAmount": 4200,
+    "totalAmount": 14100,
     "currency": "INR",
     "bookingDate": "2026-10-26",
     "flight": {
@@ -790,7 +811,10 @@ export default function B2BDocsPage() {
       "destination": "BOM"
     },
     "passengers": [
-      { "name": "MR RAHUL SHARMA", "type": "ADULT", "status": "CONFIRMED" }
+      { "name": "MR ROHAN SHARMA", "type": "ADULT", "status": "CONFIRMED" },
+      { "name": "MRS PRIYA SHARMA", "type": "ADULT", "status": "CONFIRMED" },
+      { "name": "MSTR AARAV SHARMA", "type": "CHILD", "status": "CONFIRMED" },
+      { "name": "MISS ANAYA SHARMA", "type": "INFANT", "status": "CONFIRMED" }
     ]
   }
 }`}
@@ -835,49 +859,53 @@ export default function B2BDocsPage() {
             <div>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">Guaranteed Sandbox UAT Test Catalogue</h1>
               <p className="text-slate-600 text-base mt-2">
-                Use these fixed sandbox mock flights to verify edge-cases, international passport rules, and race conditions deterministically.
+                Use these 4 fixed sandbox mock flights to verify your booking integrations deterministically. Each test case accommodates 4 passengers (2 Adults, 1 Child, 1 Infant) with individual physical seats allocated.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-xl border border-rose-200 bg-white shadow-sm space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-100 text-rose-800">
-                  Test Case TC-04: Race Condition & Out-of-Stock
+              <div className="p-5 rounded-xl border border-blue-200 bg-white shadow-sm space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                  TC-01: Domestic Direct (Non-Stop, 4 Pax)
                 </span>
-                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-TEST-SEAT1</h4>
-                <p className="text-xs text-slate-600">DEL → BOM (Air India AI-101) | Available Seats: <strong>1</strong></p>
+                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-DOM-DIR</h4>
+                <p className="text-xs text-slate-600">DEL → BOM (Air India AI-101) | Available Seats: <strong>50</strong></p>
                 <p className="text-xs text-slate-500">
-                  Attempt to book 2 seats simultaneously or concurrently from 2 threads. 1 thread will succeed (201 Created), the other will receive 409 <code className="text-rose-600">SEATS_NOT_AVAILABLE</code>.
+                  Standard domestic direct flight. Book with 4 passengers (2 Adults + 1 Child + 1 Infant). No passport required. Returns 201 Created with 4 allocated physical seats and domestic PNR starting with <code>TESTDOM</code>.
                 </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-blue-200 bg-white shadow-sm space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                  Test Case TC-03: International & Passport Validation
+              <div className="p-5 rounded-xl border border-indigo-200 bg-white shadow-sm space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">
+                  TC-02: International Direct (Non-Stop, 4 Pax)
                 </span>
-                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-TEST-INTL</h4>
-                <p className="text-xs text-slate-600">DEL → DXB (IndiGo 6E-1401) | Available Seats: <strong>15</strong></p>
+                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-INT-DIR</h4>
+                <p className="text-xs text-slate-600">DEL → DXB (IndiGo 6E-1401) | Available Seats: <strong>40</strong></p>
                 <p className="text-xs text-slate-500">
-                  Requires <code className="font-mono text-blue-600">passportNumber</code> and <code className="font-mono text-blue-600">passportExpiry</code>. Response masks PII as <code className="font-mono">Z1****67</code>.
+                  Direct international route. Book with 4 passengers with valid passport details. Returns 201 Created with 4 allocated physical seats, masked passport PII (<code className="font-mono">Z1****67</code>), and international PNR starting with <code>TESTINT</code>.
                 </p>
               </div>
 
               <div className="p-5 rounded-xl border border-emerald-200 bg-white shadow-sm space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                  Standard Domestic Flight
+                  TC-03: Domestic 1-Stop (Connecting, 4 Pax)
                 </span>
-                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-TEST-NORMAL</h4>
-                <p className="text-xs text-slate-600">DEL → BLR (IndiGo 6E-205) | Available Seats: <strong>45</strong></p>
-                <p className="text-xs text-slate-500">Standard domestic booking flow with multi-passenger support.</p>
+                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-DOM-1STOP</h4>
+                <p className="text-xs text-slate-600">DEL → GOI via BOM (IndiGo 6E-205 / 6E-512) | Available Seats: <strong>35</strong></p>
+                <p className="text-xs text-slate-500">
+                  Connecting domestic route with 1 stop. Book with 4 passengers. Returns 201 Created with 2 flight segments and 4 seats reserved across both legs.
+                </p>
               </div>
 
-              <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-800">
-                  Sold Out Inventory
+              <div className="p-5 rounded-xl border border-purple-200 bg-white shadow-sm space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                  TC-04: International 1-Stop (Connecting, 4 Pax)
                 </span>
-                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-TEST-SOLDOUT</h4>
-                <p className="text-xs text-slate-600">DEL → GOI (Vistara UK-810) | Available Seats: <strong>0</strong></p>
-                <p className="text-xs text-slate-500">Always returns 409 SEATS_NOT_AVAILABLE for instant rejection verification.</p>
+                <h4 className="font-bold text-slate-900 text-sm font-mono">sfId: TC-INT-1STOP</h4>
+                <p className="text-xs text-slate-600">DEL → DXB via BOM (Air India AI-652 / AI-983) | Available Seats: <strong>30</strong></p>
+                <p className="text-xs text-slate-500">
+                  Connecting international route with 1 stop. Book with 4 passengers with passport details. Returns 201 Created with 2 flight segments, masked PII, and international PNR.
+                </p>
               </div>
             </div>
           </div>
