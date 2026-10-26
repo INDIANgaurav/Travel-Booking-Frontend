@@ -1653,21 +1653,40 @@ Note: Keep these credentials safe. Do not share publicly.
             )}
           </div>
 
-          {/* Sort By Dropdown */}
+          {/* Sort By Custom Dropdown */}
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
               <ArrowUpDown size={13} /> Sort:
             </span>
-            <select
-              value={partnerSortBy}
-              onChange={(e) => setPartnerSortBy(e.target.value as any)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-            >
-              <option value="newest">Newest First</option>
-              <option value="name">Company Name (A-Z)</option>
-              <option value="bookings">Total Bookings</option>
-              <option value="wallet">API Wallet Balance</option>
-            </select>
+            <div className="w-48">
+              <Dropdown
+                value={partnerSortBy}
+                onChange={(val) => setPartnerSortBy(val as any)}
+                direction="bottom"
+                options={[
+                  { 
+                    value: 'newest', 
+                    label: 'Newest First',
+                    icon: <Clock size={13} className="text-blue-500" />
+                  },
+                  { 
+                    value: 'name', 
+                    label: 'Company Name (A-Z)',
+                    icon: <FileText size={13} className="text-gray-500" />
+                  },
+                  { 
+                    value: 'bookings', 
+                    label: 'Total Bookings',
+                    icon: <Ticket size={13} className="text-indigo-500" />
+                  },
+                  { 
+                    value: 'wallet', 
+                    label: 'API Wallet Balance',
+                    icon: <Activity size={13} className="text-emerald-500" />
+                  }
+                ]}
+              />
+            </div>
           </div>
         </div>
 
