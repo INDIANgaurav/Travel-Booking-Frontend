@@ -39,8 +39,24 @@ out/
 *.sln
 *.sw?
 
-# Confidential Docs
+# Confidential Documentation, Postman Collections & API specs
 docs/
 *.doc
 *.docx
 *.pdf
+*.postman_collection.json
+*.postman_environment.json
+TRIPPECHALO_*
+
+# Scripts, Temporary & Scratch Files
+scripts/
+temp/
+tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.sh
+*.bat
+*.ps1
+*.py

@@ -967,10 +967,10 @@ const AdminSeriesFareMaker: React.FC = () => {
                                       <div className="flex items-center justify-center gap-2">
                                         <button 
                                           onClick={handleSaveEdit}
-                                          className="p-1.5 text-emerald-600 hover:text-white hover:bg-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg transition-all shadow-xs cursor-pointer hover:scale-110"
+                                          className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                                           title="Save & Apply Changes"
                                         >
-                                          <Check size={16} strokeWidth={2.5} />
+                                          <Check size={16} strokeWidth={2} />
                                         </button>
                                         <button 
                                           onClick={() => handleDeleteClick(fare)} 
