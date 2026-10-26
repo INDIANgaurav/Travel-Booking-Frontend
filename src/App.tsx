@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { useEffect } from 'react'
-import {  selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout, logoutUserThunk } from './store/authSlice'
+import {  selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout, logoutUserThunk, updateToken } from './store/authSlice'
 
 // Pages
 import LandingPage from './pages/public/LandingPage'
@@ -136,8 +136,18 @@ function App() {
       dispatch(logout());
       dispatch(logoutUserThunk() as any);
     };
+    const handleTokenRefreshed = (e: any) => {
+      const detail = e.detail;
+      if (detail) {
+        dispatch(updateToken(detail));
+      }
+    };
     window.addEventListener('auth-unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth-unauthorized', handleUnauthorized);
+    window.addEventListener('auth-token-refreshed', handleTokenRefreshed);
+    return () => {
+      window.removeEventListener('auth-unauthorized', handleUnauthorized);
+      window.removeEventListener('auth-token-refreshed', handleTokenRefreshed);
+    };
   }, [dispatch]);
 
   // Validate token on app load if authenticated

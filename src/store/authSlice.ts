@@ -92,15 +92,33 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{ user: User; token: string; refreshToken?: string }>
     ) => {
+      const refreshToken = action.payload.refreshToken || (action.payload.user as any)?.refreshToken;
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
       setAuthToken(action.payload.token);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
       localStorage.setItem('token', action.payload.token);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
       localStorage.removeItem('b2bSearchState');
+    },
+    updateToken: (
+      state,
+      action: PayloadAction<{ token: string; refreshToken?: string } | string>
+    ) => {
+      const token = typeof action.payload === 'string' ? action.payload : action.payload.token;
+      const refreshToken = typeof action.payload === 'string' ? undefined : action.payload.refreshToken;
+      state.token = token;
+      state.isAuthenticated = true;
+      setAuthToken(token);
+      localStorage.setItem('token', token);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
     },
     logout: (state) => {
       state.user = null;
@@ -109,6 +127,7 @@ const authSlice = createSlice({
       setAuthToken(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('b2bSearchState');
       localStorage.removeItem('b2bRecentSearches');
     },
@@ -125,7 +144,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout, updateProfileData, setShowAgentOnboarding } = authSlice.actions;
+export const { setCredentials, updateToken, logout, updateProfileData, setShowAgentOnboarding } = authSlice.actions;
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
 

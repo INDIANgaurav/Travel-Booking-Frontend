@@ -33,8 +33,21 @@ export const triggerSessionExpired = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('b2bSearchState');
     localStorage.removeItem('b2bRecentSearches');
+
+    const pathname = window.location.pathname;
+    const isAlreadyOnLoginPage = 
+      pathname === '/admin/login' || 
+      pathname === '/b2b/login' || 
+      pathname === '/supplier/login' || 
+      pathname === '/login';
+
+    if (isAlreadyOnLoginPage) {
+      isSessionExpiredTriggered = false;
+      return;
+    }
 
     toast.error('Session expired. Please log in again.', { 
       id: 'session-expired-toast',
@@ -43,7 +56,6 @@ export const triggerSessionExpired = () => {
 
     window.dispatchEvent(new Event('auth-unauthorized'));
 
-    const pathname = window.location.pathname;
     setTimeout(() => {
       isSessionExpiredTriggered = false;
       if (pathname.startsWith('/admin') || pathname.startsWith('/sub-admin')) {
@@ -138,12 +150,26 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          const res = await axios.post(`${api.defaults.baseURL}/api/auth/refresh`, {}, { withCredentials: true });
+          const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+          const res = await axios.post(
+            `${api.defaults.baseURL}/api/auth/refresh`,
+            { refreshToken: storedRefreshToken },
+            { 
+              withCredentials: true,
+              headers: storedRefreshToken ? { 'x-refresh-token': storedRefreshToken } : {}
+            }
+          );
           const newToken = res.data.token;
+          const newRefreshToken = res.data.refreshToken;
           setAuthToken(newToken);
+          if (newRefreshToken && typeof window !== 'undefined') {
+            localStorage.setItem('refreshToken', newRefreshToken);
+          }
 
           // Dispatch event so Redux / listeners can update state
-          window.dispatchEvent(new CustomEvent('auth-token-refreshed', { detail: newToken }));
+          window.dispatchEvent(new CustomEvent('auth-token-refreshed', { 
+            detail: { token: newToken, refreshToken: newRefreshToken } 
+          }));
 
           processQueue(null, newToken);
 
