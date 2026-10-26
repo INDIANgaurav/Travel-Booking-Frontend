@@ -193,102 +193,81 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
             )}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
               <>
-                <Plane id="navbar-plane-icon" size={28} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
-                <span className={`text-2xl font-black tracking-tight flex items-center gap-1.5 ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
-                  <span>Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span></span>
-                  <span className={`text-[11px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded ${isNavWhite ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-white/20 text-white'}`}>India</span>
+                <Plane id="navbar-plane-icon" size={26} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
+                <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
+                  Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span> <span className={isNavWhite ? 'text-orange-500 font-extrabold' : 'text-orange-400 font-extrabold'}>India</span>
                 </span>
               </>
             </div>
           </div>
-        <div className="flex items-center gap-2 lg:gap-6">
+        <div className="flex items-center gap-2 lg:gap-4">
             {user?.role === 'B2B_AGENT' ? (
               <>
-                <Link to="/agent/requests" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                  <Briefcase size={20} className="text-orange-500" />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-bold">Pending Requests</span>
-                  </div>
+                <Link to="/agent/requests" className={`hidden md:flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition px-2 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                  <Briefcase size={16} className="text-orange-500" />
+                  <span className="text-xs font-semibold">Pending Requests</span>
                 </Link>
-                <Link to="/dashboard/bookings" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                  <Briefcase size={20} />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-bold">My Trips</span>
-                  </div>
+                <Link to="/dashboard/bookings" className={`hidden md:flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition px-2 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                  <Briefcase size={16} />
+                  <span className="text-xs font-semibold">My Trips</span>
                 </Link>
-                <Link to="/agent/wallet" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition px-3 py-1.5 rounded-md ${isDarkText ? 'bg-orange-50 border border-orange-200 text-gray-700' : 'bg-white/10 text-white'}`}>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-bold">Agent Wallet</span>
-                  </div>
+                <Link to="/agent/wallet" className={`hidden md:flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition px-2.5 py-1 rounded-md ${isDarkText ? 'bg-orange-50 border border-orange-200 text-gray-700' : 'bg-white/10 text-white'}`}>
+                  <span className="text-xs font-semibold">Agent Wallet</span>
                 </Link>
               </>
             ) : user?.role === 'B2B_AGENT' || user?.role === 'SUPPLIER_AGENT' ? (
               <>
-                <Link to="/b2b/home" className={`hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                  <Briefcase size={20} />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-bold">B2B Dashboard</span>
-                  </div>
+                <Link to="/b2b/home" className={`hidden md:flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition px-2 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                  <Briefcase size={16} />
+                  <span className="text-xs font-semibold">B2B Dashboard</span>
                 </Link>
               </>
             ) : !isAdmin ? (
               <>
                 {/* List Your Property */}
-                <Link to="/partner/connect" className={`hidden lg:flex items-center gap-1 lg:gap-2 cursor-pointer transition px-2 py-1.5 lg:px-3 lg:py-1.5 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
-                  <Building2 size={20} className="text-orange-500 hidden lg:block" />
-                  <Building2 size={16} className="text-orange-500 lg:hidden" />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] lg:text-[13px] font-bold">List Your Property</span>
-                  </div>
+                <Link to="/partner/connect" className={`hidden lg:flex items-center gap-1.5 cursor-pointer transition px-2.5 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                  <Building2 size={16} className="text-orange-500" />
+                  <span className="text-xs font-semibold">List Your Property</span>
                 </Link>
 
                 {/* My Trips */}
                 {isAuthenticated ? (
-                  <Link to="/dashboard/bookings" className={`hidden lg:flex items-center gap-1 lg:gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                    <Briefcase size={20} className="hidden lg:block" />
-                    <Briefcase size={16} className="lg:hidden" />
-                    <div className="flex flex-col">
-                      <span className="text-[11px] lg:text-[13px] font-bold">My Trips</span>
-                    </div>
+                  <Link to="/dashboard/bookings" className={`hidden lg:flex items-center gap-1.5 cursor-pointer transition px-2.5 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                    <Briefcase size={16} />
+                    <span className="text-xs font-semibold">My Trips</span>
                   </Link>
                 ) : (
-                  <button onClick={() => setIsLoginModalOpen(true)} className={`hidden lg:flex text-left items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                    <Briefcase size={20} />
-                    <div className="flex flex-col">
-                      <span className="text-[11px] lg:text-[13px] font-bold">My Trips</span>
-                    </div>
+                  <button onClick={() => setIsLoginModalOpen(true)} className={`hidden lg:flex items-center gap-1.5 cursor-pointer transition px-2.5 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                    <Briefcase size={16} />
+                    <span className="text-xs font-semibold">My Trips</span>
                   </button>
                 )}
 
                 {/* Wishlist */}
                 {isAuthenticated ? (
-                  <Link to="/dashboard/wishlist" className={`hidden lg:flex items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                    <Heart size={20} className="text-[#ff4f4f] fill-[#ff4f4f]" />
-                    <div className="flex flex-col">
-                      <span className="text-[11px] lg:text-[13px] font-bold">Wishlist</span>
-                    </div>
+                  <Link to="/dashboard/wishlist" className={`hidden lg:flex items-center gap-1.5 cursor-pointer transition px-2.5 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                    <Heart size={16} className="text-[#ff4f4f] fill-[#ff4f4f]" />
+                    <span className="text-xs font-semibold">Wishlist</span>
                   </Link>
                 ) : (
-                  <button onClick={() => setIsLoginModalOpen(true)} className={`hidden lg:flex text-left items-center gap-2 cursor-pointer hover:opacity-80 transition ${isDarkText ? 'text-gray-700' : 'text-white'}`}>
-                    <Heart size={20} className="text-[#ff4f4f] fill-[#ff4f4f]" />
-                    <div className="flex flex-col">
-                      <span className="text-[11px] lg:text-[13px] font-bold">Wishlist</span>
-                    </div>
+                  <button onClick={() => setIsLoginModalOpen(true)} className={`hidden lg:flex items-center gap-1.5 cursor-pointer transition px-2.5 py-1 rounded-md ${isDarkText ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}>
+                    <Heart size={16} className="text-[#ff4f4f] fill-[#ff4f4f]" />
+                    <span className="text-xs font-semibold">Wishlist</span>
                   </button>
                 )}
 
                 {/* Agent Sign Up & Supplier Login Quick Links */}
                 {!isAuthenticated && (
-                  <div className="hidden lg:flex flex-col lg:flex-row items-center gap-1 lg:gap-2 pl-2 border-l border-gray-300/40">
+                  <div className="hidden lg:flex items-center gap-1.5 pl-2 border-l border-gray-300/40">
                     <Link 
                       to="/b2b/login" 
-                      className={`text-[10px] lg:text-[13px] font-bold px-2 py-1 lg:px-4 lg:py-1.5 rounded-full transition ${isDarkText ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-400 text-gray-900 hover:bg-amber-300'}`}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-md transition ${isDarkText ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-400/90 text-gray-900 hover:bg-amber-300'}`}
                     >
-                      B2B Agent Portal
+                      B2B Portal
                     </Link>
                     <Link 
                       to="/supplier/login" 
-                      className={`text-[10px] lg:text-[13px] font-bold px-2 py-1 lg:px-4 lg:py-1.5 rounded-full transition border ${isDarkText ? 'border-emerald-600 text-emerald-700 hover:bg-emerald-50' : 'border-emerald-400 text-emerald-300 hover:bg-emerald-950/50'}`}
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-md transition border ${isDarkText ? 'border-emerald-600 text-emerald-700 hover:bg-emerald-50' : 'border-emerald-400/80 text-emerald-300 hover:bg-emerald-950/50'}`}
                     >
                       Supplier Login
                     </Link>
@@ -488,12 +467,12 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
               ) : (
                 <button 
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-xs shadow-md hover:shadow-lg transition group"
+                  className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm hover:shadow transition group"
                 >
-                  <User size={16} className="text-white hidden sm:block" />
+                  <User size={15} className="text-white hidden sm:block" />
                   <span className="hidden sm:inline">Login or Create Account</span>
                   <span className="sm:hidden">Login</span>
-                  <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform hidden sm:block" />
+                  <ChevronDown size={13} className="group-hover:translate-y-0.5 transition-transform hidden sm:block" />
                 </button>
               )}
             </div>
