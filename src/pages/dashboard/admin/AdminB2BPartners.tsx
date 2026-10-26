@@ -581,8 +581,14 @@ Note: Keep these credentials safe. Do not share publicly.
     `}
   </div>
 
+  <div class="alert-box" style="border-left-color: #0284c7; background-color: #f0f9ff; color: #0369a1;">
+    <strong style="font-size: 11pt;">[MACHINE-READABLE SPECIFICATIONS & DOWNLOADS]</strong><br/>
+    &bull; <strong>OpenAPI 3.1.0 JSON Contract:</strong> <a href="${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}/api/v1/b2b/docs/openapi.json" target="_blank" style="color: #0284c7; font-weight: bold;">Download OpenAPI 3.1 Spec</a> (Import directly into Swagger / SDK Generators).<br/>
+    &bull; <strong>Ready Postman Collection v2.1:</strong> <a href="${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}/api/v1/b2b/docs/postman.json?env=${env}" target="_blank" style="color: #d97706; font-weight: bold;">Download Postman v2.1 Collection</a> (Includes pre-configured auth scripts).
+  </div>
+
   <h2>2. API FLOW OVERVIEW</h2>
-  <p>The booking process has 4 simple steps. Complete each step in order:</p>
+  <p>The TrippeChalo India B2B engine follows a standard 6-step lifecycle:</p>
 
   <table class="data-table">
     <thead>
@@ -596,37 +602,47 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><strong>Step 1</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/auth/token</code></td>
+        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/oauth2/tokens</code></td>
         <td>Login to get 24-hour Session Token</td>
         <td>Token valid for 24 hours. Fast response (&lt; 150ms)</td>
       </tr>
       <tr>
         <td><strong>Step 2</strong></td>
-        <td><span class="badge badge-get">GET</span> <code>{{URL}}/api/v1/b2b/search/sectors</code></td>
+        <td><span class="badge badge-get">GET</span> <code>{{URL}}/api/v1/b2b/flights/sectors</code></td>
         <td>Get list of available flight routes and dates</td>
         <td>Returns active cities, dates, and lowest fares</td>
       </tr>
       <tr>
         <td><strong>Step 3</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/search/flights</code></td>
+        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/flights/search</code></td>
         <td>Search available flights, seats, and net fares</td>
-        <td>Real-time flight search (&lt; 350ms)</td>
+        <td>Real-time flight search with 15-minute price lock</td>
       </tr>
       <tr>
         <td><strong>Step 4</strong></td>
         <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/flights/book</code></td>
-        <td>Book flight and get instant confirmed PNR</td>
-        <td>Instant booking confirmation (&lt; 800ms)</td>
+        <td>Book flight with Atomic CAS and Idempotency</td>
+        <td>Instant confirmation (HTTP 201) with 0 race condition</td>
+      </tr>
+      <tr>
+        <td><strong>Step 5</strong></td>
+        <td><span class="badge badge-get">GET</span> <code>{{URL}}/api/v1/b2b/flights/booking/:id</code></td>
+        <td>Retrieve booking by BookingId or PNR</td>
+        <td>Fetch ticket confirmation if network drop occurs</td>
+      </tr>
+      <tr>
+        <td><strong>Step 6</strong></td>
+        <td><span class="badge badge-get">GET</span> <code>{{URL}}/api/v1/b2b/flights/cancellation-policy</code></td>
+        <td>Query fare rules & cancellation terms</td>
+        <td>Explicit legal confirmation: 100% Non-Refundable</td>
       </tr>
     </tbody>
   </table>
 
   <div class="alert-box" style="border-left-color: #2563eb; background-color: #eff6ff; color: #1e3a8a;">
-    <strong style="font-size: 11pt;">AUTHENTICATION ARCHITECTURE & HEADER RULES:</strong><br/>
-    &bull; <strong>Step 1 (Authentication Only):</strong> Your Master API Key (or username/password) is used <strong>ONLY in Step 1</strong> to generate a 24-hour Session Token (<code>tokenId</code>).<br/>
-    &bull; <strong>Steps 2, 3, 4 (Sectors, Search, Booking):</strong> Aage ki saari APIs me <strong>sirf Session Token (<code>tokenId</code>)</strong> bhejna compulsory hai:<br/>
-    <code style="font-weight: bold; color: #0f172a; font-size: 10.5pt; display: inline-block; margin-top: 4px;">Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(ya <code style="font-weight: bold; color: #0f172a; font-size: 10.5pt;">tokenId: &lt;tokenId&gt;</code>).<br/>
-    Master API Key ko search ya booking calls me pass karne ki jarurat nahi hai.
+    <strong style="font-size: 11pt;">IDEMPOTENCY & NETWORK RETRY ARCHITECTURE:</strong><br/>
+    On all booking requests (Step 4), pass an <code>Idempotency-Key: &lt;UUID&gt;</code> header (e.g. <code>Idempotency-Key: 7d6e4b21-4f18-4b72-9b22-421710ec9471</code>).<br/>
+    If a timeout or network drop occurs and your system retries the request, TrippeChalo India recognizes the duplicate key and replays the original booking confirmation without deducting wallet funds or blocking duplicate seats.
   </div>
 
   ${isLive ? `
@@ -657,8 +673,8 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><strong>Cancellations & Refunds</strong></td>
-        <td>Standard Airline Rules</td>
-        <td>Cancellations can be submitted via the B2B portal. Net refundable amounts after airline charges are credited back to your API wallet.</td>
+        <td>100% Non-Refundable Policy</td>
+        <td>Fixed Departure Series Fares are bulk wholesale charter contracts and strictly 100% Non-Refundable once confirmed.</td>
       </tr>
       <tr>
         <td><strong>Help & Support</strong></td>
@@ -668,8 +684,8 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
   ` : `
-  <h3>2.1 Sandbox Testing Scenarios & 4 Test Passengers</h3>
-  <p>Before <strong>${partner.companyName}</strong> is upgraded to the Live Production environment, test the following <strong>4 standard test scenarios</strong> in Sandbox mode using the test passenger details below:</p>
+  <h3>2.1 Sandbox Testing Scenarios & Guaranteed Test Catalogue</h3>
+  <p>Before <strong>${partner.companyName}</strong> is upgraded to the Live Production environment, test the following <strong>4 standard test scenarios</strong> in Sandbox mode using the guaranteed test catalogue below:</p>
 
   <table class="data-table">
     <thead>
@@ -677,7 +693,7 @@ Note: Keep these credentials safe. Do not share publicly.
         <th style="width: 12%;">Test ID</th>
         <th style="width: 26%;">Scenario</th>
         <th style="width: 32%;">Input & Sector</th>
-        <th style="width: 30%;">Expected Result & PNR Prefix</th>
+        <th style="width: 30%;">Expected Result & Status Code</th>
       </tr>
     </thead>
     <tbody>
@@ -690,7 +706,7 @@ Note: Keep these credentials safe. Do not share publicly.
           &bull; <em>No passport needed for domestic</em>
         </td>
         <td>
-          Returns <code>CONFIRMED</code> with domestic PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).
+          Returns <code>201 Created</code> with domestic PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).
         </td>
       </tr>
       <tr>
@@ -699,31 +715,33 @@ Note: Keep these credentials safe. Do not share publicly.
         <td>
           &bull; 2 Adults + 1 Child + 1 Infant<br/>
           &bull; Sector: DEL to BOM (Domestic)<br/>
-          &bull; <em>No passport needed. DOB only for Child & Infant</em>
+          &bull; <em>Infant gets flat nominal fee (₹1,500) & does not consume physical seat</em>
         </td>
         <td>
-          Returns <code>CONFIRMED</code> under single master PNR starting with <strong><code>TESTDOM</code></strong> for all 4 passengers.
+          Returns <code>201 Created</code> with full per-passenger fare breakdown under single master PNR starting with <strong><code>TESTDOM</code></strong>.
         </td>
       </tr>
       <tr>
         <td><strong>TC-03</strong></td>
         <td><strong>International Booking (With Passports)</strong></td>
         <td>
-          &bull; Sector: DEL to DXB or DEL to DPS<br/>
+          &bull; <strong>sfId: TC-TEST-INTL</strong><br/>
+          &bull; Sector: DEL to DXB (IndiGo 6E-1401)<br/>
           &bull; Passports & DOBs provided for all passengers
         </td>
         <td>
-          Returns <code>CONFIRMED</code> with international PNR starting with <strong><code>TESTINT</code></strong> (e.g. <code>TESTINT729104</code>).
+          Returns <code>201 Created</code> with international PNR starting with <strong><code>TESTINT</code></strong> and PII masked (e.g. <code>Z1****67</code>).
         </td>
       </tr>
       <tr>
         <td><strong>TC-04</strong></td>
-        <td><strong>Seat Limit / Boundary Check</strong></td>
+        <td><strong>Concurrency & Out-of-Stock Test</strong></td>
         <td>
-          &bull; Request more seats than remaining flight inventory
+          &bull; <strong>sfId: TC-TEST-SEAT1</strong> (Only 1 seat available)<br/>
+          &bull; Concurrently send 2 booking requests for this flight
         </td>
         <td>
-          Rejects with HTTP 400 Bad Request: <code>"Not enough seats available"</code>.
+          First request succeeds with <code>201 Created</code>. Second request is blocked by Atomic CAS and rejected with <strong>HTTP 409 Conflict</strong>: <code>"SEATS_NOT_AVAILABLE"</code>.
         </td>
       </tr>
     </tbody>
@@ -1262,58 +1280,52 @@ Note: Keep these credentials safe. Do not share publicly.
   "contactPhone": "9876543210"
 }</pre>
 
-  <h3>4.4 Sample Booking Confirmation Response (HTTP 200 OK)</h3>
+  <h3>4.4 Sample Booking Confirmation Response (HTTP 201 Created)</h3>
   <p style="font-size: 10pt; color: #475569;">
-    Clean booking confirmation response with confirmed PNR and ticket status:
+    Structured booking confirmation response with confirmed PNR, per-passenger fare breakdown, and seat allocation:
   </p>
   <pre class="code-box">{
   "success": true,
+  "statusCode": 201,
   "data": {
-    "pnr": "TESTDOM${Math.floor(100000 + Math.random() * 900000)}",
     "bookingId": "BK-B2B-${Math.floor(100000 + Math.random() * 900000)}",
+    "pnr": "${isLive ? 'TC8921' : 'TESTDOM' + Math.floor(100000 + Math.random() * 900000)}",
     "status": "CONFIRMED",
-    "message": "Flight booked successfully.",
-    "totalFare": 16800,
+    "idempotencyReplay": false,
+    "clientBookingRef": "MMT-BK-2026-9921",
+    "totalAmount": 9900,
+    "currency": "INR",
+    "seatsAllocated": 3,
+    "pricingBreakdown": {
+      "adultCount": 2,
+      "unitAdultFare": 4200,
+      "childCount": 1,
+      "unitChildFare": 4200,
+      "infantCount": 1,
+      "unitInfantFare": 1500,
+      "totalFare": 9900
+    },
     "flight": {
       "sfId": "SF-TC-C1A-20261210",
       "airline": "IndiGo",
       "flightNo": "6E-2045",
       "origin": "DEL",
       "destination": "BOM",
-      "travelDate": "2026-12-10T00:00:00.000Z",
-      "departureTime": "07:00",
-      "arrivalTime": "09:15"
+      "travelDate": "2026-12-10",
+      "departureTime": "07:00 (IST)",
+      "arrivalTime": "09:15 (IST)"
     },
     "passengers": [
-      {
-        "title": "Mr",
-        "firstName": "Rohan",
-        "lastName": "Sharma",
-        "type": "ADULT",
-        "gender": "Male"
-      },
-      {
-        "title": "Mrs",
-        "firstName": "Priya",
-        "lastName": "Sharma",
-        "type": "ADULT",
-        "gender": "Female"
-      },
-      {
-        "title": "Mstr",
-        "firstName": "Aarav",
-        "lastName": "Sharma",
-        "type": "CHILD",
-        "gender": "Male"
-      },
-      {
-        "title": "Miss",
-        "firstName": "Anaya",
-        "lastName": "Sharma",
-        "type": "INFANT",
-        "gender": "Female"
-      }
+      { "name": "MR ROHAN SHARMA", "type": "ADULT", "status": "CONFIRMED" },
+      { "name": "MRS PRIYA SHARMA", "type": "ADULT", "status": "CONFIRMED" },
+      { "name": "MSTR AARAV SHARMA", "type": "CHILD", "status": "CONFIRMED" },
+      { "name": "MISS ANAYA SHARMA", "type": "INFANT", "status": "CONFIRMED" }
     ]
+  },
+  "meta": {
+    "timestamp": "${new Date().toISOString()}",
+    "timezone": "Asia/Kolkata (IST)",
+    "environment": "${isLive ? 'PRODUCTION' : 'SANDBOX'}"
   }
 }</pre>
   <p style="font-size: 10pt; color: #475569;">
@@ -1334,22 +1346,27 @@ Note: Keep these credentials safe. Do not share publicly.
     <tbody>
       <tr>
         <td><code>200 OK</code></td>
-        <td><code>SUCCESS</code></td>
-        <td>Transaction processed and booking confirmed in database.</td>
+        <td><code>SUCCESS / IDEMPOTENCY_REPLAY</code></td>
+        <td>Query retrieved successfully, or duplicate booking replayed via Idempotency-Key.</td>
+      </tr>
+      <tr>
+        <td><code>201 Created</code></td>
+        <td><code>BOOKING_CONFIRMED</code></td>
+        <td>Transaction committed and flight booking confirmed in database.</td>
       </tr>
       <tr>
         <td><code>400 Bad Request</code></td>
-        <td><code>INVALID_PAYLOAD</code></td>
-        <td>Missing required fields (e.g. <code>sfId</code> or empty <code>passengers</code> array). Verify JSON format.</td>
+        <td><code>VALIDATION_ERROR</code></td>
+        <td>Missing required fields (e.g. <code>sfId</code>, missing airport codes, invalid date). Verify JSON format.</td>
       </tr>
       <tr>
         <td><code>401 Unauthorized</code></td>
-        <td><code>INVALID_CREDENTIALS</code></td>
+        <td><code>UNAUTHORIZED / INVALID_TOKEN</code></td>
         <td>Token has expired or invalid API credentials supplied. Re-authenticate via Step 1.</td>
       </tr>
       <tr>
         <td><code>402 Payment Required</code></td>
-        <td><code>INSUFFICIENT_WALLET</code></td>
+        <td><code>INSUFFICIENT_FUNDS</code></td>
         <td>(Production Mode) Partner API Wallet has insufficient funds. Top up wallet via TrippeChalo India Admin.</td>
       </tr>
       <tr>
@@ -1359,17 +1376,27 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><code>404 Not Found</code></td>
-        <td><code>FLIGHT_NOT_FOUND</code></td>
-        <td>The requested <code>sfId</code> is either inactive, does not exist, or has been sold out.</td>
+        <td><code>FLIGHT_NOT_FOUND / BOOKING_NOT_FOUND</code></td>
+        <td>The requested <code>sfId</code> or booking reference does not exist or has been archived.</td>
+      </tr>
+      <tr>
+        <td><code>409 Conflict</code></td>
+        <td><code>SEATS_NOT_AVAILABLE</code></td>
+        <td>Inventory exhausted! Another concurrent request claimed remaining seats (prevented by Atomic CAS).</td>
+      </tr>
+      <tr>
+        <td><code>422 Unprocessable</code></td>
+        <td><code>INFANT_COUNT_EXCEEDED</code></td>
+        <td>Infants count exceeds adult count (1 infant per adult on lap rule) or duplicate passenger names in request.</td>
       </tr>
       <tr>
         <td><code>429 Too Many Requests</code></td>
         <td><code>RATE_LIMIT_EXCEEDED</code></td>
-        <td>Partner request quota exceeded (60 req/min). Throttle outgoing API requests.</td>
+        <td>Partner request quota exceeded (60 req/min). Throttle requests using <code>Retry-After</code> header.</td>
       </tr>
       <tr>
-        <td><code>500 Server Error</code></td>
-        <td><code>INTERNAL_ERROR</code></td>
+        <td><code>500 Internal Server Error</code></td>
+        <td><code>INTERNAL_SERVER_ERROR</code></td>
         <td>Unexpected gateway condition. Contact technical operations team immediately with timestamp.</td>
       </tr>
     </tbody>
