@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../store/store';
@@ -8,6 +9,7 @@ import DOBCalendar from '../../../components/ui/DOBCalendar';
 import CityPicker from '../../../components/common/CityPicker';
 import toast from 'react-hot-toast';
 import RefreshButton from '../../../components/ui/RefreshButton';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 
 interface ISeriesFare {
   _id: string;
@@ -77,6 +79,17 @@ const AdminSeriesFareMaker: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const supplierName = (user as any)?.companyName || user?.name || (user as any)?.firstName || 'Supplier';
 
+  // Sidebar context from AdminLayout
+  const { isSidebarOpen, setIsSidebarOpen } = useOutletContext<{
+    isSidebarOpen?: boolean;
+    setIsSidebarOpen?: (open: boolean) => void;
+  }>() || {};
+  const sidebarWasOpenRef = useRef(false);
+
+  // Custom Delete Modal state
+  const [fareToDelete, setFareToDelete] = useState<ISeriesFare | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [fares, setFares] = useState<ISeriesFare[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -92,11 +105,21 @@ const AdminSeriesFareMaker: React.FC = () => {
   });
   const [editBuffer, setEditBuffer] = useState<Partial<ISeriesFare>>({});
 
+  const closeSidebarIfOpen = () => {
+    if (isSidebarOpen && setIsSidebarOpen) {
+      sidebarWasOpenRef.current = true;
+      setIsSidebarOpen(false);
+    }
+    window.dispatchEvent(new CustomEvent('set-admin-sidebar', { detail: { open: false } }));
+  };
+
   const handleToggleExpand = (fare: ISeriesFare) => {
     if (expandedId === fare._id) {
       setExpandedId(null);
     } else {
       setExpandedId(fare._id);
+      // Smoothly close sidebar if open to give maximum wide screen to the edit table
+      closeSidebarIfOpen();
       setEditFlags({
         adtFare: false,
         commission: false,
@@ -106,7 +129,16 @@ const AdminSeriesFareMaker: React.FC = () => {
         availSeat: false,
         airPnr: false,
       });
-      setEditBuffer(fare);
+      setEditBuffer({
+        adtFare: fare.adtFare,
+        agentCommission: fare.agentCommission,
+        chdFare: fare.chdFare,
+        infFare: fare.infFare,
+        totalSeats: fare.totalSeats,
+        availableSeats: fare.availableSeats,
+        flightNo: fare.flightNo,
+        airlinePnr: fare.airlinePnr
+      });
     }
   };
 
@@ -275,15 +307,29 @@ const AdminSeriesFareMaker: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this Series Fare?')) return;
+  const handleDeleteClick = (fare: ISeriesFare) => {
+    setFareToDelete(fare);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!fareToDelete) return;
     try {
-      await api.delete(`/api/series-fare/${id}`);
-      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== id));
-      toast.success('Series Fare deleted');
+      setIsDeleting(true);
+      await api.delete(`/api/series-fare/${fareToDelete._id}`);
+      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== fareToDelete._id));
+      toast.success(`Series Fare ${fareToDelete.sfId || ''} deleted successfully`);
+      if (expandedId === fareToDelete._id) {
+        setExpandedId(null);
+      }
     } catch (err) {
-      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== id));
-      toast.success('Deleted locally (mock)');
+      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== fareToDelete._id));
+      toast.success('Series Fare deleted locally (mock)');
+      if (expandedId === fareToDelete._id) {
+        setExpandedId(null);
+      }
+    } finally {
+      setIsDeleting(false);
+      setFareToDelete(null);
     }
   };
 
@@ -722,20 +768,8 @@ const AdminSeriesFareMaker: React.FC = () => {
                       </td>
                       <td className="p-3 text-center">
                         <button 
-                          onClick={() => {
-                            setExpandedId(isExpanded ? null : fare._id);
-                            if (!isExpanded) {
-                              setEditBuffer({
-                                adtFare: fare.adtFare,
-                                agentCommission: fare.agentCommission,
-                                totalSeats: fare.totalSeats,
-                                availableSeats: fare.availableSeats,
-                                flightNo: fare.flightNo,
-                                airlinePnr: fare.airlinePnr
-                              });
-                            }
-                          }}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-1.5 rounded transition-colors"
+                          onClick={() => handleToggleExpand(fare)}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 p-1.5 rounded transition-colors cursor-pointer"
                           title="Edit Fare"
                         >
                           <Edit2 size={14} />
@@ -746,137 +780,205 @@ const AdminSeriesFareMaker: React.FC = () => {
                     {/* Inline Fare & Seat Manager Drawer */}
                     {isExpanded && (
                       <tr className="bg-[#f8fafc] border-b-2 border-blue-600">
-                        <td colSpan={13} className="p-5">
-                          <div className="bg-white rounded-xl shadow-lg border border-blue-600/20 overflow-hidden space-y-4 p-5">
-                            {/* Card Header Summary */}
-                            <div className="bg-blue-50 text-gray-900 p-4 rounded-lg flex items-center justify-between border border-blue-600/20">
-                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 text-xs font-bold w-full items-center">
-                                <div><span className="block text-[9px] opacity-75">FARE ID</span>{fare.sfId}</div>
-                                <div><span className="block text-[9px] opacity-75">Airline</span>{fare.airline}</div>
-                                <div><span className="block text-[9px] opacity-75">Origin</span>{fare.origin}</div>
-                                <div><span className="block text-[9px] opacity-75">Destination</span>{fare.destination}</div>
-                                <div><span className="block text-[9px] opacity-75">Flight Details</span>{fare.flightNo}</div>
-                                <div><span className="block text-[9px] opacity-75">Journey Details</span>{formattedDate} {fare.departureTime}-{fare.arrivalTime}</div>
-                                <div><span className="block text-[9px] opacity-75">Total Seats</span>{fare.totalSeats}</div>
-                                <div><span className="block text-[9px] opacity-75">Available Seats</span>{fare.availableSeats}</div>
+                        <td colSpan={14} className="p-4 sm:p-5">
+                          <div className="bg-white rounded-xl shadow-lg border border-blue-600/20 overflow-hidden space-y-4 p-5 w-full">
+                            {/* Card Header Summary with Status on Top */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50/70 text-gray-900 p-4 rounded-xl flex flex-wrap items-center justify-between border border-blue-200/60 gap-4">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 text-xs font-bold flex-1 min-w-0">
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">FARE ID</span><span className="truncate block font-mono text-gray-900">{fare.sfId}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Airline</span><span className="truncate block text-gray-900">{fare.airline}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Origin</span><span className="truncate block font-mono font-bold text-blue-700">{fare.origin}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Destination</span><span className="truncate block font-mono font-bold text-blue-700">{fare.destination}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Flight Details</span><span className="truncate block text-gray-900">{fare.flightNo}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Journey Details</span><span className="truncate block text-gray-900">{formattedDate} {fare.departureTime}-{fare.arrivalTime}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Total Seats</span><span className="truncate block text-gray-900">{fare.totalSeats}</span></div>
+                                <div className="min-w-0"><span className="block text-[9px] uppercase tracking-wider text-blue-800 font-extrabold opacity-75">Available Seats</span><span className="truncate block text-emerald-700">{fare.availableSeats}</span></div>
                               </div>
+
+                              {/* Status Badges & Close Button on Top Right */}
+                              <div className="flex items-center gap-2.5 shrink-0">
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border shadow-xs ${
+                                  fare.status === 'Active' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                                  fare.status === 'SoldOut' ? 'bg-purple-100 text-purple-800 border-purple-300' :
+                                  'bg-gray-100 text-gray-800 border-gray-300'
+                                }`}>
+                                  {fare.status}
+                                </span>
+
+                                <span className={`px-2 py-1 rounded-md text-[10px] font-black tracking-tight border shadow-xs ${
+                                  fare.isTestFlight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'
+                                }`}>
+                                  {fare.isTestFlight ? 'TEST (999)' : 'LIVE'}
+                                </span>
+
                                 <button 
                                   onClick={() => handleToggleExpand(fare)}
-                                  className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 shrink-0 ml-4 shadow transition-all"
+                                  className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 shrink-0 shadow-md transition-all cursor-pointer hover:scale-105"
                                   title="Close Drawer"
                                 >
-                                ←
-                              </button>
+                                  ←
+                                </button>
+                              </div>
                             </div>
 
-                            {/* Inner Controls Table */}
-                            <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-inner">
-                              <table className="w-full text-xs text-left">
+                            {/* Inner Controls Table spanning full width */}
+                            <div className="w-full overflow-x-auto border border-gray-200 rounded-xl shadow-xs bg-white">
+                              <table className="w-full text-xs text-left border-collapse">
                                 <thead className="bg-[#f8fafc] text-gray-900 font-black text-[10px] uppercase border-b border-gray-300">
                                   <tr>
-                                    <th className="p-2.5 w-10 text-center">S.NO</th>
-                                    <th className="p-2.5 w-10 text-center"><input type="checkbox" className="rounded" /></th>
-                                    <th className="p-2.5 w-20">
+                                    <th className="py-3 px-2 text-center w-12">S.NO</th>
+                                    <th className="py-3 px-2 text-center w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
+                                    <th className="py-3 px-3 w-24">
                                       <button 
                                         onClick={handleSaveEdit}
-                                        className="bg-[#2e1065] text-white text-[10px] font-bold px-3 py-1 rounded-md hover:bg-purple-900 shadow-sm transition"
+                                        className="bg-[#2e1065] hover:bg-purple-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm transition w-full cursor-pointer"
                                       >
                                         Change
                                       </button>
                                     </th>
-                                    <th className="p-2.5">TRAVEL DATE</th>
-                                    <th className="p-2.5">DEPARTURE</th>
-                                    <th className="p-2.5">ARRIVAL</th>
-                                    <th className="p-2.5"><div className="flex items-center gap-1.5">ADT FARE<input type="checkbox" className="rounded text-blue-600" checked={editFlags.adtFare} onChange={e => setEditFlags({ ...editFlags, adtFare: e.target.checked })} /></div></th>
-                                    <th className="p-2.5"><div className="flex items-center gap-1.5">COMMISSION<input type="checkbox" className="rounded text-blue-600" checked={editFlags.commission} onChange={e => setEditFlags({ ...editFlags, commission: e.target.checked })} /></div></th>
-                                    <th className="p-2.5"><div className="flex items-center gap-1.5">CHD FARE<input type="checkbox" className="rounded text-blue-600" checked={editFlags.chdFare} onChange={e => setEditFlags({ ...editFlags, chdFare: e.target.checked })} /></div></th>
-                                    <th className="p-2.5"><div className="flex items-center gap-1.5">INF FARE<input type="checkbox" className="rounded text-blue-600" checked={editFlags.infFare} onChange={e => setEditFlags({ ...editFlags, infFare: e.target.checked })} /></div></th>
-                                    <th className="p-2.5"><div className="flex items-center justify-center gap-1.5">TOTAL SEAT<input type="checkbox" className="rounded text-blue-600" checked={editFlags.totalSeat} onChange={e => setEditFlags({ ...editFlags, totalSeat: e.target.checked })} /></div></th>
-                                    <th className="p-2.5"><div className="flex items-center justify-center gap-1.5">AVAIL SEAT<input type="checkbox" className="rounded text-blue-600" checked={editFlags.availSeat} onChange={e => setEditFlags({ ...editFlags, availSeat: e.target.checked })} /></div></th>
-                                    <th className="p-2.5 text-center">REALTIME BOOK</th>
-                                    <th className="p-2.5"><div className="flex items-center gap-1.5">AIR PNR<input type="checkbox" className="rounded text-blue-600" checked={editFlags.airPnr} onChange={e => setEditFlags({ ...editFlags, airPnr: e.target.checked })} /></div></th>
-                                    <th className="p-2.5 text-center">STATUS</th>
+                                    <th className="py-3 px-3 whitespace-nowrap">TRAVEL DATE</th>
+                                    <th className="py-3 px-3 whitespace-nowrap">DEPARTURE</th>
+                                    <th className="py-3 px-3 whitespace-nowrap">ARRIVAL</th>
+                                    <th className="py-3 px-2">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>ADT FARE</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.adtFare} onChange={e => setEditFlags({ ...editFlags, adtFare: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-2">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>COMMISSION</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.commission} onChange={e => setEditFlags({ ...editFlags, commission: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-2">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>CHD FARE</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.chdFare} onChange={e => setEditFlags({ ...editFlags, chdFare: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-2">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>INF FARE</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.infFare} onChange={e => setEditFlags({ ...editFlags, infFare: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-2 text-center">
+                                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                        <span>TOTAL SEAT</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.totalSeat} onChange={e => setEditFlags({ ...editFlags, totalSeat: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-2 text-center">
+                                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                        <span>AVAIL SEAT</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.availSeat} onChange={e => setEditFlags({ ...editFlags, availSeat: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-3 text-center whitespace-nowrap">REALTIME BOOK</th>
+                                    <th className="py-3 px-2">
+                                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                        <span>AIR PNR</span>
+                                        <input type="checkbox" className="rounded text-blue-600" checked={editFlags.airPnr} onChange={e => setEditFlags({ ...editFlags, airPnr: e.target.checked })} />
+                                      </div>
+                                    </th>
+                                    <th className="py-3 px-3 text-center whitespace-nowrap">STATUS & ACTIONS</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white text-xs">
                                   <tr className="hover:bg-blue-50/40">
-                                    <td className="p-2.5 text-center font-bold text-gray-700">1</td>
-                                    <td className="p-2.5 text-center"><input type="checkbox" className="rounded" /></td>
-                                    <td className="p-2.5"></td>
-                                    <td className="p-2.5 font-bold text-blue-600">{formattedDate}</td>
-                                    <td className="p-2.5 font-mono">{fare.departureTime}</td>
-                                    <td className="p-2.5 font-mono">{fare.arrivalTime}</td>
-                                    <td className="p-2.5">
+                                    <td className="py-3 px-2 text-center font-bold text-gray-700">1</td>
+                                    <td className="py-3 px-2 text-center"><input type="checkbox" className="rounded border-gray-300" /></td>
+                                    <td className="py-3 px-3"></td>
+                                    <td className="py-3 px-3 font-bold text-blue-600 whitespace-nowrap">{formattedDate}</td>
+                                    <td className="py-3 px-3 font-mono font-medium whitespace-nowrap">{fare.departureTime}</td>
+                                    <td className="py-3 px-3 font-mono font-medium whitespace-nowrap">{fare.arrivalTime}</td>
+                                    <td className="py-3 px-2">
                                       <input 
                                         type="text" 
                                         value={editBuffer.adtFare === 0 ? '' : (editBuffer.adtFare ?? fare.adtFare)}
                                         onChange={e => setEditBuffer({ ...editBuffer, adtFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.adtFare}
-                                        className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.adtFare ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
+                                        className={`w-full min-w-[75px] px-2.5 py-1.5 border border-gray-300 rounded-lg font-bold text-xs ${!editFlags.adtFare ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5">
+                                    <td className="py-3 px-2">
                                       <input 
                                         type="text" 
                                         value={editBuffer.agentCommission === 0 ? '' : (editBuffer.agentCommission ?? fare.agentCommission ?? 0)}
                                         onChange={e => setEditBuffer({ ...editBuffer, agentCommission: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.commission}
-                                        className={`w-16 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.commission ? 'bg-gray-100 text-gray-500' : 'text-emerald-600 bg-white'}`}
+                                        className={`w-full min-w-[70px] px-2.5 py-1.5 border border-gray-300 rounded-lg font-bold text-xs ${!editFlags.commission ? 'bg-gray-100 text-gray-500' : 'text-emerald-600 bg-white focus:ring-2 focus:ring-emerald-500'}`}
                                         title="Agent Commission"
                                       />
                                     </td>
-                                    <td className="p-2.5">
+                                    <td className="py-3 px-2">
                                       <input 
                                         type="text" 
                                         value={editBuffer.chdFare === 0 ? '' : (editBuffer.chdFare ?? fare.chdFare)}
                                         onChange={e => setEditBuffer({ ...editBuffer, chdFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.chdFare}
-                                        className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.chdFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white'}`}
+                                        className={`w-full min-w-[75px] px-2.5 py-1.5 border border-gray-300 rounded-lg font-bold text-xs ${!editFlags.chdFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5">
+                                    <td className="py-3 px-2">
                                       <input 
                                         type="text" 
                                         value={editBuffer.infFare === 0 ? '' : (editBuffer.infFare ?? fare.infFare)}
                                         onChange={e => setEditBuffer({ ...editBuffer, infFare: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.infFare}
-                                        className={`w-20 px-2 py-1 border border-gray-300 rounded font-bold text-xs ${!editFlags.infFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white'}`}
+                                        className={`w-full min-w-[75px] px-2.5 py-1.5 border border-gray-300 rounded-lg font-bold text-xs ${!editFlags.infFare ? 'bg-gray-100 text-gray-500' : 'text-gray-800 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5 text-center">
+                                    <td className="py-3 px-2 text-center">
                                       <input 
                                         type="text" 
                                         value={editBuffer.totalSeats === 0 ? '' : (editBuffer.totalSeats ?? fare.totalSeats)}
                                         onChange={e => setEditBuffer({ ...editBuffer, totalSeats: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.totalSeat}
-                                        className={`w-16 px-1 py-1 border border-gray-300 rounded text-center font-bold text-xs ${!editFlags.totalSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
+                                        className={`w-full min-w-[65px] px-2 py-1.5 border border-gray-300 rounded-lg text-center font-bold text-xs ${!editFlags.totalSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5 text-center font-bold">
+                                    <td className="py-3 px-2 text-center font-bold">
                                       <input 
                                         type="text" 
                                         value={editBuffer.availableSeats === 0 ? '' : (editBuffer.availableSeats ?? fare.availableSeats)}
                                         onChange={e => setEditBuffer({ ...editBuffer, availableSeats: e.target.value === '' ? ('' as any) : Number(e.target.value.replace(/[^0-9.-]+/g,"")) })}
                                         disabled={!editFlags.availSeat}
-                                        className={`w-16 px-1 py-1 border border-gray-300 rounded text-center font-bold text-xs ${!editFlags.availSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white'}`}
+                                        className={`w-full min-w-[65px] px-2 py-1.5 border border-gray-300 rounded-lg text-center font-bold text-xs ${!editFlags.availSeat ? 'bg-gray-100 text-gray-500' : 'text-gray-900 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5 text-center font-bold text-emerald-700">
+                                    <td className="py-3 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
                                       {fare.realtimeBook ? 'YES' : 'NO'}
                                     </td>
-                                    <td className="p-2.5">
+                                    <td className="py-3 px-2">
                                       <input 
                                         type="text" 
                                         value={editBuffer.airlinePnr ?? fare.airlinePnr}
                                         onChange={e => setEditBuffer({ ...editBuffer, airlinePnr: e.target.value })}
                                         disabled={!editFlags.airPnr}
-                                        className={`w-20 px-2 py-1 border border-gray-300 rounded text-xs font-mono font-bold uppercase ${!editFlags.airPnr ? 'bg-gray-100 text-gray-500 font-normal' : 'text-gray-900 bg-white'}`}
+                                        className={`w-full min-w-[85px] px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-mono font-bold uppercase ${!editFlags.airPnr ? 'bg-gray-100 text-gray-500 font-normal' : 'text-gray-900 bg-white focus:ring-2 focus:ring-blue-500'}`}
                                       />
                                     </td>
-                                    <td className="p-2.5 flex items-center justify-center gap-2">
-                                      <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">👤</span>
-                                      <button onClick={() => handleDelete(fare._id)} className="text-gray-400 hover:text-red-600 transition-colors">🗑️</button>
-                                      <span className="bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-[10px] font-bold">Live</span>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <span 
+                                          className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold cursor-help"
+                                          title={`Supplier / Owner: ${fare.supplierName || 'Super Admin'}`}
+                                        >
+                                          👤
+                                        </span>
+                                        <button 
+                                          onClick={() => handleDeleteClick(fare)} 
+                                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                          title="Delete Series Fare"
+                                        >
+                                          <Trash2 size={16} />
+                                        </button>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${fare.isTestFlight ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-800'}`}>
+                                          {fare.isTestFlight ? 'Test' : 'Live'}
+                                        </span>
+                                      </div>
                                     </td>
                                   </tr>
                                 </tbody>
@@ -1722,6 +1824,18 @@ const AdminSeriesFareMaker: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(fareToDelete)}
+        title="Delete Series Fare"
+        message={`Are you sure you want to permanently delete Series Fare ${fareToDelete?.sfId} (${fareToDelete?.airline} ${fareToDelete?.flightNo}: ${fareToDelete?.origin}-${fareToDelete?.destination})? This action cannot be undone.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete Fare'}
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setFareToDelete(null)}
+      />
     </div>
   );
 };

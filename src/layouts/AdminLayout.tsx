@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone, Server } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,6 +13,16 @@ export default function AdminLayout() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  useEffect(() => {
+    const handleSetSidebar = (e: any) => {
+      if (typeof e.detail?.open === 'boolean') {
+        setIsSidebarOpen(e.detail.open);
+      }
+    };
+    window.addEventListener('set-admin-sidebar', handleSetSidebar);
+    return () => window.removeEventListener('set-admin-sidebar', handleSetSidebar);
+  }, []);
 
   const toggleMenu = (name: string) => {
     setExpandedMenus(prev => prev.includes(name) ? [] : [name]);
@@ -316,7 +326,7 @@ export default function AdminLayout() {
 
 
           <div className="h-full">
-            <Outlet />
+            <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>
         </main>
       </div>
