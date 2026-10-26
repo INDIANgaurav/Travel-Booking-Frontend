@@ -259,22 +259,21 @@ export default function LandingPage() {
                 Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">Dream Vacation</span>
               </h1>
             </div>
-          {/* Top Tabs Pill */}
-          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-start lg:justify-between px-4 lg:px-6 py-4 lg:py-5 mx-auto relative z-30 w-[95%] lg:w-[90%] max-w-[1000px] mb-[-20px] lg:mb-[-40px] overflow-x-auto gap-6 lg:gap-2 hidden-scrollbar">
+          {/* Top Tabs Pill - Centered with Flights and Hotels only */}
+          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-center px-8 lg:px-12 py-3.5 lg:py-4 mx-auto relative z-30 w-fit max-w-[360px] mb-[-20px] lg:mb-[-40px] gap-10 sm:gap-14">
             {[
-              {name: 'Flights', icon: Plane}, {name: 'Hotels', icon: Building2}, {name: 'Villas & Homestays', icon: Map},
-              {name: 'Holiday Packages', icon: Map}, {name: 'Trains', icon: Plane}, {name: 'Buses', icon: Bus},
-              {name: 'Cabs', icon: Car}, {name: 'Forex Card', icon: CreditCard}, {name: 'Travel Insurance', icon: Shield}
+              { name: 'Flights', icon: Plane },
+              { name: 'Hotels', icon: Building2 }
             ].map(tab => (
               <button
                 key={tab.name}
-                className={`flex flex-col items-center gap-1.5 relative min-w-[80px] shrink-0 ${activeTab === tab.name ? 'text-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
+                className={`flex flex-col items-center gap-1.5 relative px-3 py-1 cursor-pointer transition-all ${activeTab === tab.name ? 'text-blue-600 font-extrabold' : 'text-gray-500 hover:text-blue-600 font-semibold'}`}
                 onClick={() => setActiveTab(tab.name)}
               >
-                <tab.icon size={22} className={activeTab === tab.name ? 'text-blue-600' : 'text-gray-400'} />
-                <span className="text-[11px] font-bold text-center leading-tight whitespace-nowrap">{tab.name}</span>
+                <tab.icon size={22} className={activeTab === tab.name ? 'text-blue-600 scale-110 transition-transform' : 'text-gray-400'} />
+                <span className="text-xs sm:text-[13px] text-center leading-tight whitespace-nowrap">{tab.name}</span>
                 {activeTab === tab.name && (
-                  <div className="absolute -bottom-4 lg:-bottom-5 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-blue-600 rounded-t-full shadow-[0_-2px_10px_rgba(37,99,235,0.5)]"></div>
+                  <div className="absolute -bottom-3.5 lg:-bottom-4 left-1/2 -translate-x-1/2 w-10 h-[3px] bg-blue-600 rounded-t-full shadow-[0_-2px_10px_rgba(37,99,235,0.5)]"></div>
                 )}
               </button>
             ))}
@@ -584,13 +583,6 @@ export default function LandingPage() {
 
 
 
-                {/* Flight Tracker Button - Hidden on mobile to save space for Search button */}
-                <div className="mt-5 hidden md:block">
-                   <button className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition">
-                     <Ticket size={16} className="text-blue-600" />
-                     <span className="text-[13px] font-bold text-gray-800">Flight Tracker</span>
-                   </button>
-                </div>
 
                 {/* Massive Search Button Overlapping Bottom for Flights */}
                 <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
