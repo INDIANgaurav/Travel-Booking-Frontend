@@ -802,6 +802,10 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Authentication</td>
       <td>None (Public Token Issuer)</td>
     </tr>
+    <tr>
+      <td style="font-weight: bold; background-color: #f1f5f9;">API Key Header</td>
+      <td><code>x-api-key: ${isLive ? partner.liveApiKey : partner.testApiKey}</code> (Optional alternative to body credentials)</td>
+    </tr>
   </table>
 
   <p><strong>Request Body Parameters:</strong></p>
@@ -818,38 +822,49 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><code>username</code></td>
         <td>String</td>
-        <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory*</span></td>
         <td>Assigned Client ID (e.g. <code>${partner.username || 'YOUR_CLIENT_ID'}</code>)</td>
       </tr>
       <tr>
         <td><code>password</code></td>
         <td>String</td>
-        <td><span class="badge-req">Mandatory</span></td>
+        <td><span class="badge-req">Mandatory*</span></td>
         <td>Assigned partner password secret</td>
+      </tr>
+      <tr>
+        <td><code>apiKey</code></td>
+        <td>String</td>
+        <td><span class="badge-opt">Alternative</span></td>
+        <td>Partner API Key (<code>${isLive ? partner.liveApiKey : partner.testApiKey}</code>). Can be provided instead of username/password.</td>
       </tr>
     </tbody>
   </table>
 
-  <p><strong>Sample Request Payload:</strong></p>
+  <p><strong>Sample Request Payload (Option 1: Username & Password):</strong></p>
   <pre class="code-box">{
   "username": "${partner.username || 'YOUR_USERNAME'}",
   "password": "${partner.password || 'YOUR_PASSWORD'}"
+}</pre>
+
+  <p><strong>Sample Request Payload (Option 2: API Key):</strong></p>
+  <pre class="code-box">{
+  "apiKey": "${isLive ? partner.liveApiKey : partner.testApiKey}"
 }</pre>
 
   <p><strong>Sample Response Payload (HTTP 200 OK):</strong></p>
   <pre class="code-box">{
   "success": true,
   "status": "SUCCESS",
-  "tokenId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJZCI6IjZhZGEzMDkyMzI5OWY2MGQ4ODNlZTUyNCI...",
+  "tokenId": "&lt;DYNAMIC_24H_JWT_TOKEN_GENERATED_ON_REQUEST&gt;",
   "data": {
-    "tokenId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "tokenId": "&lt;DYNAMIC_24H_JWT_TOKEN_GENERATED_ON_REQUEST&gt;",
     "tokenType": "Bearer",
     "expiresIn": 86400,
     "environment": "${isLive ? 'PRODUCTION' : 'SANDBOX'}"
   }
 }</pre>
   <p style="font-size: 10pt; color: #475569;">
-    <strong>Token Usage Rule:</strong> Pass the returned <code>tokenId</code> in all subsequent requests within the HTTP Header as:<br/>
+    <strong>Token Usage Rule:</strong> Pass the dynamically returned <code>tokenId</code> in all subsequent requests within the HTTP Header as:<br/>
     <code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(or &nbsp;<code style="color: #0f172a; font-weight: bold; font-size: 10.5pt;">tokenId: &lt;tokenId&gt;</code>). Token validity is <strong>24 hours</strong>.
   </p>
 
@@ -2106,12 +2121,6 @@ Note: Keep these credentials safe. Do not share publicly.
                       Pre-configured with credentials, endpoints, and standard passenger manifest payloads.
                     </div>
                   </div>
-                  <button 
-                    onClick={() => copyWelcomeKit(selectedPartner)}
-                    className="px-3.5 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition whitespace-nowrap shrink-0"
-                  >
-                    <Copy size={13}/> Copy Quick Text
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 border-t border-gray-200/60">
