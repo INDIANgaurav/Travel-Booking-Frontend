@@ -154,10 +154,10 @@ const SupplierDashboardLayout: React.FC = () => {
           
           <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/supplier-portal/dashboard')}>
             <div className="flex items-center justify-center bg-white p-1 sm:p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform shrink-0">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
+              <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
             </div>
             <div className="hidden min-[380px]:block">
-              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span> <span className="text-xs font-bold text-orange-400">INDIA</span></span>
               <span className="block text-[8px] sm:text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] -mt-1">SUPPLIER PORTAL</span>
             </div>
           </div>
@@ -394,7 +394,7 @@ const SupplierDashboardLayout: React.FC = () => {
 
       {/* Footer */}
       <footer className="hidden lg:block bg-[#0b1031] border-t border-white/10 py-3 text-center text-xs text-gray-400">
-        © 2026 TrippeChalo. All rights reserved. Supplier Portal 
+        © 2026 TrippeChalo India. All rights reserved. Supplier Portal 
       </footer>
 
       {/* Logout Confirmation Modal */}
@@ -429,7 +429,7 @@ const SupplierDashboardLayout: React.FC = () => {
           <div className="relative w-[80%] max-w-[300px] h-full bg-[#161c3f] border-r border-white/10 shadow-2xl flex flex-col animate-[fadeInLeft_0.3s_ease-out]">
             <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0b1031]">
               <div className="flex items-center gap-2">
-                <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6" crossOrigin="anonymous" />
+                <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-6 h-6" crossOrigin="anonymous" />
                 <span className="text-white font-black">MENU</span>
               </div>
               <button onClick={() => setShowMobileMenu(false)} className="text-gray-400 hover:text-white p-1">

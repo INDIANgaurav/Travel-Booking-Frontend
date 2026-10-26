@@ -53,7 +53,7 @@ export default function AdminLayout() {
           ]
         },
         { 
-          name: 'TrippeChalo FD', 
+          name: 'TrippeChalo India FD', 
           icon: <PackageOpen size={20} />,
           subItems: [
             { name: 'FD Maker', path: '/admin/fd-maker' },

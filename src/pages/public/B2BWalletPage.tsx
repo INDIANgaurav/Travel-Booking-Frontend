@@ -184,7 +184,7 @@ export default function B2BWalletPage() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
         amount: orderData.amount * 100, // in paise
         currency: orderData.currency,
-        name: 'Trippechalo B2B Wallet',
+        name: 'TrippeChalo India B2B Wallet',
         description: 'Wallet Top-up',
         image: '/tg-favicon.svg',
         order_id: orderData.orderId,

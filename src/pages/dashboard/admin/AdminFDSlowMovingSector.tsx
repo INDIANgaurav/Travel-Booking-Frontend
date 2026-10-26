@@ -204,7 +204,7 @@ export default function AdminFDSlowMovingSector() {
                   <td className="p-3 text-center font-bold text-gray-800">₹{item.price}</td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-2">
-                      {item.supplierName && !['trippechalo', 'admin', 'super admin', 'pj holiday bookers', 'supplier'].includes(item.supplierName.toLowerCase()) ? (
+                      {item.supplierName && !['trippechalo', 'trippechalo india', 'admin', 'super admin', 'pj holiday bookers', 'supplier'].includes(item.supplierName.toLowerCase()) ? (
                         <button onClick={() => handleAlertSupplier(item)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded text-[10px] font-bold transition-colors">
                           Alert Supplier
                         </button>

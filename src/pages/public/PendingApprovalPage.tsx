@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import TopNavbar from '../../components/layout/TopNavbar';
 import { CheckCircle2, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -21,7 +21,7 @@ const PendingApprovalPage = () => {
               </div>
               <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Application Under Review</h1>
               <p className="text-orange-100 font-medium max-w-md mx-auto">
-                Thank you for applying to join TrippeChalo's exclusive agent network.
+                Thank you for applying to join TrippeChalo India's exclusive agent network.
               </p>
             </div>
           </div>

@@ -345,7 +345,7 @@ export default function HotelSearchResults() {
                   )}
                   {hotel.source === 'direct' && (
                     <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow-md">
-                      TrippeChalo Exclusive
+                      TrippeChalo India Exclusive
                     </div>
                   )}
                 </div>

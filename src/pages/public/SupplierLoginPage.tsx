@@ -59,7 +59,10 @@ const SupplierLoginPage: React.FC = () => {
           <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full flex items-center justify-center text-white font-black text-xl shadow-md mb-2">
             TC
           </div>
-          <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+          <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase flex items-center gap-1.5">
+            TRIPPE<span className="text-blue-600">CHALO</span>
+            <span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
+          </span>
           <span className="text-[10px] text-gray-400 font-semibold italic tracking-wider">Let us check in for you</span>
         </div>
 

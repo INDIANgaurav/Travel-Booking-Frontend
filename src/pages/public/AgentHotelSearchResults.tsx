@@ -72,8 +72,9 @@ export default function AgentHotelSearchResults(props: any) {
               <div className="bg-orange-500 p-1.5 rounded text-white">
                 <Building2 size={24} />
               </div>
-              <span className="text-2xl font-black tracking-tight text-gray-900">
+              <span className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-1.5">
                 Trippe<span className="text-orange-500">Biz</span>
+                <span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
               </span>
             </div>
           </div>

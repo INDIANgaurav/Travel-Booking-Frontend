@@ -44,7 +44,7 @@ const AdminLoginPage: React.FC = () => {
 
       // Validate administrative roles
       if (!user.roles?.includes('SUPER_ADMIN') && !user.roles?.includes('SUB_ADMIN')) {
-        throw new Error('Access denied. This portal is strictly reserved for TrippeChalo Administrators.');
+        throw new Error('Access denied. This portal is strictly reserved for TrippeChalo India Administrators.');
       }
 
       dispatch(setCredentials({ user, token: token || data.token }));
@@ -93,8 +93,9 @@ const AdminLoginPage: React.FC = () => {
           <div className="w-14 h-14 bg-gradient-to-tr from-blue-700 via-indigo-600 to-blue-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20 mb-3 border border-white/20">
             TC
           </div>
-          <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">
+          <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase flex items-center gap-1.5">
             TRIPPE<span className="text-blue-600">CHALO</span>
+            <span className="text-[11px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
           </span>
           <span className="text-xs text-gray-500 font-semibold tracking-wide mt-0.5">
             Administration & Operations Control Panel

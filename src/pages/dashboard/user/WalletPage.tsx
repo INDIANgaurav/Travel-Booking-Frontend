@@ -78,7 +78,7 @@ export default function WalletPage() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
         amount: orderData.amount * 100, // in paise
         currency: orderData.currency,
-        name: 'Trippechalo Wallet',
+        name: 'TrippeChalo India Wallet',
         description: 'Wallet Top-up',
         image: '/tg-favicon.svg',
         order_id: orderData.orderId,

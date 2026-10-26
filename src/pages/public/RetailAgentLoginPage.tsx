@@ -64,10 +64,13 @@ const RetailAgentLoginPage: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex items-center justify-center">
-            <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8 md:w-10 md:h-10" crossOrigin="anonymous" />
+            <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-8 h-8 md:w-10 md:h-10" crossOrigin="anonymous" />
           </div>
           <div>
-            <span className="text-lg md:text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+            <span className="text-lg md:text-xl font-black text-[#0c1a40] tracking-tight uppercase flex items-center gap-1.5">
+              TRIPPE<span className="text-blue-600">CHALO</span>
+              <span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
+            </span>
             <span className="block text-[8px] md:text-[9px] text-gray-400 font-bold tracking-widest uppercase -mt-1">B2B AGENT ENGINE</span>
           </div>
         </Link>
@@ -197,7 +200,7 @@ const RetailAgentLoginPage: React.FC = () => {
             Your Gateway to Smarter Travel Business
           </h1>
           <p className="text-xs md:text-sm text-gray-100 max-w-2xl leading-relaxed drop-shadow text-center">
-            Power your agency with TrippeChalo's B2B engine — access real-time inventory, instant PNR generation, and exclusive agent fares across 100+ airlines. Book faster, earn more.
+            Power your agency with TrippeChalo India's B2B engine — access real-time inventory, instant PNR generation, and exclusive agent fares across 100+ airlines. Book faster, earn more.
           </p>
         </div>
 
@@ -374,7 +377,7 @@ const RetailAgentLoginPage: React.FC = () => {
                  <HeadphonesIcon size={20} />
                </div>
                <h4 className="font-black text-[#0c1a40] mb-3 text-lg tracking-tight">Quick Support</h4>
-               <p className="text-xs text-gray-500 leading-relaxed">TrippeChalo is 24/7 available. Whenever you need us you will speak and will help you to find the perfect flight solution.</p>
+               <p className="text-xs text-gray-500 leading-relaxed">TrippeChalo India is 24/7 available. Whenever you need us you will speak and will help you to find the perfect flight solution.</p>
              </div>
 
              <div className="bg-[#f0f4ff] p-8 rounded-3xl flex flex-col justify-start">
@@ -394,11 +397,14 @@ const RetailAgentLoginPage: React.FC = () => {
           {/* Col 1 */}
           <div>
             <div className="flex items-center gap-2 mb-6">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
-              <span className="text-2xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+              <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-10 h-10" crossOrigin="anonymous" />
+              <span className="text-2xl font-black text-[#0c1a40] tracking-tight uppercase flex items-center gap-2">
+                TRIPPE<span className="text-blue-600">CHALO</span>
+                <span className="text-xs bg-orange-500 text-white font-black px-2 py-0.5 rounded tracking-wide">INDIA</span>
+              </span>
             </div>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed font-bold">
-              TrippeChalo Head Office<br/>
+              TrippeChalo India Head Office<br/>
               Delhi, India<br/>
             </p>
             <button className="flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-sm hover:bg-[#20bd5a] transition">
@@ -451,7 +457,7 @@ const RetailAgentLoginPage: React.FC = () => {
         {/* Payment & Copyright row */}
         <div className="max-w-7xl mx-auto border-t border-gray-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-[11px] font-bold text-gray-500">
-            Copyright 2026 TrippeChalo. All rights reserved
+            Copyright 2026 TrippeChalo India. All rights reserved
           </div>
           
           <div className="flex flex-col items-center">

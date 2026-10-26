@@ -246,7 +246,7 @@ export default function FlightTicket() {
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center justify-end gap-1">
-                Trippe<span className="text-blue-500">Chalo</span>
+                Trippe<span className="text-blue-500">Chalo</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span>
               </h2>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function FlightTicket() {
             <div>
               <h2 className="text-3xl font-black text-[#0b1031] tracking-tight flex items-center gap-2 mb-1">
                 <Plane size={28} className="text-blue-600" />
-                <span>{platformInfo?.companyName?.split(' ')[0] || 'Trippe'}<span className="text-blue-600">{platformInfo?.companyName?.split(' ').slice(1).join(' ') || 'Chalo'}</span></span>
+                <span>{platformInfo?.companyName?.split(' ')[0] || 'Trippe'}<span className="text-blue-600">{platformInfo?.companyName?.split(' ').slice(1).join(' ') || 'Chalo'}</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span></span>
               </h2>
               <p className="text-[11px] text-gray-500 font-medium tracking-widest uppercase">E-Ticket / Reservation Voucher</p>
             </div>

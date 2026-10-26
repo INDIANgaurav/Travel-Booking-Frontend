@@ -45,8 +45,9 @@ export default function HotelBookingSuccess() {
         <div ref={componentRef} className="bg-white rounded-xl shadow-xl overflow-hidden print:shadow-none print:border-none">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 flex justify-between items-center">
-            <div className="text-white font-black text-2xl tracking-tighter">
+            <div className="text-white font-black text-2xl tracking-tighter flex items-center gap-1.5">
               Trippe<span className="text-[#ff9e00]">Chalo</span>
+              <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
             </div>
             <div className="text-right text-white">
               <p className="text-xs font-bold uppercase tracking-wider opacity-80">Booking Status</p>

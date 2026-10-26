@@ -705,7 +705,7 @@ export default function LandingPage() {
                     <Building2 className="text-blue-300" size={48} />
                  </div>
                  <h2 className="text-3xl font-black text-gray-900 mb-2">{activeTab} is Coming Soon!</h2>
-                 <p className="text-lg text-gray-500 font-medium max-w-md mx-auto">We are currently building this module. It will be available in the next phase of TrippeChalo.</p>
+                 <p className="text-lg text-gray-500 font-medium max-w-md mx-auto">We are currently building this module. It will be available in the next phase of TrippeChalo India.</p>
               </div>
             )}
 
@@ -845,7 +845,7 @@ export default function LandingPage() {
           <div className="w-full md:w-1/2 z-10">
             <h2 className="text-4xl font-black text-white mb-6">Seamless Travel Experience</h2>
             <p className="text-gray-400 font-medium text-lg mb-8 leading-relaxed">
-              Discover a world of possibilities with TrippeChalo. We partner with top airlines and premium hotels to bring you an extensive network of travel options. From business trips to family vacations, our intuitive platform ensures your booking is secure, fast, and reliable.
+              Discover a world of possibilities with TrippeChalo India. We partner with top airlines and premium hotels to bring you an extensive network of travel options. From business trips to family vacations, our intuitive platform ensures your booking is secure, fast, and reliable.
             </p>
             
             <ul className="space-y-4">
@@ -881,7 +881,7 @@ export default function LandingPage() {
       </div>
 
 
-      {/* Why Choose TrippeChalo Section */}
+      {/* Why Choose TrippeChalo India Section */}
       <div id="features-cards" className="relative bg-white py-16 w-full overflow-hidden border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between mb-12 border-b border-gray-200 pb-6">
@@ -942,9 +942,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-black text-gray-900 mb-6 text-center">Search Flights, Hotels, Bus and Holiday Packages</h2>
           <div className="text-gray-600 text-sm leading-relaxed space-y-4 w-full text-center md:text-left">
-            <p>TrippeChalo is a rapidly growing travel platform in India, designed to be a trusted companion for all your journeys. With our "Travel Made Easy" approach, we are building a seamless ecosystem for flight bookings, hotels, buses, and holiday packages, delivering continuous value-added services along the way.</p>
+            <p>TrippeChalo India is a rapidly growing travel platform in India, designed to be a trusted companion for all your journeys. With our "Travel Made Easy" approach, we are building a seamless ecosystem for flight bookings, hotels, buses, and holiday packages, delivering continuous value-added services along the way.</p>
             <p>We understand that planning a trip can be overwhelming, so we have simplified the process to make it easy for you to find the perfect travel deals that suit your needs. Our intuitive website provides a wide range of options to choose from. Whether you're planning a family vacation, a solo adventure, or a business trip, we are constantly expanding to cover everything you need.</p>
-            <p>We believe in transparency and honesty in all our dealings. We do not charge any hidden fees, and our prices are highly competitive. With TrippeChalo, you can be assured of an honest booking experience. If you're looking for a hassle-free and affordable way to plan your next trip, you're at the right place.</p>
+            <p>We believe in transparency and honesty in all our dealings. We do not charge any hidden fees, and our prices are highly competitive. With TrippeChalo India, you can be assured of an honest booking experience. If you're looking for a hassle-free and affordable way to plan your next trip, you're at the right place.</p>
           </div>
         </div>
       </div>
@@ -960,7 +960,7 @@ export default function LandingPage() {
         
         <div className="relative z-10 w-full h-full max-w-7xl mx-auto px-6 flex flex-col justify-end pb-12">
           <div className="text-center md:text-left md:ml-auto md:mr-0 md:max-w-xl">
-            <h3 className="text-4xl md:text-6xl font-black text-white mb-2 leading-tight">TrippeChalo</h3>
+            <h3 className="text-4xl md:text-6xl font-black text-white mb-2 leading-tight">TrippeChalo India</h3>
             <h4 className="text-2xl md:text-3xl font-bold text-orange-200">Keeping India's Heritage Alive</h4>
           </div>
         </div>
@@ -979,7 +979,7 @@ export default function LandingPage() {
           <div className="order-last md:order-first mt-8 md:mt-0">
             <div className="flex items-center gap-2 mb-6">
               <Plane id="footer-plane-icon" size={24} className="text-blue-500 opacity-0" />
-              <span className="text-xl font-black tracking-tight">TrippeChalo</span>
+              <span className="text-xl font-black tracking-tight">TrippeChalo India</span>
             </div>
             <p className="mb-4 text-gray-500">The world's leading travel booking platform for users and agents.</p>
           </div>
@@ -1013,7 +1013,7 @@ export default function LandingPage() {
           <div>
             <h4 className="text-white font-bold mb-4 uppercase tracking-wider">Support</h4>
             <ul className="space-y-2">
-              <li><span className="text-gray-400 leading-relaxed block mb-2">For refunds, cancellations or queries, reach out to our 24/7 support or chat with TrippeChalo AI.</span></li>
+              <li><span className="text-gray-400 leading-relaxed block mb-2">For refunds, cancellations or queries, reach out to our 24/7 support or chat with TrippeChalo India AI.</span></li>
               <li><a href="mailto:trippechaloindia@gmail.com" className="text-blue-500 hover:text-blue-400 transition">Email Support</a></li>
             </ul>
           </div>

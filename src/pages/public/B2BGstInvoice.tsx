@@ -150,7 +150,7 @@ const B2BGstInvoice: React.FC = () => {
               {/* GST Info Details row */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8 border-b border-gray-50 pb-6 md:pb-8">
                 <div>
-                  <p className="text-[10px] font-bold text-gray-500 mb-1">{platformInfo?.companyName?.split(' ')[0] || 'TrippeChalo'} GST Number</p>
+                  <p className="text-[10px] font-bold text-gray-500 mb-1">{platformInfo?.companyName || 'TrippeChalo India'} GST Number</p>
                   <p className="text-[13px] font-black text-[#0c1a40]">{platformInfo?.gstn || '18AAJCT4798C1ZW'}</p>
                 </div>
                 <div>

@@ -184,8 +184,9 @@ export default function FlightSearchResults() {
             </button>
             <Link to="/" className="flex items-center gap-2">
               <Plane size={24} className="text-blue-600" />
-              <span className="text-xl font-black tracking-tight text-gray-900">
+              <span className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-1.5">
                 Trippe<span className="text-blue-600">Chalo</span>
+                <span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
               </span>
             </Link>
 

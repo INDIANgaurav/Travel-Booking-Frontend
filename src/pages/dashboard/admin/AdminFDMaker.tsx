@@ -1669,7 +1669,7 @@ const AdminSeriesFareMaker: React.FC = () => {
             </form>
 
             <div className="bg-gray-100 py-2 px-6 text-right text-[10px] text-gray-500 font-bold border-t border-gray-200">
-              © 2026 TrippeChalo All rights reserved.
+              © 2026 TrippeChalo India. All rights reserved.
             </div>
           </div>
         </div>

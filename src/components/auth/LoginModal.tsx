@@ -102,7 +102,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
 
           <div className="mt-8 text-center text-[10px] text-gray-400">
-            By proceeding, you agree to TrippeChalo's Privacy Policy, User Agreement and T&Cs
+            By proceeding, you agree to TrippeChalo India's Privacy Policy, User Agreement and T&Cs
           </div>
         </div>
         </div>

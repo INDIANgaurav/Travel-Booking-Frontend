@@ -151,7 +151,7 @@ export default function HotelCheckout() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
         amount,
         currency,
-        name: "TrippeChalo",
+        name: "TrippeChalo India",
         description: `Hotel Booking - ${hotel.name}`,
         order_id: orderId,
         handler: async function (response: any) {

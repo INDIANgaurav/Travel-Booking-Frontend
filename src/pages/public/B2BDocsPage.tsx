@@ -15,7 +15,7 @@ export default function B2BDocsPage() {
       {/* Sidebar */}
       <div className="w-full md:w-64 bg-gray-50 border-r border-gray-200 h-screen sticky top-0 overflow-y-auto custom-scrollbar flex-shrink-0">
         <div className="p-6 border-b border-gray-200 bg-white">
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Trippe<span className="text-blue-600">Chalo</span></h1>
+          <h1 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-1.5">Trippe<span className="text-blue-600">Chalo</span><span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span></h1>
           <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wider">Flight Series API</p>
         </div>
         
@@ -48,7 +48,7 @@ export default function B2BDocsPage() {
             <div className="max-w-3xl animate-fade-in">
               <h2 className="text-3xl font-black text-gray-900 mb-6">Flight Series API</h2>
               <p className="text-gray-600 mb-8 leading-relaxed text-lg">
-                Welcome to the TrippeChalo B2B API documentation tailored for <strong>{partner}</strong>. 
+                Welcome to the TrippeChalo India B2B API documentation tailored for <strong>{partner}</strong>. 
                 Our API allows you to seamlessly integrate our exclusive SeriesFare and Fixed Departure inventory directly into your platform.
               </p>
 

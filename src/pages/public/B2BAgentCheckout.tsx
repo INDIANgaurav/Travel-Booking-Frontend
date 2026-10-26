@@ -507,10 +507,10 @@ const B2BAgentCheckout: React.FC = () => {
         <div className="flex items-center gap-10 relative z-10">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
             <div className="flex items-center justify-center bg-white p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-8 h-8" crossOrigin="anonymous" />
+              <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-8 h-8" crossOrigin="anonymous" />
             </div>
             <div>
-              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span> <span className="text-xs font-bold text-orange-400">INDIA</span></span>
               <span className="block text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>

@@ -54,14 +54,14 @@ export default function DynamicPageViewer() {
             <h1 
               className="text-3xl md:text-4xl font-black text-slate-900 mb-8 pb-6 border-b border-slate-100 flex items-center flex-wrap"
               dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(headline.replace(/TrippeChalo/gi, '<span class="text-blue-600 font-black mx-1">TrippeChalo</span>')) 
+                __html: DOMPurify.sanitize(headline.replace(/TrippeChalo(\s+India)?/gi, '<span class="text-blue-600 font-black mx-1">TrippeChalo India</span>')) 
               }}
             />
             <div 
               className="prose prose-slate max-w-none prose-headings:text-slate-800 prose-a:text-blue-600 text-slate-800 font-medium leading-relaxed break-words overflow-hidden [&_*]:!text-slate-800"
               style={{ overflowWrap: 'anywhere' }}
               dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(content.replace(/TrippeChalo/gi, '<span class="text-blue-600 font-bold mx-1">TrippeChalo</span>')) 
+                __html: DOMPurify.sanitize(content.replace(/TrippeChalo(\s+India)?/gi, '<span class="text-blue-600 font-bold mx-1">TrippeChalo India</span>')) 
               }}
             />
           </div>

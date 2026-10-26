@@ -169,7 +169,7 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center justify-end gap-1">
-                Trippe<span className="text-blue-500">Chalo</span>
+                Trippe<span className="text-blue-500">Chalo</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span>
               </h2>
             </div>
           </div>

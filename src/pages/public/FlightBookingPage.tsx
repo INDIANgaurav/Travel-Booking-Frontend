@@ -314,7 +314,7 @@ export default function FlightBookingPage() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
         amount: orderData.amount * 100,
         currency: orderData.currency,
-        name: 'TrippeChalo Wallet',
+        name: 'TrippeChalo India Wallet',
         description: 'Instant Wallet Top-up',
         order_id: orderData.orderId,
         handler: async function (response: any) {
@@ -519,7 +519,7 @@ export default function FlightBookingPage() {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
         amount: data.amount,
         currency: data.currency,
-        name: 'TrippeChalo',
+        name: 'TrippeChalo India',
         description: 'Flight Booking Transaction',
         order_id: data.orderId,
         handler: async function (response: any) {
@@ -620,8 +620,9 @@ export default function FlightBookingPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
               <Plane size={18} />
             </div>
-            <span className="text-xl md:text-2xl font-black text-white tracking-tight">
+            <span className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-1.5">
               Trippe<span className="text-blue-400">Chalo</span>
+              <span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span>
             </span>
           </div>
 

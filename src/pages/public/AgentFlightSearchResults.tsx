@@ -754,10 +754,10 @@ export default function AgentFlightSearchResults(props: any) {
               <ArrowLeft size={20} />
             </button>
             <div className="flex items-center justify-center">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-10 h-10" crossOrigin="anonymous" />
+              <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-10 h-10" crossOrigin="anonymous" />
             </div>
             <div>
-              <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase">TRIPPE<span className="text-blue-600">CHALO</span></span>
+              <span className="text-xl font-black text-[#0c1a40] tracking-tight uppercase flex items-center gap-1.5">TRIPPE<span className="text-blue-600">CHALO</span><span className="text-[10px] bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span></span>
               <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-widest -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>

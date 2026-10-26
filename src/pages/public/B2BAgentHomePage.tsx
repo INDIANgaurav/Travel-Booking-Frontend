@@ -393,10 +393,10 @@ interface RecentSearch {
         <div className="flex items-center gap-2 sm:gap-10 relative z-10 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/b2b/home')}>
             <div className="flex items-center justify-center bg-white p-1 sm:p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform shrink-0">
-              <img src="/tg-favicon.svg" alt="TrippeChalo" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
+              <img src="/tg-favicon.svg" alt="TrippeChalo India" className="w-6 h-6 sm:w-8 sm:h-8" crossOrigin="anonymous" />
             </div>
             <div className="hidden min-[380px]:block">
-              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span></span>
+              <span className="text-sm sm:text-xl font-black text-white tracking-tight uppercase">TRIPPE<span className="text-blue-400">CHALO</span> <span className="text-xs font-bold text-orange-400">INDIA</span></span>
               <span className="block text-[8px] sm:text-[9px] text-blue-200/80 font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] -mt-1">B2B AGENT ENGINE</span>
             </div>
           </div>
@@ -790,9 +790,9 @@ interface RecentSearch {
           {/* Watermark Logo (Left side) */}
           <div 
             className="absolute top-1/2 left-[50px] -translate-y-1/2 select-none pointer-events-none font-black leading-none whitespace-nowrap -rotate-90 flex items-center"
-            style={{ color: '#0b1031', opacity: 0.04, fontSize: '100px', letterSpacing: '8px' }}
+            style={{ color: '#0b1031', opacity: 0.04, fontSize: '90px', letterSpacing: '8px' }}
           >
-            TRIPPECHALO
+            TRIPPECHALO INDIA
           </div>
           
           <div 
@@ -832,18 +832,18 @@ interface RecentSearch {
               </p>
 
               <p style={{ color: '#64748b', fontSize: '18px', fontStyle: 'italic', marginBottom: '10px', fontFamily: "'Georgia', serif", maxWidth: '700px', lineHeight: '1.6' }}>
-                has been officially registered and verified as an Authorised Channel Partner with TrippeChalo Pvt. Ltd. , committed to delivering excellence in travel services.
+                has been officially registered and verified as an Authorised Channel Partner with TrippeChalo India Private Limited, committed to delivering excellence in travel services.
               </p>
             </div>
 
             {/* Elegant Bottom Row */}
             <div className="w-full flex justify-between items-end px-24 pb-4">
-              <div className="flex flex-col items-center" style={{ width: '200px' }}>
+              <div className="flex flex-col items-center" style={{ width: '220px' }}>
                 <div style={{ borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '10px', width: '100%', textAlign: 'center' }}>
                    <div style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", color: '#0f172a', fontSize: '32px' }}>Director Signature</div>
                 </div>
                 <p style={{ color: '#0f172a', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Director</p>
-                <p style={{ color: '#64748b', fontSize: '12px' }}>TrippeChalo Pvt. Ltd. </p>
+                <p style={{ color: '#64748b', fontSize: '12px' }}>TrippeChalo India Private Limited</p>
               </div>
 
               {/* Minimalist Seal */}
@@ -861,10 +861,10 @@ interface RecentSearch {
                  </div>
               </div>
 
-              <div className="flex flex-col items-center" style={{ width: '220px' }}>
+              <div className="flex flex-col items-center" style={{ width: '240px' }}>
                 <div style={{ borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '10px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-                  <img src="/tg-favicon.svg" alt="TrippeChalo" style={{ width: '32px', height: '32px' }} crossOrigin="anonymous" />
-                  <span style={{ color: '#0f172a', fontSize: '24px', fontWeight: '900', letterSpacing: '1px' }}>TRIPPE<span style={{ color: '#2563eb' }}>CHALO</span></span>
+                  <img src="/tg-favicon.svg" alt="TrippeChalo India" style={{ width: '32px', height: '32px' }} crossOrigin="anonymous" />
+                  <span style={{ color: '#0f172a', fontSize: '22px', fontWeight: '900', letterSpacing: '1px' }}>TRIPPE<span style={{ color: '#2563eb' }}>CHALO</span> <span style={{ color: '#ea580c', fontSize: '14px' }}>INDIA</span></span>
                 </div>
                 <p style={{ color: '#0f172a', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Date Issued</p>
                 <p style={{ color: '#64748b', fontSize: '12px' }}>{new Date().toLocaleDateString('en-GB')}</p>

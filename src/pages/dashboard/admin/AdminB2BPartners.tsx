@@ -179,7 +179,7 @@ export default function AdminB2BPartners() {
     const flight = `${booking.details?.airline || 'Airline'} ${booking.details?.flightNo || ''}`.trim();
     const paxList = booking.details?.passengers?.map(p => p.name).join(', ') || 'N/A';
     const bookingDate = new Date(booking.createdAt || booking.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    const text = `✅ TrippeChalo B2B API Booking Verified:\n• Partner: ${partnerForBookings?.companyName || 'B2B Partner'}\n• Environment: ${isTest ? 'Sandbox / Testing' : 'Live Production'}\n• PNR: ${pnr}\n• Booking ID: ${booking.bookingId}\n• Sector: ${sector}\n• Flight: ${flight}\n• Booking Date: ${bookingDate}\n• Passengers: ${paxList}\n• Status: CONFIRMED in Database`;
+    const text = `✅ TrippeChalo India B2B API Booking Verified:\n• Partner: ${partnerForBookings?.companyName || 'B2B Partner'}\n• Environment: ${isTest ? 'Sandbox / Testing' : 'Live Production'}\n• PNR: ${pnr}\n• Booking ID: ${booking.bookingId}\n• Sector: ${sector}\n• Flight: ${flight}\n• Booking Date: ${bookingDate}\n• Passengers: ${paxList}\n• Status: CONFIRMED in Database`;
 
     navigator.clipboard.writeText(text);
     toast.success('Verification report copied to clipboard!');
@@ -303,7 +303,7 @@ export default function AdminB2BPartners() {
 
   const copyWelcomeKit = (partner: B2BClient) => {
     const text = `=========================================
-TrippeChalo B2B Flight API - Access Details
+TrippeChalo India B2B Flight API - Access Details
 =========================================
 Company: ${partner.companyName}
 Contact: ${partner.contactName} (${partner.email})
@@ -360,7 +360,7 @@ Note: Keep these credentials safe. Do not share publicly.
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
   <meta charset='utf-8'>
-  <title>TrippeChalo B2B Flight API Specification - ${partner.companyName}</title>
+  <title>TrippeChalo India B2B Flight API Specification - ${partner.companyName}</title>
   <!--[if gte mso 9]>
   <xml>
     <w:WordDocument>
@@ -482,7 +482,7 @@ Note: Keep these credentials safe. Do not share publicly.
   ${!isDocDownload && !isPreviewInModal ? `
   <div class="no-print" style="margin-bottom: 22px; padding: 14px 20px; background-color: #0f2b48; color: #ffffff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
     <div>
-      <strong style="color: #60a5fa; font-size: 15px;">TrippeChalo B2B Flight API Specification (${envBadge})</strong>
+      <strong style="color: #60a5fa; font-size: 15px;">TrippeChalo India B2B Flight API Specification (${envBadge})</strong>
       <div style="font-size: 12px; color: #cbd5e1; margin-top: 3px;">In the browser print preview dialog, select "Save as PDF" under Destination to export.</div>
     </div>
     <div style="display: flex; gap: 10px;">
@@ -534,7 +534,7 @@ Note: Keep these credentials safe. Do not share publicly.
 
   <div class="alert-box">
     <strong style="font-size: 11pt;">[BASE GATEWAY URL &bull; {{URL}} VARIABLE]</strong><br/>
-    Throughout this specification, the variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway URL:<br/><br/>
+    Throughout this specification, the variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo India API Gateway URL:<br/><br/>
     &bull; <strong>Company Gateway URL:</strong> <code style="font-weight: bold; color: #15803d; font-size: 11pt;">${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}</code><br/><br/>
     <em>Set the variable <code>{{URL}}</code> in Postman or your code to <code>${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}</code>. All API endpoints start with <code>{{URL}}/api/v1/b2b/...</code></em>
   </div>
@@ -574,7 +574,7 @@ Note: Keep these credentials safe. Do not share publicly.
   <div class="alert-box">
     ${isLive ? `
       <strong>[LIVE PRODUCTION ENVIRONMENT]</strong><br/>
-      You are connected to the <strong>LIVE PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here reserve real seats from airlines and deduct actual funds from your TrippeChalo API Wallet. Ensure your wallet has sufficient balance before issuing tickets.
+      You are connected to the <strong>LIVE PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here reserve real seats from airlines and deduct actual funds from your TrippeChalo India API Wallet. Ensure your wallet has sufficient balance before issuing tickets.
     ` : `
       <strong>[SANDBOX TEST ENVIRONMENT]</strong><br/>
       You are connected to the <strong>SANDBOX TEST ENVIRONMENT</strong>. All flight search and booking calls simulate inventory confirmation without deducting real funds or blocking real airline seats.
@@ -643,7 +643,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><strong>Wallet Balance</strong></td>
         <td>Maintain Sufficient Balance</td>
-        <td>Before issuing bookings, your TrippeChalo API Wallet must have enough balance. Bookings without sufficient balance return HTTP 402 Payment Required.</td>
+        <td>Before issuing bookings, your TrippeChalo India API Wallet must have enough balance. Bookings without sufficient balance return HTTP 402 Payment Required.</td>
       </tr>
       <tr>
         <td><strong>Real-Time Booking</strong></td>
@@ -787,7 +787,7 @@ Note: Keep these credentials safe. Do not share publicly.
     <span style="font-size: 10.5pt; color: #334155; line-height: 1.6;">
       1. Run the test calls using your sandbox credentials.<br/>
       2. Keep a note of the generated <strong>PNR numbers</strong> (Domestic: <code>TESTDOM...</code>, International: <code>TESTINT...</code>).<br/>
-      3. Share your generated PNRs with your TrippeChalo Account Manager.<br/>
+      3. Share your generated PNRs with your TrippeChalo India Account Manager.<br/>
       4. Once verified, your partner account will be promoted to <strong>Live Production</strong>!
     </span>
   </div>
@@ -1350,7 +1350,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><code>402 Payment Required</code></td>
         <td><code>INSUFFICIENT_WALLET</code></td>
-        <td>(Production Mode) Partner API Wallet has insufficient funds. Top up wallet via TrippeChalo Admin.</td>
+        <td>(Production Mode) Partner API Wallet has insufficient funds. Top up wallet via TrippeChalo India Admin.</td>
       </tr>
       <tr>
         <td><code>403 Forbidden</code></td>
@@ -1379,11 +1379,11 @@ Note: Keep these credentials safe. Do not share publicly.
   <table class="data-table">
     <tr>
       <td style="width: 30%; font-weight: bold; background-color: #f1f5f9;">Technical Support Desk</td>
-      <td>TrippeChalo Dedicated Account Manager & Operations Desk</td>
+      <td>TrippeChalo India Dedicated Account Manager & Operations Desk</td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Account Technical Manager</td>
-      <td>TrippeChalo B2B Technical Integration Cell</td>
+      <td>TrippeChalo India B2B Technical Integration Cell</td>
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Production Escalation SLA</td>
@@ -1412,7 +1412,7 @@ Note: Keep these credentials safe. Do not share publicly.
     });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `TrippeChalo_${isLive ? 'LIVE' : 'SANDBOX'}_API_${partner.companyName.replace(/[^a-zA-Z0-9]/g, '_')}.doc`;
+    link.download = `TrippeChalo_India_${isLive ? 'LIVE' : 'SANDBOX'}_API_${partner.companyName.replace(/[^a-zA-Z0-9]/g, '_')}.doc`;
     link.click();
     toast.success(`${isLive ? 'Live Production' : 'Sandbox Test'} Word Document (.doc) downloaded for ${partner.companyName}!`);
   };
@@ -1438,9 +1438,9 @@ Note: Keep these credentials safe. Do not share publicly.
     const apiKey = isLive ? partner.liveApiKey : partner.testApiKey;
     const collection = {
       info: {
-        name: `TrippeChalo B2B Flight API (${isLive ? 'LIVE' : 'SANDBOX'}) - ${partner.companyName}`,
+        name: `TrippeChalo India B2B Flight API (${isLive ? 'LIVE' : 'SANDBOX'}) - ${partner.companyName}`,
         _postman_id: `tc-b2b-${isLive ? 'live' : 'test'}-${partner._id}`,
-        description: `Official TrippeChalo B2B API Postman Collection (${isLive ? 'LIVE PRODUCTION' : 'SANDBOX TESTING'}) customized for ${partner.companyName}.`,
+        description: `Official TrippeChalo India B2B API Postman Collection (${isLive ? 'LIVE PRODUCTION' : 'SANDBOX TESTING'}) customized for ${partner.companyName}.`,
         schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
       },
       variable: [
@@ -1541,7 +1541,7 @@ Note: Keep these credentials safe. Do not share publicly.
     const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `TrippeChalo_Postman_${isLive ? 'LIVE' : 'SANDBOX'}_${partner.companyName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+    link.download = `TrippeChalo_India_Postman_${isLive ? 'LIVE' : 'SANDBOX'}_${partner.companyName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
     link.click();
     toast.success(`${isLive ? 'Live Production' : 'Sandbox Test'} Postman Collection downloaded for ${partner.companyName}!`);
   };
@@ -1660,7 +1660,7 @@ Note: Keep these credentials safe. Do not share publicly.
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Server className="text-blue-600" /> B2B API Partners
           </h1>
-          <p className="text-gray-500">Manage external companies consuming TrippeChalo APIs</p>
+          <p className="text-gray-500">Manage external companies consuming TrippeChalo India APIs</p>
         </div>
         <button 
           onClick={handleOpenAddModal}
@@ -2825,7 +2825,7 @@ Note: Keep these credentials safe. Do not share publicly.
             {/* Document Render Body */}
             <div className="flex-1 bg-white overflow-hidden relative">
               <iframe
-                title="TrippeChalo API Specification"
+                title="TrippeChalo India API Specification"
                 srcDoc={generateDocumentHtml(docViewerPartner, docViewerEnv, false, true)}
                 className="w-full h-full border-0"
               />
@@ -2838,7 +2838,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <ConfirmModal
         isOpen={!!partnerToDelete}
         title={`Delete "${partnerToDelete?.companyName || 'Partner'}"?`}
-        message={`Are you sure you want to permanently delete this B2B partner? This action will immediately revoke all API keys, active tokens, and permanently terminate their access to TrippeChalo APIs.`}
+        message={`Are you sure you want to permanently delete this B2B partner? This action will immediately revoke all API keys, active tokens, and permanently terminate their access to TrippeChalo India APIs.`}
         confirmText={isDeleting ? 'Deleting...' : 'Permanently Delete'}
         cancelText="Cancel"
         isDestructive={true}

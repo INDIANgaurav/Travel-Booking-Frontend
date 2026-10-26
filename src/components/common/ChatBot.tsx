@@ -113,7 +113,7 @@ export default function ChatBot() {
     return [
       {
         id: 1,
-        text: "Hi! I'm **TrippeChalo AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
+        text: "Hi! I'm **TrippeChalo India AI Assistant**.\n\nI can help you find the best flights, hotels, and travel deals. What are you looking for today?",
         sender: 'bot',
         timestamp: new Date(),
       },
@@ -354,7 +354,9 @@ export default function ChatBot() {
               
               <div className="flex items-center justify-center gap-2">
                 <Bot size={22} className="text-blue-600" />
-                <span className="text-xl font-black text-gray-800 tracking-tight">TrippeChalo AI</span>
+                <span className="text-xl font-black text-gray-800 tracking-tight flex items-center gap-1.5">
+                  TrippeChalo <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide">INDIA</span> AI
+                </span>
               </div>
               
               <button
@@ -372,7 +374,7 @@ export default function ChatBot() {
             <div className="px-5 pt-2 pb-4 bg-white shrink-0 lg:hidden">
               <h2 className="text-3xl font-bold text-blue-500 mb-1">Hi, There</h2>
               <p className="text-gray-800 text-sm leading-relaxed">
-                <strong>I'm TrippeChalo AI</strong> — your personal travel assistant. Let's plan your next trip together.
+                <strong>I'm TrippeChalo India AI</strong> — your personal travel assistant. Let's plan your next trip together.
               </p>
             </div>
 

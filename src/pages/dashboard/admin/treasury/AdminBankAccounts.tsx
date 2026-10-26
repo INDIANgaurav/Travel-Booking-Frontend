@@ -106,7 +106,7 @@ export default function AdminBankAccounts() {
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Account Name *</label>
-              <input required value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. TrippeChalo Pvt Ltd" />
+              <input required value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. TrippeChalo India Pvt Ltd" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Account Number *</label>
