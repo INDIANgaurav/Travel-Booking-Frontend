@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   const { activities } = useAdminSocket();
 
   useEffect(() => {
+    let isMounted = true;
     const fetchDashboardData = async () => {
       try {
         const [statsRes, queueRes] = await Promise.all([
@@ -25,22 +26,55 @@ export default function AdminDashboard() {
           api.get('/api/admin/pending-queue')
         ]);
         
-        setStats(statsRes.data);
-        setPendingQueue(queueRes.data.summary);
-      } catch (error) {
+        if (isMounted) {
+          setStats(statsRes.data);
+          setPendingQueue(queueRes.data.summary);
+        }
+      } catch (error: any) {
+        // If 401 or handled auth, api interceptor triggers auto-logout and session expired toast
+        if (error?.response?.status === 401 || error?.isHandledAuth) {
+          return;
+        }
         console.error('Error fetching admin dashboard data:', error);
-        toast.error('Failed to load dashboard data');
+        toast.error('Failed to load dashboard data', { id: 'admin-dashboard-error' });
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     fetchDashboardData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-[70vh]">
         <Loader />
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-center p-6">
+        <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+          <Activity size={32} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Dashboard Data Unavailable</h2>
+          <p className="text-sm text-gray-500 mt-1 max-w-md">
+            We couldn't retrieve the latest administrative statistics. Please refresh or check your connection.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md transition-all cursor-pointer"
+        >
+          Retry Loading
+        </button>
       </div>
     );
   }

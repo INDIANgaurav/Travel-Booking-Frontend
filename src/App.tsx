@@ -60,6 +60,7 @@ import SupplierBookingHistory from './pages/supplier/SupplierBookingHistory'
 import SupplierQueueHistory from './pages/supplier/SupplierQueueHistory'
 
 import AdminLayout from './layouts/AdminLayout'
+import AdminLoginPage from './pages/public/AdminLoginPage'
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
 import AdminPendingUsers from './pages/dashboard/admin/AdminPendingUsers'
 import AdminManageUsers from './pages/dashboard/admin/AdminManageUsers'
@@ -132,6 +133,7 @@ function App() {
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      dispatch(logout());
       dispatch(logoutUserThunk() as any);
     };
     window.addEventListener('auth-unauthorized', handleUnauthorized);
@@ -159,7 +161,19 @@ function App() {
 
   // A simple wrapper to protect routes
   const ProtectedRoute = ({ children, allowedRoles }: { children?: React.ReactNode, allowedRoles?: string[] }) => {
-    if (!isAuthenticated) return <Navigate to="/" replace />
+    if (!isAuthenticated) {
+      const path = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (path.startsWith('/admin') || allowedRoles?.includes('SUPER_ADMIN')) {
+        return <Navigate to="/admin/login" replace />;
+      }
+      if (path.startsWith('/supplier') || allowedRoles?.includes('SUPPLIER_AGENT')) {
+        return <Navigate to="/supplier/login" replace />;
+      }
+      if (path.startsWith('/b2b') || allowedRoles?.includes('B2B_AGENT')) {
+        return <Navigate to="/b2b/login" replace />;
+      }
+      return <Navigate to="/?login=true" replace />;
+    }
     if (user && user.isActive === false) return <Navigate to="/inactive-account" replace />
     if (user && user.roles && user.roles.includes('B2B_AGENT') && (user.agentStatus === 'PENDING' || user.agentStatus === 'INCOMPLETE')) {
       return <Navigate to="/pending-approval" replace />
@@ -209,6 +223,8 @@ function App() {
 
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Navigate to="/?login=true" replace />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/flights/search" element={<FlightSearchResults />} />
         <Route path="/flights/booking" element={<FlightBookingPage />} />
         <Route path="/hotels/search" element={<HotelSearchResults />} />

@@ -60,6 +60,13 @@ export default function LandingPage() {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  // Automatically open login modal if redirected with ?login=true
+  useEffect(() => {
+    if (searchParams.get('login') === 'true' && !isAuthenticated) {
+      setIsLoginModalOpen(true);
+    }
+  }, [searchParams, isAuthenticated]);
+
   const [topFlightRoutes, setTopFlightRoutes] = useState<any[]>([
     { from: 'Delhi', to: 'Mumbai', codeFrom: 'DEL', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
     { from: 'Mumbai', to: 'Delhi', codeFrom: 'BOM', codeTo: 'DEL', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80' },

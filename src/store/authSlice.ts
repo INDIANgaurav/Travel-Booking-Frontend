@@ -53,10 +53,25 @@ const loadUserFromStorage = () => {
   }
 };
 
+const loadTokenFromStorage = () => {
+  try {
+    return localStorage.getItem('token') || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const initialUser = loadUserFromStorage();
+const initialToken = loadTokenFromStorage();
+
+if (initialToken) {
+  setAuthToken(initialToken);
+}
+
 const initialState: AuthState = {
-  user: loadUserFromStorage(),
-  token: null,
-  isAuthenticated: !!loadUserFromStorage(),
+  user: initialUser,
+  token: initialToken,
+  isAuthenticated: !!(initialUser && initialToken),
   showAgentOnboarding: false,
 };
 
@@ -65,7 +80,7 @@ export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async (_, { d
     const api = (await import('../services/api')).default;
     await api.post('/api/auth/logout');
   } catch (e) {
-    console.error('Logout failed', e);
+    // Ignore server error on logout
   } finally {
     dispatch(authSlice.actions.logout());
   }
@@ -84,7 +99,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       setAuthToken(action.payload.token);
       localStorage.setItem('user', JSON.stringify(action.payload.user));
-      localStorage.removeItem('token'); // Cleanup old architecture token
+      localStorage.setItem('token', action.payload.token);
       localStorage.removeItem('b2bSearchState');
     },
     logout: (state) => {
@@ -93,7 +108,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       setAuthToken(null);
       localStorage.removeItem('user');
-      localStorage.removeItem('token'); // Cleanup old architecture token
+      localStorage.removeItem('token');
       localStorage.removeItem('b2bSearchState');
       localStorage.removeItem('b2bRecentSearches');
     },
