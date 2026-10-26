@@ -73,6 +73,9 @@ export default function AdminB2BPartners() {
   const [editingPartner, setEditingPartner] = useState<B2BClient | null>(null);
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<B2BClient | null>(null);
+  const [isDocViewerOpen, setIsDocViewerOpen] = useState(false);
+  const [docViewerPartner, setDocViewerPartner] = useState<B2BClient | null>(null);
+  const [docViewerEnv, setDocViewerEnv] = useState<'test' | 'live'>('test');
   const [partnerToDelete, setPartnerToDelete] = useState<B2BClient | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -345,7 +348,7 @@ Note: Keep these credentials safe. Do not share publicly.
     return import.meta.env.VITE_API_URL || 'https://travel-go-backend-ozbw.onrender.com';
   };
 
-  const generateDocumentHtml = (partner: B2BClient, env: 'test' | 'live' = 'test', isDocDownload: boolean = false) => {
+  const generateDocumentHtml = (partner: B2BClient, env: 'test' | 'live' = 'test', isDocDownload: boolean = false, isPreviewInModal: boolean = false) => {
     const serverUrl = getServerUrl();
     const isLive = env === 'live';
     const apiKey = isLive ? partner.liveApiKey : partner.testApiKey;
@@ -476,7 +479,7 @@ Note: Keep these credentials safe. Do not share publicly.
 </head>
 <body>
 <div class="WordSection1">
-  ${!isDocDownload ? `
+  ${!isDocDownload && !isPreviewInModal ? `
   <div class="no-print" style="margin-bottom: 22px; padding: 14px 20px; background-color: #0f2b48; color: #ffffff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
     <div>
       <strong style="color: #60a5fa; font-size: 15px;">TrippeChalo B2B Flight API Specification (${envBadge})</strong>
@@ -1551,11 +1554,27 @@ Note: Keep these credentials safe. Do not share publicly.
     setIsDocsModalOpen(true);
   };
 
+  const openDocViewer = (partner: B2BClient, env: 'test' | 'live' = 'test') => {
+    setDocViewerPartner(partner);
+    setDocViewerEnv(env);
+    setIsDocViewerOpen(true);
+  };
+
+  const openDocInNewTab = (partner: B2BClient, env: 'test' | 'live' = 'test') => {
+    const html = generateDocumentHtml(partner, env, false, false);
+    const newTab = window.open('', '_blank');
+    if (!newTab) {
+      toast.error('Please allow popups to view documentation in a new tab');
+      return;
+    }
+    newTab.document.write(html);
+    newTab.document.close();
+    newTab.focus();
+  };
+
   const openFullDocs = (env: 'test' | 'live') => {
     if (!selectedPartner) return;
-    const key = env === 'test' ? selectedPartner.testApiKey : selectedPartner.liveApiKey;
-    const url = `/api-docs?partner=${encodeURIComponent(selectedPartner.companyName)}&env=${env}&key=${encodeURIComponent(key)}`;
-    window.open(url, '_blank');
+    openDocViewer(selectedPartner, env);
   };
 
   // Filter partner bookings for verification modal
@@ -1933,12 +1952,22 @@ Note: Keep these credentials safe. Do not share publicly.
                     )}
                   </button>
 
-                  <button 
-                    onClick={() => openDocs(partner)}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-2 px-3 rounded-xl transition text-xs font-medium shadow-xs cursor-pointer"
-                  >
-                    <Key size={13} /> View Keys & Docs
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      onClick={() => openDocs(partner)}
+                      className="w-full flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white py-2 px-2.5 rounded-xl transition text-xs font-semibold shadow-xs cursor-pointer"
+                      title="View API Keys & Authentication Credentials"
+                    >
+                      <Key size={13} /> View Keys
+                    </button>
+                    <button 
+                      onClick={() => openDocViewer(partner, partner.status === 'Live' ? 'live' : 'test')}
+                      className="w-full flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2.5 rounded-xl transition text-xs font-bold shadow-xs cursor-pointer"
+                      title="View & Read Full API Specification"
+                    >
+                      <Eye size={13} /> View Docs
+                    </button>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button 
                       onClick={() => downloadCustomizedDoc(partner, partner.status === 'Live' ? 'live' : 'test')}
@@ -1948,9 +1977,9 @@ Note: Keep these credentials safe. Do not share publicly.
                       <FileText size={13} /> Word (.doc)
                     </button>
                     <button 
-                      onClick={() => printOrDownloadPdf(partner, partner.status === 'Live' ? 'live' : 'test')}
+                      onClick={() => openDocViewer(partner, partner.status === 'Live' ? 'live' : 'test')}
                       className="flex items-center justify-center gap-1.5 bg-purple-50/80 hover:bg-purple-100 text-purple-700 border border-purple-200/80 py-2 px-2 rounded-xl transition text-xs font-semibold cursor-pointer"
-                      title="Open print preview / Save as PDF"
+                      title="View / Print PDF specification"
                     >
                       <Printer size={13} /> PDF
                     </button>
@@ -2140,24 +2169,31 @@ Note: Keep these credentials safe. Do not share publicly.
                       </span>
                       <span className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded font-bold">999 Seats</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-1.5">
                       <button
-                        onClick={() => downloadCustomizedDoc(selectedPartner, 'test')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
-                        title="Download Sandbox Word Doc (.doc)"
+                        onClick={() => openDocViewer(selectedPartner, 'test')}
+                        className="flex items-center justify-center gap-1 bg-amber-600 hover:bg-amber-700 text-white py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="View Sandbox Spec in Interactive Viewer"
                       >
-                        <FileText size={12} className="text-amber-600 shrink-0"/> Word (.doc)
+                        <Eye size={12} className="shrink-0"/> View Spec
                       </button>
                       <button
-                        onClick={() => printOrDownloadPdf(selectedPartner, 'test')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
-                        title="Print or Save Sandbox Spec as PDF"
+                        onClick={() => downloadCustomizedDoc(selectedPartner, 'test')}
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="Download Sandbox Word Doc (.doc)"
+                      >
+                        <FileText size={12} className="text-amber-600 shrink-0"/> Word
+                      </button>
+                      <button
+                        onClick={() => openDocViewer(selectedPartner, 'test')}
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="View / Print Sandbox Spec as PDF"
                       >
                         <Printer size={12} className="text-amber-600 shrink-0"/> PDF
                       </button>
                       <button
                         onClick={() => downloadCustomizedPostman(selectedPartner, 'test')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
                         title="Download Sandbox Postman Collection"
                       >
                         <Download size={12} className="text-amber-600 shrink-0"/> Postman
@@ -2173,24 +2209,31 @@ Note: Keep these credentials safe. Do not share publicly.
                       </span>
                       <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">Real Flights</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-1.5">
                       <button
-                        onClick={() => downloadCustomizedDoc(selectedPartner, 'live')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
-                        title="Download Live Production Word Doc (.doc)"
+                        onClick={() => openDocViewer(selectedPartner, 'live')}
+                        className="flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="View Live Production Spec in Interactive Viewer"
                       >
-                        <FileText size={12} className="text-emerald-600 shrink-0"/> Word (.doc)
+                        <Eye size={12} className="shrink-0"/> View Spec
                       </button>
                       <button
-                        onClick={() => printOrDownloadPdf(selectedPartner, 'live')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
-                        title="Print or Save Live Spec as PDF"
+                        onClick={() => downloadCustomizedDoc(selectedPartner, 'live')}
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="Download Live Production Word Doc (.doc)"
+                      >
+                        <FileText size={12} className="text-emerald-600 shrink-0"/> Word
+                      </button>
+                      <button
+                        onClick={() => openDocViewer(selectedPartner, 'live')}
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                        title="View / Print Live Spec as PDF"
                       >
                         <Printer size={12} className="text-emerald-600 shrink-0"/> PDF
                       </button>
                       <button
                         onClick={() => downloadCustomizedPostman(selectedPartner, 'live')}
-                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs"
+                        className="flex items-center justify-center gap-1 bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 py-1.5 px-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
                         title="Download Live Production Postman Collection"
                       >
                         <Download size={12} className="text-emerald-600 shrink-0"/> Postman
@@ -2272,8 +2315,8 @@ Note: Keep these credentials safe. Do not share publicly.
                       <span>Test API Key</span>
                       <span className="text-orange-500 lowercase normal-case text-[10px]">(Doesn't deduct real balance)</span>
                     </div>
-                    <button onClick={() => openFullDocs('test')} className="text-blue-600 hover:text-blue-700 flex items-center gap-1 normal-case bg-blue-50 px-2 py-0.5 rounded">
-                      View Test Docs <ExternalLink size={12}/>
+                    <button onClick={() => openDocViewer(selectedPartner, 'test')} className="text-blue-600 hover:text-blue-700 flex items-center gap-1 normal-case bg-blue-50 px-2 py-0.5 rounded cursor-pointer font-semibold">
+                      View Test Docs <Eye size={12}/>
                     </button>
                   </label>
                   <div className="flex">
@@ -2298,8 +2341,8 @@ Note: Keep these credentials safe. Do not share publicly.
                       <span>Live Production Key</span>
                       <span className="text-green-600 lowercase normal-case text-[10px]">(Deducts real balance)</span>
                     </div>
-                    <button onClick={() => openFullDocs('live')} className="text-green-600 hover:text-green-700 flex items-center gap-1 normal-case bg-green-50 px-2 py-0.5 rounded">
-                      View Live Docs <ExternalLink size={12}/>
+                    <button onClick={() => openDocViewer(selectedPartner, 'live')} className="text-green-600 hover:text-green-700 flex items-center gap-1 normal-case bg-green-50 px-2 py-0.5 rounded cursor-pointer font-semibold">
+                      View Live Docs <Eye size={12}/>
                     </button>
                   </label>
                   <div className="flex">
@@ -2670,6 +2713,122 @@ Note: Keep these credentials safe. Do not share publicly.
               >
                 Close Audit View
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Interactive Document Viewer Modal */}
+      {isDocViewerOpen && docViewerPartner && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border border-gray-200">
+            {/* Modal Header */}
+            <div className="px-5 py-3.5 bg-gray-900 text-white flex flex-wrap items-center justify-between gap-3 border-b border-gray-800">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center shrink-0">
+                  <FileText size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold text-sm sm:text-base text-white truncate">
+                      B2B Flight API Specification
+                    </h2>
+                    <span className="text-gray-400 hidden sm:inline">•</span>
+                    <span className="text-blue-400 font-semibold text-xs sm:text-sm truncate hidden sm:inline">
+                      {docViewerPartner.companyName}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 truncate">
+                    Interactive technical interface & UAT specification viewer
+                  </p>
+                </div>
+              </div>
+
+              {/* Center / Right Controls */}
+              <div className="flex items-center flex-wrap gap-2">
+                {/* Environment Toggle */}
+                <div className="bg-gray-800 p-0.5 rounded-lg flex items-center border border-gray-700">
+                  <button
+                    onClick={() => setDocViewerEnv('test')}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      docViewerEnv === 'test'
+                        ? 'bg-amber-500 text-gray-950 shadow-xs'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${docViewerEnv === 'test' ? 'bg-gray-950' : 'bg-amber-400'}`} />
+                    Sandbox Spec
+                  </button>
+                  <button
+                    onClick={() => setDocViewerEnv('live')}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      docViewerEnv === 'live'
+                        ? 'bg-emerald-500 text-gray-950 shadow-xs'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${docViewerEnv === 'live' ? 'bg-gray-950' : 'bg-emerald-400'}`} />
+                    Live Spec
+                  </button>
+                </div>
+
+                {/* Print / Save PDF */}
+                <button
+                  onClick={() => printOrDownloadPdf(docViewerPartner, docViewerEnv)}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shadow-xs"
+                  title="Print or Save as PDF"
+                >
+                  <Printer size={13} />
+                  <span className="hidden md:inline">Print / PDF</span>
+                </button>
+
+                {/* Download Word */}
+                <button
+                  onClick={() => downloadCustomizedDoc(docViewerPartner, docViewerEnv)}
+                  className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  title="Download Microsoft Word .doc"
+                >
+                  <FileText size={13} className="text-blue-400" />
+                  <span className="hidden md:inline">Word</span>
+                </button>
+
+                {/* Download Postman */}
+                <button
+                  onClick={() => downloadCustomizedPostman(docViewerPartner, docViewerEnv)}
+                  className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  title="Download Postman JSON Collection"
+                >
+                  <Download size={13} className="text-amber-400" />
+                  <span className="hidden md:inline">Postman</span>
+                </button>
+
+                {/* Open in New Tab */}
+                <button
+                  onClick={() => openDocInNewTab(docViewerPartner, docViewerEnv)}
+                  className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  title="Open full document in new tab"
+                >
+                  <ExternalLink size={13} />
+                </button>
+
+                {/* Close */}
+                <button
+                  onClick={() => setIsDocViewerOpen(false)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition cursor-pointer ml-1"
+                  title="Close Documentation Viewer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Document Render Body */}
+            <div className="flex-1 bg-white overflow-hidden relative">
+              <iframe
+                title="TrippeChalo API Specification"
+                srcDoc={generateDocumentHtml(docViewerPartner, docViewerEnv, false, true)}
+                className="w-full h-full border-0"
+              />
             </div>
           </div>
         </div>
