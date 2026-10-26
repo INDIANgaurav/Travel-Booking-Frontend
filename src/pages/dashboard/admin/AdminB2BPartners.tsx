@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, 
   Download, ExternalLink, Edit, Trash2, Printer, FileText,
-  Search, Ticket, Calendar, Plane, User as UserIcon, RefreshCw, CheckCheck, Clock, ShieldCheck, ArrowRight
+  Search, Ticket, Calendar, Plane, User as UserIcon, RefreshCw, CheckCheck, Clock, ShieldCheck, ArrowRight,
+  Filter, X, ArrowUpDown
 } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
@@ -74,6 +75,11 @@ export default function AdminB2BPartners() {
   const [selectedPartner, setSelectedPartner] = useState<B2BClient | null>(null);
   const [partnerToDelete, setPartnerToDelete] = useState<B2BClient | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Search, Filter & Sort states for partners list
+  const [partnerSearch, setPartnerSearch] = useState('');
+  const [partnerStatusFilter, setPartnerStatusFilter] = useState<'ALL' | 'Testing' | 'Live' | 'Pending' | 'Suspended'>('ALL');
+  const [partnerSortBy, setPartnerSortBy] = useState<'newest' | 'name' | 'bookings' | 'wallet'>('newest');
 
   // Partner Bookings verification modal states
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
@@ -524,18 +530,17 @@ Note: Keep these credentials safe. Do not share publicly.
   <p>The following pre-configured credentials have been provisioned for <strong>${partner.companyName}</strong>. All requests must be dispatched over secure TLS 1.3 / HTTPS.</p>
 
   <div class="alert-box">
-    <strong style="font-size: 11pt;">[GATEWAY HOST CONFIGURATION &bull; {{URL}} VARIABLE]</strong><br/>
-    Throughout this specification, the variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway Host URL.<br/><br/>
-    &bull; <strong>Company Production Gateway URL:</strong> <code style="font-weight: bold; color: #15803d; font-size: 11pt;">https://api.trippechalo.com</code><br/>
-    &bull; <strong>Company Sandbox / Staging Gateway URL:</strong> <code style="font-weight: bold; color: #b45309; font-size: 11pt;">https://sandbox-api.trippechalo.com</code><br/><br/>
-    <em>In your application or Postman environment variables, configure <code>{{URL}}</code> to your active environment host. All endpoint paths (e.g. <code>{{URL}}/api/v1/b2b/auth/token</code>) resolve against this gateway.</em>
+    <strong style="font-size: 11pt;">[BASE GATEWAY URL &bull; {{URL}} VARIABLE]</strong><br/>
+    Throughout this specification, the variable <code style="font-weight: bold; color: #1e40af; font-size: 11pt;">{{URL}}</code> represents your assigned TrippeChalo API Gateway URL:<br/><br/>
+    &bull; <strong>Company Gateway URL:</strong> <code style="font-weight: bold; color: #15803d; font-size: 11pt;">${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}</code><br/><br/>
+    <em>Set the variable <code>{{URL}}</code> in Postman or your code to <code>${isLive ? 'https://api.trippechalo.com' : 'https://sandbox-api.trippechalo.com'}</code>. All API endpoints start with <code>{{URL}}/api/v1/b2b/...</code></em>
   </div>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 25%;">Configuration Parameter</th>
-        <th style="width: 35%;">Configured Value</th>
+        <th style="width: 25%;">Setting</th>
+        <th style="width: 35%;">Your Configured Value</th>
         <th style="width: 40%;">Description & Usage</th>
       </tr>
     </thead>
@@ -565,162 +570,214 @@ Note: Keep these credentials safe. Do not share publicly.
 
   <div class="alert-box">
     ${isLive ? `
-      <strong>[COMMERCIAL PRODUCTION ENVIRONMENT]</strong><br/>
-      You are connected to the <strong>LIVE COMMERCIAL PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here reserve real physical seats from commercial airline series and decrement actual commercial funds from your TrippeChalo API Wallet. Ensure your wallet balance is funded prior to issuing bookings.
+      <strong>[LIVE PRODUCTION ENVIRONMENT]</strong><br/>
+      You are connected to the <strong>LIVE PRODUCTION ENVIRONMENT</strong>. All booking calls submitted here reserve real seats from airlines and deduct actual funds from your TrippeChalo API Wallet. Ensure your wallet has sufficient balance before issuing tickets.
     ` : `
-      <strong>[SANDBOX SIMULATION ENVIRONMENT]</strong><br/>
-      You are currently accessing the <strong>SANDBOX SIMULATION ENVIRONMENT</strong>. All flight search and booking transactions simulate inventory confirmation without debiting real funds or blocking physical airline seats. Complete the test scenarios described below to qualify for production rollout.
+      <strong>[SANDBOX TEST ENVIRONMENT]</strong><br/>
+      You are connected to the <strong>SANDBOX TEST ENVIRONMENT</strong>. All flight search and booking calls simulate inventory confirmation without deducting real funds or blocking real airline seats.
     `}
   </div>
 
-  <h2>2. INTEGRATION ARCHITECTURE & OPERATING POLICIES</h2>
-  <p>The TrippeChalo B2B Flight API operates as a high-throughput, low-latency airline distribution gateway structured into four distinct transaction stages:</p>
+  <h2>2. API FLOW OVERVIEW</h2>
+  <p>The booking process has 4 simple steps. Complete each step in order:</p>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 12%;">Stage</th>
-        <th style="width: 15%;">Method & Path</th>
-        <th style="width: 35%;">Functional Responsibility</th>
-        <th style="width: 38%;">Aviation SLA & Guarantees</th>
+        <th style="width: 10%;">Step</th>
+        <th style="width: 38%;">Method & Full URL</th>
+        <th style="width: 27%;">What It Does</th>
+        <th style="width: 25%;">Response Speed & Notes</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Stage 1</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>/auth/token</code></td>
-        <td>Session Authentication & Bearer Token Generation</td>
-        <td>Token valid for 24 Hours (86,400s). Response SLA: &lt; 150ms</td>
+        <td><strong>Step 1</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/auth/token</code></td>
+        <td>Login to get 24-hour Session Token</td>
+        <td>Token valid for 24 hours. Fast response (&lt; 150ms)</td>
       </tr>
       <tr>
-        <td><strong>Stage 2</strong></td>
-        <td><span class="badge badge-get">GET</span> <code>/search/sectors</code></td>
-        <td>Commercial Airline Route & Corridor Discovery</td>
-        <td>Returns available active city pairs, minimum fares, and flight series</td>
+        <td><strong>Step 2</strong></td>
+        <td><span class="badge badge-get">GET</span> <code>{{URL}}/api/v1/b2b/search/sectors</code></td>
+        <td>Get list of available flight routes and dates</td>
+        <td>Returns active cities, dates, and lowest fares</td>
       </tr>
       <tr>
-        <td><strong>Stage 3</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>/search/flights</code></td>
-        <td>Live Seat Availability, Pricing & Baggage Query</td>
-        <td>Real-time flight series query. Latency SLA: &lt; 350ms</td>
+        <td><strong>Step 3</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/search/flights</code></td>
+        <td>Search available flights, seats, and net fares</td>
+        <td>Real-time flight search (&lt; 350ms)</td>
       </tr>
       <tr>
-        <td><strong>Stage 4</strong></td>
-        <td><span class="badge badge-post">POST</span> <code>/flights/book</code></td>
-        <td>Instant Airline PNR Reservation & Ticket Issuance</td>
-        <td>Synchronous carrier seat decrement & authentic PNR. Latency SLA: &lt; 800ms</td>
+        <td><strong>Step 4</strong></td>
+        <td><span class="badge badge-post">POST</span> <code>{{URL}}/api/v1/b2b/flights/book</code></td>
+        <td>Book flight and get instant confirmed PNR</td>
+        <td>Instant booking confirmation (&lt; 800ms)</td>
       </tr>
     </tbody>
   </table>
 
   ${isLive ? `
-  <h3>2.1 Commercial Production Policies & Wallet Operations</h3>
+  <h3>2.1 Production Guidelines & Wallet Operations</h3>
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 25%;">Operational Domain</th>
-        <th style="width: 35%;">Standard Operating Rule</th>
-        <th style="width: 40%;">Description & Instructions</th>
+        <th style="width: 25%;">Topic</th>
+        <th style="width: 35%;">Rule</th>
+        <th style="width: 40%;">Description</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Wallet Pre-Funding Requirement</strong></td>
-        <td>Sufficient API Wallet Balance</td>
-        <td>Before issuing bookings, your TrippeChalo API Wallet must maintain sufficient balance to cover gross booking value. Bookings with insufficient wallet balance return HTTP 402 Payment Required.</td>
+        <td><strong>Wallet Balance</strong></td>
+        <td>Maintain Sufficient Balance</td>
+        <td>Before issuing bookings, your TrippeChalo API Wallet must have enough balance. Bookings without sufficient balance return HTTP 402 Payment Required.</td>
       </tr>
       <tr>
-        <td><strong>Real-Time Seat Confirmation</strong></td>
-        <td>Live Carrier PNR Generation</td>
-        <td>Every confirmed booking request reserves real seats with commercial carriers (IndiGo, Air India, SpiceJet, etc.) and generates an authentic airline PNR instantly.</td>
+        <td><strong>Real-Time Booking</strong></td>
+        <td>Live Airline PNR Generated</td>
+        <td>Every confirmed booking request reserves real airline seats and generates an authentic airline PNR instantly.</td>
       </tr>
       <tr>
         <td><strong>No Testing in Production</strong></td>
-        <td>Live Passenger Traffic Only</td>
-        <td>Do not dispatch dummy or synthetic passenger manifests to Live endpoints. Real ticket fares will be charged. All exploratory tests must be conducted in the Sandbox environment.</td>
+        <td>Live Passengers Only</td>
+        <td>Do not send dummy or test passenger names to Live endpoints. Real ticket fares will be charged. Use the Sandbox environment for all testing.</td>
       </tr>
       <tr>
-        <td><strong>Cancellations & Ticket Voids</strong></td>
-        <td>Standard Airline Cancellation Rules</td>
-        <td>Cancellations can be submitted via the B2B portal or cancellation endpoints. Net refundable amounts after airline charges are refunded directly into your API wallet.</td>
+        <td><strong>Cancellations & Refunds</strong></td>
+        <td>Standard Airline Rules</td>
+        <td>Cancellations can be submitted via the B2B portal. Net refundable amounts after airline charges are credited back to your API wallet.</td>
       </tr>
       <tr>
-        <td><strong>Technical Support Desk</strong></td>
-        <td>Dedicated Integration Desk</td>
-        <td>Priority support for schedule changes, flight delivery, and critical booking status inquiries through your Account Manager.</td>
+        <td><strong>Help & Support</strong></td>
+        <td>Dedicated Support Desk</td>
+        <td>Priority support for flight schedules, booking issues, and inquiries through your Account Manager.</td>
       </tr>
     </tbody>
   </table>
   ` : `
-  <h3>2.1 Mandatory UAT Test Scenarios (Sandbox Certification)</h3>
-  <p>Before <strong>${partner.companyName}</strong> can be approved and promoted to the Live Production environment, your development team must execute the following <strong>4 mandatory test scenarios</strong> in Sandbox mode and provide the generated PNR records for audit:</p>
+  <h3>2.1 Sandbox Testing Scenarios & 4 Test Passengers</h3>
+  <p>Before <strong>${partner.companyName}</strong> is upgraded to the Live Production environment, test the following <strong>4 standard test scenarios</strong> in Sandbox mode using the test passenger details below:</p>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 15%;">Scenario ID</th>
-        <th style="width: 25%;">Test Description</th>
-        <th style="width: 30%;">Required Manifest & Input</th>
-        <th style="width: 30%;">Expected Result & Verification</th>
+        <th style="width: 12%;">Test ID</th>
+        <th style="width: 26%;">Scenario</th>
+        <th style="width: 32%;">Input & Sector</th>
+        <th style="width: 30%;">Expected Result & PNR Prefix</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>TC-01 (Mandatory)</strong></td>
-        <td><strong>Solo Adult Oneway Booking (Domestic)</strong></td>
+        <td><strong>TC-01</strong></td>
+        <td><strong>Single Adult Domestic Booking</strong></td>
         <td>
-          &bull; Adults: 1 (Mr. Rohan Sharma)<br/>
-          &bull; Route: DEL to BOM (Domestic Sector)<br/>
-          &bull; Note: <em>No passport required for domestic</em>
+          &bull; 1 Adult (Mr. Rohan Sharma)<br/>
+          &bull; Sector: DEL to BOM (Domestic)<br/>
+          &bull; <em>No passport needed for domestic</em>
         </td>
         <td>
-          Status returns <code>CONFIRMED</code> with unique PNR (e.g. <code>TEST-XXXXXX</code>). Ticket record verified in database.
-        </td>
-      </tr>
-      <tr>
-        <td><strong>TC-02 (Mandatory)</strong></td>
-        <td><strong>Multi-Pax Family Booking (2 Adults + 1 Child + 1 Infant - Domestic)</strong></td>
-        <td>
-          &bull; Adults: 2 (Mr. Rohan Sharma, Mrs. Priya Sharma)<br/>
-          &bull; Children: 1 (Mstr. Aarav Sharma, Age 7, DOB provided)<br/>
-          &bull; Infants: 1 (Miss Anaya Sharma, Age 1, DOB provided)<br/>
-          &bull; Route: DEL to BOM (Domestic - No passport needed)
-        </td>
-        <td>
-          Status returns <code>CONFIRMED</code>. Manifest must verify all 4 passengers ticketed under a single master PNR with correct passenger age categories.
+          Returns <code>CONFIRMED</code> with domestic PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).
         </td>
       </tr>
       <tr>
-        <td><strong>TC-03 (Mandatory)</strong></td>
-        <td><strong>Route Discovery & Dynamic Flight Search</strong></td>
+        <td><strong>TC-02</strong></td>
+        <td><strong>Family Booking (4 Passengers - Domestic)</strong></td>
         <td>
-          &bull; Call <code>GET /search/sectors</code><br/>
-          &bull; Call <code>POST /search/flights</code> for sector DEL to BOM
+          &bull; 2 Adults + 1 Child + 1 Infant<br/>
+          &bull; Sector: DEL to BOM (Domestic)<br/>
+          &bull; <em>No passport needed. DOB only for Child & Infant</em>
         </td>
         <td>
-          Retrieves active sectors list and returns available Series Fare flight items with seat counts and baggage rules.
+          Returns <code>CONFIRMED</code> under single master PNR starting with <strong><code>TESTDOM</code></strong> for all 4 passengers.
         </td>
       </tr>
       <tr>
-        <td><strong>TC-04 (Mandatory)</strong></td>
-        <td><strong>Seat Depletion & Boundary Test</strong></td>
+        <td><strong>TC-03</strong></td>
+        <td><strong>International Booking (With Passports)</strong></td>
         <td>
-          &bull; Request booking with passenger count exceeding remaining flight seats.
+          &bull; Sector: DEL to DXB or DEL to DPS<br/>
+          &bull; Passports & DOBs provided for all passengers
         </td>
         <td>
-          System gracefully rejects with HTTP 400 Bad Request and message: <code>"Not enough seats available"</code>.
+          Returns <code>CONFIRMED</code> with international PNR starting with <strong><code>TESTINT</code></strong> (e.g. <code>TESTINT729104</code>).
         </td>
+      </tr>
+      <tr>
+        <td><strong>TC-04</strong></td>
+        <td><strong>Seat Limit / Boundary Check</strong></td>
+        <td>
+          &bull; Request more seats than remaining flight inventory
+        </td>
+        <td>
+          Rejects with HTTP 400 Bad Request: <code>"Not enough seats available"</code>.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4 style="color: #0f2b48; font-size: 11.5pt; font-weight: 700; margin: 18px 0 8px 0;">4 Test Passengers (Use for all Sandbox Testing):</h4>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 8%;">Pax #</th>
+        <th style="width: 14%;">Type</th>
+        <th style="width: 22%;">Name & Gender</th>
+        <th style="width: 14%;">Date of Birth</th>
+        <th style="width: 14%;">Passport Number</th>
+        <th style="width: 14%;">Passport Expiry</th>
+        <th style="width: 14%;">Domestic Rule</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Pax 1</strong></td>
+        <td><span class="badge-req">ADULT</span> (Lead)</td>
+        <td><strong>Mr. Rohan Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
+        <td><code>1990-05-15</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892101</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 2</strong></td>
+        <td><span class="badge-req">ADULT</span></td>
+        <td><strong>Mrs. Priya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
+        <td><code>1992-08-22</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892102</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 3</strong></td>
+        <td><span class="badge-opt">CHILD</span> (Age 7)</td>
+        <td><strong>Mstr. Aarav Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
+        <td><code>2018-03-10</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892103</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Pax 4</strong></td>
+        <td><span class="badge-opt">INFANT</span> (Age 1)</td>
+        <td><strong>Miss Anaya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
+        <td><code>2025-06-14</code></td>
+        <td><code style="font-weight: bold; color: #1e40af;">TC8892104</code></td>
+        <td><code>2032-08-31</code></td>
+        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
       </tr>
     </tbody>
   </table>
 
   <div style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 14px 18px; margin: 14px 0;">
-    <strong style="color: #1e3a8a; font-size: 11pt;">How to Submit for Admin Verification & Production Sign-off:</strong><br/>
+    <strong style="color: #1e3a8a; font-size: 11pt;">How to Submit Test Results for Live Production Activation:</strong><br/>
     <span style="font-size: 10.5pt; color: #334155; line-height: 1.6;">
-      1. Run the test calls from your application or Postman using your sandbox credentials.<br/>
-      2. Record the generated <strong>PNR numbers</strong> (e.g. <code>TEST-204554</code>) and <strong>Booking IDs</strong>.<br/>
-      3. Share the generated PNR list directly with your TrippeChalo Integration Manager or Account Lead.<br/>
-      4. The TrippeChalo Operations Team will verify the bookings in the <strong>Admin Verification Console</strong> and immediately upgrade your partner status to <strong>Live Production</strong>.
+      1. Run the test calls using your sandbox credentials.<br/>
+      2. Keep a note of the generated <strong>PNR numbers</strong> (Domestic: <code>TESTDOM...</code>, International: <code>TESTINT...</code>).<br/>
+      3. Share your generated PNRs with your TrippeChalo Account Manager.<br/>
+      4. Once verified, your partner account will be promoted to <strong>Live Production</strong>!
     </span>
   </div>
   `}
@@ -1004,72 +1061,17 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
-  <h2>4. PASSENGER MANIFEST STANDARDS & SECTOR RULES</h2>
+  <h2>4. PASSENGER DETAILS & SAMPLE BOOKING</h2>
   
   <div class="alert-box">
-    <strong style="font-size: 11pt;">[CIVIL AVIATION DIRECTIVE: DOMESTIC VS INTERNATIONAL FLIGHTS]</strong><br/>
-    &bull; <strong>DOMESTIC FLIGHTS (India Sectors - e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
-    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>STRICTLY NOT REQUIRED (OMIT)</strong>. Adult Date of Birth (<code>dob</code>) is also optional for Adults. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child and Infant to confirm age category).<br/><br/>
-    &bull; <strong>INTERNATIONAL FLIGHTS:</strong><br/>
-    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and Date of Birth (<code>dob</code>) are <strong>MANDATORY FOR ALL PASSENGERS</strong> as per Civil Aviation authority mandates.
+    <strong style="font-size: 11pt;">[DOMESTIC VS INTERNATIONAL FLIGHT RULES]</strong><br/>
+    &bull; <strong>Domestic Flights (e.g. DEL-BOM, BOM-BLR, DEL-GOI):</strong><br/>
+    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) are <strong>NOT REQUIRED (Omit)</strong>. Adult Date of Birth (<code>dob</code>) is also optional. You only need: <code>title</code>, <code>firstName</code>, <code>lastName</code>, <code>type</code>, <code>gender</code>, and <code>dob</code> (only for Child and Infant).<br/><br/>
+    &bull; <strong>International Flights (e.g. DEL-DXB, DEL-DPS):</strong><br/>
+    Passport details (<code>passportNo</code>, <code>passportExpiry</code>) and Date of Birth (<code>dob</code>) are <strong>MANDATORY FOR ALL PASSENGERS</strong>.
   </div>
 
-  <h3>4.1 Certified UAT Test Manifest - 4 Passengers (Domestic & International)</h3>
-  <p>Use the following pre-validated passenger test identities when conducting testing or integration certification:</p>
-
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th style="width: 8%;">Pax #</th>
-        <th style="width: 14%;">Category</th>
-        <th style="width: 22%;">Name & Gender</th>
-        <th style="width: 14%;">Date of Birth</th>
-        <th style="width: 14%;">Passport Number</th>
-        <th style="width: 14%;">Passport Expiry</th>
-        <th style="width: 14%;">Domestic Rule</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Pax 1</strong></td>
-        <td><span class="badge-req">ADULT</span> (Lead)</td>
-        <td><strong>Mr. Rohan Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
-        <td><code>1990-05-15</code></td>
-        <td><code style="font-weight: bold; color: #1e40af;">TC8892101</code></td>
-        <td><code>2032-08-31</code></td>
-        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
-      </tr>
-      <tr>
-        <td><strong>Pax 2</strong></td>
-        <td><span class="badge-req">ADULT</span></td>
-        <td><strong>Mrs. Priya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
-        <td><code>1992-08-22</code></td>
-        <td><code style="font-weight: bold; color: #1e40af;">TC8892102</code></td>
-        <td><code>2032-08-31</code></td>
-        <td><span style="color: #059669; font-weight: bold;">Omit Passport & DOB</span></td>
-      </tr>
-      <tr>
-        <td><strong>Pax 3</strong></td>
-        <td><span class="badge-opt">CHILD</span> (Age 7)</td>
-        <td><strong>Mstr. Aarav Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Male</span></td>
-        <td><code>2018-03-10</code></td>
-        <td><code style="font-weight: bold; color: #1e40af;">TC8892103</code></td>
-        <td><code>2032-08-31</code></td>
-        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
-      </tr>
-      <tr>
-        <td><strong>Pax 4</strong></td>
-        <td><span class="badge-opt">INFANT</span> (Age 1)</td>
-        <td><strong>Miss Anaya Sharma</strong><br/><span style="font-size: 8.5pt; color: #64748b;">Female</span></td>
-        <td><code>2025-06-14</code></td>
-        <td><code style="font-weight: bold; color: #1e40af;">TC8892104</code></td>
-        <td><code>2032-08-31</code></td>
-        <td><span style="color: #b45309; font-weight: bold;">DOB Required (Omit Passport)</span></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <h3>4.2 Field-by-Field Manifest Data Dictionary</h3>
+  <h3>4.1 Passenger Field Guide</h3>
   <table class="data-table">
     <thead>
       <tr>
@@ -1077,7 +1079,7 @@ Note: Keep these credentials safe. Do not share publicly.
         <th style="width: 12%;">Type</th>
         <th style="width: 22%;">Domestic Flights</th>
         <th style="width: 22%;">International Flights</th>
-        <th>Rules & Validation Description</th>
+        <th>Description</th>
       </tr>
     </thead>
     <tbody>
@@ -1093,14 +1095,14 @@ Note: Keep these credentials safe. Do not share publicly.
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Given name as displayed on Govt photo ID (Aadhaar / Voter ID / Passport)</td>
+        <td>Passenger first name (as per Govt ID / Passport)</td>
       </tr>
       <tr>
         <td><code>lastName</code></td>
         <td>String</td>
         <td><span class="badge-req">Mandatory</span></td>
         <td><span class="badge-req">Mandatory</span></td>
-        <td>Last name / Surname as displayed on Govt photo ID</td>
+        <td>Passenger last name (as per Govt ID / Passport)</td>
       </tr>
       <tr>
         <td><code>type</code></td>
@@ -1119,30 +1121,30 @@ Note: Keep these credentials safe. Do not share publicly.
       <tr>
         <td><code>dob</code></td>
         <td>String</td>
-        <td><span class="badge-opt">Required ONLY for Child & Infant</span><br/><span style="font-size: 8.5pt; color: #64748b;">(Not needed for Adults)</span></td>
-        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
-        <td>Date of birth (<code>YYYY-MM-DD</code>). In domestic flights, strictly required for CHD and INF to confirm fare qualification.</td>
+        <td><span class="badge-opt">Required for Child & Infant</span><br/><span style="font-size: 8.5pt; color: #64748b;">(Omit for Adults)</span></td>
+        <td><span class="badge-req">Mandatory for ALL</span></td>
+        <td>Date of birth (<code>YYYY-MM-DD</code>)</td>
       </tr>
       <tr>
         <td><code>passportNo</code></td>
         <td>String</td>
         <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
-        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
-        <td>Passport alphanumeric number. Only required when booking international sectors.</td>
+        <td><span class="badge-req">Mandatory for ALL</span></td>
+        <td>Passport number (required for international sectors)</td>
       </tr>
       <tr>
         <td><code>passportExpiry</code></td>
         <td>String</td>
         <td><span style="background-color: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 8.5pt;">NOT REQUIRED (Omit)</span></td>
-        <td><span class="badge-req">Mandatory for ALL Pax</span></td>
-        <td>Passport expiration date (<code>YYYY-MM-DD</code>). Must have 6+ months validity.</td>
+        <td><span class="badge-req">Mandatory for ALL</span></td>
+        <td>Passport expiry date (<code>YYYY-MM-DD</code>, must have 6+ months validity)</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>4.3 Standard Domestic Booking Request (4 Passengers: 2 Adults + 1 Child + 1 Infant)</h3>
+  <h3>4.2 Domestic Booking Request Payload (4 Passengers: 2 Adults + 1 Child + 1 Infant)</h3>
   <p style="font-size: 10pt; color: #475569;">
-    Notice that for domestic flights, <strong>no passport fields are sent</strong>, and <code>dob</code> is only provided for Child and Infant:
+    For domestic flights, no passport fields are sent, and <code>dob</code> is only provided for Child and Infant:
   </p>
   <pre class="code-box">{
   "sfId": "SF-TC-C1A-20261210",
@@ -1182,9 +1184,9 @@ Note: Keep these credentials safe. Do not share publicly.
   "contactPhone": "9876543210"
 }</pre>
 
-  <h3>4.4 International Booking Request (All 4 Passengers with Passports & DOBs)</h3>
+  <h3>4.3 International Booking Request Payload (All 4 Passengers with Passports & DOBs)</h3>
   <p style="font-size: 10pt; color: #475569;">
-    When booking international sectors, Civil Aviation rules mandate complete passport details and dates of birth for all passengers:
+    When booking international flights, complete passport details and dates of birth are required for all passengers:
   </p>
   <pre class="code-box">{
   "sfId": "SF-TC-INT-20261210",
@@ -1234,14 +1236,18 @@ Note: Keep these credentials safe. Do not share publicly.
   "contactPhone": "9876543210"
 }</pre>
 
-  <h3>4.5 Sample Booking Confirmation Response (HTTP 200 OK)</h3>
+  <h3>4.4 Sample Booking Confirmation Response (HTTP 200 OK)</h3>
+  <p style="font-size: 10pt; color: #475569;">
+    Clean booking confirmation response with confirmed PNR and ticket status:
+  </p>
   <pre class="code-box">{
   "success": true,
   "data": {
-    "pnr": "TC${Math.floor(100000 + Math.random() * 900000)}",
+    "pnr": "TESTDOM${Math.floor(100000 + Math.random() * 900000)}",
     "bookingId": "BK-B2B-${Math.floor(100000 + Math.random() * 900000)}",
     "status": "CONFIRMED",
     "message": "Flight booked successfully.",
+    "totalFare": 16800,
     "flight": {
       "sfId": "SF-TC-C1A-20261210",
       "airline": "IndiGo",
@@ -1250,9 +1256,7 @@ Note: Keep these credentials safe. Do not share publicly.
       "destination": "BOM",
       "travelDate": "2026-12-10T00:00:00.000Z",
       "departureTime": "07:00",
-      "arrivalTime": "09:15",
-      "remainingSeats": 14,
-      "totalFare": 13500
+      "arrivalTime": "09:15"
     },
     "passengers": [
       {
@@ -1286,6 +1290,11 @@ Note: Keep these credentials safe. Do not share publicly.
     ]
   }
 }</pre>
+  <p style="font-size: 10pt; color: #475569;">
+    <strong>PNR Prefix Rule:</strong><br/>
+    &bull; All <strong>Domestic bookings</strong> generate PNR starting with <strong><code>TESTDOM</code></strong> (e.g. <code>TESTDOM108293</code>).<br/>
+    &bull; All <strong>International bookings</strong> generate PNR starting with <strong><code>TESTINT</code></strong> (e.g. <code>TESTINT729104</code>).
+  </p>
 
   <h2>5. STANDARD HTTP STATUS CODES & EXCEPTION DICTIONARY</h2>
   <table class="data-table">
@@ -1559,9 +1568,52 @@ Note: Keep these credentials safe. Do not share publicly.
   // Sort dates descending (latest date on top)
   const sortedDateKeys = Object.keys(groupedBookings).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
+  // Partner stats for quick filter tabs
+  const partnerCounts = {
+    total: partners.length,
+    testing: partners.filter(p => p.status === 'Testing').length,
+    live: partners.filter(p => p.status === 'Live').length,
+    pending: partners.filter(p => p.status === 'Pending').length,
+    suspended: partners.filter(p => p.status === 'Suspended').length,
+  };
+
+  // Filtered & Sorted partners list
+  const filteredPartners = partners
+    .filter(partner => {
+      // Status filter
+      if (partnerStatusFilter !== 'ALL' && partner.status !== partnerStatusFilter) {
+        return false;
+      }
+      // Search query filter
+      if (partnerSearch.trim()) {
+        const q = partnerSearch.toLowerCase().trim();
+        const matchCompany = partner.companyName?.toLowerCase().includes(q);
+        const matchContact = partner.contactName?.toLowerCase().includes(q);
+        const matchEmail = partner.email?.toLowerCase().includes(q);
+        const matchUsername = partner.username?.toLowerCase().includes(q);
+        const matchKey = partner.testApiKey?.toLowerCase().includes(q) || partner.liveApiKey?.toLowerCase().includes(q);
+        return Boolean(matchCompany || matchContact || matchEmail || matchUsername || matchKey);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (partnerSortBy === 'name') {
+        return (a.companyName || '').localeCompare(b.companyName || '');
+      }
+      if (partnerSortBy === 'bookings') {
+        return (b.totalBookings ?? 0) - (a.totalBookings ?? 0);
+      }
+      if (partnerSortBy === 'wallet') {
+        return (b.apiWalletBalance ?? 0) - (a.apiWalletBalance ?? 0);
+      }
+      // 'newest' default
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Server className="text-blue-600" /> B2B API Partners
@@ -1570,11 +1622,164 @@ Note: Keep these credentials safe. Do not share publicly.
         </div>
         <button 
           onClick={handleOpenAddModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold shadow-xs hover:shadow transition cursor-pointer"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Add New Partner
         </button>
+      </div>
+
+      {/* Modern Search, Filter & Controls Bar */}
+      <div className="bg-white p-4 rounded-2xl shadow-xs border border-gray-200 mb-6 space-y-3.5">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Field */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={17} />
+            <input 
+              type="text" 
+              placeholder="Search by company name, contact, email, username or API key..."
+              value={partnerSearch}
+              onChange={(e) => setPartnerSearch(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+            />
+            {partnerSearch && (
+              <button 
+                onClick={() => setPartnerSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-200 transition cursor-pointer"
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Sort By Dropdown */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+              <ArrowUpDown size={13} /> Sort:
+            </span>
+            <select
+              value={partnerSortBy}
+              onChange={(e) => setPartnerSortBy(e.target.value as any)}
+              className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+            >
+              <option value="newest">Newest First</option>
+              <option value="name">Company Name (A-Z)</option>
+              <option value="bookings">Total Bookings</option>
+              <option value="wallet">API Wallet Balance</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Status Filter Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-400 mr-1 flex items-center gap-1">
+              <Filter size={12} /> Status:
+            </span>
+            <button
+              onClick={() => setPartnerStatusFilter('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                partnerStatusFilter === 'ALL'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              All
+              <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                partnerStatusFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {partnerCounts.total}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setPartnerStatusFilter('Testing')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                partnerStatusFilter === 'Testing'
+                  ? 'bg-orange-600 text-white shadow-xs'
+                  : 'bg-orange-50 hover:bg-orange-100/80 text-orange-700 border border-orange-200/60'
+              }`}
+            >
+              Testing / Sandbox
+              <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                partnerStatusFilter === 'Testing' ? 'bg-white/20 text-white' : 'bg-orange-200/70 text-orange-800'
+              }`}>
+                {partnerCounts.testing}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setPartnerStatusFilter('Live')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                partnerStatusFilter === 'Live'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 border border-emerald-200/60'
+              }`}
+            >
+              Live Production
+              <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                partnerStatusFilter === 'Live' ? 'bg-white/20 text-white' : 'bg-emerald-200/70 text-emerald-800'
+              }`}>
+                {partnerCounts.live}
+              </span>
+            </button>
+
+            {partnerCounts.pending > 0 && (
+              <button
+                onClick={() => setPartnerStatusFilter('Pending')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                  partnerStatusFilter === 'Pending'
+                    ? 'bg-gray-800 text-white shadow-xs'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                Pending
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                  partnerStatusFilter === 'Pending' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {partnerCounts.pending}
+                </span>
+              </button>
+            )}
+
+            {partnerCounts.suspended > 0 && (
+              <button
+                onClick={() => setPartnerStatusFilter('Suspended')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                  partnerStatusFilter === 'Suspended'
+                    ? 'bg-red-600 text-white shadow-xs'
+                    : 'bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/60'
+                }`}
+              >
+                Suspended
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] ${
+                  partnerStatusFilter === 'Suspended' ? 'bg-white/20 text-white' : 'bg-red-200/70 text-red-800'
+                }`}>
+                  {partnerCounts.suspended}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* Results Summary / Clear */}
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>
+              Showing <strong className="text-gray-900">{filteredPartners.length}</strong> of {partners.length} partners
+            </span>
+            {(partnerSearch || partnerStatusFilter !== 'ALL') && (
+              <button
+                onClick={() => {
+                  setPartnerSearch('');
+                  setPartnerStatusFilter('ALL');
+                }}
+                className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2 ml-1 cursor-pointer"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -1585,9 +1790,26 @@ Note: Keep these credentials safe. Do not share publicly.
           <h3 className="text-lg font-medium text-gray-900">No B2B Partners yet</h3>
           <p className="text-gray-500 mt-2">Add your first partner to generate their API keys.</p>
         </div>
+      ) : filteredPartners.length === 0 ? (
+        <div className="text-center p-12 bg-white rounded-2xl shadow-xs border border-gray-200">
+          <Search className="mx-auto text-gray-300 mb-3" size={40} />
+          <h3 className="text-base font-bold text-gray-800">No matching partners found</h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+            No B2B partners matched your search query &ldquo;{partnerSearch}&rdquo; or selected status filter.
+          </p>
+          <button
+            onClick={() => {
+              setPartnerSearch('');
+              setPartnerStatusFilter('ALL');
+            }}
+            className="mt-4 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl text-xs font-bold transition cursor-pointer"
+          >
+            Clear Search & Filters
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {partners.map(partner => (
+          {filteredPartners.map(partner => (
             <div key={partner._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition flex flex-col justify-between h-full">
               <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50/50 min-h-[92px]">
                 <div className="flex-1 pr-3 min-w-0">
