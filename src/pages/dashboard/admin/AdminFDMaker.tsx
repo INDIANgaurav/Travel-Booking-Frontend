@@ -223,6 +223,8 @@ const AdminSeriesFareMaker: React.FC = () => {
     }
   }, [newFare.departureTime, newFare.arrivalTime]);
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
@@ -238,14 +240,24 @@ const AdminSeriesFareMaker: React.FC = () => {
     fetchFares();
   }, []);
 
+  // Auto-fetch whenever mode or filters change
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    fetchFares();
+  }, [flightModeFilter, moreOptionsFilter, supplierFilter, travelTypeFilter, travelDateFilter]);
+
   const fetchFares = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (travelDateFilter) params.append('date', travelDateFilter);
-      if (airlineFilter) params.append('airline', airlineFilter);
-      if (supplierFilter !== 'All') params.append('supplierName', supplierFilter);
-      if (moreOptionsFilter === 'Active') params.append('status', 'Active');
+      if (airlineFilter.trim()) params.append('airline', airlineFilter.trim());
+      if (supplierFilter && supplierFilter !== 'All') params.append('supplierName', supplierFilter);
+      if (travelTypeFilter && travelTypeFilter !== 'All') params.append('bookingType', travelTypeFilter);
+      if (moreOptionsFilter && moreOptionsFilter !== 'All') params.append('status', moreOptionsFilter);
       if (flightModeFilter === 'LIVE') params.append('isTestFlight', 'false');
       if (flightModeFilter === 'TEST') params.append('isTestFlight', 'true');
       
@@ -300,10 +312,10 @@ const AdminSeriesFareMaker: React.FC = () => {
     try {
       await api.put(`/api/series-fare/${expandedId}`, editBuffer);
       setFares(prev => (Array.isArray(prev) ? prev : []).map(f => (f._id === expandedId ? { ...f, ...editBuffer } : f)));
-      toast.success('Price updated!');
+      toast.success('Fare details updated successfully!');
     } catch (err) {
       setFares(prev => (Array.isArray(prev) ? prev : []).map(f => (f._id === expandedId ? { ...f, ...editBuffer } : f)));
-      toast.success('Price updated locally (mock)');
+      toast.success('Fare details updated locally (mock)');
     }
   };
 
@@ -816,7 +828,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                                   className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 shrink-0 shadow-md transition-all cursor-pointer hover:scale-105"
                                   title="Close Drawer"
                                 >
-                                  ←
+                                  <X size={15} strokeWidth={2.5} />
                                 </button>
                               </div>
                             </div>
@@ -828,14 +840,6 @@ const AdminSeriesFareMaker: React.FC = () => {
                                   <tr>
                                     <th className="py-3 px-2 text-center w-12">S.NO</th>
                                     <th className="py-3 px-2 text-center w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
-                                    <th className="py-3 px-3 w-24">
-                                      <button 
-                                        onClick={handleSaveEdit}
-                                        className="bg-[#2e1065] hover:bg-purple-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm transition w-full cursor-pointer"
-                                      >
-                                        Change
-                                      </button>
-                                    </th>
                                     <th className="py-3 px-3 whitespace-nowrap">TRAVEL DATE</th>
                                     <th className="py-3 px-3 whitespace-nowrap">DEPARTURE</th>
                                     <th className="py-3 px-3 whitespace-nowrap">ARRIVAL</th>
@@ -889,7 +893,6 @@ const AdminSeriesFareMaker: React.FC = () => {
                                   <tr className="hover:bg-blue-50/40">
                                     <td className="py-3 px-2 text-center font-bold text-gray-700">1</td>
                                     <td className="py-3 px-2 text-center"><input type="checkbox" className="rounded border-gray-300" /></td>
-                                    <td className="py-3 px-3"></td>
                                     <td className="py-3 px-3 font-bold text-blue-600 whitespace-nowrap">{formattedDate}</td>
                                     <td className="py-3 px-3 font-mono font-medium whitespace-nowrap">{fare.departureTime}</td>
                                     <td className="py-3 px-3 font-mono font-medium whitespace-nowrap">{fare.arrivalTime}</td>
@@ -962,12 +965,13 @@ const AdminSeriesFareMaker: React.FC = () => {
                                     </td>
                                     <td className="py-3 px-3 text-center whitespace-nowrap">
                                       <div className="flex items-center justify-center gap-2">
-                                        <span 
-                                          className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold cursor-help"
-                                          title={`Supplier / Owner: ${fare.supplierName || 'Super Admin'}`}
+                                        <button 
+                                          onClick={handleSaveEdit}
+                                          className="p-1.5 text-emerald-600 hover:text-white hover:bg-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg transition-all shadow-xs cursor-pointer hover:scale-110"
+                                          title="Save & Apply Changes"
                                         >
-                                          👤
-                                        </span>
+                                          <Check size={16} strokeWidth={2.5} />
+                                        </button>
                                         <button 
                                           onClick={() => handleDeleteClick(fare)} 
                                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
