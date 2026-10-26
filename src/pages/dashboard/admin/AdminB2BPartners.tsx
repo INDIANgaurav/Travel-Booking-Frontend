@@ -618,6 +618,14 @@ Note: Keep these credentials safe. Do not share publicly.
     </tbody>
   </table>
 
+  <div class="alert-box" style="border-left-color: #2563eb; background-color: #eff6ff; color: #1e3a8a;">
+    <strong style="font-size: 11pt;">AUTHENTICATION ARCHITECTURE & HEADER RULES:</strong><br/>
+    &bull; <strong>Step 1 (Authentication Only):</strong> Your Master API Key (or username/password) is used <strong>ONLY in Step 1</strong> to generate a 24-hour Session Token (<code>tokenId</code>).<br/>
+    &bull; <strong>Steps 2, 3, 4 (Sectors, Search, Booking):</strong> Aage ki saari APIs me <strong>sirf Session Token (<code>tokenId</code>)</strong> bhejna compulsory hai:<br/>
+    <code style="font-weight: bold; color: #0f172a; font-size: 10.5pt; display: inline-block; margin-top: 4px;">Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(ya <code style="font-weight: bold; color: #0f172a; font-size: 10.5pt;">tokenId: &lt;tokenId&gt;</code>).<br/>
+    Master API Key ko search ya booking calls me pass karne ki jarurat nahi hai.
+  </div>
+
   ${isLive ? `
   <h3>2.1 Production Guidelines & Wallet Operations</h3>
   <table class="data-table">
@@ -880,7 +888,7 @@ Note: Keep these credentials safe. Do not share publicly.
     </tr>
     <tr>
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
-      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em></td>
+      <td><code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(Mandatory session token from Step 1)</td>
     </tr>
   </table>
 
@@ -930,7 +938,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(Mandatory session token from Step 1)
       </td>
     </tr>
   </table>
@@ -1033,7 +1041,7 @@ Note: Keep these credentials safe. Do not share publicly.
       <td style="font-weight: bold; background-color: #f1f5f9;">Request Headers</td>
       <td>
         <code>Content-Type: application/json</code><br/>
-        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;<em>(or <code>x-api-key: &lt;YOUR_API_KEY&gt;</code>)</em>
+        <code>Authorization: Bearer &lt;tokenId&gt;</code> &nbsp;(Mandatory session token from Step 1)
       </td>
     </tr>
   </table>
