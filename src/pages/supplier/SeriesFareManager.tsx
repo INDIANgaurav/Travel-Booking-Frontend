@@ -257,17 +257,13 @@ const SeriesFareManager: React.FC = () => {
       const response = await api.post('/api/series-fare', newFare);
       if (response.data) {
         setFares(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
+        toast.success('Series Fare created successfully!');
+        setShowAddModal(false);
       }
-    } catch (err) {
-      const mockCreated: ISeriesFare = {
-        _id: Date.now().toString(),
-        sfId: Math.floor(5000 + Math.random() * 1000).toString(),
-        ...newFare as any,
-        status: 'Active' as const
-      };
-      setFares(prev => [mockCreated, ...(Array.isArray(prev) ? prev : [])]);
+    } catch (err: any) {
+      console.error('Failed to create series fare:', err);
+      toast.error(err.response?.data?.message || 'Server error: Series Fare save nahi ho paya.');
     }
-    setShowAddModal(false);
   };
 
   const handleSaveEdit = async () => {

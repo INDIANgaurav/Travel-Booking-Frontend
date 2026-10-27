@@ -36,7 +36,17 @@ interface ISeriesFare {
   isTestFlight?: boolean;
 }
 
-const CitySelect = ({ value, onChange, placeholder = 'Select City' }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
+const CitySelect = ({ 
+  value, 
+  onChange, 
+  placeholder = 'Select City',
+  heightClass = 'h-10'
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  placeholder?: string;
+  heightClass?: string;
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -54,7 +64,7 @@ const CitySelect = ({ value, onChange, placeholder = 'Select City' }: { value: s
     <div className="relative w-full" ref={dropdownRef}>
       <div
         onClick={() => setIsOpen(true)}
-        className="w-full text-xs px-3.5 h-10 border border-gray-300 rounded-lg bg-white font-bold uppercase cursor-pointer flex items-center justify-between hover:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+        className={`w-full text-xs px-3.5 ${heightClass} border border-gray-300 rounded-lg bg-white font-bold uppercase cursor-pointer flex items-center justify-between hover:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs`}
       >
         <span className={value ? 'text-gray-900 font-extrabold tracking-wide' : 'text-gray-400 font-normal normal-case'}>
           {value || placeholder}
@@ -302,34 +312,70 @@ const AdminSeriesFareMaker: React.FC = () => {
   const handleCreateFare = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = { ...newFare };
+      const payload: any = { 
+        ...newFare,
+        supplierName: supplierName || 'Super Admin',
+        supplierId: (user as any)?._id || undefined
+      };
+
+      if (!payload.travelDate) {
+        toast.error('Kripya Journey Travel Date select karein!');
+        return;
+      }
+
       if (isConnectingFlight) {
         payload.segments = segments.filter(s => s.origin && s.destination && s.flightNo);
-        if (payload.segments.length > 0) {
-          payload.origin = payload.segments[0].origin;
-          payload.destination = payload.segments[payload.segments.length - 1].destination;
-          payload.flightNo = payload.segments.map((s: any) => s.flightNo).join(', ');
-          payload.departureTime = payload.segments[0].departureTime;
-          payload.arrivalTime = payload.segments[payload.segments.length - 1].arrivalTime;
+        if (payload.segments.length < 2) {
+          toast.error('Connecting flight ke liye kam se kam 2 legs (e.g. Leg 1: DEL -> BOM, Leg 2: BOM -> DXB) complete fill karein!');
+          return;
         }
+        for (let i = 0; i < payload.segments.length; i++) {
+          const seg = payload.segments[i];
+          if (!seg.departureTime || !seg.arrivalTime) {
+            toast.error(`Flight Leg ${i + 1} ka Depart Time aur Arrival Time select karein!`);
+            return;
+          }
+        }
+        payload.origin = payload.segments[0].origin;
+        payload.destination = payload.segments[payload.segments.length - 1].destination;
+        payload.flightNo = payload.segments.map((s: any) => s.flightNo).join(', ');
+        payload.departureTime = payload.segments[0].departureTime;
+        payload.arrivalTime = payload.segments[payload.segments.length - 1].arrivalTime;
+      } else {
+        if (!payload.origin || !payload.destination) {
+          toast.error('Origin aur Destination city select karein!');
+          return;
+        }
+        if (!payload.flightNo) {
+          toast.error('Flight Number enter karein!');
+          return;
+        }
+        if (!payload.departureTime || !payload.arrivalTime) {
+          toast.error('Departure Time aur Arrival Time select karein!');
+          return;
+        }
+      }
+
+      if (!payload.airline) {
+        toast.error('Airline name enter karein!');
+        return;
+      }
+      if (!payload.adtFare) {
+        toast.error('Adult Fare enter karein!');
+        return;
       }
 
       const response = await api.post('/api/series-fare', payload);
       if (response.data) {
         setFares(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(newFare.isTestFlight ? 'Test Flight (Sandbox 999 seats) created!' : 'Live Series Fare created successfully!');
+        setShowAddModal(false);
       }
-    } catch (err) {
-      const mockCreated: ISeriesFare = {
-        _id: Date.now().toString(),
-        sfId: Math.floor(5000 + Math.random() * 1000).toString(),
-        ...newFare as any,
-        status: 'Active' as const
-      };
-      setFares(prev => [mockCreated, ...(Array.isArray(prev) ? prev : [])]);
-      toast.success('Series fare created locally!');
+    } catch (err: any) {
+      console.error('Failed to create series fare:', err);
+      const errMsg = err.response?.data?.message || err.message || 'Server error: Series Fare save nahi ho paya.';
+      toast.error(errMsg);
     }
-    setShowAddModal(false);
   };
 
   const handleSaveEdit = async () => {
@@ -1413,77 +1459,109 @@ const AdminSeriesFareMaker: React.FC = () => {
                   </label>
                 </div>
 
-                {!isConnectingFlight ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                    {/* Travel Date */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Journey Travel Date *</label>
-                      <DOBCalendar
-                        value={newFare.travelDate}
-                        onChange={(date) => setNewFare({ ...newFare, travelDate: date })}
-                        placeholder="dd-mm-yyyy"
-                      />
+                {/* Helpful Note for Direct vs Connecting Flight */}
+                <div className={`p-3 rounded-lg border text-xs leading-relaxed transition-all ${
+                  isConnectingFlight 
+                    ? 'bg-amber-50/80 border-amber-200 text-amber-900' 
+                    : 'bg-blue-50/60 border-blue-200 text-blue-900'
+                }`}>
+                  {isConnectingFlight ? (
+                    <div className="space-y-1">
+                      <p className="font-extrabold flex items-center gap-1.5 text-amber-900">
+                        <span>✈️ Connecting Flight Mode (Multi-Leg):</span>
+                      </p>
+                      <p className="text-[11px] text-amber-800">
+                        Yeh tab use hota hai jab flight kisi doosre shahar rukti hai aur passenger flight badalta hai. <strong>Leg 1</strong> me pehli flight ki details (jaise DEL se BOM) aur <strong>Leg 2</strong> me doosri flight ki details (jaise BOM se DXB) bharein.
+                      </p>
+                      <p className="text-[11px] text-amber-900 font-bold bg-amber-100/70 px-2 py-1 rounded border border-amber-300/50 mt-1">
+                        💡 Zaroori: Agar New Delhi se Dubai Direct / Non-Stop flight hai, toh upar diye checkbox ko <strong>UNCHECK (band)</strong> rakhein!
+                      </p>
                     </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-blue-800">
+                        <strong>Direct Flight Mode:</strong> Yeh direct non-stop flight hai. Neeche seedha Travel Date, Departure & Arrival time select karein. (Agar flight kisi aur shahar ruk kar plane badalti hai, tabhi upar Connecting Flight check karein).
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-                    {/* Depart Time */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time *</label>
-                      <Dropdown 
-                        value={newFare.departureTime} 
-                        onChange={(val) => setNewFare({ ...newFare, departureTime: val })} 
-                        options={timeOptions}
-                        placeholder="Select Time"
-                        searchable={true}
-                        direction="auto"
-                        className="w-full h-10"
-                      />
-                    </div>
-
-                    {/* Arrival Time */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time *</label>
-                      <Dropdown 
-                        value={newFare.arrivalTime} 
-                        onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })} 
-                        options={timeOptions}
-                        placeholder="Select Time"
-                        searchable={true}
-                        direction="auto"
-                        className="w-full h-10"
-                      />
-                    </div>
-
-                    {/* Duration & Day Change */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Duration</label>
-                        <input 
-                          type="text" 
-                          value={(newFare as any).duration || '--:--'} 
-                          readOnly 
-                          className="w-full h-10 px-3 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Day Change</label>
-                        <input 
-                          type="text" 
-                          value={`+${(newFare as any).dayChange || 0} Day`} 
-                          readOnly 
-                          className="w-full h-10 px-2 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
-                        />
-                      </div>
-                    </div>
+                {/* Journey Travel Date & Timings */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                  {/* Travel Date (Always Visible) */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Journey Travel Date *</label>
+                    <DOBCalendar
+                      value={newFare.travelDate}
+                      onChange={(date) => setNewFare({ ...newFare, travelDate: date })}
+                      placeholder="dd-mm-yyyy"
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-4">
+
+                  {!isConnectingFlight && (
+                    <>
+                      {/* Depart Time */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time *</label>
+                        <Dropdown 
+                          value={newFare.departureTime} 
+                          onChange={(val) => setNewFare({ ...newFare, departureTime: val })} 
+                          options={timeOptions}
+                          placeholder="Select Time"
+                          searchable={true}
+                          direction="auto"
+                          className="w-full h-10"
+                        />
+                      </div>
+
+                      {/* Arrival Time */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time *</label>
+                        <Dropdown 
+                          value={newFare.arrivalTime} 
+                          onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })} 
+                          options={timeOptions}
+                          placeholder="Select Time"
+                          searchable={true}
+                          direction="auto"
+                          className="w-full h-10"
+                        />
+                      </div>
+
+                      {/* Duration & Day Change */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Duration</label>
+                          <input 
+                            type="text" 
+                            value={(newFare as any).duration || '--:--'} 
+                            readOnly 
+                            className="w-full h-10 px-3 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Day Change</label>
+                          <input 
+                            type="text" 
+                            value={`+${(newFare as any).dayChange || 0} Day`} 
+                            readOnly 
+                            className="w-full h-10 px-2 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {isConnectingFlight && (
+                  <div className="space-y-4 pt-2">
                     {/* Segments */}
                     {segments.map((seg, idx) => (
                       <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl relative space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide">
                             <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</span>
-                            Flight Leg {idx + 1}
+                            Flight Leg {idx + 1} {idx === 0 ? '(Pehla Segment)' : idx === 1 ? '(Doosra Segment)' : ''}
                           </span>
                           {idx > 0 && (
                             <button 
@@ -1503,7 +1581,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                               type="text" 
                               value={seg.flightNo} 
                               onChange={e => { const s = [...segments]; s[idx].flightNo = e.target.value.toUpperCase(); setSegments(s); }} 
-                              placeholder="e.g. 6E-205"
+                              placeholder="e.g. AI-887"
                               required 
                               className="w-full h-9 px-3 text-xs font-bold border border-gray-300 rounded-lg bg-white outline-none" 
                             />
@@ -1514,30 +1592,34 @@ const AdminSeriesFareMaker: React.FC = () => {
                               type="text" 
                               value={seg.airline} 
                               onChange={e => { const s = [...segments]; s[idx].airline = e.target.value.toUpperCase(); setSegments(s); }} 
-                              placeholder="e.g. 6E" 
+                              placeholder="e.g. AI" 
                               className="w-full h-9 px-3 text-xs font-bold border border-gray-300 rounded-lg bg-white outline-none" 
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin *</label>
-                            <input 
-                              type="text" 
-                              value={seg.origin} 
-                              onChange={e => { const s = [...segments]; s[idx].origin = e.target.value.toUpperCase(); setSegments(s); }} 
-                              placeholder="e.g. DEL"
-                              required 
-                              className="w-full h-9 px-3 text-xs font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none" 
+                            <CitySelect
+                              value={seg.origin}
+                              onChange={(val) => {
+                                const s = [...segments];
+                                s[idx].origin = val;
+                                setSegments(s);
+                              }}
+                              placeholder="Select Origin"
+                              heightClass="h-9"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination *</label>
-                            <input 
-                              type="text" 
-                              value={seg.destination} 
-                              onChange={e => { const s = [...segments]; s[idx].destination = e.target.value.toUpperCase(); setSegments(s); }} 
-                              placeholder="e.g. BOM"
-                              required 
-                              className="w-full h-9 px-3 text-xs font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none" 
+                            <CitySelect
+                              value={seg.destination}
+                              onChange={(val) => {
+                                const s = [...segments];
+                                s[idx].destination = val;
+                                setSegments(s);
+                              }}
+                              placeholder="Select Destination"
+                              heightClass="h-9"
                             />
                           </div>
                           <div>
