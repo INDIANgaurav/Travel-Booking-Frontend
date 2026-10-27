@@ -26,7 +26,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const cacheKey = `${origin}-${destination}`;
-  const [prices, setPrices] = useState<Record<string, number>>(priceCache[cacheKey] || {});
+  const [prices, setPrices] = useState<Record<string, any>>(priceCache[cacheKey] || {});
   const [loadingPrices, setLoadingPrices] = useState(!priceCache[cacheKey]);
 
   useEffect(() => {
@@ -36,14 +36,13 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
         setLoadingPrices(true);
       }
       
-      // api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
-      //  .then(res => {
-      //    priceCache[key] = res.data;
-      //    setPrices(res.data);
-      //  })
-      //  .catch(err => console.error("[CustomCalendar] Error fetching calendar prices:", err))
-      //  .finally(() => setLoadingPrices(false));
-      setLoadingPrices(false);
+      api.get(`/api/searches/calendar-prices?origin=${origin}&destination=${destination}`)
+        .then(res => {
+          priceCache[key] = res.data;
+          setPrices(res.data || {});
+        })
+        .catch(err => console.error("[CustomCalendar] Error fetching calendar prices:", err))
+        .finally(() => setLoadingPrices(false));
     }
   }, [origin, destination]);
 
@@ -82,21 +81,26 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
     const startDayOfWeek = getDay(monthStart);
-    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="w-full h-6 sm:h-7"></div>);
+    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="w-full h-8 sm:h-9"></div>);
     const totalCells = startDayOfWeek + days.length;
     const rowsNeeded = Math.ceil(totalCells / 7);
     const cellsNeeded = rowsNeeded * 7;
-    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="w-full h-6 sm:h-7"></div>);
+    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="w-full h-8 sm:h-9"></div>);
     
     const allCells = [
       ...blanks,
-      ...days.map((day, idx) => {
+      ...days.map((day) => {
         const dateNum = day.getDate();
         const dateStr = format(day, 'yyyy-MM-dd');
         const holidayKey = format(day, 'dd-MM');
         const holiday = HOLIDAYS[holidayKey];
-        const dynamicPrice = prices[dateStr];
         
+        const dayData = prices[dateStr];
+        const dynamicPrice = typeof dayData === 'object' && dayData !== null ? dayData.price : dayData;
+        const availableSeats = typeof dayData === 'object' && dayData !== null ? dayData.seats : null;
+        const isFD = typeof dayData === 'object' && dayData !== null ? dayData.isFD : false;
+        const airlineInfo = typeof dayData === 'object' && dayData !== null ? `${dayData.airline || ''} ${dayData.flightNo || ''}`.trim() : '';
+
         const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
         const isPast = isBefore(startOfDay(day), minD);
         
@@ -111,15 +115,15 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
         let roundingClass = "rounded-md";
 
         const isAvailableUnknownPrice = dynamicPrice !== undefined && Number(dynamicPrice) === -1;
-        const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) !== -1;
-        const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
+        const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) > 0;
+        const isAvailable = isAvailableUnknownPrice || hasKnownPrice || isFD;
 
         if (isPast) {
           bgClass = "bg-white";
           textClass = "text-gray-300";
           priceClass = "hidden";
         } else if (isSelected) {
-          bgClass = "bg-blue-500";
+          bgClass = "bg-blue-600 text-white font-bold shadow-xs";
           textClass = "text-white font-bold";
           priceClass = "text-blue-100";
           roundingClass = isSelectedStart && endDate ? "rounded-l-md rounded-r-none" : isSelectedEnd && startDate ? "rounded-r-md rounded-l-none" : "rounded-md";
@@ -127,9 +131,13 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           bgClass = "bg-blue-50";
           textClass = "text-gray-900";
           roundingClass = "rounded-none";
+        } else if (isFD) {
+          bgClass = "bg-emerald-50/90 hover:bg-emerald-100/90 border border-emerald-300/80";
+          textClass = "text-emerald-900 font-extrabold";
+          priceClass = "text-emerald-700 font-bold";
         } else if (isAvailable) {
           bgClass = "bg-green-50 hover:bg-green-100 border border-green-200";
-          textClass = "text-green-700";
+          textClass = "text-green-700 font-semibold";
           priceClass = "text-green-700";
         }
 
@@ -137,7 +145,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           <div 
             key={day.toString()} 
             onClick={() => !isPast && onDateClick(day)}
-            className={`flex flex-col items-center justify-center h-6 sm:h-7 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+            className={`flex flex-col items-center justify-center min-h-[34px] sm:min-h-[38px] py-0.5 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
           >
             {holiday && !isPast && (
               <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
@@ -145,20 +153,36 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
                 <span className="font-bold text-yellow-300">{holiday.name}</span>
               </div>
             )}
+
+            {isFD && !isPast && !isSelected && (
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 ease-in-out absolute -top-9 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] whitespace-nowrap px-2.5 py-1 rounded shadow-xl z-30 pointer-events-none flex items-center gap-1.5 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span className="font-bold text-emerald-300">Fixed Departure (FD)</span>
+                {airlineInfo ? <span>• {airlineInfo}</span> : null}
+                <span>•</span>
+                <span className="font-bold text-yellow-300">{availableSeats != null ? `${availableSeats} Seats Left` : 'Available'}</span>
+              </div>
+            )}
             
-            <span className={`text-[11px] sm:text-xs font-semibold leading-none ${textClass}`}>{dateNum}</span>
+            <span className={`text-[11px] sm:text-xs font-bold leading-none ${textClass}`}>{dateNum}</span>
             {!isPast && (
-              <div className="flex flex-col items-center leading-none">
+              <div className="flex flex-col items-center leading-none mt-0.5">
                 {hasKnownPrice ? (
-                  <span className={`text-[7px] sm:text-[8px] font-bold ${priceClass}`}>
-                    {Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
+                  <span className={`text-[7.5px] sm:text-[8px] font-bold ${priceClass}`}>
+                    ₹{Math.round(Number(dynamicPrice)).toLocaleString('en-IN')}
                   </span>
                 ) : loadingPrices ? (
-                  <span className={`text-[7px] sm:text-[8px] font-bold ${priceClass}`}>...</span>
+                  <span className={`text-[7px] font-bold ${priceClass}`}>...</span>
                 ) : null}
                 
+                {isFD && (
+                  <span className="text-[6.5px] font-black uppercase tracking-tighter text-emerald-800 bg-emerald-200/80 px-1 py-0.2 rounded mt-0.5 whitespace-nowrap">
+                    {availableSeats != null ? `${availableSeats}s` : 'FD'}
+                  </span>
+                )}
+
                 {holiday && (
-                  <span className="text-[6px] font-bold truncate text-center w-[90%]" style={{ color: holiday.color }}>
+                  <span className="text-[6px] font-bold truncate text-center w-[90%] mt-0.5" style={{ color: holiday.color }}>
                     {holiday.name.substring(0, 5)}...
                   </span>
                 )}
@@ -167,7 +191,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           </div>
         );
       }),
-      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-full h-6 sm:h-7"></div>)
+      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-full h-8 sm:h-9"></div>)
     ];
 
     const mappedRows = (

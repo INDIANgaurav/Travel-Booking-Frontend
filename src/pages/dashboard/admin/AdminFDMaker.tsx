@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -81,6 +81,26 @@ const CitySelect = ({ value, onChange, placeholder = 'Select City' }: { value: s
 const AdminSeriesFareMaker: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const supplierName = (user as any)?.companyName || user?.name || (user as any)?.firstName || 'Supplier';
+
+  // Generate time options from 00:00 to 23:55 (5-minute interval)
+  const timeOptions = useMemo(() => {
+    const opts = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 5) {
+        const hh = h.toString().padStart(2, '0');
+        const mm = m.toString().padStart(2, '0');
+        opts.push({ value: `${hh}:${mm}`, label: `${hh}:${mm}` });
+      }
+    }
+    return opts;
+  }, []);
+
+  const cancellationPolicyOptions = [
+    { value: '100% Non-Refundable Charter', label: '100% Non-Refundable Charter (Series Fare)' },
+    { value: 'Standard Cancellation (₹3,000 Fee / Pax)', label: 'Standard Cancellation (₹3,000 Fee / Pax)' },
+    { value: 'Partially Refundable (Airport Taxes Only)', label: 'Partially Refundable (Airport Taxes Only)' },
+    { value: 'Fully Refundable (Free cancellation up to 48h prior)', label: 'Fully Refundable (Free up to 48h prior)' }
+  ];
 
   // Sidebar context from AdminLayout
   const { isSidebarOpen, setIsSidebarOpen } = useOutletContext<{
@@ -188,6 +208,8 @@ const AdminSeriesFareMaker: React.FC = () => {
     totalSeats: '' as number | '',
     availableSeats: '' as number | '',
     status: 'Active',
+    cancellationPolicy: '100% Non-Refundable Charter',
+    isRefundable: false,
     closeBeforeDepartureDays: '' as number | '',
     closeBeforeDepartureHours: '' as number | ''
   });
@@ -1406,26 +1428,28 @@ const AdminSeriesFareMaker: React.FC = () => {
                     {/* Depart Time */}
                     <div>
                       <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time *</label>
-                      <input 
-                        type="text" 
+                      <Dropdown 
                         value={newFare.departureTime} 
-                        onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} 
-                        required 
-                        placeholder="e.g. 07:00" 
-                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                        onChange={(val) => setNewFare({ ...newFare, departureTime: val })} 
+                        options={timeOptions}
+                        placeholder="Select Time"
+                        searchable={true}
+                        direction="auto"
+                        className="w-full h-10"
                       />
                     </div>
 
                     {/* Arrival Time */}
                     <div>
                       <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time *</label>
-                      <input 
-                        type="text" 
+                      <Dropdown 
                         value={newFare.arrivalTime} 
-                        onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} 
-                        required 
-                        placeholder="e.g. 09:15" 
-                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                        onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })} 
+                        options={timeOptions}
+                        placeholder="Select Time"
+                        searchable={true}
+                        direction="auto"
+                        className="w-full h-10"
                       />
                     </div>
 
@@ -1518,24 +1542,26 @@ const AdminSeriesFareMaker: React.FC = () => {
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time *</label>
-                            <input 
-                              type="text" 
+                            <Dropdown 
                               value={seg.departureTime} 
-                              onChange={e => { const s = [...segments]; s[idx].departureTime = e.target.value; setSegments(s); }} 
-                              required 
-                              placeholder="06:00" 
-                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none" 
+                              onChange={(val) => { const s = [...segments]; s[idx].departureTime = val; setSegments(s); }} 
+                              options={timeOptions}
+                              placeholder="06:00"
+                              searchable={true}
+                              direction="auto"
+                              className="w-full h-9"
                             />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time *</label>
-                            <input 
-                              type="text" 
+                            <Dropdown 
                               value={seg.arrivalTime} 
-                              onChange={e => { const s = [...segments]; s[idx].arrivalTime = e.target.value; setSegments(s); }} 
-                              required 
-                              placeholder="08:15" 
-                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none" 
+                              onChange={(val) => { const s = [...segments]; s[idx].arrivalTime = val; setSegments(s); }} 
+                              options={timeOptions}
+                              placeholder="08:15"
+                              searchable={true}
+                              direction="auto"
+                              className="w-full h-9"
                             />
                           </div>
                           <div>
@@ -1701,17 +1727,29 @@ const AdminSeriesFareMaker: React.FC = () => {
                       <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Agent Commission (₹)</label>
                       <input 
                         type="number"
+                        min="0"
                         value={(newFare as any).agentCommission ?? ''}
-                        onChange={(e) => setNewFare({ ...newFare, agentCommission: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                        placeholder="e.g. 200"
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
+                          setNewFare({ ...newFare, agentCommission: val } as any);
+                        }}
+                        placeholder="0 (e.g. 200)"
                         className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Cancellation Policy</label>
-                      <div className="h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg flex items-center text-[11px] font-extrabold text-slate-700">
-                        100% Non-Refundable Charter
-                      </div>
+                      <Dropdown 
+                        value={(newFare as any).cancellationPolicy || '100% Non-Refundable Charter'}
+                        onChange={(val) => setNewFare({ 
+                          ...newFare, 
+                          cancellationPolicy: val, 
+                          isRefundable: val !== '100% Non-Refundable Charter' 
+                        } as any)}
+                        options={cancellationPolicyOptions}
+                        direction="auto"
+                        className="w-full h-10"
+                      />
                     </div>
                   </div>
                 </div>

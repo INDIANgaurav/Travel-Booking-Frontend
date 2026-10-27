@@ -55,7 +55,11 @@ export function useFlightSearch() {
   const user = useSelector(selectCurrentUser);
   
   const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
-  const getDisplayPrice = (price: number) => isAgentDiscount ? Math.floor(price * 0.9) : price;
+  const getDisplayPrice = (price: any): number => {
+    if (price === null || price === undefined || isNaN(Number(price))) return 0;
+    const num = Number(price);
+    return isAgentDiscount ? Math.floor(num * 0.9) : num;
+  };
 
   const getLocalISO = (d: Date) => {
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();

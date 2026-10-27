@@ -35,7 +35,7 @@ const HOLIDAYS: Record<string, { name: string; color: string }> = {
 
 export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onClose, origin, destination, isOneWay }: DualMonthCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
-  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [prices, setPrices] = useState<Record<string, any>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
   const today = startOfDay(new Date());
 
@@ -107,10 +107,12 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
         const holiday = HOLIDAYS[holidayKey];
 
         const dateStr = format(day, 'yyyy-MM-dd');
-        const priceForDay = prices[dateStr];
+        const dayData = prices[dateStr];
+        const priceForDay = typeof dayData === 'object' && dayData !== null ? dayData.price : dayData;
+        const isFDForDay = typeof dayData === 'object' && dayData !== null ? dayData.isFD : false;
         const isAvailableUnknownPrice = priceForDay !== undefined && Number(priceForDay) === -1;
-        const hasKnownPrice = priceForDay !== undefined && Number(priceForDay) !== -1;
-        const isAvailable = isAvailableUnknownPrice || hasKnownPrice;
+        const hasKnownPrice = priceForDay !== undefined && Number(priceForDay) > 0;
+        const isAvailable = isAvailableUnknownPrice || hasKnownPrice || isFDForDay;
 
         days.push(
           <div

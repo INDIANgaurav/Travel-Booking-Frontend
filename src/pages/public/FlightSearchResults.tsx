@@ -118,22 +118,22 @@ export default function FlightSearchResults() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Calendar Prices State
-  const [calendarPrices, setCalendarPrices] = useState<Record<string, number>>({});
+  const [calendarPrices, setCalendarPrices] = useState<Record<string, any>>({});
   const [sliderOffset, setSliderOffset] = useState(0);
 
   useEffect(() => {
-    // const fetchCalendarPrices = async () => {
-    //   if (!from || !to) return;
-    //   try {
-    //     const { data } = await api.get(`/api/searches/calendar-prices?origin=${from}&destination=${to}`);
-    //     if (data) {
-    //       setCalendarPrices(data);
-    //     }
-    //   } catch (err) {
-    //     console.error('Error fetching calendar prices:', err);
-    //   }
-    // };
-    // fetchCalendarPrices();
+    const fetchCalendarPrices = async () => {
+      if (!from || !to) return;
+      try {
+        const { data } = await api.get(`/api/searches/calendar-prices?origin=${from}&destination=${to}`);
+        if (data) {
+          setCalendarPrices(data);
+        }
+      } catch (err) {
+        console.error('Error fetching calendar prices:', err);
+      }
+    };
+    fetchCalendarPrices();
   }, [from, to]);
 
   // Redirect removed, all users get normal UI
@@ -532,14 +532,19 @@ export default function FlightSearchResults() {
                       const isSelected = d.toDateString() === new Date(date).toDateString();
 
                       const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                      const priceForDate = calendarPrices[dStr];
+                      const rawPrice = calendarPrices[dStr];
+                      const priceForDate = typeof rawPrice === 'object' && rawPrice !== null ? rawPrice.price : rawPrice;
+                      const isFDDate = typeof rawPrice === 'object' && rawPrice !== null ? rawPrice.isFD : false;
+                      const seatsForDate = typeof rawPrice === 'object' && rawPrice !== null ? rawPrice.seats : null;
                       
                       let displayPriceStr = '--';
-                      if (isSelected && cheapestFlight) {
-                         displayPriceStr = `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')}`;
-                      } else if (priceForDate > 0) {
-                         displayPriceStr = `₹ ${getDisplayPrice(priceForDate).toLocaleString('en-IN')}`;
-                      } else if (priceForDate === -1) {
+                      if (isSelected && cheapestFlight && cheapestFlight.price != null && Number(cheapestFlight.price) > 0) {
+                         const val = getDisplayPrice(cheapestFlight.price);
+                         displayPriceStr = val > 0 ? `₹ ${val.toLocaleString('en-IN')}` : '--';
+                      } else if (typeof priceForDate === 'number' && priceForDate > 0) {
+                         const val = getDisplayPrice(priceForDate);
+                         displayPriceStr = val > 0 ? `₹ ${val.toLocaleString('en-IN')}` : '--';
+                      } else if (priceForDate === -1 || isFDDate) {
                          displayPriceStr = 'Available';
                       }
 
@@ -555,8 +560,9 @@ export default function FlightSearchResults() {
                           <p className={`font-bold text-[13px] ${isSelected ? 'text-blue-600' : 'text-gray-900'}`}>
                             {d.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
                           </p>
-                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : (priceForDate ? 'text-green-600' : 'text-gray-500')}`}>
+                          <p className={`text-[11px] ${isSelected ? 'text-blue-600' : (priceForDate ? 'text-green-600 font-bold' : 'text-gray-500')}`}>
                             {displayPriceStr}
+                            {isFDDate && seatsForDate ? <span className="block text-[9px] text-emerald-600 font-extrabold">FD • {seatsForDate}s</span> : null}
                           </p>
                         </div>
                       );
@@ -571,14 +577,14 @@ export default function FlightSearchResults() {
                     <div className={`${sortBy === 'CHEAPEST' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} w-8 h-8 rounded-full flex items-center justify-center font-black`}><span className={sortBy === 'CHEAPEST' ? '' : ''}>₹</span></div>
                     <div>
                       <p className="font-bold text-gray-900 text-[13px]">CHEAPEST</p>
-                      <p className="text-gray-500 text-[11px]">{cheapestFlight ? `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')} | ${formatDuration(cheapestFlight.durationMinutes)}` : '--'}</p>
+                      <p className="text-gray-500 text-[11px]">{cheapestFlight && cheapestFlight.price != null && Number(cheapestFlight.price) > 0 ? `₹ ${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')} | ${formatDuration(cheapestFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
                   <div onClick={() => setSortBy('NON STOP FIRST')} className={`flex-1 bg-white border-x border-t ${sortBy === 'NON STOP FIRST' ? 'border-b-4 border-blue-500 shadow-md opacity-100' : 'border-b border-gray-200 shadow-sm opacity-80 bg-gray-50'} rounded p-2 cursor-pointer flex items-center gap-3 transition`}>
                     <div className={`${sortBy === 'NON STOP FIRST' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'} w-8 h-8 rounded flex items-center justify-center`}><Plane size={16} /></div>
                     <div>
                       <p className="font-bold text-gray-900 text-[13px]">NON STOP FIRST</p>
-                      <p className="text-gray-500 text-[11px]">{nonStopFlight ? `₹ ${getDisplayPrice(nonStopFlight.price).toLocaleString('en-IN')} | ${formatDuration(nonStopFlight.durationMinutes)}` : '--'}</p>
+                      <p className="text-gray-500 text-[11px]">{nonStopFlight && nonStopFlight.price != null && Number(nonStopFlight.price) > 0 ? `₹ ${getDisplayPrice(nonStopFlight.price).toLocaleString('en-IN')} | ${formatDuration(nonStopFlight.durationMinutes)}` : '--'}</p>
                     </div>
                   </div>
                   </div>
