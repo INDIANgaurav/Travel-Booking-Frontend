@@ -1452,7 +1452,19 @@ const AdminSeriesFareMaker: React.FC = () => {
                     <input 
                       type="checkbox" 
                       checked={isConnectingFlight} 
-                      onChange={(e) => setIsConnectingFlight(e.target.checked)} 
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setIsConnectingFlight(isChecked);
+                        if (isChecked) {
+                          setSegments(prev => {
+                            if (prev.length >= 2) return prev;
+                            return [
+                              { origin: newFare.origin || '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' },
+                              { origin: '', destination: newFare.destination || '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }
+                            ];
+                          });
+                        }
+                      }} 
                       className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4 cursor-pointer"
                     />
                     <span>Connecting Flight (Multi-Leg / 1-Stop)?</span>
@@ -1471,7 +1483,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                         <span>✈️ Connecting Flight Mode (Multi-Leg):</span>
                       </p>
                       <p className="text-[11px] text-amber-800">
-                        Yeh tab use hota hai jab flight kisi doosre shahar rukti hai aur passenger flight badalta hai. <strong>Leg 1</strong> me pehli flight ki details (jaise DEL se BOM) aur <strong>Leg 2</strong> me doosri flight ki details (jaise BOM se DXB) bharein.
+                        Connecting flight ke liye <strong>kam se kam 2 legs compulsory hain</strong> (Leg 1: Pehla safar, Leg 2: Doosra safar). Aap chahein toh 3rd leg add kar sakte hain, par 2 legs hamesha rahenge.
                       </p>
                       <p className="text-[11px] text-amber-900 font-bold bg-amber-100/70 px-2 py-1 rounded border border-amber-300/50 mt-1">
                         💡 Zaroori: Agar New Delhi se Dubai Direct / Non-Stop flight hai, toh upar diye checkbox ko <strong>UNCHECK (band)</strong> rakhein!
@@ -1559,17 +1571,24 @@ const AdminSeriesFareMaker: React.FC = () => {
                     {segments.map((seg, idx) => (
                       <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl relative space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide">
-                            <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</span>
-                            Flight Leg {idx + 1} {idx === 0 ? '(Pehla Segment)' : idx === 1 ? '(Doosra Segment)' : ''}
-                          </span>
-                          {idx > 0 && (
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide">
+                              <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</span>
+                              Flight Leg {idx + 1} {idx === 0 ? '(Pehla Segment)' : idx === 1 ? '(Doosra Segment)' : ''}
+                            </span>
+                            {idx < 2 && (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                Compulsory
+                              </span>
+                            )}
+                          </div>
+                          {idx >= 2 && segments.length > 2 && (
                             <button 
                               type="button" 
                               onClick={() => setSegments(segments.filter((_, i) => i !== idx))}
-                              className="text-rose-600 hover:text-rose-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              className="text-rose-600 hover:text-rose-800 text-xs font-bold flex items-center gap-1 cursor-pointer bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-md transition-colors"
                             >
-                              <X size={14} /> Remove Leg
+                              <X size={14} /> Remove Leg {idx + 1}
                             </button>
                           )}
                         </div>
