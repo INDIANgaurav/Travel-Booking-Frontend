@@ -541,6 +541,8 @@ export default function FlightSearchResults() {
                       if (isSelected && cheapestFlight && cheapestFlight.price != null && Number(cheapestFlight.price) > 0) {
                          const val = getDisplayPrice(cheapestFlight.price);
                          displayPriceStr = val > 0 ? `₹ ${val.toLocaleString('en-IN')}` : '--';
+                      } else if (isSelected && !loading && (!cheapestFlight || !cheapestFlight.price)) {
+                         displayPriceStr = '--';
                       } else if (typeof priceForDate === 'number' && priceForDate > 0) {
                          const val = getDisplayPrice(priceForDate);
                          displayPriceStr = val > 0 ? `₹ ${val.toLocaleString('en-IN')}` : '--';
@@ -562,7 +564,9 @@ export default function FlightSearchResults() {
                           </p>
                           <p className={`text-[11px] ${isSelected ? 'text-blue-600' : (priceForDate ? 'text-green-600 font-bold' : 'text-gray-500')}`}>
                             {displayPriceStr}
-                            {isFDDate && seatsForDate ? <span className="block text-[9px] text-emerald-600 font-extrabold">FD • {seatsForDate}s</span> : null}
+                            {!(isSelected && !loading && !cheapestFlight) && seatsForDate ? (
+                              <span className="block text-[9px] text-emerald-600 font-extrabold">{seatsForDate} Seats Left</span>
+                            ) : null}
                           </p>
                         </div>
                       );

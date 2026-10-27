@@ -98,7 +98,6 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
         const dayData = prices[dateStr];
         const dynamicPrice = typeof dayData === 'object' && dayData !== null ? dayData.price : dayData;
         const availableSeats = typeof dayData === 'object' && dayData !== null ? dayData.seats : null;
-        const isFD = typeof dayData === 'object' && dayData !== null ? dayData.isFD : false;
         const airlineInfo = typeof dayData === 'object' && dayData !== null ? `${dayData.airline || ''} ${dayData.flightNo || ''}`.trim() : '';
 
         const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
@@ -116,7 +115,6 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
 
         const isAvailableUnknownPrice = dynamicPrice !== undefined && Number(dynamicPrice) === -1;
         const hasKnownPrice = dynamicPrice !== undefined && Number(dynamicPrice) > 0;
-        const isAvailable = isAvailableUnknownPrice || hasKnownPrice || isFD;
 
         if (isPast) {
           bgClass = "bg-white";
@@ -131,14 +129,14 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           bgClass = "bg-blue-50";
           textClass = "text-gray-900";
           roundingClass = "rounded-none";
-        } else if (isFD) {
-          bgClass = "bg-emerald-50/90 hover:bg-emerald-100/90 border border-emerald-300/80";
-          textClass = "text-emerald-900 font-extrabold";
-          priceClass = "text-emerald-700 font-bold";
-        } else if (isAvailable) {
-          bgClass = "bg-green-50 hover:bg-green-100 border border-green-200";
-          textClass = "text-green-700 font-semibold";
-          priceClass = "text-green-700";
+        } else if (hasKnownPrice) {
+          bgClass = "bg-white hover:bg-emerald-50/50";
+          textClass = "text-gray-900 font-bold";
+          priceClass = "text-emerald-600 font-semibold";
+        } else if (isAvailableUnknownPrice) {
+          bgClass = "bg-white hover:bg-gray-100";
+          textClass = "text-gray-800";
+          priceClass = "text-gray-400";
         }
 
         return (
@@ -154,13 +152,11 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
               </div>
             )}
 
-            {isFD && !isPast && !isSelected && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 ease-in-out absolute -top-9 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] whitespace-nowrap px-2.5 py-1 rounded shadow-xl z-30 pointer-events-none flex items-center gap-1.5 border border-emerald-500/30">
+            {availableSeats != null && availableSeats > 0 && !isPast && !isSelected && (
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] whitespace-nowrap px-2.5 py-1 rounded shadow-xl z-30 pointer-events-none flex items-center gap-1.5 border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span className="font-bold text-emerald-300">Fixed Departure (FD)</span>
-                {airlineInfo ? <span>• {airlineInfo}</span> : null}
-                <span>•</span>
-                <span className="font-bold text-yellow-300">{availableSeats != null ? `${availableSeats} Seats Left` : 'Available'}</span>
+                {airlineInfo ? <span className="font-semibold text-gray-200">{airlineInfo} •</span> : null}
+                <span className="font-bold text-yellow-300">{availableSeats} Seats Left</span>
               </div>
             )}
             
@@ -174,10 +170,10 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
                 ) : loadingPrices ? (
                   <span className={`text-[7px] font-bold ${priceClass}`}>...</span>
                 ) : null}
-                
-                {isFD && (
-                  <span className="text-[6.5px] font-black uppercase tracking-tighter text-emerald-800 bg-emerald-200/80 px-1 py-0.2 rounded mt-0.5 whitespace-nowrap">
-                    {availableSeats != null ? `${availableSeats}s` : 'FD'}
+
+                {availableSeats != null && availableSeats > 0 && (
+                  <span className="text-[6.5px] font-black uppercase tracking-tighter text-emerald-800 bg-emerald-100/90 px-1 py-0.2 rounded mt-0.5 whitespace-nowrap">
+                    {availableSeats} left
                   </span>
                 )}
 

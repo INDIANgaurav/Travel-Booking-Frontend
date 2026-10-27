@@ -1369,7 +1369,7 @@ export default function FlightBookingPage() {
                   </div>
                   <p className="text-[12px] text-gray-600 leading-relaxed">
                     {isNonRefundable 
-                      ? 'Fixed departures, series fares, and promotional fares do not allow date, flight, or name alterations.' 
+                      ? 'Special contracted and promotional fares do not allow date, flight, or name alterations.' 
                       : 'Applicable airline date change penalty plus any difference between the original fare and the new flight fare will be charged.'}
                   </p>
                 </div>
