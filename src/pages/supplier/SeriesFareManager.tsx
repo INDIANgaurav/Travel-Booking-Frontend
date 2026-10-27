@@ -315,7 +315,7 @@ const SeriesFareManager: React.FC = () => {
     const sampleData = [
       '', 'IndiGo', 'ABCD12', 'ONE_WAY', 'DEL', 'BOM', '6E123',
       '10:00', '12:00', 'T3', 'T2',
-      '2024-12-01', '5000', '4500', '1500', '200',
+      '2026-12-25', '5000', '4500', '1500', '200',
       '50', '50', 'true', 'Active'
     ];
 

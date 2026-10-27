@@ -36,7 +36,7 @@ interface ISeriesFare {
   isTestFlight?: boolean;
 }
 
-const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
+const CitySelect = ({ value, onChange, placeholder = 'Select City' }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -54,12 +54,15 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
     <div className="relative w-full" ref={dropdownRef}>
       <div
         onClick={() => setIsOpen(true)}
-        className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white font-bold uppercase cursor-pointer min-h-[34px] flex items-center"
+        className="w-full text-xs px-3.5 h-10 border border-gray-300 rounded-lg bg-white font-bold uppercase cursor-pointer flex items-center justify-between hover:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
       >
-        {value || placeholder}
+        <span className={value ? 'text-gray-900 font-extrabold tracking-wide' : 'text-gray-400 font-normal normal-case'}>
+          {value || placeholder}
+        </span>
+        <ChevronDown size={14} className="text-gray-400 shrink-0" />
       </div>
       {isOpen && (
-        <div className="absolute top-[100%] mt-1 left-0 z-[60]">
+        <div className="absolute top-[100%] mt-1 left-0 z-[60] shadow-2xl rounded-xl">
           <CityPicker 
             value={value} 
             onChange={(code) => {
@@ -67,7 +70,7 @@ const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange:
               setIsOpen(false);
             }} 
             onClose={() => setIsOpen(false)} 
-            title="SELECT CITY" 
+            title="SELECT AIRPORT CITY" 
           />
         </div>
       )}
@@ -177,7 +180,7 @@ const AdminSeriesFareMaker: React.FC = () => {
     duration: '',
     stopOver: 0,
     dayChange: 0,
-    travelDate: '',
+    travelDate: '2026-12-25',
     adtFare: '' as number | '',
     chdFare: '' as number | '',
     infFare: '' as number | '',
@@ -506,7 +509,7 @@ const AdminSeriesFareMaker: React.FC = () => {
     const sampleData = [
       '', 'IndiGo', 'ABCD12', 'ONE_WAY', 'DEL', 'BOM', '6E123',
       '10:00', '12:00', 'T3', 'T2',
-      '2024-12-01', '5000', '4500', '1500', '200',
+      '2026-12-25', '5000', '4500', '1500', '200',
       '50', '50', 'true', 'Active'
     ];
 
@@ -1154,521 +1157,585 @@ const AdminSeriesFareMaker: React.FC = () => {
 
       {/* Create Series Fare Fullscreen Form Overlay */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 overflow-y-auto font-sans p-4 md:p-6 flex items-start justify-center">
-          <div className="w-full max-w-6xl bg-white rounded-xl shadow-2xl border border-blue-600/20 overflow-visible mb-12">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 overflow-y-auto font-sans p-4 md:p-6 flex items-start justify-center animate-fade-in">
+          <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-12">
             {/* Header Bar */}
-            <div className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
-              <h2 className="text-sm font-bold tracking-widest uppercase">
-                Add New Series Fare
-              </h2>
+            <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center">
+                  <Plane size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-extrabold tracking-wide uppercase text-white">
+                    Add New Series Fare
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Configure wholesale fixed departure flight inventory, seat allocations, and B2B pricing
+                  </p>
+                </div>
+              </div>
               <button 
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
                 title="Close"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateFare} className="p-8 space-y-8 text-xs text-gray-800">
-              {/* SECTION 1: Travel Journey Details */}
-              <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-visible p-8">
-                <div className="font-black text-sm text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
-                  <Plane size={18} className="text-blue-600" />
-                  Travel Journey Details
+            <form onSubmit={handleCreateFare} className="p-6 md:p-8 space-y-6 text-xs text-gray-800 bg-slate-50/50">
+              {/* Flight Environment / Mode Selector Banner */}
+              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-xs text-gray-900">Inventory Mode:</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide border ${
+                      newFare.isTestFlight 
+                        ? 'bg-amber-100 text-amber-800 border-amber-300' 
+                        : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    }`}>
+                      {newFare.isTestFlight ? 'SANDBOX TEST (API Testing Only • 999 Seats)' : 'LIVE PRODUCTION (Real Flight Inventory)'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    {newFare.isTestFlight 
+                      ? 'Sandbox test flights appear only in test queries. Partner test bookings will not deduct real balance.' 
+                      : 'Live flight will be published immediately to public search and production B2B APIs.'}
+                  </p>
                 </div>
-                <div className="space-y-6">
-                  {/* Flight Environment / Mode Selector */}
-                  <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-amber-50/70 p-4 rounded-xl border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xs text-gray-900">Flight Environment:</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${
-                          newFare.isTestFlight 
-                            ? 'bg-amber-100 text-amber-800 border-amber-300' 
-                            : 'bg-blue-100 text-blue-800 border-blue-300'
-                        }`}>
-                          {newFare.isTestFlight ? 'SANDBOX TEST (API Testing Only • Auto 999 Seats)' : 'LIVE PRODUCTION (Real Flight Inventory)'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-600">
-                        {newFare.isTestFlight 
-                          ? 'This flight will ONLY appear in Sandbox API queries. Partner test bookings will not deduct real balance or block commercial seats.' 
-                          : 'This flight is live for public customer bookings and production B2B partner APIs.'}
-                      </p>
-                    </div>
-                    <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1 shrink-0 shadow-xs">
-                      <button
-                        type="button"
-                        onClick={() => setNewFare({
-                          ...newFare,
-                          isTestFlight: false,
-                          totalSeats: newFare.totalSeats === 999 ? 10 : newFare.totalSeats,
-                          availableSeats: newFare.availableSeats === 999 ? 10 : newFare.availableSeats
-                        })}
-                        className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
-                          !newFare.isTestFlight
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        Live Flight
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewFare({
-                          ...newFare,
-                          isTestFlight: true,
-                          totalSeats: 999,
-                          availableSeats: 999
-                        })}
-                        className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
-                          newFare.isTestFlight
-                            ? 'bg-amber-500 text-white shadow-xs'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        Test Flight (999 Seats)
-                      </button>
-                    </div>
+                <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 shrink-0 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setNewFare({
+                      ...newFare,
+                      isTestFlight: false,
+                      totalSeats: newFare.totalSeats === 999 ? 10 : newFare.totalSeats,
+                      availableSeats: newFare.availableSeats === 999 ? 10 : newFare.availableSeats
+                    })}
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                      !newFare.isTestFlight
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Live Flight
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewFare({
+                      ...newFare,
+                      isTestFlight: true,
+                      totalSeats: 999,
+                      availableSeats: 999
+                    })}
+                    className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                      newFare.isTestFlight
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Test Flight (999 Seats)
+                  </button>
+                </div>
+              </div>
+
+              {/* CARD 1: Route & Flight Information */}
+              <div className="bg-white border border-gray-200 shadow-xs rounded-xl p-5 md:p-6 space-y-4">
+                <div className="font-extrabold text-sm text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+                  <Plane size={16} className="text-blue-600" />
+                  <span>1. Route & Flight Information</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Supplier */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Supplier *</label>
+                    <Dropdown 
+                      value={supplierName}
+                      onChange={() => {}}
+                      options={[{ value: supplierName, label: supplierName }]}
+                      className="h-10"
+                    />
                   </div>
 
-                  {/* Row 1: Journey Type */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start">
-                    <div className="font-bold text-gray-700 pt-1">Journey Type</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-start">
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Supplier*</label>
-                      <Dropdown 
-                        value={supplierName}
-                        onChange={() => {}}
-                        options={[
-                          { value: supplierName, label: supplierName }
-                        ]}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Travel Type*</label>
-                      <Dropdown 
-                        value={newFare.bookingType}
-                        onChange={(value) => setNewFare({ ...newFare, bookingType: value as any })}
-                        options={[
-                          { value: 'ONE_WAY', label: 'Domestic' },
-                          { value: 'ROUND_TRIP', label: 'International' }
-                        ]}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Airline*</label>
-                      <input
-                        type="text"
-                        value={newFare.airline}
-                        onChange={(e) => setNewFare({ ...newFare, airline: e.target.value })}
-                        required
-                        className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Airline PNR*</label>
-                      <input
-                        type="text"
-                        value={newFare.airlinePnr}
-                        onChange={(e) => setNewFare({ ...newFare, airlinePnr: e.target.value })}
-                        required
-                        className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white font-mono uppercase"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-2">Travel Class*</label>
-                      <Dropdown 
-                        value={travelClassAdd}
-                        onChange={setTravelClassAdd}
-                        options={[
-                          { value: 'ECONOMY', label: 'ECONOMY' },
-                          { value: 'PREMIUM_ECONOMY', label: 'PREMIUM ECONOMY' },
-                          { value: 'BUSINESS', label: 'BUSINESS' }
-                        ]}
-                      />
-                    </div>
-                  </div>
-                  </div>
+                  {/* Travel Type */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Travel Type *</label>
+                    <Dropdown 
+                      value={newFare.bookingType}
+                      onChange={(value) => setNewFare({ ...newFare, bookingType: value as any })}
+                      options={[
+                        { value: 'ONE_WAY', label: 'Domestic' },
+                        { value: 'ROUND_TRIP', label: 'International' }
+                      ]}
+                      className="h-10"
+                    />
                   </div>
 
-                  {/* Row 2: Travel schedule & Class */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start pt-6 border-t border-gray-100">
-                    <div className="font-bold text-gray-700 pt-1">Travel schedule & Class</div>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Origin*</label>
-                          <CitySelect
-                            value={newFare.origin}
-                            onChange={(val) => setNewFare({ ...newFare, origin: val })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Destination*</label>
-                          <CitySelect
-                            value={newFare.destination}
-                            onChange={(val) => setNewFare({ ...newFare, destination: val })}
-                          />
-                        </div>
+                  {/* Airline */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Airline *</label>
+                    <input
+                      type="text"
+                      value={newFare.airline}
+                      onChange={(e) => setNewFare({ ...newFare, airline: e.target.value })}
+                      placeholder="e.g. IndiGo, Air India"
+                      required
+                      className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Flight No */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Flight Number *</label>
+                    <input
+                      type="text"
+                      value={newFare.flightNo}
+                      onChange={(e) => setNewFare({ ...newFare, flightNo: e.target.value.toUpperCase() })}
+                      placeholder="e.g. 6E-2045"
+                      required
+                      className="w-full h-10 px-3.5 text-xs font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Airline PNR */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Airline PNR *</label>
+                    <input
+                      type="text"
+                      value={newFare.airlinePnr}
+                      onChange={(e) => setNewFare({ ...newFare, airlinePnr: e.target.value.toUpperCase() })}
+                      placeholder="e.g. ABCD12"
+                      required
+                      className="w-full h-10 px-3.5 text-xs font-mono font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Travel Class */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Travel Class *</label>
+                    <Dropdown 
+                      value={travelClassAdd}
+                      onChange={setTravelClassAdd}
+                      options={[
+                        { value: 'ECONOMY', label: 'ECONOMY' },
+                        { value: 'PREMIUM_ECONOMY', label: 'PREMIUM ECONOMY' },
+                        { value: 'BUSINESS', label: 'BUSINESS' }
+                      ]}
+                      className="h-10"
+                    />
+                  </div>
+
+                  {/* Origin City */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Origin City (From) *</label>
+                    <CitySelect
+                      value={newFare.origin}
+                      onChange={(val) => setNewFare({ ...newFare, origin: val })}
+                      placeholder="Select Origin"
+                    />
+                  </div>
+
+                  {/* Dep Terminal */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Terminal <span className="font-normal text-gray-400">(Optional)</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. T1, T2"
+                      value={(newFare as any).departureTerminal || ''}
+                      onChange={(e) => setNewFare({ ...newFare, departureTerminal: e.target.value.toUpperCase() } as any)}
+                      className="w-full h-10 px-3.5 text-xs font-semibold uppercase border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Destination City */}
+                  <div className="sm:col-start-1 lg:col-start-3">
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Destination City (To) *</label>
+                    <CitySelect
+                      value={newFare.destination}
+                      onChange={(val) => setNewFare({ ...newFare, destination: val })}
+                      placeholder="Select Destination"
+                    />
+                  </div>
+
+                  {/* Arr Terminal */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Terminal <span className="font-normal text-gray-400">(Optional)</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. T2, T3"
+                      value={(newFare as any).arrivalTerminal || ''}
+                      onChange={(e) => setNewFare({ ...newFare, arrivalTerminal: e.target.value.toUpperCase() } as any)}
+                      className="w-full h-10 px-3.5 text-xs font-semibold uppercase border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: Schedule & Timings */}
+              <div className="bg-white border border-gray-200 shadow-xs rounded-xl p-5 md:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                  <div className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
+                    <Calendar size={16} className="text-blue-600" />
+                    <span>2. Schedule & Flight Timings</span>
+                  </div>
+                  <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50/70 text-blue-800 text-xs font-bold cursor-pointer hover:bg-blue-100/70 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={isConnectingFlight} 
+                      onChange={(e) => setIsConnectingFlight(e.target.checked)} 
+                      className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                    />
+                    <span>Connecting Flight (Multi-Leg / 1-Stop)?</span>
+                  </label>
+                </div>
+
+                {!isConnectingFlight ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    {/* Travel Date */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Journey Travel Date *</label>
+                      <DOBCalendar
+                        value={newFare.travelDate}
+                        onChange={(date) => setNewFare({ ...newFare, travelDate: date })}
+                        placeholder="dd-mm-yyyy"
+                      />
+                    </div>
+
+                    {/* Depart Time */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time *</label>
+                      <input 
+                        type="text" 
+                        value={newFare.departureTime} 
+                        onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} 
+                        required 
+                        placeholder="e.g. 07:00" 
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                      />
+                    </div>
+
+                    {/* Arrival Time */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time *</label>
+                      <input 
+                        type="text" 
+                        value={newFare.arrivalTime} 
+                        onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} 
+                        required 
+                        placeholder="e.g. 09:15" 
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                      />
+                    </div>
+
+                    {/* Duration & Day Change */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Duration</label>
+                        <input 
+                          type="text" 
+                          value={(newFare as any).duration || '--:--'} 
+                          readOnly 
+                          className="w-full h-10 px-3 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
+                        />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Departure Terminal <span className="font-normal">(Optional)</span></label>
-                          <input
-                            type="text"
-                            placeholder="e.g. T1, T2"
-                            className="w-full border border-gray-300 rounded-lg p-2.5 text-[13px] bg-gray-50 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all uppercase"
-                            value={(newFare as any).departureTerminal || ''}
-                            onChange={(e) => setNewFare({ ...newFare, departureTerminal: e.target.value.toUpperCase() } as any)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Arrival Terminal <span className="font-normal">(Optional)</span></label>
-                          <input
-                            type="text"
-                            placeholder="e.g. T1, T2"
-                            className="w-full border border-gray-300 rounded-lg p-2.5 text-[13px] bg-gray-50 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all uppercase"
-                            value={(newFare as any).arrivalTerminal || ''}
-                            onChange={(e) => setNewFare({ ...newFare, arrivalTerminal: e.target.value.toUpperCase() } as any)}
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Day Change</label>
+                        <input 
+                          type="text" 
+                          value={`+${(newFare as any).dayChange || 0} Day`} 
+                          readOnly 
+                          className="w-full h-10 px-2 text-xs font-bold text-center border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed shadow-2xs" 
+                        />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Journey From*</label>
-                          <DOBCalendar
-                            value={newFare.travelDate}
-                            onChange={(date) => setNewFare({ ...newFare, travelDate: date })}
-                            placeholder="dd-mm-yyyy"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Journey To*</label>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 min-w-0">
-                              <DOBCalendar
-                                value={newFare.travelDate}
-                                onChange={(date) => setNewFare({ ...newFare, travelDate: date })}
-                                placeholder="dd-mm-yyyy"
-                              />
-                            </div>
-                            <button type="button" className="w-9 h-9 bg-blue-600 hover:bg-[#155685] text-white rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-all" title="Add Another Date">
-                              <Plus size={16} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Segments */}
+                    {segments.map((seg, idx) => (
+                      <div key={idx} className="p-4 bg-slate-50 border border-slate-200 rounded-xl relative space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide">
+                            <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</span>
+                            Flight Leg {idx + 1}
+                          </span>
+                          {idx > 0 && (
+                            <button 
+                              type="button" 
+                              onClick={() => setSegments(segments.filter((_, i) => i !== idx))}
+                              className="text-rose-600 hover:text-rose-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <X size={14} /> Remove Leg
                             </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No *</label>
+                            <input 
+                              type="text" 
+                              value={seg.flightNo} 
+                              onChange={e => { const s = [...segments]; s[idx].flightNo = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="e.g. 6E-205"
+                              required 
+                              className="w-full h-9 px-3 text-xs font-bold border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Airline Code *</label>
+                            <input 
+                              type="text" 
+                              value={seg.airline} 
+                              onChange={e => { const s = [...segments]; s[idx].airline = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="e.g. 6E" 
+                              className="w-full h-9 px-3 text-xs font-bold border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin *</label>
+                            <input 
+                              type="text" 
+                              value={seg.origin} 
+                              onChange={e => { const s = [...segments]; s[idx].origin = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="e.g. DEL"
+                              required 
+                              className="w-full h-9 px-3 text-xs font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination *</label>
+                            <input 
+                              type="text" 
+                              value={seg.destination} 
+                              onChange={e => { const s = [...segments]; s[idx].destination = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="e.g. BOM"
+                              required 
+                              className="w-full h-9 px-3 text-xs font-bold uppercase border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time *</label>
+                            <input 
+                              type="text" 
+                              value={seg.departureTime} 
+                              onChange={e => { const s = [...segments]; s[idx].departureTime = e.target.value; setSegments(s); }} 
+                              required 
+                              placeholder="06:00" 
+                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time *</label>
+                            <input 
+                              type="text" 
+                              value={seg.arrivalTime} 
+                              onChange={e => { const s = [...segments]; s[idx].arrivalTime = e.target.value; setSegments(s); }} 
+                              required 
+                              placeholder="08:15" 
+                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Dep Terminal</label>
+                            <input 
+                              type="text" 
+                              value={seg.departureTerminal || ''} 
+                              onChange={e => { const s = [...segments]; s[idx].departureTerminal = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="T1" 
+                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none uppercase" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Arr Terminal</label>
+                            <input 
+                              type="text" 
+                              value={seg.arrivalTerminal || ''} 
+                              onChange={e => { const s = [...segments]; s[idx].arrivalTerminal = e.target.value.toUpperCase(); setSegments(s); }} 
+                              placeholder="T2" 
+                              className="w-full h-9 px-3 text-xs border border-gray-300 rounded-lg bg-white outline-none uppercase" 
+                            />
                           </div>
                         </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Airline PNR"
-                            value={newFare.airlinePnr}
-                            onChange={(e) => setNewFare({ ...newFare, airlinePnr: e.target.value.toUpperCase() })}
-                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white uppercase font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                          />
-                        </div>
                       </div>
-                    </div>
+                    ))}
+                    <button 
+                      type="button" 
+                      onClick={() => setSegments([...segments, { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }])}
+                      className="px-4 py-2 border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Plus size={14} /> Add Another Leg
+                    </button>
                   </div>
-
-                  {/* Row 3: Seats & Allocation */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start pt-6 border-t border-gray-100">
-                    <div className="font-bold text-gray-700 pt-1">Seats & Allocation</div>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Total Seat*</label>
-                          <input
-                            type="number"
-                            value={(newFare as any).totalSeats ?? ''}
-                            onChange={(e) => setNewFare({ ...newFare, totalSeats: e.target.value === '' ? '' : Number(e.target.value), availableSeats: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                            required
-                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Total Seat*</label>
-                          <input
-                            type="number"
-                            value={(newFare as any).totalSeats ?? ''}
-                            onChange={(e) => setNewFare({ ...newFare, totalSeats: e.target.value === '' ? '' : Number(e.target.value), availableSeats: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                            required
-                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Close Before Departure Days</label>
-                          <input
-                            type="number"
-                            value={(newFare as any).closeBeforeDepartureDays ?? ''}
-                            onChange={(e) => setNewFare({ ...newFare, closeBeforeDepartureDays: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-gray-600 mb-1.5">Close Before Departure Hours*</label>
-                          <input
-                            type="number"
-                            value={(newFare as any).closeBeforeDepartureHours ?? ''}
-                            onChange={(e) => setNewFare({ ...newFare, closeBeforeDepartureHours: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                            className="w-full text-xs px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                )}
               </div>
 
-              {/* SECTION 2: Flight Details */}
-              <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden p-8">
-                <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-3">
-                  <div className="font-black text-sm text-gray-900 flex items-center gap-2">
-                    <Check size={18} className="text-blue-600" />
-                    Flight Details
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Flight Number(Comma Seperated)</span>
-                    <input type="text" className="w-32 text-xs px-3 py-1.5 border border-gray-300 rounded-lg bg-white" />
-                    <button type="button" className="bg-gray-900 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-800 transition-colors shadow-sm">Auto</button>
-                  </div>
+              {/* CARD 3: Seats & Inventory Policy */}
+              <div className="bg-white border border-gray-200 shadow-xs rounded-xl p-5 md:p-6 space-y-4">
+                <div className="font-extrabold text-sm text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+                  <UserCheck size={16} className="text-blue-600" />
+                  <span>3. Seats & Inventory Policy</span>
                 </div>
 
-                <div className="bg-white">
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start">
-                    <div className="font-bold text-gray-700 pt-1">
-                      Sector & Schedule
-                      <div className="mt-4">
-                        <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
-                          <input 
-                            type="checkbox" 
-                            checked={isConnectingFlight} 
-                            onChange={(e) => setIsConnectingFlight(e.target.checked)} 
-                            className="rounded text-blue-600 border-gray-300 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                          />
-                          <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Is Connecting Flight?</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div className="space-y-5">
-                      {!isConnectingFlight ? (
-                        <div className="space-y-5">
-                          {/* Sub-row 1: Route */}
-                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No*</label>
-                              <input type="text" value={newFare.flightNo} onChange={e => setNewFare({ ...newFare, flightNo: e.target.value })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin*</label>
-                              <input type="text" value={newFare.origin} onChange={e => setNewFare({ ...newFare, origin: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
-                              <input type="text" placeholder="T1" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination*</label>
-                              <input type="text" value={newFare.destination} onChange={e => setNewFare({ ...newFare, destination: e.target.value.toUpperCase() })} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Terminal</label>
-                              <input type="text" placeholder="T2" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                          </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Total Seats */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Total Inventory Seats *</label>
+                    <input
+                      type="number"
+                      value={(newFare as any).totalSeats ?? ''}
+                      onChange={(e) => setNewFare({ 
+                        ...newFare, 
+                        totalSeats: e.target.value === '' ? '' : Number(e.target.value), 
+                        availableSeats: e.target.value === '' ? '' : Number(e.target.value) 
+                      } as any)}
+                      readOnly={newFare.isTestFlight}
+                      required
+                      placeholder="e.g. 50"
+                      className={`w-full h-10 px-3.5 text-xs font-bold border border-gray-300 rounded-lg outline-none transition-all shadow-2xs ${
+                        newFare.isTestFlight 
+                          ? 'bg-amber-50 text-amber-900 border-amber-300 cursor-not-allowed' 
+                          : 'bg-white text-blue-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                      }`}
+                    />
+                    {newFare.isTestFlight && (
+                      <p className="text-[10px] text-amber-700 mt-1 font-semibold">Locked at 999 seats in Sandbox test mode</p>
+                    )}
+                  </div>
 
-                          {/* Sub-row 2: Time */}
-                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
-                              <input type="text" value={newFare.departureTime} onChange={e => setNewFare({ ...newFare, departureTime: e.target.value })} required placeholder="e.g. 06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
-                              <input type="text" value={newFare.arrivalTime} onChange={e => setNewFare({ ...newFare, arrivalTime: e.target.value })} required placeholder="e.g. 23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Duration*</label>
-                              <input type="text" value={(newFare as any).duration || ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-gray-600 mb-1">Stop Over</label>
-                              <input type="number" value={(newFare as any).stopOver ?? ''} onChange={e => setNewFare({ ...newFare, stopOver: e.target.value === '' ? '' : Number(e.target.value) } as any)} className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1">
-                                <label className="block text-[10px] font-bold text-gray-600 mb-1">Day Change</label>
-                                <input type="number" value={(newFare as any).dayChange ?? ''} readOnly className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:outline-none transition-all cursor-not-allowed text-gray-500" />
-                              </div>
-                              <button type="button" className="w-9 h-9 bg-blue-600 hover:bg-[#155685] text-white rounded-lg flex items-center justify-center shrink-0 shadow-sm transition-all" title="Add another flight">
-                                <Plus size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          {segments.map((seg, idx) => (
-                            <div key={idx} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative">
-                              <div className="absolute -left-3 -top-3 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md">
-                                {idx + 1}
-                              </div>
-                              {idx > 0 && (
-                                <button 
-                                  type="button" 
-                                  onClick={() => setSegments(segments.filter((_, i) => i !== idx))}
-                                  className="absolute -right-2 -top-2 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors"
-                                >
-                                  <X size={12} />
-                                </button>
-                              )}
-                              
-                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Flight No*</label>
-                                  <input type="text" value={seg.flightNo} onChange={e => { const s = [...segments]; s[idx].flightNo = e.target.value; setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Airline Code*</label>
-                                  <input type="text" value={seg.airline} onChange={e => { const s = [...segments]; s[idx].airline = e.target.value.toUpperCase(); setSegments(s); }} placeholder="6E" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Origin*</label>
-                                  <input type="text" value={seg.origin} onChange={e => { const s = [...segments]; s[idx].origin = e.target.value.toUpperCase(); setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Destination*</label>
-                                  <input type="text" value={seg.destination} onChange={e => { const s = [...segments]; s[idx].destination = e.target.value.toUpperCase(); setSegments(s); }} required className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white font-bold uppercase outline-none" />
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time*</label>
-                                  <input type="text" value={seg.departureTime} onChange={e => { const s = [...segments]; s[idx].departureTime = e.target.value; setSegments(s); }} required placeholder="06:00" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time*</label>
-                                  <input type="text" value={seg.arrivalTime} onChange={e => { const s = [...segments]; s[idx].arrivalTime = e.target.value; setSegments(s); }} required placeholder="23:10" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Dep Terminal</label>
-                                  <input type="text" value={seg.departureTerminal || ''} onChange={e => { const s = [...segments]; s[idx].departureTerminal = e.target.value.toUpperCase(); setSegments(s); }} placeholder="T1" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-bold text-gray-600 mb-1">Arr Terminal</label>
-                                  <input type="text" value={seg.arrivalTerminal || ''} onChange={e => { const s = [...segments]; s[idx].arrivalTerminal = e.target.value.toUpperCase(); setSegments(s); }} placeholder="T2" className="w-full text-xs px-3 py-2 border border-gray-300 rounded bg-white outline-none" />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <button 
-                            type="button" 
-                            onClick={() => setSegments([...segments, { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }])}
-                            className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                          >
-                            <Plus size={14} /> Add Another Leg
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  {/* Cutoff Days */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Close Before Departure (Days)</label>
+                    <input
+                      type="number"
+                      value={(newFare as any).closeBeforeDepartureDays ?? ''}
+                      onChange={(e) => setNewFare({ ...newFare, closeBeforeDepartureDays: e.target.value === '' ? '' : Number(e.target.value) } as any)}
+                      placeholder="0"
+                      className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Cutoff Hours */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Close Before Departure (Hours) *</label>
+                    <input
+                      type="number"
+                      value={(newFare as any).closeBeforeDepartureHours ?? ''}
+                      onChange={(e) => setNewFare({ ...newFare, closeBeforeDepartureHours: e.target.value === '' ? '' : Number(e.target.value) } as any)}
+                      placeholder="4"
+                      required
+                      className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
+                    />
                   </div>
                 </div>
               </div>
-              {/* SECTION 3: Fare Details */}
-              <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden p-8">
-                <div className="font-black text-sm text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
-                  <span className="text-blue-600 font-serif text-lg leading-none">₹</span>
-                  Fare Details
+
+              {/* CARD 4: Fares, Commercials & Baggage */}
+              <div className="bg-white border border-gray-200 shadow-xs rounded-xl p-5 md:p-6 space-y-5">
+                <div className="font-extrabold text-sm text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
+                  <span className="text-blue-600 font-serif font-black text-base">₹</span>
+                  <span>4. Fares, Commercials & Baggage</span>
                 </div>
-                <div className="space-y-8">
-                  {/* Row 1: Passenger Fare Details */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start">
-                    <div className="font-bold text-gray-700 pt-1">Passenger Fare Details</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+                {/* Sub-section: Passenger Fares */}
+                <div>
+                  <h4 className="text-[11px] font-extrabold uppercase text-gray-500 tracking-wider mb-2">Per-Passenger Fare Breakdown (INR)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Adult Fare *</label>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Adult Fare * (₹)</label>
                       <input
                         type="number"
                         value={(newFare as any).adtFare ?? ''}
                         onChange={(e) => setNewFare({ ...newFare, adtFare: e.target.value === '' ? '' : Number(e.target.value) } as any)}
+                        placeholder="e.g. 4200"
                         required
-                        className="w-full text-xs px-3 py-1.5 border border-gray-300 rounded bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full h-10 px-3.5 text-xs font-extrabold text-emerald-700 border-2 border-emerald-400 rounded-lg bg-emerald-50/20 outline-none focus:ring-2 focus:ring-emerald-200 transition-all shadow-2xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Child Fare</label>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Child Fare (₹)</label>
                       <input
                         type="number"
                         value={(newFare as any).chdFare ?? ''}
                         onChange={(e) => setNewFare({ ...newFare, chdFare: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                        className="w-full text-xs px-3 py-1.5 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="e.g. 4200"
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Infant Fare</label>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Infant Fare (₹) <span className="text-blue-600 font-normal">(Dedicated Seat)</span></label>
                       <input
                         type="number"
                         value={(newFare as any).infFare ?? ''}
                         onChange={(e) => setNewFare({ ...newFare, infFare: e.target.value === '' ? '' : Number(e.target.value) } as any)}
-                        className="w-full text-xs px-3 py-1.5 border border-gray-300 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="e.g. 1500"
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
                       />
                     </div>
-                    </div>
                   </div>
+                </div>
 
-                  {/* Row 2: Baggage Details */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 items-start pt-6 border-t border-gray-100">
-                    <div className="font-bold text-gray-700 pt-1">Baggage Details</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+                {/* Sub-section: Baggage & Policy */}
+                <div className="pt-4 border-t border-gray-100">
+                  <h4 className="text-[11px] font-extrabold uppercase text-gray-500 tracking-wider mb-2">Baggage Allowance & Commercial Terms</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Check In Baggage*</label>
-                      <input type="text" defaultValue="15 Kg" className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white" />
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Check-In Baggage</label>
+                      <input 
+                        type="text" 
+                        defaultValue="15 Kg" 
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                      />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Hand Baggage*</label>
-                      <input type="text" defaultValue="7 Kg" className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white" />
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Hand / Cabin Baggage</label>
+                      <input 
+                        type="text" 
+                        defaultValue="7 Kg" 
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                      />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Warning</label>
-                      <input type="text" defaultValue="Special Non refundable fares / Free baggage..." className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white" />
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Agent Commission (₹)</label>
+                      <input 
+                        type="number"
+                        value={(newFare as any).agentCommission ?? ''}
+                        onChange={(e) => setNewFare({ ...newFare, agentCommission: e.target.value === '' ? '' : Number(e.target.value) } as any)}
+                        placeholder="e.g. 200"
+                        className="w-full h-10 px-3.5 text-xs font-semibold border border-gray-300 rounded-lg bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs" 
+                      />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Prompt</label>
-                      <input type="text" defaultValue="Special Non refundable fares / Free baggage..." className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Fare Rule Description</label>
-                      <input type="text" defaultValue="Special Non refundable fares / Free baggage..." className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white" />
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Cancellation Policy</label>
+                      <div className="h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg flex items-center text-[11px] font-extrabold text-slate-700">
+                        100% Non-Refundable Charter
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-              {/* Submit Button */}
-              <div className="text-right pt-4 border-t border-gray-200">
+              {/* Form Action Footer */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-xs px-8 py-2.5 rounded-lg transition-all mr-3"
+                  className="px-6 py-2.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition-all cursor-pointer shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-[#155685] text-white font-bold text-xs px-10 py-2.5 rounded-lg transition-all shadow-md"
+                  className="px-8 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
                 >
-                  Submit
+                  <Plane size={15} /> Save & Publish Series Fare
                 </button>
               </div>
             </form>
 
-            <div className="bg-gray-100 py-2 px-6 text-right text-[10px] text-gray-500 font-bold border-t border-gray-200">
+            <div className="bg-gray-100 py-2.5 px-6 text-right text-[10px] text-gray-500 font-bold border-t border-gray-200">
               © 2026 TrippeChalo India. All rights reserved.
             </div>
           </div>

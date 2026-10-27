@@ -102,10 +102,10 @@ export default function DOBCalendar({ value, onChange, minDate, maxDate, initial
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <div 
-        className="w-full border border-gray-300 rounded p-2 text-[13px] bg-white cursor-pointer flex justify-between items-center hover:border-blue-500 transition-colors"
+        className="w-full border border-gray-300 rounded-lg px-3.5 h-10 min-h-[40px] text-xs font-semibold bg-white cursor-pointer flex justify-between items-center hover:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
         onClick={() => { setIsOpen(!isOpen); setIsYearOpen(false); setIsMonthOpen(false); }}
       >
-        <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+        <span className={value ? 'text-gray-900 font-bold' : 'text-gray-400 font-normal'}>
           {value ? format(parseISO(value), 'dd MMM, yyyy') : placeholder}
         </span>
         <CalendarIcon size={16} className="text-gray-500" />
