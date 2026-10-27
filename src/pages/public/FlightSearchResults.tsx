@@ -723,9 +723,9 @@ export default function FlightSearchResults() {
                        </div>
                        <div className="flex flex-col">
                          <div className="flex items-center gap-2 mb-0.5">
-                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedOutbound.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.departureTime))}</span>
                            <span className="text-blue-500 text-[10px] md:text-xs">➔</span>
-                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.arrivalTime))}</span>
                          </div>
                          <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                            <span>{selectedOutbound.airline} {selectedOutbound.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
@@ -745,9 +745,9 @@ export default function FlightSearchResults() {
                            </div>
                            <div className="flex flex-col">
                              <div className="flex items-center gap-2 mb-0.5">
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedReturn.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.departureTime))}</span>
                                <span className="text-emerald-500 text-[10px] md:text-xs">➔</span>
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
                              </div>
                              <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
@@ -908,6 +908,23 @@ export default function FlightSearchResults() {
   );
 }
 
+
+const parseDate = (val: any) => {
+  if (!val) return new Date();
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? new Date() : d;
+};
+
+const formatTime = (d: any) => {
+  const dt = parseDate(d);
+  return dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+};
+
+const formatDate = (d: any) => {
+  const dt = parseDate(d);
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+};
+
 // Subcomponent for Flight Card
 function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }: { flight: Flight, isSelected?: boolean, onSelect?: () => void, isRoundTrip?: boolean, displayPrice?: number }) {
   const navigate = useNavigate();
@@ -1017,7 +1034,7 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
                   {/* Price & Action (Only show on the first segment to save space) */}
                   {idx === 0 ? (
                     <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
-                      {flight.isRoundTripComboReturn || (originalPrice === 0 && finalPrice === 0) ? (
+                      {Boolean(flight.isRoundTripComboReturn) ? (
                         <div className="flex flex-col items-start md:items-end">
                           <span className="font-black text-xs md:text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Included</span>
                           <p className="text-[10px] text-gray-500 mt-0.5">Round-Trip Combo</p>
@@ -1066,7 +1083,7 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
 
           {/* Price & Action */}
           <div className="col-span-3 md:col-span-1 border-t border-gray-100 pt-3 md:pt-0 md:border-none text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start">
-            {flight.isRoundTripComboReturn || (originalPrice === 0 && finalPrice === 0) ? (
+            {Boolean(flight.isRoundTripComboReturn) ? (
               <div className="flex flex-col items-start md:items-end">
                 <span className="font-black text-xs md:text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Included</span>
                 <p className="text-[10px] text-gray-500 mt-0.5">Round-Trip Combo</p>
