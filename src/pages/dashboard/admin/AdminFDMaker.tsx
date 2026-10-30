@@ -102,6 +102,84 @@ const CitySelect = ({
   );
 };
 
+const TimeSelect = ({
+  value,
+  onChange,
+  heightClass = 'h-10'
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  heightClass?: string;
+}) => {
+  const [h, m] = (value || '').split(':');
+  const currentH = h || '';
+  const currentM = m || '';
+
+  const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')), []);
+  const minutes = useMemo(() => {
+    const list = [];
+    for (let i = 0; i < 60; i += 5) {
+      list.push(i.toString().padStart(2, '0'));
+    }
+    if (currentM && !list.includes(currentM)) {
+      list.push(currentM);
+      list.sort((a, b) => Number(a) - Number(b));
+    }
+    return list;
+  }, [currentM]);
+
+  const handleHourChange = (newH: string) => {
+    const minute = currentM || '00';
+    onChange(newH ? `${newH}:${minute}` : '');
+  };
+
+  const handleMinuteChange = (newM: string) => {
+    const hour = currentH || '00';
+    onChange(newM ? `${hour}:${newM}` : '');
+  };
+
+  return (
+    <div className={`w-full ${heightClass} flex items-center gap-1.5 p-1 bg-white border border-gray-300 rounded-lg shadow-2xs hover:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all`}>
+      {/* Hours Select */}
+      <div className="relative flex-1 h-full flex items-center">
+        <select
+          value={currentH}
+          onChange={(e) => handleHourChange(e.target.value)}
+          className="w-full h-full text-xs font-bold text-gray-900 bg-transparent px-2 pr-4 outline-none cursor-pointer appearance-none"
+        >
+          <option value="" disabled className="text-gray-400 font-normal">HH</option>
+          {hours.map((hh) => (
+            <option key={hh} value={hh} className="font-semibold text-gray-900">
+              {hh} hrs
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={11} className="absolute right-1 text-gray-400 pointer-events-none" />
+      </div>
+
+      {/* Colon separator */}
+      <span className="font-black text-gray-400 text-xs px-0.5 select-none">:</span>
+
+      {/* Minutes Select */}
+      <div className="relative flex-1 h-full flex items-center">
+        <select
+          value={currentM}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="w-full h-full text-xs font-bold text-gray-900 bg-transparent px-2 pr-4 outline-none cursor-pointer appearance-none"
+        >
+          <option value="" disabled className="text-gray-400 font-normal">MM</option>
+          {minutes.map((mm) => (
+            <option key={mm} value={mm} className="font-semibold text-gray-900">
+              {mm} min
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={11} className="absolute right-1 text-gray-400 pointer-events-none" />
+      </div>
+    </div>
+  );
+};
+
 const AdminSeriesFareMaker: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const supplierName = (user as any)?.companyName || user?.name || (user as any)?.firstName || 'Supplier';
@@ -245,9 +323,17 @@ const AdminSeriesFareMaker: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (newFare.departureTime && newFare.arrivalTime) {
-      const [depH, depM] = newFare.departureTime.split(':').map(Number);
-      const [arrH, arrM] = newFare.arrivalTime.split(':').map(Number);
+    let depTime = newFare.departureTime;
+    let arrTime = newFare.arrivalTime;
+
+    if (isConnectingFlight && segments.length >= 2) {
+      depTime = segments[0]?.departureTime || '';
+      arrTime = segments[segments.length - 1]?.arrivalTime || '';
+    }
+
+    if (depTime && arrTime) {
+      const [depH, depM] = depTime.split(':').map(Number);
+      const [arrH, arrM] = arrTime.split(':').map(Number);
       if (!isNaN(depH) && !isNaN(arrH)) {
         let depTotalMins = depH * 60 + depM;
         let arrTotalMins = arrH * 60 + arrM;
@@ -261,16 +347,26 @@ const AdminSeriesFareMaker: React.FC = () => {
         const durM = diffMins % 60;
         const durationStr = `${durH.toString().padStart(2, '0')}:${durM.toString().padStart(2, '0')}`;
         
-        if ((newFare as any).duration !== durationStr || (newFare as any).dayChange !== calculatedDayChange) {
-          setNewFare(prev => ({
+        setNewFare(prev => {
+          if (
+            (prev as any).duration === durationStr &&
+            (prev as any).dayChange === calculatedDayChange &&
+            prev.departureTime === depTime &&
+            prev.arrivalTime === arrTime
+          ) {
+            return prev;
+          }
+          return {
             ...prev,
+            departureTime: depTime,
+            arrivalTime: arrTime,
             duration: durationStr,
             dayChange: calculatedDayChange
-          } as any));
-        }
+          } as any;
+        });
       }
     }
-  }, [newFare.departureTime, newFare.arrivalTime]);
+  }, [newFare.departureTime, newFare.arrivalTime, isConnectingFlight, segments]);
 
   const isFirstRender = useRef(true);
 
@@ -1570,29 +1666,21 @@ const AdminSeriesFareMaker: React.FC = () => {
                     <>
                       {/* Depart Time */}
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time *</label>
-                        <Dropdown 
-                          value={newFare.departureTime} 
-                          onChange={(val) => setNewFare({ ...newFare, departureTime: val })} 
-                          options={timeOptions}
-                          placeholder="Select Time"
-                          searchable={true}
-                          direction="auto"
-                          className="w-full h-10"
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Departure Time (HH:MM) *</label>
+                        <TimeSelect
+                          value={newFare.departureTime}
+                          onChange={(val) => setNewFare({ ...newFare, departureTime: val })}
+                          heightClass="h-10"
                         />
                       </div>
 
                       {/* Arrival Time */}
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time *</label>
-                        <Dropdown 
-                          value={newFare.arrivalTime} 
-                          onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })} 
-                          options={timeOptions}
-                          placeholder="Select Time"
-                          searchable={true}
-                          direction="auto"
-                          className="w-full h-10"
+                        <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Arrival Time (HH:MM) *</label>
+                        <TimeSelect
+                          value={newFare.arrivalTime}
+                          onChange={(val) => setNewFare({ ...newFare, arrivalTime: val })}
+                          heightClass="h-10"
                         />
                       </div>
 
@@ -1699,27 +1787,19 @@ const AdminSeriesFareMaker: React.FC = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time *</label>
-                            <Dropdown 
-                              value={seg.departureTime} 
-                              onChange={(val) => { const s = [...segments]; s[idx].departureTime = val; setSegments(s); }} 
-                              options={timeOptions}
-                              placeholder="06:00"
-                              searchable={true}
-                              direction="auto"
-                              className="w-full h-9"
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Depart Time (HH:MM) *</label>
+                            <TimeSelect
+                              value={seg.departureTime}
+                              onChange={(val) => { const s = [...segments]; s[idx].departureTime = val; setSegments(s); }}
+                              heightClass="h-9"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time *</label>
-                            <Dropdown 
-                              value={seg.arrivalTime} 
-                              onChange={(val) => { const s = [...segments]; s[idx].arrivalTime = val; setSegments(s); }} 
-                              options={timeOptions}
-                              placeholder="08:15"
-                              searchable={true}
-                              direction="auto"
-                              className="w-full h-9"
+                            <label className="block text-[10px] font-bold text-gray-600 mb-1">Arrival Time (HH:MM) *</label>
+                            <TimeSelect
+                              value={seg.arrivalTime}
+                              onChange={(val) => { const s = [...segments]; s[idx].arrivalTime = val; setSegments(s); }}
+                              heightClass="h-9"
                             />
                           </div>
                           <div>

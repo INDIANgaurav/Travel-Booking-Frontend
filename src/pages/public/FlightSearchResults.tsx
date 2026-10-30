@@ -935,6 +935,13 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
   
   const parseDate = (val: any) => {
     if (!val) return new Date();
+    if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val) && !val.includes('T')) {
+      const base = flight.departureTime ? new Date(flight.departureTime) : new Date();
+      const [hh, mm] = val.split(':').map(Number);
+      const d = new Date(base);
+      d.setHours(hh || 0, mm || 0, 0, 0);
+      return d;
+    }
     const d = new Date(val);
     return isNaN(d.getTime()) ? new Date() : d;
   };
@@ -959,17 +966,25 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
   const originalPrice = Number(flight.price) || 0;
 
   const calculateLayover = (arrTime: string, depTime: string) => {
-    const arr = new Date(arrTime).getTime();
-    const dep = new Date(depTime).getTime();
-    const mins = Math.floor((dep - arr) / (1000 * 60));
-    if (mins < 0 || isNaN(mins)) return '0h 0m';
+    const arr = parseDate(arrTime).getTime();
+    const dep = parseDate(depTime).getTime();
+    let diff = dep - arr;
+    if (diff < 0) {
+      diff += 24 * 60 * 60 * 1000;
+    }
+    const mins = Math.floor(diff / (1000 * 60));
+    if (isNaN(mins)) return '0h 0m';
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
   };
 
   const getDuration = (arrTime: string, depTime: string) => {
-    const arr = new Date(arrTime).getTime();
-    const dep = new Date(depTime).getTime();
-    const mins = Math.floor((arr - dep) / (1000 * 60));
+    const arr = parseDate(arrTime).getTime();
+    const dep = parseDate(depTime).getTime();
+    let diff = arr - dep;
+    if (diff < 0) {
+      diff += 24 * 60 * 60 * 1000;
+    }
+    const mins = Math.floor(diff / (1000 * 60));
     return mins > 0 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : '--';
   };
 
