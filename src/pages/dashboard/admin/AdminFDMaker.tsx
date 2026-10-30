@@ -52,12 +52,14 @@ const CitySelect = ({
   value, 
   onChange, 
   placeholder = 'Select City',
-  heightClass = 'h-10'
+  heightClass = 'h-10',
+  align = 'left'
 }: { 
   value: string; 
   onChange: (val: string) => void; 
   placeholder?: string;
   heightClass?: string;
+  align?: 'left' | 'right';
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -84,7 +86,7 @@ const CitySelect = ({
         <ChevronDown size={14} className="text-gray-400 shrink-0" />
       </div>
       {isOpen && (
-        <div className="absolute top-[100%] mt-1 left-0 z-[60] shadow-2xl rounded-xl">
+        <div className={`absolute top-[100%] mt-1 ${align === 'right' ? 'right-0' : 'left-0'} z-[60] shadow-2xl rounded-xl`}>
           <CityPicker 
             value={value} 
             onChange={(code) => {
@@ -331,20 +333,20 @@ const AdminSeriesFareMaker: React.FC = () => {
       };
 
       if (!payload.travelDate) {
-        toast.error('Kripya Journey Travel Date select karein!');
+        toast.error('Please select a journey travel date.');
         return;
       }
 
       if (isConnectingFlight) {
         payload.segments = segments.filter(s => s.origin && s.destination && s.flightNo);
         if (payload.segments.length < 2) {
-          toast.error('Connecting flight ke liye kam se kam 2 legs (e.g. Leg 1: DEL -> BOM, Leg 2: BOM -> DXB) complete fill karein!');
+          toast.error('Connecting flight itineraries require at least two complete flight legs (e.g., Leg 1: DEL → BOM, Leg 2: BOM → DXB).');
           return;
         }
         for (let i = 0; i < payload.segments.length; i++) {
           const seg = payload.segments[i];
           if (!seg.departureTime || !seg.arrivalTime) {
-            toast.error(`Flight Leg ${i + 1} ka Depart Time aur Arrival Time select karein!`);
+            toast.error(`Please select departure and arrival times for Flight Leg ${i + 1}.`);
             return;
           }
         }
@@ -355,25 +357,25 @@ const AdminSeriesFareMaker: React.FC = () => {
         payload.arrivalTime = payload.segments[payload.segments.length - 1].arrivalTime;
       } else {
         if (!payload.origin || !payload.destination) {
-          toast.error('Origin aur Destination city select karein!');
+          toast.error('Please select both Origin and Destination cities.');
           return;
         }
         if (!payload.flightNo) {
-          toast.error('Flight Number enter karein!');
+          toast.error('Please enter a flight number.');
           return;
         }
         if (!payload.departureTime || !payload.arrivalTime) {
-          toast.error('Departure Time aur Arrival Time select karein!');
+          toast.error('Please select both Departure and Arrival times.');
           return;
         }
       }
 
       if (!payload.airline) {
-        toast.error('Airline name enter karein!');
+        toast.error('Please enter the airline name.');
         return;
       }
       if (!payload.adtFare) {
-        toast.error('Adult Fare enter karein!');
+        toast.error('Please enter the Adult fare.');
         return;
       }
 
@@ -849,8 +851,8 @@ const AdminSeriesFareMaker: React.FC = () => {
                         <div className="flex flex-col items-start gap-1">
                           <span className="text-gray-900">{fare.origin} - {fare.destination}</span>
                           {fare.segments && fare.segments.length > 1 ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold rounded bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs" title={`Connecting flight via ${fare.segments[0].destination}`}>
-                              ✈️ {fare.segments.length - 1}-Stop (via {fare.segments[0].destination})
+                            <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-extrabold rounded bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs" title={`Connecting flight via ${fare.segments[0].destination}`}>
+                              {fare.segments.length - 1}-Stop via {fare.segments[0].destination}
                             </span>
                           ) : (
                             <span className="text-[10px] text-gray-400 font-medium">Non-Stop</span>
@@ -927,19 +929,19 @@ const AdminSeriesFareMaker: React.FC = () => {
 
                             {/* Connecting Flight Segments Breakdown if Multi-Leg */}
                             {fare.segments && fare.segments.length > 1 && (
-                              <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2">
+                              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs font-black text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
-                                    <span>✈️ Connecting Flight Route Breakdown ({fare.segments.length - 1}-Stop)</span>
+                                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                                    <span>Connecting Route Breakdown ({fare.segments.length - 1}-Stop)</span>
                                   </span>
-                                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300">
+                                  <span className="text-[10px] font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded border border-slate-300">
                                     Total Legs: {fare.segments.length}
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3 pt-1">
                                   {fare.segments.map((seg, sIdx) => (
-                                    <div key={sIdx} className="flex items-center gap-2.5 bg-white px-3 py-2 rounded-lg border border-amber-300 shadow-2xs">
-                                      <span className="w-5 h-5 rounded-full bg-amber-600 text-white font-black flex items-center justify-center text-[10px]">{sIdx + 1}</span>
+                                    <div key={sIdx} className="flex items-center gap-2.5 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-2xs">
+                                      <span className="w-5 h-5 rounded-full bg-slate-800 text-white font-black flex items-center justify-center text-[10px]">{sIdx + 1}</span>
                                       <div className="flex flex-col">
                                         <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900">
                                           <span>{seg.origin}</span>
@@ -1278,7 +1280,7 @@ const AdminSeriesFareMaker: React.FC = () => {
       {/* Create Series Fare Fullscreen Form Overlay */}
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 overflow-y-auto font-sans p-4 md:p-6 flex items-start justify-center animate-fade-in">
-          <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-12">
+          <div className="w-full max-w-7xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden mb-12">
             {/* Header Bar */}
             <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center border-b border-slate-800">
               <div className="flex items-center gap-3">
@@ -1476,6 +1478,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                       value={newFare.destination}
                       onChange={(val) => setNewFare({ ...newFare, destination: val })}
                       placeholder="Select Destination"
+                      align="right"
                     />
                   </div>
 
@@ -1523,28 +1526,29 @@ const AdminSeriesFareMaker: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Helpful Note for Direct vs Connecting Flight */}
-                <div className={`p-3 rounded-lg border text-xs leading-relaxed transition-all ${
+                {/* Professional Information Note for Itinerary Type */}
+                <div className={`p-4 rounded-xl border text-xs leading-relaxed transition-all ${
                   isConnectingFlight 
-                    ? 'bg-amber-50/80 border-amber-200 text-amber-900' 
+                    ? 'bg-slate-50 border-slate-200 text-slate-800' 
                     : 'bg-blue-50/60 border-blue-200 text-blue-900'
                 }`}>
                   {isConnectingFlight ? (
-                    <div className="space-y-1">
-                      <p className="font-extrabold flex items-center gap-1.5 text-amber-900">
-                        <span>✈️ Connecting Flight Mode (Multi-Leg):</span>
+                    <div className="space-y-1.5">
+                      <div className="font-extrabold text-slate-900 flex items-center gap-2 text-xs">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        <span>Connecting Flight Configuration (Multi-Leg / 1-Stop):</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600">
+                        Connecting flights require a minimum of two flight legs (e.g., Leg 1: DEL → BOM, Leg 2: BOM → DXB). Additional transit sectors can be added using the Add Another Leg option.
                       </p>
-                      <p className="text-[11px] text-amber-800">
-                        Connecting flight ke liye <strong>kam se kam 2 legs compulsory hain</strong> (Leg 1: Pehla safar, Leg 2: Doosra safar). Aap chahein toh 3rd leg add kar sakte hain, par 2 legs hamesha rahenge.
-                      </p>
-                      <p className="text-[11px] text-amber-900 font-bold bg-amber-100/70 px-2 py-1 rounded border border-amber-300/50 mt-1">
-                        💡 Zaroori: Agar New Delhi se Dubai Direct / Non-Stop flight hai, toh upar diye checkbox ko <strong>UNCHECK (band)</strong> rakhein!
+                      <p className="text-[11px] text-slate-500 font-medium border-t border-slate-200/70 pt-1.5">
+                        Note: For direct or non-stop flights between origin and destination, please keep the Connecting Flight checkbox unselected.
                       </p>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] text-blue-800">
-                        <strong>Direct Flight Mode:</strong> Yeh direct non-stop flight hai. Neeche seedha Travel Date, Departure & Arrival time select karein. (Agar flight kisi aur shahar ruk kar plane badalti hai, tabhi upar Connecting Flight check karein).
+                      <p className="text-[11px] text-blue-900">
+                        <strong className="font-bold">Direct Flight Configuration:</strong> Standard non-stop itinerary. Select travel date, departure time, and arrival time below. For multi-leg itineraries with layovers, enable the Connecting Flight option above.
                       </p>
                     </div>
                   )}
@@ -1626,11 +1630,11 @@ const AdminSeriesFareMaker: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 uppercase tracking-wide">
                               <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</span>
-                              Flight Leg {idx + 1} {idx === 0 ? '(Pehla Segment)' : idx === 1 ? '(Doosra Segment)' : ''}
+                              Flight Leg {idx + 1} {idx === 0 ? '(First Sector)' : idx === 1 ? '(Second Sector)' : ''}
                             </span>
                             {idx < 2 && (
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                Compulsory
+                              <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                                Required
                               </span>
                             )}
                           </div>
@@ -1691,6 +1695,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                               }}
                               placeholder="Select Destination"
                               heightClass="h-9"
+                              align="right"
                             />
                           </div>
                           <div>
