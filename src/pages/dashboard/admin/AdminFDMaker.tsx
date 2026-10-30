@@ -11,6 +11,17 @@ import toast from 'react-hot-toast';
 import RefreshButton from '../../../components/ui/RefreshButton';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
 
+interface ISeriesFareSegment {
+  origin: string;
+  destination: string;
+  airline: string;
+  flightNo: string;
+  departureTime: string;
+  arrivalTime: string;
+  departureTerminal?: string;
+  arrivalTerminal?: string;
+}
+
 interface ISeriesFare {
   _id: string;
   sfId: string;
@@ -34,6 +45,7 @@ interface ISeriesFare {
   supplierName?: string;
   supplierId?: string;
   isTestFlight?: boolean;
+  segments?: ISeriesFareSegment[];
 }
 
 const CitySelect = ({ 
@@ -828,13 +840,22 @@ const AdminSeriesFareMaker: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-900">{fare.supplierName || 'UNKNOWN'}</span>
+                          <span className="font-bold text-gray-900">{fare.supplierName || 'Admin'}</span>
                           <span className="text-[10px] text-gray-500 uppercase">{fare.airline}</span>
                         </div>
                       </td>
                       <td className="p-3 font-mono text-blue-600 font-bold">{fare.airlinePnr || 'PENDING'}</td>
                       <td className="p-3 font-bold text-gray-800">
-                        {fare.origin} - {fare.destination}
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="text-gray-900">{fare.origin} - {fare.destination}</span>
+                          {fare.segments && fare.segments.length > 1 ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold rounded bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs" title={`Connecting flight via ${fare.segments[0].destination}`}>
+                              ✈️ {fare.segments.length - 1}-Stop (via {fare.segments[0].destination})
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 font-medium">Non-Stop</span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-gray-600">
                         <span className="text-gray-900">{formattedDate}</span>
@@ -903,6 +924,37 @@ const AdminSeriesFareMaker: React.FC = () => {
                                 </button>
                               </div>
                             </div>
+
+                            {/* Connecting Flight Segments Breakdown if Multi-Leg */}
+                            {fare.segments && fare.segments.length > 1 && (
+                              <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-black text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
+                                    <span>✈️ Connecting Flight Route Breakdown ({fare.segments.length - 1}-Stop)</span>
+                                  </span>
+                                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300">
+                                    Total Legs: {fare.segments.length}
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-3 pt-1">
+                                  {fare.segments.map((seg, sIdx) => (
+                                    <div key={sIdx} className="flex items-center gap-2.5 bg-white px-3 py-2 rounded-lg border border-amber-300 shadow-2xs">
+                                      <span className="w-5 h-5 rounded-full bg-amber-600 text-white font-black flex items-center justify-center text-[10px]">{sIdx + 1}</span>
+                                      <div className="flex flex-col">
+                                        <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900">
+                                          <span>{seg.origin}</span>
+                                          <span className="text-gray-400">→</span>
+                                          <span>{seg.destination}</span>
+                                        </div>
+                                        <div className="text-[10px] text-gray-500 font-medium">
+                                          {seg.airline} <span className="font-mono font-bold text-blue-600">{seg.flightNo}</span> • {seg.departureTime} - {seg.arrivalTime}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Inner Controls Table spanning full width */}
                             <div className="w-full overflow-x-auto border border-gray-200 rounded-xl shadow-xs bg-white">

@@ -75,7 +75,6 @@ import CugSuppliersManager from './pages/dashboard/admin/CugSuppliersManager'
 import AdminInventory from './pages/dashboard/admin/AdminInventory'
 import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
 import AdminB2BPartners from './pages/dashboard/admin/AdminB2BPartners'
-import AdminSMSSettings from './pages/dashboard/admin/settings/AdminSMSSettings'
 import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
 import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
 import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
@@ -412,8 +411,6 @@ function App() {
           <Route path="fd-slow-moving" element={<AdminFDSlowMovingSector />} />
           <Route path="b2b-partners" element={<AdminB2BPartners />} />
           <Route path="profile" element={<AdminProfile />} />
-          
-          <Route path="settings/sms-emails" element={<AdminSMSSettings />} />
           <Route path="settings/roles" element={<AdminRoleMaster />} />
           <Route path="settings/pg-mapping" element={<AdminPGMapping />} />
           <Route path="settings/pages" element={<AdminDynamicPages />} />

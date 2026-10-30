@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone, Server } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,7 @@ export default function AdminLayout() {
   const user = useSelector(selectCurrentUser);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const navContainerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleSetSidebar = (e: any) => {
@@ -24,15 +24,31 @@ export default function AdminLayout() {
     return () => window.removeEventListener('set-admin-sidebar', handleSetSidebar);
   }, []);
 
-  const toggleMenu = (name: string) => {
-    setExpandedMenus(prev => prev.includes(name) ? [] : [name]);
-  };
-
   const handleLogout = () => {
     navigate('/');
     setTimeout(() => {
       dispatch(logoutUserThunk() as any);
     }, 0);
+  };
+
+  const isPathActive = (targetPath?: string) => {
+    if (!targetPath || targetPath === '#') return false;
+    if (targetPath === '/admin' || targetPath === '/admin/dashboard') {
+      return location.pathname === targetPath;
+    }
+    return location.pathname === targetPath || location.pathname.startsWith(`${targetPath}/`);
+  };
+
+  const isParentActive = (item: { name: string; path?: string; subItems?: { name: string; path: string }[] }) => {
+    if (item.path && isPathActive(item.path)) return true;
+    if (item.subItems?.some(sub => isPathActive(sub.path))) return true;
+    if (item.name === 'User Directory' && location.pathname.startsWith('/admin/user-profile')) return true;
+    if (item.name === 'Booking Operations' && (
+      location.pathname.startsWith('/admin/bookings') || 
+      location.pathname.startsWith('/admin/group-bookings') || 
+      location.pathname.startsWith('/admin/cancellations')
+    )) return true;
+    return false;
   };
 
   const navGroups = [
@@ -86,7 +102,6 @@ export default function AdminLayout() {
         },
         { name: 'Sub-Admin Roles', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
         { name: 'B2B Registrations', path: '/admin/b2b-requests', icon: <Briefcase size={20} /> },
-        { name: 'Group Bookings RFQ', path: '/admin/group-bookings', icon: <Users size={20} /> },
       ]
     },
     {
@@ -142,7 +157,15 @@ export default function AdminLayout() {
     {
       title: 'Operations & Logs',
       items: [
-        { name: 'Booking Operations', path: '/admin/bookings', icon: <Briefcase size={20} /> },
+        { 
+          name: 'Booking Operations', 
+          icon: <Briefcase size={20} />,
+          subItems: [
+            { name: 'All Bookings', path: '/admin/bookings' },
+            { name: 'Group Bookings RFQ', path: '/admin/group-bookings' },
+            { name: 'Cancellations', path: '/admin/cancellations' }
+          ]
+        },
         { name: 'Helpdesk Tickets', path: '/admin/helpdesk', icon: <MessageSquare size={20} /> },
       ]
     },
@@ -155,7 +178,6 @@ export default function AdminLayout() {
           name: 'System Settings', 
           icon: <Settings size={20} />,
           subItems: [
-            { name: 'SMS & Emails', path: '/admin/settings/sms-emails' },
             { name: 'Role Master', path: '/admin/settings/roles' },
             { name: 'PG User Mapping', path: '/admin/settings/pg-mapping' },
             { name: 'Edit Footer Links', path: '/admin/settings/pages' },
@@ -166,14 +188,63 @@ export default function AdminLayout() {
     }
   ];
 
-  React.useEffect(() => {
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(() => {
+    const initial: string[] = [];
     navGroups.forEach(group => {
       group.items.forEach(item => {
-        if (item.subItems?.some(sub => location.pathname.includes(sub.path))) {
-          setExpandedMenus([item.name]);
+        if (item.subItems && isParentActive(item)) {
+          initial.push(item.name);
         }
       });
     });
+    return initial;
+  });
+
+  const toggleMenu = (name: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(name) ? prev.filter(m => m !== name) : [...prev, name]
+    );
+  };
+
+  useEffect(() => {
+    navGroups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.subItems && isParentActive(item)) {
+          setExpandedMenus(prev => prev.includes(item.name) ? prev : [...prev, item.name]);
+        }
+      });
+    });
+  }, [location.pathname]);
+
+  // Auto-scroll sidebar container smoothly to the active menu / sub-item
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const container = navContainerRef.current;
+      if (!container) return;
+
+      const activeEl = 
+        container.querySelector<HTMLElement>('[data-sidebar-subactive="true"]') ||
+        container.querySelector<HTMLElement>('[data-sidebar-active="true"]') ||
+        container.querySelector<HTMLElement>('[data-sidebar-parentactive="true"]');
+
+      if (activeEl) {
+        const containerRect = container.getBoundingClientRect();
+        const activeRect = activeEl.getBoundingClientRect();
+
+        const relativeTop = activeRect.top - containerRect.top + container.scrollTop;
+        const targetScrollTop = Math.max(
+          0,
+          relativeTop - (container.clientHeight / 2) + (activeEl.clientHeight / 2)
+        );
+
+        container.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth'
+        });
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   return (
@@ -216,7 +287,7 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-8 hidden-scrollbar">
+        <nav ref={navContainerRef} className="flex-1 overflow-y-auto py-6 px-3 space-y-8 hidden-scrollbar scroll-smooth">
           {navGroups.map((group, groupIdx) => (
             <div key={groupIdx}>
               {isSidebarOpen && (
@@ -226,7 +297,7 @@ export default function AdminLayout() {
               )}
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive = item.path ? location.pathname.includes(item.path) : (item.subItems?.some(sub => location.pathname.includes(sub.path)));
+                  const isActive = isParentActive(item);
                   const isExpanded = expandedMenus.includes(item.name);
                   const hasSubItems = item.subItems && item.subItems.length > 0;
 
@@ -238,7 +309,8 @@ export default function AdminLayout() {
                             if (!isSidebarOpen) setIsSidebarOpen(true);
                             toggleMenu(item.name);
                           }}
-                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                          data-sidebar-parentactive={isActive ? "true" : undefined}
+                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group relative ${
                             isActive 
                               ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
                               : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
@@ -253,16 +325,22 @@ export default function AdminLayout() {
                           {isSidebarOpen && (
                             <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                           )}
+                          {!isSidebarOpen && (
+                            <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-md">
+                              {item.name}
+                            </div>
+                          )}
                         </button>
                       ) : (
                         <Link
                           to={item.path!}
+                          data-sidebar-active={isActive ? "true" : undefined}
                           onClick={() => {
                             if (window.innerWidth < 768) {
                               setIsSidebarOpen(false);
                             }
                           }}
-                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group ${
+                          className={`w-full flex items-center ${isSidebarOpen ? 'justify-between' : 'justify-center'} px-3 py-3 rounded-xl transition-all duration-200 group relative ${
                             isActive 
                               ? 'bg-blue-600/40 text-white shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/50' 
                               : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
@@ -275,7 +353,7 @@ export default function AdminLayout() {
                             {isSidebarOpen && <span className="font-medium text-[13px] tracking-wide truncate">{item.name}</span>}
                           </div>
                           {!isSidebarOpen && (
-                            <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                            <div className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-md">
                               {item.name}
                             </div>
                           )}
@@ -286,23 +364,25 @@ export default function AdminLayout() {
                       {hasSubItems && isSidebarOpen && isExpanded && (
                         <div className="mt-1 ml-4 pl-4 border-l border-blue-500/30 space-y-1">
                           {item.subItems!.map(sub => {
-                            const isSubActive = location.pathname.includes(sub.path);
+                            const isSubActive = isPathActive(sub.path);
                             return (
                               <Link
                                 key={sub.name}
                                 to={sub.path}
+                                data-sidebar-subactive={isSubActive ? "true" : undefined}
                                 onClick={() => {
                                   if (window.innerWidth < 768) {
                                     setIsSidebarOpen(false);
                                   }
                                 }}
-                                className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                                   isSubActive
-                                    ? 'bg-blue-500/30 text-white font-medium'
+                                    ? 'bg-blue-500/30 text-white font-semibold ring-1 ring-blue-400/40 shadow-sm shadow-blue-900/30'
                                     : 'text-blue-200/60 hover:text-white hover:bg-white/5'
                                 }`}
                               >
-                                <span className="text-sm">{sub.name}</span>
+                                {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 animate-pulse" />}
+                                <span className="text-sm truncate">{sub.name}</span>
                               </Link>
                             );
                           })}
@@ -334,15 +414,3 @@ export default function AdminLayout() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-

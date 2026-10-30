@@ -3,6 +3,7 @@ import { settingsApi } from '../../../../api/settingsApi';
 import toast from 'react-hot-toast';
 import { Loader2, Megaphone, Plus, Edit, Trash2, X, Check, Calendar, ChevronDown } from 'lucide-react';
 import CustomCalendar from '../../../../components/common/CustomCalendar';
+import ConfirmModal from '../../../../components/ui/ConfirmModal';
 
 interface Announcement {
   _id: string;
@@ -39,6 +40,11 @@ export default function AdminAnnouncements() {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteModalState, setDeleteModalState] = useState<{ isOpen: boolean; id: string | null; title: string }>({
+    isOpen: false,
+    id: null,
+    title: ''
+  });
 
   useEffect(() => {
     fetchAnnouncements();
@@ -108,14 +114,24 @@ export default function AdminAnnouncements() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this announcement?')) return;
+  const handleDeleteClick = (a: Announcement) => {
+    setDeleteModalState({
+      isOpen: true,
+      id: a._id,
+      title: a.title
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModalState.id) return;
     try {
-      await settingsApi.deleteAnnouncement(id);
+      await settingsApi.deleteAnnouncement(deleteModalState.id);
       toast.success('Announcement deleted');
       fetchAnnouncements();
     } catch (err) {
       toast.error('Failed to delete announcement');
+    } finally {
+      setDeleteModalState({ isOpen: false, id: null, title: '' });
     }
   };
 
@@ -381,7 +397,7 @@ export default function AdminAnnouncements() {
                       <button onClick={() => handleEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                         <Edit size={16} />
                       </button>
-                      <button onClick={() => handleDelete(a._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                      <button onClick={() => handleDeleteClick(a)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -392,6 +408,18 @@ export default function AdminAnnouncements() {
           </table>
         </div>
       </div>
+
+      {/* Branded Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModalState.isOpen}
+        title="Delete Announcement"
+        message={`Are you sure you want to delete "${deleteModalState.title}"? This announcement will be removed immediately.`}
+        confirmText="Delete Announcement"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModalState({ isOpen: false, id: null, title: '' })}
+      />
     </div>
   );
 }

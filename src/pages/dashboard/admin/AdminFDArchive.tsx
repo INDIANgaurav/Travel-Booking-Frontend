@@ -3,6 +3,7 @@ import { Search, RotateCcw, Trash2, ArchiveRestore, Loader2 } from 'lucide-react
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import RefreshButton from '../../../components/ui/RefreshButton';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 
 interface IFareArchive {
   _id: string;
@@ -27,6 +28,7 @@ export default function AdminFDArchive() {
   const [archives, setArchives] = useState<IFareArchive[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchArchives = async () => {
     try {
@@ -60,9 +62,8 @@ export default function AdminFDArchive() {
     }
   };
 
-  const handlePermanentDelete = async () => {
+  const handleConfirmPermanentDelete = async () => {
     if (!selectedIds.length) return;
-    if (!window.confirm('Are you sure you want to permanently delete these items? This cannot be undone.')) return;
     
     const loadingToast = toast.loading('Deleting permanently...');
     try {
@@ -75,6 +76,7 @@ export default function AdminFDArchive() {
       toast.error(error.response?.data?.message || 'Failed to delete items', { id: loadingToast });
     } finally {
       setIsProcessing(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -202,7 +204,7 @@ export default function AdminFDArchive() {
               Restore Selected
             </button>
             <button 
-              onClick={handlePermanentDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={selectedIds.length === 0 || isProcessing}
               className="bg-rose-50 border border-rose-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-rose-100 text-rose-700 text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-sm"
             >
@@ -212,6 +214,17 @@ export default function AdminFDArchive() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Permanently Delete Items"
+        message={`Are you sure you want to permanently delete ${selectedIds.length} item(s)? This action cannot be undone.`}
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmPermanentDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }
