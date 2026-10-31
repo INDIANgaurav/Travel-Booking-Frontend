@@ -779,7 +779,7 @@ export default function FlightSearchResults() {
                     <button 
                       onClick={() => {
                         if (!user) {
-                          toast.error('Please login or signup first to book flights.');
+                          toast.error('Please login or signup first to book flights.', { id: 'login-required-toast' });
                           setIsLoginModalOpen(true);
                         } else {
                           navigate('/flights/booking', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
