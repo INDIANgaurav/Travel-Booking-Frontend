@@ -575,6 +575,8 @@ const AdminSeriesFareMaker: React.FC = () => {
         payload.flightNo = payload.segments.map((s: any) => s.flightNo).join(', ');
         payload.departureTime = payload.segments[0].departureTime;
         payload.arrivalTime = payload.segments[payload.segments.length - 1].arrivalTime;
+        payload.departureTerminal = payload.segments[0].departureTerminal || '';
+        payload.arrivalTerminal = payload.segments[payload.segments.length - 1].arrivalTerminal || '';
       } else {
         if (!payload.origin || !payload.destination) {
           toast.error('Please select both Origin and Destination cities.');

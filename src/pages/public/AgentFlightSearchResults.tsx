@@ -24,6 +24,8 @@ interface Flight {
   arrivalAirportCode: string;
   departureTime: string;
   arrivalTime: string;
+  departureTerminal?: string;
+  arrivalTerminal?: string;
   durationMinutes: number;
   price: number;
   stops: number;
@@ -364,6 +366,9 @@ export default function AgentFlightSearchResults(props: any) {
                         <p className="font-black text-xl">{formatTime(flight.departureTime)}</p>
                         <p className="text-xs font-bold mt-0.5">{flight.departureAirportCode}</p>
                         <p className="text-[10px] text-gray-500">{new Date(flight.departureTime).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</p>
+                        {flight.departureTerminal ? (
+                          <p className="text-[9px] text-gray-500 font-semibold mt-1">Terminal: {flight.departureTerminal.toUpperCase().startsWith('T') ? flight.departureTerminal.toUpperCase() : flight.departureTerminal}</p>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-col items-center min-w-[120px]">
@@ -379,7 +384,9 @@ export default function AgentFlightSearchResults(props: any) {
                         <p className="font-black text-xl">{formatTime(flight.arrivalTime)}</p>
                         <p className="text-xs font-bold mt-0.5">{flight.arrivalAirportCode}</p>
                         <p className="text-[10px] text-gray-500">{new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</p>
-                        <p className="text-[9px] text-gray-400 mt-1">Terminal: 1</p>
+                        {flight.arrivalTerminal ? (
+                          <p className="text-[9px] text-gray-500 font-semibold mt-1">Terminal: {flight.arrivalTerminal.toUpperCase().startsWith('T') ? flight.arrivalTerminal.toUpperCase() : flight.arrivalTerminal}</p>
+                        ) : null}
                       </div>
                     </div>
                     

@@ -15,6 +15,8 @@ export interface Flight {
   arrivalAirportCode: string;
   departureTime: string;
   arrivalTime: string;
+  departureTerminal?: string;
+  arrivalTerminal?: string;
   durationMinutes: number;
   price: number;
   stops: number;

@@ -27,6 +27,8 @@ interface Flight {
   arrivalAirportCode: string;
   departureTime: string;
   arrivalTime: string;
+  departureTerminal?: string;
+  arrivalTerminal?: string;
   durationMinutes: number;
   price: number;
   stops: number;
@@ -858,7 +860,7 @@ export default function FlightSearchResults() {
           onClick={() => setShowFlightDetails(null)}
         >
           <div 
-            className="bg-white rounded-xl shadow-2xl w-[600px] overflow-hidden transform transition-all scale-100"
+            className="bg-white rounded-xl shadow-2xl w-[620px] max-w-[95vw] overflow-hidden transform transition-all scale-100"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 bg-gradient-to-r from-blue-900 to-blue-800 text-white flex justify-between items-center">
@@ -868,8 +870,8 @@ export default function FlightSearchResults() {
               </button>
             </div>
             
-            <div className="p-8">
-              <div className="flex items-center gap-5 border-b border-gray-100 pb-6 mb-6">
+            <div className="p-6 md:p-8 max-h-[75vh] overflow-y-auto">
+              <div className="flex items-center gap-4 border-b border-gray-100 pb-5 mb-6">
                 <img src={showFlightDetails.airlineLogo} alt="" className="w-12 h-12 object-contain" />
                 <div>
                   <p className="font-black text-gray-900 text-xl">{showFlightDetails.airline}</p>
@@ -877,29 +879,92 @@ export default function FlightSearchResults() {
                 </div>
               </div>
               
-              <div className="flex justify-between items-center">
-                <div className="text-center w-1/3">
-                  <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
-                  <p className="text-base font-bold mt-2 text-gray-800">{showFlightDetails.departureCity || 'City'}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{new Date(showFlightDetails.departureTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                  <p className="text-[10px] bg-gray-100 px-2 py-1 rounded inline-block mt-2 text-gray-600 font-bold">Terminal 1</p>
+              {showFlightDetails.segments && showFlightDetails.segments.length > 1 ? (
+                <div className="space-y-4">
+                  {showFlightDetails.segments.map((seg, sIdx) => {
+                    const segDep = parseDate(seg.departureTime);
+                    const segArr = parseDate(seg.arrivalTime);
+                    return (
+                      <React.Fragment key={sIdx}>
+                        {sIdx > 0 && (
+                          <div className="flex justify-center py-2">
+                            <div className="bg-amber-50 text-amber-700 px-3.5 py-1 rounded-full text-[10px] font-bold border border-amber-200 shadow-xs">
+                              Change Plane at {showFlightDetails.segments![sIdx - 1].destination}
+                            </div>
+                          </div>
+                        )}
+                        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/60">
+                          <div className="flex items-center justify-between text-xs font-bold text-gray-600 mb-3 pb-2 border-b border-gray-200">
+                            <span>Leg {sIdx + 1}: {seg.airline} {seg.flightNo}</span>
+                            <span>{formatDate(segDep)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="text-center w-1/3">
+                              <p className="text-2xl font-black text-gray-900">{formatTime(segDep)}</p>
+                              <p className="text-sm font-bold mt-1 text-gray-800">{seg.origin}</p>
+                              {seg.departureTerminal ? (
+                                <p className="text-[10px] bg-white border border-gray-300 px-2 py-0.5 rounded inline-block mt-1.5 text-gray-700 font-bold">
+                                  {seg.departureTerminal.toUpperCase().startsWith('T') || seg.departureTerminal.toLowerCase().startsWith('terminal') ? seg.departureTerminal.toUpperCase() : `Terminal ${seg.departureTerminal}`}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="flex flex-col items-center px-2 w-1/3">
+                              <div className="w-full h-[2px] bg-gray-300 relative flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              </div>
+                            </div>
+                            <div className="text-center w-1/3">
+                              <p className="text-2xl font-black text-gray-900">{formatTime(segArr)}</p>
+                              <p className="text-sm font-bold mt-1 text-gray-800">{seg.destination}</p>
+                              {seg.arrivalTerminal ? (
+                                <p className="text-[10px] bg-white border border-gray-300 px-2 py-0.5 rounded inline-block mt-1.5 text-gray-700 font-bold">
+                                  {seg.arrivalTerminal.toUpperCase().startsWith('T') || seg.arrivalTerminal.toLowerCase().startsWith('terminal') ? seg.arrivalTerminal.toUpperCase() : `Terminal ${seg.arrivalTerminal}`}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-                
-                <div className="flex flex-col items-center px-4 w-1/3">
-                  <p className="text-xs font-bold text-gray-500 mb-2">{Math.floor(showFlightDetails.durationMinutes / 60)}h {showFlightDetails.durationMinutes % 60}m</p>
-                  <div className="w-full h-[2px] bg-gray-200 relative flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <div className="text-center w-1/3">
+                    <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                    <p className="text-base font-bold mt-2 text-gray-800">{showFlightDetails.departureCity || 'City'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{new Date(showFlightDetails.departureTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    {showFlightDetails.departureTerminal ? (
+                      <p className="text-[10px] bg-gray-100 px-2 py-1 rounded inline-block mt-2 text-gray-700 font-bold border border-gray-200">
+                        {showFlightDetails.departureTerminal.toUpperCase().startsWith('T') || showFlightDetails.departureTerminal.toLowerCase().startsWith('terminal')
+                          ? showFlightDetails.departureTerminal.toUpperCase()
+                          : `Terminal ${showFlightDetails.departureTerminal}`}
+                      </p>
+                    ) : null}
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 mt-2">{showFlightDetails.stops === 0 ? 'NON STOP' : `${showFlightDetails.stops} STOP`}</p>
+                  
+                  <div className="flex flex-col items-center px-4 w-1/3">
+                    <p className="text-xs font-bold text-gray-500 mb-2">{Math.floor(showFlightDetails.durationMinutes / 60)}h {showFlightDetails.durationMinutes % 60}m</p>
+                    <div className="w-full h-[2px] bg-gray-200 relative flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 mt-2">{showFlightDetails.stops === 0 ? 'NON STOP' : `${showFlightDetails.stops} STOP`}</p>
+                  </div>
+                  
+                  <div className="text-center w-1/3">
+                    <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                    <p className="text-base font-bold mt-2 text-gray-800">{showFlightDetails.arrivalCity || 'City'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{new Date(showFlightDetails.arrivalTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    {showFlightDetails.arrivalTerminal ? (
+                      <p className="text-[10px] bg-gray-100 px-2 py-1 rounded inline-block mt-2 text-gray-700 font-bold border border-gray-200">
+                        {showFlightDetails.arrivalTerminal.toUpperCase().startsWith('T') || showFlightDetails.arrivalTerminal.toLowerCase().startsWith('terminal')
+                          ? showFlightDetails.arrivalTerminal.toUpperCase()
+                          : `Terminal ${showFlightDetails.arrivalTerminal}`}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                
-                <div className="text-center w-1/3">
-                  <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
-                  <p className="text-base font-bold mt-2 text-gray-800">{showFlightDetails.arrivalCity || 'City'}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{new Date(showFlightDetails.arrivalTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                  <p className="text-[10px] bg-gray-100 px-2 py-1 rounded inline-block mt-2 text-gray-600 font-bold">Terminal 2</p>
-                </div>
-              </div>
+              )}
             </div>
             
             <div className="bg-gray-50 p-4 border-t border-gray-100 text-center text-xs text-gray-500">
@@ -1031,7 +1096,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
                       <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-600">{segment.airline}-{segment.flightNo}</span>
                     </div>
                     <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segDep)}</p>
-                    <p className="text-[10px] md:text-xs text-gray-500 mt-1">{segment.origin}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <p className="text-[10px] md:text-xs text-gray-500">{segment.origin}</p>
+                      {segment.departureTerminal ? (
+                        <span className="text-[9px] bg-gray-100 text-gray-600 px-1 py-0.2 rounded font-bold border border-gray-200">
+                          {segment.departureTerminal.toUpperCase().startsWith('T') ? segment.departureTerminal.toUpperCase() : `T${segment.departureTerminal}`}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-[9px] md:text-[10px] text-gray-400">{formatDate(segDep)}</p>
                   </div>
                   
@@ -1046,7 +1118,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
                   {/* Arrival */}
                   <div className="text-right md:text-left md:pl-2">
                     <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segArr)}</p>
-                    <p className="text-[10px] md:text-xs text-gray-500 mt-1">{segment.destination}</p>
+                    <div className="flex items-center gap-1.5 mt-1 md:justify-start justify-end">
+                      <p className="text-[10px] md:text-xs text-gray-500">{segment.destination}</p>
+                      {segment.arrivalTerminal ? (
+                        <span className="text-[9px] bg-gray-100 text-gray-600 px-1 py-0.2 rounded font-bold border border-gray-200">
+                          {segment.arrivalTerminal.toUpperCase().startsWith('T') ? segment.arrivalTerminal.toUpperCase() : `T${segment.arrivalTerminal}`}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-[9px] md:text-[10px] text-gray-400">{formatDate(segArr)}</p>
                   </div>
 
@@ -1080,7 +1159,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
           {/* Departure */}
           <div className="text-left">
             <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(depTime)}</p>
-            <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.departureAirportCode || flight.departureCity}</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <p className="text-[10px] md:text-xs text-gray-500">{flight.departureAirportCode || flight.departureCity}</p>
+              {flight.departureTerminal ? (
+                <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-bold border border-gray-200">
+                  {flight.departureTerminal.toUpperCase().startsWith('T') ? flight.departureTerminal.toUpperCase() : `T${flight.departureTerminal}`}
+                </span>
+              ) : null}
+            </div>
             <p className="text-[9px] md:text-[10px] text-gray-400">{formatDate(depTime)}</p>
           </div>
           
@@ -1096,7 +1182,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
           {/* Arrival */}
           <div className="text-right md:text-left md:pl-2">
             <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(arrTime)}</p>
-            <p className="text-[10px] md:text-xs text-gray-500 mt-1">{flight.arrivalAirportCode || flight.arrivalCity}</p>
+            <div className="flex items-center gap-1.5 mt-1 md:justify-start justify-end">
+              <p className="text-[10px] md:text-xs text-gray-500">{flight.arrivalAirportCode || flight.arrivalCity}</p>
+              {flight.arrivalTerminal ? (
+                <span className="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-bold border border-gray-200">
+                  {flight.arrivalTerminal.toUpperCase().startsWith('T') ? flight.arrivalTerminal.toUpperCase() : `T${flight.arrivalTerminal}`}
+                </span>
+              ) : null}
+            </div>
             <p className="text-[9px] md:text-[10px] text-gray-400">{formatDate(arrTime)}</p>
           </div>
 
