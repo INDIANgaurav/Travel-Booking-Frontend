@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, Check, Search, Filter, ArrowLeftRight, Calendar, UserCheck, ArrowLeft, X, Plane, RefreshCw, Upload, Download, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../store/store';
 import api from '../../../services/api';
@@ -105,77 +105,201 @@ const CitySelect = ({
 const TimeSelect = ({
   value,
   onChange,
-  heightClass = 'h-10'
+  heightClass = 'h-10',
+  placeholder = 'Select Time',
+  align = 'left'
 }: {
   value: string;
   onChange: (val: string) => void;
   heightClass?: string;
+  placeholder?: string;
+  align?: 'left' | 'right';
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hourListRef = useRef<HTMLDivElement>(null);
+  const minListRef = useRef<HTMLDivElement>(null);
+
   const [h, m] = (value || '').split(':');
   const currentH = h || '';
   const currentM = m || '';
 
+  // Hours: 00 to 23 (24-hour standard aviation time)
   const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')), []);
-  const minutes = useMemo(() => {
-    const list = [];
-    for (let i = 0; i < 60; i += 5) {
-      list.push(i.toString().padStart(2, '0'));
-    }
-    if (currentM && !list.includes(currentM)) {
-      list.push(currentM);
-      list.sort((a, b) => Number(a) - Number(b));
-    }
-    return list;
-  }, [currentM]);
+  // Minutes: 00 to 59 (all 60 individual minutes)
+  const minutes = useMemo(() => Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')), []);
 
-  const handleHourChange = (newH: string) => {
-    const minute = currentM || '00';
-    onChange(newH ? `${newH}:${minute}` : '');
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Auto-scroll selected hour & minute into view when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        if (hourListRef.current && currentH) {
+          const activeH = hourListRef.current.querySelector('[data-selected="true"]');
+          if (activeH) {
+            activeH.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        }
+        if (minListRef.current && currentM) {
+          const activeM = minListRef.current.querySelector('[data-selected="true"]');
+          if (activeM) {
+            activeM.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        }
+      }, 50);
+    }
+  }, [isOpen]);
+
+  const selectHour = (hourVal: string) => {
+    const newM = currentM || '00';
+    onChange(`${hourVal}:${newM}`);
   };
 
-  const handleMinuteChange = (newM: string) => {
-    const hour = currentH || '00';
-    onChange(newM ? `${hour}:${newM}` : '');
+  const selectMinute = (minVal: string) => {
+    const newH = currentH || '00';
+    onChange(`${newH}:${minVal}`);
   };
 
   return (
-    <div className={`w-full ${heightClass} flex items-center gap-1.5 p-1 bg-white border border-gray-300 rounded-lg shadow-2xs hover:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all`}>
-      {/* Hours Select */}
-      <div className="relative flex-1 h-full flex items-center">
-        <select
-          value={currentH}
-          onChange={(e) => handleHourChange(e.target.value)}
-          className="w-full h-full text-xs font-bold text-gray-900 bg-transparent px-2 pr-4 outline-none cursor-pointer appearance-none"
-        >
-          <option value="" disabled className="text-gray-400 font-normal">HH</option>
-          {hours.map((hh) => (
-            <option key={hh} value={hh} className="font-semibold text-gray-900">
-              {hh} hrs
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={11} className="absolute right-1 text-gray-400 pointer-events-none" />
-      </div>
+    <div className="relative w-full" ref={containerRef}>
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full ${heightClass} px-3 text-xs font-semibold bg-white border border-gray-300 rounded-lg flex items-center justify-between hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs text-left cursor-pointer`}
+      >
+        <div className="flex items-center gap-1.5 truncate">
+          <Clock size={13} className="text-gray-400 shrink-0" />
+          {value ? (
+            <span className="font-bold text-gray-900 tracking-wider">{value}</span>
+          ) : (
+            <span className="text-gray-400 font-normal">{placeholder}</span>
+          )}
+        </div>
+        <ChevronDown
+          size={13}
+          className={`text-gray-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
 
-      {/* Colon separator */}
-      <span className="font-black text-gray-400 text-xs px-0.5 select-none">:</span>
-
-      {/* Minutes Select */}
-      <div className="relative flex-1 h-full flex items-center">
-        <select
-          value={currentM}
-          onChange={(e) => handleMinuteChange(e.target.value)}
-          className="w-full h-full text-xs font-bold text-gray-900 bg-transparent px-2 pr-4 outline-none cursor-pointer appearance-none"
+      {/* 2-Line Dropdown Popover */}
+      {isOpen && (
+        <div
+          className={`absolute ${
+            align === 'right' ? 'right-0' : 'left-0'
+          } mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100`}
         >
-          <option value="" disabled className="text-gray-400 font-normal">MM</option>
-          {minutes.map((mm) => (
-            <option key={mm} value={mm} className="font-semibold text-gray-900">
-              {mm} min
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={11} className="absolute right-1 text-gray-400 pointer-events-none" />
-      </div>
+          {/* Header */}
+          <div className="px-3 py-2 bg-slate-50 border-b border-gray-200 flex items-center justify-between text-[11px] font-bold text-gray-700">
+            <span className="flex items-center gap-1.5">
+              <Clock size={12} className="text-blue-600" /> Select Flight Time
+            </span>
+            {value ? (
+              <span className="text-blue-700 font-extrabold bg-blue-100/80 px-2 py-0.5 rounded text-[10px]">
+                {value}
+              </span>
+            ) : (
+              <span className="text-gray-400 text-[10px] font-medium">HH:MM</span>
+            )}
+          </div>
+
+          {/* 2 Lines / Columns: Line 1 = Hours (00-23), Line 2 = Minutes (00-59) */}
+          <div className="grid grid-cols-2 divide-x divide-gray-100 bg-white">
+            {/* Line 1: Hours */}
+            <div className="flex flex-col">
+              <div className="px-2 py-1.5 bg-gray-50/80 border-b border-gray-100 text-[10px] font-extrabold text-gray-600 uppercase tracking-wider text-center">
+                Hours (00–23)
+              </div>
+              <div
+                ref={hourListRef}
+                className="max-h-48 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar"
+              >
+                {hours.map((hh) => {
+                  const isSelected = currentH === hh;
+                  return (
+                    <button
+                      key={hh}
+                      type="button"
+                      data-selected={isSelected}
+                      onClick={() => selectHour(hh)}
+                      className={`w-full py-1 px-2 text-xs rounded font-semibold text-center transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white font-bold shadow-xs'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
+                    >
+                      {hh} <span className={`text-[9px] ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>hrs</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Line 2: Minutes */}
+            <div className="flex flex-col">
+              <div className="px-2 py-1.5 bg-gray-50/80 border-b border-gray-100 text-[10px] font-extrabold text-gray-600 uppercase tracking-wider text-center">
+                Minutes (00–59)
+              </div>
+              <div
+                ref={minListRef}
+                className="max-h-48 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar"
+              >
+                {minutes.map((mm) => {
+                  const isSelected = currentM === mm;
+                  return (
+                    <button
+                      key={mm}
+                      type="button"
+                      data-selected={isSelected}
+                      onClick={() => selectMinute(mm)}
+                      className={`w-full py-1 px-2 text-xs rounded font-semibold text-center transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white font-bold shadow-xs'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
+                    >
+                      {mm} <span className={`text-[9px] ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>min</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer with Clear and Done */}
+          <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                onChange('');
+              }}
+              className="text-[11px] text-gray-500 hover:text-red-600 font-medium cursor-pointer"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-md shadow-xs transition-colors cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1800,6 +1924,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                               value={seg.arrivalTime}
                               onChange={(val) => { const s = [...segments]; s[idx].arrivalTime = val; setSegments(s); }}
                               heightClass="h-9"
+                              align="right"
                             />
                           </div>
                           <div>
@@ -2136,20 +2261,19 @@ const AdminSeriesFareMaker: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 mb-1">New Departure Time</label>
-                  <input
-                    type="text"
+                  <TimeSelect
                     value={flightModData.departureTime}
-                    onChange={e => setFlightModData(prev => ({ ...prev, departureTime: e.target.value }))}
-                    className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white"
+                    onChange={val => setFlightModData(prev => ({ ...prev, departureTime: val }))}
+                    heightClass="h-9"
                   />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 mb-1">New Arrival Time</label>
-                  <input
-                    type="text"
+                  <TimeSelect
                     value={flightModData.arrivalTime}
-                    onChange={e => setFlightModData(prev => ({ ...prev, arrivalTime: e.target.value }))}
-                    className="w-full text-xs px-2.5 py-1.5 border border-gray-300 rounded bg-white"
+                    onChange={val => setFlightModData(prev => ({ ...prev, arrivalTime: val }))}
+                    heightClass="h-9"
+                    align="right"
                   />
                 </div>
               </div>
