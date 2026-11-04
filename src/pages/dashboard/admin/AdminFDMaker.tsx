@@ -570,6 +570,27 @@ const AdminSeriesFareMaker: React.FC = () => {
             return;
           }
         }
+        // Validate connecting route continuity & layover
+        for (let i = 1; i < payload.segments.length; i++) {
+          const prev = payload.segments[i - 1];
+          const curr = payload.segments[i];
+          if (prev.destination.toUpperCase() !== curr.origin.toUpperCase()) {
+            toast.error(`Route continuity mismatch: Leg ${i + 1} Origin (${curr.origin}) must match Leg ${i} Destination (${prev.destination}).`);
+            return;
+          }
+          if (prev.arrivalTime && curr.departureTime && !curr.dayChange) {
+            const [prevArrH, prevArrM] = prev.arrivalTime.split(':').map(Number);
+            const [currDepH, currDepM] = curr.departureTime.split(':').map(Number);
+            if (!isNaN(prevArrH) && !isNaN(currDepH)) {
+              const prevArrTotal = prevArrH * 60 + prevArrM;
+              const currDepTotal = currDepH * 60 + currDepM;
+              if (currDepTotal < prevArrTotal) {
+                toast.error(`Invalid layover timing: Leg ${i + 1} departure (${curr.departureTime}) is earlier than Leg ${i} arrival (${prev.arrivalTime}). Adjust times or set Day Change.`);
+                return;
+              }
+            }
+          }
+        }
         payload.origin = payload.segments[0].origin;
         payload.destination = payload.segments[payload.segments.length - 1].destination;
         payload.flightNo = payload.segments.map((s: any) => s.flightNo).join(', ');
@@ -580,6 +601,10 @@ const AdminSeriesFareMaker: React.FC = () => {
       } else {
         if (!payload.origin || !payload.destination) {
           toast.error('Please select both Origin and Destination cities.');
+          return;
+        }
+        if (payload.origin.toUpperCase() === payload.destination.toUpperCase()) {
+          toast.error('Origin and Destination cannot be the same city.');
           return;
         }
         if (!payload.flightNo) {
@@ -596,8 +621,24 @@ const AdminSeriesFareMaker: React.FC = () => {
         toast.error('Please enter the airline name.');
         return;
       }
-      if (!payload.adtFare) {
-        toast.error('Please enter the Adult fare.');
+      if (!payload.adtFare || Number(payload.adtFare) <= 0) {
+        toast.error('Please enter a valid Adult fare greater than 0.');
+        return;
+      }
+      if (payload.chdFare !== undefined && payload.chdFare !== '' && Number(payload.chdFare) < 0) {
+        toast.error('Child fare cannot be negative.');
+        return;
+      }
+      if (payload.infFare !== undefined && payload.infFare !== '' && Number(payload.infFare) < 0) {
+        toast.error('Infant fare cannot be negative.');
+        return;
+      }
+      if (!payload.isTestFlight && (!payload.totalSeats || Number(payload.totalSeats) <= 0)) {
+        toast.error('Total seats must be at least 1.');
+        return;
+      }
+      if (payload.availableSeats !== undefined && payload.availableSeats !== '' && Number(payload.availableSeats) < 0) {
+        toast.error('Available seats cannot be negative.');
         return;
       }
 
@@ -616,6 +657,26 @@ const AdminSeriesFareMaker: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!expandedId) return;
+    if (editBuffer.adtFare !== undefined && Number(editBuffer.adtFare) <= 0) {
+      toast.error('Adult fare must be greater than 0.');
+      return;
+    }
+    if (editBuffer.chdFare !== undefined && Number(editBuffer.chdFare) < 0) {
+      toast.error('Child fare cannot be negative.');
+      return;
+    }
+    if (editBuffer.infFare !== undefined && Number(editBuffer.infFare) < 0) {
+      toast.error('Infant fare cannot be negative.');
+      return;
+    }
+    if (editBuffer.totalSeats !== undefined && Number(editBuffer.totalSeats) <= 0) {
+      toast.error('Total seats must be at least 1.');
+      return;
+    }
+    if (editBuffer.availableSeats !== undefined && Number(editBuffer.availableSeats) < 0) {
+      toast.error('Available seats cannot be negative.');
+      return;
+    }
     try {
       await api.put(`/api/series-fare/${expandedId}`, editBuffer);
       setFares(prev => (Array.isArray(prev) ? prev : []).map(f => (f._id === expandedId ? { ...f, ...editBuffer } : f)));
@@ -1954,7 +2015,10 @@ const AdminSeriesFareMaker: React.FC = () => {
                     ))}
                     <button 
                       type="button" 
-                      onClick={() => setSegments([...segments, { origin: '', destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }])}
+                      onClick={() => {
+                        const lastDest = segments.length > 0 ? segments[segments.length - 1].destination : '';
+                        setSegments([...segments, { origin: lastDest, destination: '', airline: '', flightNo: '', departureTime: '', arrivalTime: '', departureTerminal: '', arrivalTerminal: '' }]);
+                      }}
                       className="px-4 py-2 border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Plus size={14} /> Add Another Leg
@@ -1983,6 +2047,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                         availableSeats: e.target.value === '' ? '' : Number(e.target.value) 
                       } as any)}
                       readOnly={newFare.isTestFlight}
+                      min="1"
                       required
                       placeholder="e.g. 50"
                       className={`w-full h-10 px-3.5 text-xs font-bold border border-gray-300 rounded-lg outline-none transition-all shadow-2xs ${
@@ -2041,6 +2106,7 @@ const AdminSeriesFareMaker: React.FC = () => {
                         value={(newFare as any).adtFare ?? ''}
                         onChange={(e) => setNewFare({ ...newFare, adtFare: e.target.value === '' ? '' : Number(e.target.value) } as any)}
                         placeholder="e.g. 4200"
+                        min="1"
                         required
                         className="w-full h-10 px-3.5 text-xs font-extrabold text-emerald-700 border-2 border-emerald-400 rounded-lg bg-emerald-50/20 outline-none focus:ring-2 focus:ring-emerald-200 transition-all shadow-2xs"
                       />

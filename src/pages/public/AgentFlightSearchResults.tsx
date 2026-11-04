@@ -211,7 +211,14 @@ export default function AgentFlightSearchResults(props: any) {
                        </div>
 
                        <div className="text-right w-1/3">
-                         <p className="font-black text-lg text-gray-900 leading-tight mt-4">{formatTime(segment.arrivalTime)}</p>
+                         <div className="flex items-center justify-end gap-1 mt-4">
+                            <p className="font-black text-lg text-gray-900 leading-tight">{formatTime(segment.arrivalTime)}</p>
+                            {((segment as any).dayChange > 0 || (segment.arrivalTime && segment.departureTime && segment.arrivalTime < segment.departureTime)) && (
+                              <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">
+                                +{(segment as any).dayChange || 1}D
+                              </span>
+                            )}
+                          </div>
                          <p className="text-[10px] text-gray-500 font-semibold">{segment.destination}</p>
                        </div>
                      </div>
@@ -235,7 +242,14 @@ export default function AgentFlightSearchResults(props: any) {
                </div>
 
                <div className="text-right">
-                 <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
+                 <div className="flex items-center justify-end gap-1">
+                  <p className="font-black text-lg text-gray-900">{formatTime(flight.arrivalTime)}</p>
+                  {((flight as any).dayChange > 0 || (flight.arrivalTime && flight.departureTime && new Date(flight.arrivalTime) < new Date(flight.departureTime))) && (
+                    <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded leading-none">
+                      +{(flight as any).dayChange || 1} Day
+                    </span>
+                  )}
+                </div>
                  <p className="text-[10px] text-gray-500 font-semibold">{flight.arrivalCity} ({flight.arrivalAirportCode})</p>
                </div>
              </div>
@@ -381,7 +395,14 @@ export default function AgentFlightSearchResults(props: any) {
                       </div>
 
                       <div className="text-left">
-                        <p className="font-black text-xl">{formatTime(flight.arrivalTime)}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-black text-xl">{formatTime(flight.arrivalTime)}</p>
+                          {((flight as any).dayChange > 0 || (flight.arrivalTime && flight.departureTime && new Date(flight.arrivalTime) < new Date(flight.departureTime))) && (
+                            <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded leading-none">
+                              +{(flight as any).dayChange || 1} Day
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs font-bold mt-0.5">{flight.arrivalAirportCode}</p>
                         <p className="text-[10px] text-gray-500">{new Date(flight.arrivalTime).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' })}</p>
                         {flight.arrivalTerminal ? (
@@ -1484,6 +1505,9 @@ export default function AgentFlightSearchResults(props: any) {
                       <span className="font-black text-[15px]">{new Date(selectedOutbound.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                       <span className="text-gray-500 text-xs">→</span>
                       <span className="font-black text-[15px]">{new Date(selectedOutbound.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                      {((selectedOutbound as any).dayChange > 0 || new Date(selectedOutbound.arrivalTime) < new Date(selectedOutbound.departureTime)) && (
+                        <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 border border-rose-800 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -1500,6 +1524,9 @@ export default function AgentFlightSearchResults(props: any) {
                         <span className="font-black text-[15px]">{new Date(selectedReturn.departureTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                         <span className="text-gray-500 text-xs">→</span>
                         <span className="font-black text-[15px]">{new Date(selectedReturn.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                        {((selectedReturn as any).dayChange > 0 || new Date(selectedReturn.arrivalTime) < new Date(selectedReturn.departureTime)) && (
+                          <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 border border-rose-800 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">

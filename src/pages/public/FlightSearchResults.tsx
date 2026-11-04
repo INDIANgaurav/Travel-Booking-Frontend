@@ -732,6 +732,9 @@ export default function FlightSearchResults() {
                            <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.departureTime))}</span>
                            <span className="text-blue-500 text-[10px] md:text-xs">➔</span>
                            <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.arrivalTime))}</span>
+                          {((selectedOutbound as any).dayChange > 0 || parseDate(selectedOutbound.arrivalTime) < parseDate(selectedOutbound.departureTime)) && (
+                            <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
+                          )}
                          </div>
                          <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                            <span>{selectedOutbound.airline} {selectedOutbound.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
@@ -754,6 +757,9 @@ export default function FlightSearchResults() {
                                <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.departureTime))}</span>
                                <span className="text-emerald-500 text-[10px] md:text-xs">➔</span>
                                <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
+                              {((selectedReturn as any).dayChange > 0 || parseDate(selectedReturn.arrivalTime) < parseDate(selectedReturn.departureTime)) && (
+                                <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
+                              )}
                              </div>
                              <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
@@ -952,7 +958,14 @@ export default function FlightSearchResults() {
                   </div>
                   
                   <div className="text-center w-1/3">
-                    <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-3xl font-black text-gray-900">{new Date(showFlightDetails.arrivalTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                      {((showFlightDetails as any).dayChange > 0 || new Date(showFlightDetails.arrivalTime) < new Date(showFlightDetails.departureTime)) && (
+                        <span className="text-[11px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                          +{(showFlightDetails as any).dayChange || 1} Day
+                        </span>
+                      )}
+                    </div>
                     <p className="text-base font-bold mt-2 text-gray-800">{showFlightDetails.arrivalCity || 'City'}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{new Date(showFlightDetails.arrivalTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     {showFlightDetails.arrivalTerminal ? (
@@ -1117,7 +1130,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
 
                   {/* Arrival */}
                   <div className="text-right md:text-left md:pl-2">
-                    <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segArr)}</p>
+                    <div className="flex items-center gap-1.5 justify-end md:justify-start">
+                      <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(segArr)}</p>
+                      {((segment as any).dayChange > 0 || segArr < segDep) && (
+                        <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded leading-none">
+                          +{(segment as any).dayChange || 1} Day
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 mt-1 md:justify-start justify-end">
                       <p className="text-[10px] md:text-xs text-gray-500">{segment.destination}</p>
                       {segment.arrivalTerminal ? (
@@ -1181,7 +1201,14 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
 
           {/* Arrival */}
           <div className="text-right md:text-left md:pl-2">
-            <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(arrTime)}</p>
+            <div className="flex items-center gap-1.5 justify-end md:justify-start">
+              <p className="font-black text-sm md:text-[17px] text-gray-900">{formatTime(arrTime)}</p>
+              {((flight as any).dayChange > 0 || arrTime < depTime) && (
+                <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded leading-none">
+                  +{(flight as any).dayChange || 1} Day
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1.5 mt-1 md:justify-start justify-end">
               <p className="text-[10px] md:text-xs text-gray-500">{flight.arrivalAirportCode || flight.arrivalCity}</p>
               {flight.arrivalTerminal ? (
