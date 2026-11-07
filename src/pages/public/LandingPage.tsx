@@ -108,67 +108,67 @@ export default function LandingPage() {
 
   const FESTIVE_THEMES: Record<string, { gradient: string; badgeBg: string; buttonBg: string; textAccent: string; icon: string }> = {
     DIWALI_GOLD: {
-      gradient: 'from-[#580d04] via-[#8c2d04] to-[#d97706]',
+      gradient: 'from-[#420b05] via-[#7c2d03] to-[#b45309]',
       badgeBg: 'bg-amber-500/20 text-amber-200 border-amber-400/30',
-      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-gray-950',
+      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950',
       textAccent: 'text-amber-200',
-      icon: '🪔'
+      icon: 'Festival of Lights'
     },
     HOLI_COLORS: {
-      gradient: 'from-[#831843] via-[#581c87] to-[#0369a1]',
+      gradient: 'from-[#831843] via-[#581c87] to-[#1e40af]',
       badgeBg: 'bg-pink-500/20 text-pink-200 border-pink-400/30',
-      buttonBg: 'bg-gradient-to-r from-pink-500 to-purple-600 text-white',
+      buttonBg: 'bg-white hover:bg-slate-100 text-slate-900',
       textAccent: 'text-pink-200',
-      icon: '🎨'
+      icon: 'Spring Festival'
     },
     NEW_YEAR_MIDNIGHT: {
-      gradient: 'from-[#030712] via-[#1e1b4b] to-[#312e81]',
+      gradient: 'from-[#030712] via-[#0f172a] to-[#312e81]',
       badgeBg: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/30',
-      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-gray-950',
+      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950',
       textAccent: 'text-amber-200',
-      icon: '🎆'
+      icon: 'New Year 2026'
     },
     CHRISTMAS_RED: {
-      gradient: 'from-[#7f1d1d] via-[#991b1b] to-[#14532d]',
+      gradient: 'from-[#7f1d1d] via-[#881337] to-[#14532d]',
       badgeBg: 'bg-red-500/20 text-red-200 border-red-400/30',
-      buttonBg: 'bg-white hover:bg-gray-100 text-red-800',
+      buttonBg: 'bg-white hover:bg-slate-100 text-red-900',
       textAccent: 'text-red-200',
-      icon: '🎄'
+      icon: 'Merry Christmas'
     },
     EID_EMERALD: {
-      gradient: 'from-[#064e3b] via-[#047857] to-[#92400e]',
+      gradient: 'from-[#064e3b] via-[#047857] to-[#854d0e]',
       badgeBg: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
-      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-gray-950',
+      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950',
       textAccent: 'text-emerald-200',
-      icon: '🌙'
+      icon: 'Eid Mubarak'
     },
     TRICOLOR_INDIA: {
-      gradient: 'from-[#c2410c] via-[#0f172a] to-[#15803d]',
+      gradient: 'from-[#9a3412] via-[#0f172a] to-[#15803d]',
       badgeBg: 'bg-orange-500/20 text-orange-200 border-orange-400/30',
-      buttonBg: 'bg-white hover:bg-gray-100 text-gray-900',
+      buttonBg: 'bg-white hover:bg-slate-100 text-slate-900',
       textAccent: 'text-orange-200',
-      icon: '🇮🇳'
+      icon: 'National Celebration'
     },
     ROYAL_PURPLE: {
-      gradient: 'from-[#3b0764] via-[#581c87] to-[#86198f]',
+      gradient: 'from-[#3b0764] via-[#581c87] to-[#701a75]',
       badgeBg: 'bg-purple-500/20 text-purple-200 border-purple-400/30',
-      buttonBg: 'bg-white hover:bg-gray-100 text-purple-900',
+      buttonBg: 'bg-white hover:bg-slate-100 text-purple-950',
       textAccent: 'text-purple-200',
-      icon: '👑'
+      icon: 'Exclusive Offer'
     },
     SUNSET_ORANGE: {
-      gradient: 'from-[#9a3412] via-[#be123c] to-[#9d174d]',
+      gradient: 'from-[#9a3412] via-[#be123c] to-[#831843]',
       badgeBg: 'bg-orange-500/20 text-orange-200 border-orange-400/30',
-      buttonBg: 'bg-white hover:bg-gray-100 text-rose-900',
+      buttonBg: 'bg-white hover:bg-slate-100 text-rose-950',
       textAccent: 'text-orange-200',
-      icon: '🌅'
+      icon: 'Seasonal Special'
     },
     CUSTOM: {
-      gradient: 'from-[#1e3a8a] to-[#312e81]',
-      badgeBg: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
-      buttonBg: 'bg-white hover:bg-gray-100 text-blue-900',
-      textAccent: 'text-blue-200',
-      icon: '✨'
+      gradient: 'from-[#0f172a] to-[#1e293b]',
+      badgeBg: 'bg-slate-500/20 text-slate-200 border-slate-400/30',
+      buttonBg: 'bg-white hover:bg-slate-100 text-slate-900',
+      textAccent: 'text-slate-200',
+      icon: 'Featured Special'
     }
   };
 
@@ -326,49 +326,15 @@ export default function LandingPage() {
       <ScrollAirplane />
 
       {/* Public Navbar */}
-      <TopNavbar />
-
-      {/* Festive Top Announcement Ribbon */}
-      {activeFestiveBanner && activeFestiveBanner.showTopStrip && !isBannerDismissed && (
-        <div 
-          className={`w-full py-2 px-4 bg-gradient-to-r ${
-            FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.gradient || FESTIVE_THEMES.DIWALI_GOLD.gradient
-          } text-white shadow-md relative z-40 transition-all duration-300 animate-in fade-in flex items-center justify-between text-xs sm:text-sm font-medium`}
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-1 text-center truncate px-2">
-            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/20 border border-white/30 backdrop-blur-xs">
-              {activeFestiveBanner.badgeText || FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.icon || '✨'}
-            </span>
-            <span className="truncate font-semibold drop-shadow-xs">
-              {activeFestiveBanner.title}
-            </span>
-            {activeFestiveBanner.bannerType === 'PROMOTIONAL' && activeFestiveBanner.promoCode && (
-              <span className="hidden md:inline-flex items-center gap-1 font-mono font-black bg-white text-gray-900 px-2 py-0.5 rounded text-[11px] shadow-xs">
-                CODE: {activeFestiveBanner.promoCode}
-              </span>
-            )}
-            <Link 
-              to={activeFestiveBanner.ctaLink || '/'} 
-              className="hidden sm:inline-flex items-center gap-1 text-amber-200 hover:text-white font-bold underline underline-offset-2 ml-1 shrink-0"
-            >
-              {activeFestiveBanner.ctaText || 'Explore'} →
-            </Link>
-          </div>
-
-          <button
-            onClick={() => setIsBannerDismissed(true)}
-            className="p-1 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors shrink-0"
-            title="Dismiss Announcement"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      <TopNavbar 
+        festiveBanner={!isBannerDismissed ? activeFestiveBanner : null} 
+        onDismissFestiveBanner={() => setIsBannerDismissed(true)} 
+      />
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 bg-[#00224f]`}>
+      <div className={`relative ${activeFestiveBanner && activeFestiveBanner.showTopStrip && !isBannerDismissed ? 'pt-24 sm:pt-28 lg:pt-32' : 'pt-16 pb-20 lg:pt-20 lg:pb-24'} pb-20 lg:pb-24 bg-[#00224f]`}>
         
         {/* Dynamic Background Elements */}
           <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">
@@ -910,10 +876,10 @@ export default function LandingPage() {
 
       {/* Active Festive Showcase Banner */}
       {activeFestiveBanner && (
-        <div className="w-full bg-white pt-8 pb-4 px-4 sm:px-6 relative z-30">
+        <div className="w-full bg-white pt-6 sm:pt-8 pb-4 px-3 sm:px-6 relative z-30">
           <div className="max-w-6xl mx-auto">
             <div 
-              className={`rounded-3xl p-6 sm:p-8 md:p-10 bg-gradient-to-r ${
+              className={`rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-9 bg-gradient-to-r ${
                 FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.gradient || FESTIVE_THEMES.DIWALI_GOLD.gradient
               } text-white shadow-xl relative overflow-hidden transition-all duration-300`}
             >
@@ -921,55 +887,55 @@ export default function LandingPage() {
               <div className="absolute -top-16 -right-16 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
               <div className="absolute -bottom-16 -left-16 w-60 h-60 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
 
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
                 {/* Content side */}
-                <div className="max-w-2xl space-y-3">
+                <div className="max-w-2xl space-y-2.5 sm:space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-white/20 border border-white/30 backdrop-blur-md shadow-xs">
-                      <Sparkles size={13} className="text-amber-300" />
-                      {activeFestiveBanner.badgeText || FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.icon || 'Festive Special'}
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-white/20 border border-white/25 backdrop-blur-md shadow-xs">
+                      <Sparkles size={12} className="text-amber-300" />
+                      {activeFestiveBanner.badgeText || FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.icon || 'Special Campaign'}
                     </span>
                     {activeFestiveBanner.bannerType === 'GREETING' && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/80 text-white shadow-xs">
-                        Festive Greetings 💖
+                      <span className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold bg-white/20 text-white backdrop-blur-xs">
+                        Holiday Greetings
                       </span>
                     )}
                     {activeFestiveBanner.bannerType === 'PROMOTIONAL' && activeFestiveBanner.discountText && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-400 text-gray-950 uppercase tracking-wider shadow-xs">
+                      <span className="px-2.5 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-amber-400 text-slate-950 uppercase tracking-wider shadow-xs">
                         {activeFestiveBanner.discountText}
                       </span>
                     )}
                   </div>
 
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-md">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight drop-shadow-md">
                     {activeFestiveBanner.title}
                   </h2>
 
-                  <p className="text-sm sm:text-base text-white/90 leading-relaxed max-w-xl font-medium">
+                  <p className="text-xs sm:text-sm md:text-base text-white/90 leading-relaxed max-w-xl font-normal">
                     {activeFestiveBanner.subtitle}
                   </p>
 
                   {/* Promo Code Box for Promotional Banners */}
                   {activeFestiveBanner.bannerType === 'PROMOTIONAL' && activeFestiveBanner.promoCode && (
-                    <div className="pt-2 flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md border border-white/30 px-3.5 py-1.5 rounded-xl">
-                        <span className="text-xs text-white/70 uppercase font-semibold">Use Coupon:</span>
-                        <span className="font-mono text-sm sm:text-base font-black text-amber-300 tracking-wider">
+                    <div className="pt-1 flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2 bg-black/30 backdrop-blur-md border border-white/25 px-3 py-1.5 rounded-lg">
+                        <span className="text-[11px] text-white/70 uppercase font-semibold">Promo:</span>
+                        <span className="font-mono text-xs sm:text-sm font-bold text-amber-300 tracking-wider">
                           {activeFestiveBanner.promoCode}
                         </span>
                       </div>
                       <button
                         onClick={() => handleCopyPromo(activeFestiveBanner.promoCode)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 border border-white/30 text-white text-xs font-bold transition-all"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/25 text-white text-xs font-semibold transition-all cursor-pointer"
                       >
                         {isPromoCopied ? (
                           <>
-                            <Check size={14} className="text-emerald-300" />
-                            <span className="text-emerald-200">Copied!</span>
+                            <Check size={13} className="text-emerald-300" />
+                            <span className="text-emerald-200">Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy size={14} />
+                            <Copy size={13} />
                             <span>Copy Code</span>
                           </>
                         )}
@@ -979,19 +945,19 @@ export default function LandingPage() {
                 </div>
 
                 {/* Action / CTA Button */}
-                <div className="flex flex-col sm:flex-row md:flex-col items-start md:items-end justify-center gap-3 shrink-0">
+                <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-start md:items-end justify-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto mt-2 md:mt-0">
                   <Link
                     to={activeFestiveBanner.ctaLink || '/'}
-                    className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm md:text-base shadow-lg hover:shadow-xl transition-all transform hover:scale-105 ${
-                      FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.buttonBg || 'bg-white text-gray-900'
+                    className={`w-full sm:w-auto text-center justify-center inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm md:text-base shadow-lg hover:shadow-xl transition-all transform hover:scale-105 ${
+                      FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.buttonBg || 'bg-white text-slate-900'
                     }`}
                   >
                     <span>{activeFestiveBanner.ctaText || 'Explore Flights'}</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   </Link>
 
-                  <span className="text-xs text-white/70 font-medium">
-                    {activeFestiveBanner.bannerType === 'GREETING' ? '✨ Celebrating with TrippeChalo' : '⚡ Limited-time festive deal'}
+                  <span className="text-[11px] text-white/75 font-medium text-center sm:text-right">
+                    {activeFestiveBanner.bannerType === 'GREETING' ? 'Celebrating with TrippeChalo' : 'Limited-time festive offer'}
                   </span>
                 </div>
               </div>
