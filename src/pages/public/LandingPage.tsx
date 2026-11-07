@@ -67,49 +67,65 @@ export default function LandingPage() {
     }
   }, [searchParams, isAuthenticated]);
 
-  const [topFlightRoutes, setTopFlightRoutes] = useState<any[]>([
-    { from: 'Delhi', to: 'Mumbai', codeFrom: 'DEL', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
-    { from: 'Mumbai', to: 'Delhi', codeFrom: 'BOM', codeTo: 'DEL', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80' },
-    { from: 'Delhi', to: 'Bangalore', codeFrom: 'DEL', codeTo: 'BLR', img: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=400&q=80' },
-    { from: 'Bangalore', to: 'Mumbai', codeFrom: 'BLR', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
-    { from: 'Mumbai', to: 'Goa', codeFrom: 'BOM', codeTo: 'GOI', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80' },
-    { from: 'Delhi', to: 'Goa', codeFrom: 'DEL', codeTo: 'GOI', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80' },
-    { from: 'Kolkata', to: 'Delhi', codeFrom: 'CCU', codeTo: 'DEL', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80' },
-    { from: 'Hyderabad', to: 'Mumbai', codeFrom: 'HYD', codeTo: 'BOM', img: 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80' },
-    { from: 'Delhi', to: 'Dubai', codeFrom: 'DEL', codeTo: 'DXB', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80' }
-  ]);
+  const CITY_LANDMARKS: Record<string, { landmark: string; img: string }> = {
+    BOM: { landmark: 'Gateway of India', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
+    DEL: { landmark: 'India Gate', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=500&q=80' },
+    BLR: { landmark: 'Vidhana Soudha', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=500&q=80' },
+    GOI: { landmark: 'Goa Beaches', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80' },
+    GOX: { landmark: 'Goa Beaches', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80' },
+    CCU: { landmark: 'Victoria Memorial', img: 'https://images.unsplash.com/photo-1558431382-27e303142255?w=500&q=80' },
+    HYD: { landmark: 'Charminar', img: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=500&q=80' },
+    JAI: { landmark: 'Hawa Mahal', img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=500&q=80' },
+    DXB: { landmark: 'Burj Khalifa', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&q=80' },
+    DPS: { landmark: 'Ulun Danu Temple', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&q=80' },
+    BKK: { landmark: 'Wat Arun', img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=500&q=80' },
+    KUL: { landmark: 'Petronas Towers', img: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=500&q=80' },
+    ATQ: { landmark: 'Golden Temple', img: 'https://images.unsplash.com/photo-1514222134-b57cbb8ce073?w=500&q=80' },
+    MAA: { landmark: 'Kapaleeshwarar Temple', img: 'https://images.unsplash.com/photo-1616843413587-9e3a37f7bbd8?w=500&q=80' },
+    AMD: { landmark: 'Atal Bridge & Sabarmati', img: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=500&q=80' },
+    NMI: { landmark: 'Mumbai Skyline', img: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=500&q=80' },
+    SXR: { landmark: 'Dal Lake Shikara', img: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?w=500&q=80' },
+    VNS: { landmark: 'Ganga Ghats', img: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=500&q=80' }
+  };
+
+  const DEFAULT_TOP_ROUTES = [
+    { from: 'Delhi', to: 'Mumbai', codeFrom: 'DEL', codeTo: 'BOM', landmark: 'Gateway of India', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
+    { from: 'Mumbai', to: 'Delhi', codeFrom: 'BOM', codeTo: 'DEL', landmark: 'India Gate', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=500&q=80' },
+    { from: 'Delhi', to: 'Bangalore', codeFrom: 'DEL', codeTo: 'BLR', landmark: 'Vidhana Soudha', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=500&q=80' },
+    { from: 'Delhi', to: 'Goa', codeFrom: 'DEL', codeTo: 'GOI', landmark: 'Goa Beaches', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80' },
+    { from: 'Delhi', to: 'Dubai', codeFrom: 'DEL', codeTo: 'DXB', landmark: 'Burj Khalifa', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&q=80' },
+    { from: 'Delhi', to: 'Bali', codeFrom: 'DEL', codeTo: 'DPS', landmark: 'Ulun Danu Temple', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&q=80' },
+    { from: 'Kolkata', to: 'Delhi', codeFrom: 'CCU', codeTo: 'DEL', landmark: 'India Gate', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=500&q=80' },
+    { from: 'Hyderabad', to: 'Mumbai', codeFrom: 'HYD', codeTo: 'BOM', landmark: 'Gateway of India', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
+    { from: 'Delhi', to: 'Jaipur', codeFrom: 'DEL', codeTo: 'JAI', landmark: 'Hawa Mahal', img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=500&q=80' },
+    { from: 'Bangalore', to: 'Mumbai', codeFrom: 'BLR', codeTo: 'BOM', landmark: 'Gateway of India', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' }
+  ];
+
+  const [topFlightRoutes, setTopFlightRoutes] = useState<any[]>(DEFAULT_TOP_ROUTES);
 
   useEffect(() => {
     const fetchTopRoutes = async () => {
       try {
         const response = await api.get('/searches/flights/top-routes');
-        if (response.data && response.data.length > 0) {
-          const cityImages: Record<string, string> = {
-            'DEL': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&q=80',
-            'BOM': 'https://images.unsplash.com/photo-1522748906645-95d8adfd52c7?w=400&q=80',
-            'BLR': 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=400&q=80',
-            'GOI': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&q=80',
-            'CCU': 'https://images.unsplash.com/photo-1558431382-27e303142255?w=400&q=80',
-            'HYD': 'https://images.unsplash.com/photo-1582509653531-15b74dbf77c3?w=400&q=80',
-            'MAA': 'https://images.unsplash.com/photo-1582510003544-4d00b7f7415e?w=400&q=80',
-            'DXB': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80',
-            'JAI': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&q=80'
-          };
-          const dynamicRoutes = response.data.map((r: any) => ({
-            from: CITIES[r.codeFrom] || r.codeFrom,
-            to: CITIES[r.codeTo] || r.codeTo,
-            codeFrom: r.codeFrom,
-            codeTo: r.codeTo,
-            img: cityImages[r.codeTo] || cityImages[r.codeFrom] || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400&q=80'
-          }));
-          
-          if (dynamicRoutes.length < 9) {
-            const existingKeys = new Set(dynamicRoutes.map((r: any) => `${r.codeFrom}-${r.codeTo}`));
-            const filler = topFlightRoutes.filter(r => !existingKeys.has(`${r.codeFrom}-${r.codeTo}`));
-            setTopFlightRoutes([...dynamicRoutes, ...filler].slice(0, 9));
-          } else {
-            setTopFlightRoutes(dynamicRoutes.slice(0, 9));
-          }
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          const dynamicRoutes = response.data.map((r: any) => {
+            const destInfo = CITY_LANDMARKS[r.codeTo] || CITY_LANDMARKS[r.codeFrom] || {
+              landmark: 'Iconic Landmark',
+              img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=500&q=80'
+            };
+            return {
+              from: r.from || CITIES[r.codeFrom] || r.codeFrom,
+              to: r.to || CITIES[r.codeTo] || r.codeTo,
+              codeFrom: r.codeFrom,
+              codeTo: r.codeTo,
+              landmark: destInfo.landmark,
+              img: destInfo.img,
+              count: r.count
+            };
+          });
+
+          // Show only top 10 most booked flights in the tool
+          setTopFlightRoutes(dynamicRoutes.slice(0, 10));
         }
       } catch (error) {
         console.error('Failed to fetch top routes:', error);
@@ -279,7 +295,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-12 lg:pb-8 px-4 lg:px-8 relative z-20">
+          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-14 lg:pb-16 px-4 lg:px-8 relative z-20">
             
             {/* Click-away overlay */}
             {(activeDatePicker || isFromPickerOpen || isToPickerOpen || isCabinPickerOpen || isBookingForOpen) && (
@@ -290,7 +306,7 @@ export default function LandingPage() {
             )}
             
             {activeTab === 'Flights' ? (
-              <div className="relative pb-10 md:pb-0">
+              <div className="pb-6 lg:pb-8">
                 {/* Flight Types */}
                 <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 lg:mb-6 relative">
                   <label className="flex items-center gap-2 cursor-pointer group">
@@ -584,13 +600,6 @@ export default function LandingPage() {
 
 
 
-                {/* Massive Search Button Overlapping Bottom for Flights */}
-                <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
-                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]`}>
-                    SEARCH FLIGHTS
-                  </button>
-                </div>
-
               </div>
             ) : activeTab === 'Hotels' ? (
               <div className="relative pb-10 md:pb-0">
@@ -709,14 +718,19 @@ export default function LandingPage() {
               </div>
             )}
 
-            {/* Massive Search Button Overlapping Bottom for Hotels */}
-            {activeTab === 'Hotels' && (
-                <div className="absolute -bottom-5 md:-bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
-                  <button onClick={handleSearch} className={`w-full sm:w-auto px-6 md:px-12 py-2.5 md:py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${(user?.roles?.includes('B2B_AGENT')) ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'}`}>
-                    SEARCH HOTELS
-                  </button>
-                </div>
-            )}
+            {/* Massive Search Button Overlapping Bottom */}
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
+              <button 
+                onClick={handleSearch} 
+                className={`w-full sm:w-auto px-8 md:px-14 py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${
+                  activeTab === 'Hotels' && user?.roles?.includes('B2B_AGENT')
+                    ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' 
+                    : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'
+                }`}
+              >
+                {activeTab === 'Hotels' ? 'SEARCH HOTELS' : 'SEARCH FLIGHTS'}
+              </button>
+            </div>
           </div>
           
           {/* Explore More Strip */}
@@ -768,41 +782,38 @@ export default function LandingPage() {
       </div>
 
       {/* Top Flight Routes Section */}
-      <div className="bg-white py-20 w-full border-t border-gray-100 overflow-hidden relative">
+      <div className="bg-white py-16 md:py-20 w-full border-t border-gray-100 overflow-hidden relative">
         {/* Subtle Map Background */}
         <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-center bg-no-repeat bg-cover opacity-[0.04] pointer-events-none"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-12 text-center">Top Flight Routes</h2>
+          <div className="text-center mb-10 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">Top Flight Routes</h2>
+            <p className="text-gray-500 font-medium text-sm md:text-base">Most booked destinations across our platform</p>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6 max-w-6xl mx-auto">
             {topFlightRoutes.map((route, i) => (
               <div 
                 key={i}
-                onClick={() => {
-                  const query = new URLSearchParams({
-                    tab: 'Flights',
-                    from: route.codeFrom,
-                    to: route.codeTo,
-                    date: getLocalISO(new Date(Date.now() + 86400000)),
-                    tripType: 'One Way',
-                    adults: '1', children: '0', infants: '0', cabinClass: 'Economy/ Premium Economy'
-                  }).toString();
-                  navigate(`/flights/search?${query}`);
-                }}
-                className="flex items-center gap-5 bg-white border border-gray-100 hover:border-blue-200 hover:shadow-xl p-3 md:p-4 rounded-2xl cursor-pointer transition-all duration-300 group transform hover:-translate-y-1"
+                className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(20%-16px)] min-w-[230px] max-w-[320px] flex items-center gap-3.5 bg-white border border-gray-100 hover:border-gray-200 shadow-xs hover:shadow-md p-3.5 rounded-2xl transition-all duration-300"
               >
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 shadow-sm">
-                  <img src={route.img} alt={route.to} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden shrink-0 shadow-xs bg-slate-100 relative">
+                  <img src={route.img} alt={route.to} className="w-full h-full object-cover" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 text-gray-900 font-bold mb-1.5 md:text-lg">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-gray-900 font-bold text-sm md:text-base leading-tight truncate">
                     <span>{route.from}</span>
-                    <Plane size={14} className="text-gray-400 rotate-90" />
-                    <span>{route.to}</span>
+                    <Plane size={13} className="text-blue-500 rotate-90 shrink-0" />
+                    <span className="truncate">{route.to}</span>
                   </div>
-                  <div className="text-sm font-bold text-blue-500 uppercase tracking-wide">
-                    {route.codeFrom}-{route.codeTo}
+                  <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
+                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[10px]">{route.codeFrom}-{route.codeTo}</span>
+                    {route.landmark && (
+                      <span className="text-[10px] text-gray-400 font-medium truncate" title={route.landmark}>
+                        {route.landmark}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
