@@ -199,6 +199,23 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
               </button>
             )}
 
+            <style>{`
+              @keyframes festiveTickerScroll {
+                0% { transform: translateX(0%); }
+                100% { transform: translateX(-50%); }
+              }
+              .festive-ticker-animated {
+                display: flex;
+                white-space: nowrap;
+                align-items: center;
+                width: max-content;
+                animation: festiveTickerScroll 28s linear infinite;
+              }
+              .festive-ticker-animated:hover {
+                animation-play-state: paused;
+              }
+            `}</style>
+
             <div 
               className="flex-1 overflow-hidden mr-7 relative flex cursor-pointer select-none"
               onClick={() => {
@@ -209,7 +226,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 }
               }}
             >
-              <div className="animate-[scrollText_28s_linear_infinite] flex whitespace-nowrap items-center hover:[animation-play-state:paused]">
+              <div className="festive-ticker-animated">
                 {/* First Set */}
                 <div className="flex items-center gap-8 sm:gap-12 px-4 shrink-0">
                   <div className="flex items-center gap-2">
@@ -220,7 +237,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       {festiveBanner.title}
                     </span>
                     {festiveBanner.subtitle && (
-                      <span className="hidden sm:inline text-white/80 text-xs">
+                      <span className="hidden sm:inline text-white/85 text-xs">
                         — {festiveBanner.subtitle}
                       </span>
                     )}
@@ -229,9 +246,6 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         USE CODE: {festiveBanner.promoCode}
                       </span>
                     )}
-                    <span className="text-amber-200 hover:text-white underline underline-offset-2 text-xs font-bold ml-1">
-                      {festiveBanner.ctaText || 'Explore Flights'} →
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -249,7 +263,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                   </div>
                 </div>
 
-                {/* Second Set (Duplicate for smooth loop) */}
+                {/* Second Set (Duplicate for smooth infinite marquee loop) */}
                 <div className="flex items-center gap-8 sm:gap-12 px-4 shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25">
@@ -259,7 +273,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                       {festiveBanner.title}
                     </span>
                     {festiveBanner.subtitle && (
-                      <span className="hidden sm:inline text-white/80 text-xs">
+                      <span className="hidden sm:inline text-white/85 text-xs">
                         — {festiveBanner.subtitle}
                       </span>
                     )}
@@ -268,9 +282,6 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                         USE CODE: {festiveBanner.promoCode}
                       </span>
                     )}
-                    <span className="text-amber-200 hover:text-white underline underline-offset-2 text-xs font-bold ml-1">
-                      {festiveBanner.ctaText || 'Explore Flights'} →
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">

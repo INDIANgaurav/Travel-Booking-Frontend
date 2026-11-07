@@ -119,12 +119,27 @@
   100% { transform: translateX(-50%); }
 }
 
+@keyframes festiveTickerScroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 120s linear infinite;
   }
   .pause-on-hover:hover .animate-marquee,
   .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+  .festive-ticker-animated {
+    display: flex;
+    white-space: nowrap;
+    align-items: center;
+    width: max-content;
+    animation: festiveTickerScroll 28s linear infinite;
+  }
+  .festive-ticker-animated:hover {
     animation-play-state: paused;
   }
 }
