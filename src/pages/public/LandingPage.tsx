@@ -326,12 +326,15 @@ export default function LandingPage() {
       <ScrollAirplane />
 
       {/* Public Navbar */}
-      <TopNavbar />
+      <TopNavbar 
+        festiveBanner={!isBannerDismissed ? activeFestiveBanner : null} 
+        onDismissFestiveBanner={() => setIsBannerDismissed(true)} 
+      />
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 bg-[#00224f]`}>
+      <div className={`relative ${activeFestiveBanner && activeFestiveBanner.showTopStrip && !isBannerDismissed ? 'pt-24 sm:pt-28 lg:pt-32' : 'pt-16 pb-20 lg:pt-20 lg:pb-24'} pb-20 lg:pb-24 bg-[#00224f]`}>
         
         {/* Dynamic Background Elements */}
           <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">

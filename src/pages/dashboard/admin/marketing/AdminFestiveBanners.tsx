@@ -562,6 +562,11 @@ export default function AdminFestiveBanners() {
                     <span className="font-semibold underline underline-offset-4 flex items-center gap-1 text-[11px]">
                       {banner.ctaText || 'Explore'} <ArrowRight size={11} />
                     </span>
+                    {banner.showTopStrip && (
+                      <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-medium">
+                        Top Marquee Active
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -866,6 +871,22 @@ export default function AdminFestiveBanners() {
                   <span className="text-[11px] text-slate-400">Reflects real-time changes</span>
                 </div>
 
+                {/* Top Marquee Ribbon Preview */}
+                {formData.showTopStrip && (
+                  <div className={`mb-3 py-1.5 px-3 rounded-lg bg-gradient-to-r ${THEME_GRADIENTS[formData.bgTheme]} text-white text-[11px] font-medium flex items-center justify-between shadow-xs overflow-hidden`}>
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">
+                        TOP MARQUEE TICKER
+                      </span>
+                      <span className="truncate font-semibold">{formData.title}</span>
+                      <span className="text-white/70 truncate hidden sm:inline">— {formData.subtitle}</span>
+                    </div>
+                    <span className="text-amber-200 shrink-0 text-[10px] font-bold ml-2">
+                      Moving Right → Left
+                    </span>
+                  </div>
+                )}
+
                 {/* Hero Showcase Card Preview */}
                 <div className={`p-6 rounded-2xl bg-gradient-to-r ${THEME_GRADIENTS[formData.bgTheme]} text-white shadow-md relative overflow-hidden`}>
                   <div className="flex items-center justify-between mb-3">
@@ -906,6 +927,16 @@ export default function AdminFestiveBanners() {
                     className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900 cursor-pointer"
                   />
                   <span className="text-xs font-semibold text-slate-800">Publish to live site immediately</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.showTopStrip}
+                    onChange={(e) => setFormData({ ...formData, showTopStrip: e.target.checked })}
+                    className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900 cursor-pointer"
+                  />
+                  <span className="text-xs font-semibold text-slate-800">Display top scrolling marquee ticker</span>
                 </label>
               </div>
 

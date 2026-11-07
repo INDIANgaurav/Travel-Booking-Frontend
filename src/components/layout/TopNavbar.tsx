@@ -14,9 +14,23 @@ interface TopNavbarProps {
   onProfileClick?: () => void;
   forceWhite?: boolean;
   portalMode?: boolean;
+  festiveBanner?: any;
+  onDismissFestiveBanner?: () => void;
 }
 
-export default function TopNavbar({ forceWhite = false, portalMode = false, onProfileClick, onMenuClick }: TopNavbarProps) {
+const FESTIVE_THEME_GRADIENTS: Record<string, string> = {
+  DIWALI_GOLD: 'from-[#420b05] via-[#7c2d03] to-[#b45309]',
+  HOLI_COLORS: 'from-[#831843] via-[#581c87] to-[#1e40af]',
+  NEW_YEAR_MIDNIGHT: 'from-[#030712] via-[#0f172a] to-[#312e81]',
+  CHRISTMAS_RED: 'from-[#7f1d1d] via-[#881337] to-[#14532d]',
+  EID_EMERALD: 'from-[#064e3b] via-[#047857] to-[#854d0e]',
+  TRICOLOR_INDIA: 'from-[#9a3412] via-[#0f172a] to-[#15803d]',
+  ROYAL_PURPLE: 'from-[#3b0764] via-[#581c87] to-[#701a75]',
+  SUNSET_ORANGE: 'from-[#9a3412] via-[#be123c] to-[#831843]',
+  CUSTOM: 'from-[#0f172a] to-[#1e293b]'
+};
+
+export default function TopNavbar({ forceWhite = false, portalMode = false, onProfileClick, onMenuClick, festiveBanner, onDismissFestiveBanner }: TopNavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -165,6 +179,116 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
                 100% { transform: translateX(-50%); }
               }
             `}</style>
+          </div>
+        )}
+        
+        {/* Festive Marquee Ticker — Positioned ABOVE the navbar moving right to left */}
+        {festiveBanner && festiveBanner.showTopStrip && (
+          <div 
+            className={`w-full bg-gradient-to-r ${
+              festiveBanner.bgTheme ? (FESTIVE_THEME_GRADIENTS[festiveBanner.bgTheme] || FESTIVE_THEME_GRADIENTS.DIWALI_GOLD) : FESTIVE_THEME_GRADIENTS.DIWALI_GOLD
+            } text-white text-xs font-medium py-1.5 px-2 overflow-hidden relative flex items-center shadow-xs border-b border-white/10`}
+          >
+            {onDismissFestiveBanner && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDismissFestiveBanner(); }}
+                className="absolute right-2 z-20 p-1 bg-black/30 hover:bg-black/50 rounded text-white/90 hover:text-white cursor-pointer shadow-xs backdrop-blur-xs transition-colors shrink-0"
+                title="Dismiss"
+              >
+                <X size={13} />
+              </button>
+            )}
+
+            <div 
+              className="flex-1 overflow-hidden mr-7 relative flex cursor-pointer select-none"
+              onClick={() => {
+                if (festiveBanner.ctaLink && festiveBanner.ctaLink !== '/' && festiveBanner.ctaLink !== '#search') {
+                  navigate(festiveBanner.ctaLink);
+                } else {
+                  window.scrollTo({ top: 120, behavior: 'smooth' });
+                }
+              }}
+            >
+              <div className="animate-[scrollText_28s_linear_infinite] flex whitespace-nowrap items-center hover:[animation-play-state:paused]">
+                {/* First Set */}
+                <div className="flex items-center gap-8 sm:gap-12 px-4 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25">
+                      {festiveBanner.badgeText || 'Special'}
+                    </span>
+                    <span className="font-semibold text-xs drop-shadow-xs">
+                      {festiveBanner.title}
+                    </span>
+                    {festiveBanner.subtitle && (
+                      <span className="hidden sm:inline text-white/80 text-xs">
+                        — {festiveBanner.subtitle}
+                      </span>
+                    )}
+                    {festiveBanner.bannerType === 'PROMOTIONAL' && festiveBanner.promoCode && (
+                      <span className="font-mono font-bold text-[10px] bg-white text-slate-900 px-1.5 py-0.5 rounded shadow-xs ml-1">
+                        USE CODE: {festiveBanner.promoCode}
+                      </span>
+                    )}
+                    <span className="text-amber-200 hover:text-white underline underline-offset-2 text-xs font-bold ml-1">
+                      {festiveBanner.ctaText || 'Explore Flights'} →
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25">
+                      {festiveBanner.badgeText || 'Special'}
+                    </span>
+                    <span className="font-semibold text-xs drop-shadow-xs">
+                      {festiveBanner.title}
+                    </span>
+                    {festiveBanner.bannerType === 'PROMOTIONAL' && festiveBanner.discountText && (
+                      <span className="text-amber-200 font-bold text-xs">
+                        ({festiveBanner.discountText})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Second Set (Duplicate for smooth loop) */}
+                <div className="flex items-center gap-8 sm:gap-12 px-4 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25">
+                      {festiveBanner.badgeText || 'Special'}
+                    </span>
+                    <span className="font-semibold text-xs drop-shadow-xs">
+                      {festiveBanner.title}
+                    </span>
+                    {festiveBanner.subtitle && (
+                      <span className="hidden sm:inline text-white/80 text-xs">
+                        — {festiveBanner.subtitle}
+                      </span>
+                    )}
+                    {festiveBanner.bannerType === 'PROMOTIONAL' && festiveBanner.promoCode && (
+                      <span className="font-mono font-bold text-[10px] bg-white text-slate-900 px-1.5 py-0.5 rounded shadow-xs ml-1">
+                        USE CODE: {festiveBanner.promoCode}
+                      </span>
+                    )}
+                    <span className="text-amber-200 hover:text-white underline underline-offset-2 text-xs font-bold ml-1">
+                      {festiveBanner.ctaText || 'Explore Flights'} →
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25">
+                      {festiveBanner.badgeText || 'Special'}
+                    </span>
+                    <span className="font-semibold text-xs drop-shadow-xs">
+                      {festiveBanner.title}
+                    </span>
+                    {festiveBanner.bannerType === 'PROMOTIONAL' && festiveBanner.discountText && (
+                      <span className="text-amber-200 font-bold text-xs">
+                        ({festiveBanner.discountText})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         
