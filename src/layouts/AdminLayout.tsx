@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone, Server } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIcon, Settings, Menu, Briefcase, DollarSign, PackageOpen, LayoutGrid, ChevronRight, ShieldCheck, Globe, FileText, Tag, MessageSquare, Megaphone, Server, Sparkles } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
@@ -127,6 +127,7 @@ export default function AdminLayout() {
     {
       title: 'Marketing & Promos',
       items: [
+        { name: 'Festive Banners', path: '/admin/marketing/banners', icon: <Sparkles size={20} /> },
         { name: 'Promo Codes', path: '/admin/marketing/promos', icon: <Tag size={20} /> },
         { name: 'Announcements', path: '/admin/marketing/announcements', icon: <Megaphone size={20} /> },
       ]

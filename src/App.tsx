@@ -88,6 +88,7 @@ import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
 import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
 import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
 import AdminPromoCodes from './pages/dashboard/admin/marketing/AdminPromoCodes'
+import AdminFestiveBanners from './pages/dashboard/admin/marketing/AdminFestiveBanners'
 import AdminAnnouncements from './pages/dashboard/admin/settings/AdminAnnouncements'
 import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
 import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
@@ -403,6 +404,7 @@ function App() {
           <Route path="suppliers" element={<SupplierManagement />} />
           <Route path="cug-suppliers" element={<CugSuppliersManager />} />
           <Route path="marketing/promos" element={<AdminPromoCodes />} />
+          <Route path="marketing/banners" element={<AdminFestiveBanners />} />
           <Route path="marketing/announcements" element={<AdminAnnouncements />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="fd-maker" element={<AdminFDMaker />} />
