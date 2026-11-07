@@ -557,16 +557,11 @@ export default function AdminFestiveBanners() {
                     </div>
                   )}
 
-                  {/* CTA & Ribbon Indicator */}
+                  {/* CTA info */}
                   <div className="mt-4 flex items-center justify-between text-xs text-white/80 relative z-10">
                     <span className="font-semibold underline underline-offset-4 flex items-center gap-1 text-[11px]">
                       {banner.ctaText || 'Explore'} <ArrowRight size={11} />
                     </span>
-                    {banner.showTopStrip && (
-                      <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-medium">
-                        Top Ribbon Active
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -871,21 +866,6 @@ export default function AdminFestiveBanners() {
                   <span className="text-[11px] text-slate-400">Reflects real-time changes</span>
                 </div>
 
-                {/* Top strip preview */}
-                {formData.showTopStrip && (
-                  <div className={`mb-3 py-2 px-4 rounded-xl bg-gradient-to-r ${THEME_GRADIENTS[formData.bgTheme]} text-white text-xs font-medium flex items-center justify-between shadow-xs`}>
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                        {formData.badgeText || 'Special'}
-                      </span>
-                      <span className="font-semibold truncate">{formData.title}</span>
-                    </div>
-                    <span className="underline shrink-0 text-[11px] font-semibold">
-                      {formData.ctaText} →
-                    </span>
-                  </div>
-                )}
-
                 {/* Hero Showcase Card Preview */}
                 <div className={`p-6 rounded-2xl bg-gradient-to-r ${THEME_GRADIENTS[formData.bgTheme]} text-white shadow-md relative overflow-hidden`}>
                   <div className="flex items-center justify-between mb-3">
@@ -916,7 +896,7 @@ export default function AdminFestiveBanners() {
                 </div>
               </div>
 
-              {/* Status & Ribbon Controls */}
+              {/* Status Controls */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
@@ -926,16 +906,6 @@ export default function AdminFestiveBanners() {
                     className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900 cursor-pointer"
                   />
                   <span className="text-xs font-semibold text-slate-800">Publish to live site immediately</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={formData.showTopStrip}
-                    onChange={(e) => setFormData({ ...formData, showTopStrip: e.target.checked })}
-                    className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900 cursor-pointer"
-                  />
-                  <span className="text-xs font-semibold text-slate-800">Display top announcement ribbon</span>
                 </label>
               </div>
 

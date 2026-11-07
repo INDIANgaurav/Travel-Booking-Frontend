@@ -14,23 +14,9 @@ interface TopNavbarProps {
   onProfileClick?: () => void;
   forceWhite?: boolean;
   portalMode?: boolean;
-  festiveBanner?: any;
-  onDismissFestiveBanner?: () => void;
 }
 
-const FESTIVE_THEME_GRADIENTS: Record<string, string> = {
-  DIWALI_GOLD: 'from-[#420b05] via-[#7c2d03] to-[#b45309]',
-  HOLI_COLORS: 'from-[#831843] via-[#581c87] to-[#1e40af]',
-  NEW_YEAR_MIDNIGHT: 'from-[#030712] via-[#0f172a] to-[#312e81]',
-  CHRISTMAS_RED: 'from-[#7f1d1d] via-[#881337] to-[#14532d]',
-  EID_EMERALD: 'from-[#064e3b] via-[#047857] to-[#854d0e]',
-  TRICOLOR_INDIA: 'from-[#9a3412] via-[#0f172a] to-[#15803d]',
-  ROYAL_PURPLE: 'from-[#3b0764] via-[#581c87] to-[#701a75]',
-  SUNSET_ORANGE: 'from-[#9a3412] via-[#be123c] to-[#831843]',
-  CUSTOM: 'from-[#0f172a] to-[#1e293b]'
-};
-
-export default function TopNavbar({ forceWhite = false, portalMode = false, onProfileClick, onMenuClick, festiveBanner, onDismissFestiveBanner }: TopNavbarProps) {
+export default function TopNavbar({ forceWhite = false, portalMode = false, onProfileClick, onMenuClick }: TopNavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -503,52 +489,6 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
           </div>
         </div>
         </nav>
-
-        {/* Festive Banner Ribbon — Rendered directly BELOW the main navbar */}
-        {festiveBanner && festiveBanner.showTopStrip && (
-          <div 
-            className={`w-full py-1.5 sm:py-2 px-3 sm:px-6 bg-gradient-to-r ${
-              festiveBanner.bgTheme ? (FESTIVE_THEME_GRADIENTS[festiveBanner.bgTheme] || FESTIVE_THEME_GRADIENTS.DIWALI_GOLD) : FESTIVE_THEME_GRADIENTS.DIWALI_GOLD
-            } text-white shadow-md transition-all duration-300 border-t border-white/10`}
-          >
-            <div className="max-w-[1200px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {festiveBanner.badgeText && (
-                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-white/20 border border-white/25 shrink-0">
-                    {festiveBanner.badgeText}
-                  </span>
-                )}
-                <span className="truncate font-semibold text-xs sm:text-sm drop-shadow-xs">
-                  {festiveBanner.title}
-                </span>
-                {festiveBanner.bannerType === 'PROMOTIONAL' && festiveBanner.promoCode && (
-                  <span className="hidden md:inline-flex items-center gap-1 font-mono font-bold bg-white text-slate-900 px-2 py-0.5 rounded text-[10px] shrink-0">
-                    CODE: {festiveBanner.promoCode}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                <Link
-                  to={festiveBanner.ctaLink || '/'}
-                  className="text-xs sm:text-sm font-bold text-amber-200 hover:text-white underline underline-offset-2 whitespace-nowrap"
-                >
-                  {festiveBanner.ctaText || 'Explore'} →
-                </Link>
-
-                {onDismissFestiveBanner && (
-                  <button
-                    onClick={onDismissFestiveBanner}
-                    className="p-1 rounded hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
-                    title="Dismiss"
-                  >
-                    <X size={15} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile Sidebar Drawer */}

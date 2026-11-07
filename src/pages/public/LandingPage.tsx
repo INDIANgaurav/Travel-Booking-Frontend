@@ -326,15 +326,12 @@ export default function LandingPage() {
       <ScrollAirplane />
 
       {/* Public Navbar */}
-      <TopNavbar 
-        festiveBanner={!isBannerDismissed ? activeFestiveBanner : null} 
-        onDismissFestiveBanner={() => setIsBannerDismissed(true)} 
-      />
+      <TopNavbar />
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Massive Hero Section */}
-      <div className={`relative ${activeFestiveBanner && activeFestiveBanner.showTopStrip && !isBannerDismissed ? 'pt-24 sm:pt-28 lg:pt-32' : 'pt-16 pb-20 lg:pt-20 lg:pb-24'} pb-20 lg:pb-24 bg-[#00224f]`}>
+      <div className={`relative pt-16 pb-20 lg:pt-20 lg:pb-24 bg-[#00224f]`}>
         
         {/* Dynamic Background Elements */}
           <div className="absolute inset-0 z-0 overflow-hidden bg-[#001f3f]">
@@ -948,6 +945,12 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-start md:items-end justify-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto mt-2 md:mt-0">
                   <Link
                     to={activeFestiveBanner.ctaLink || '/'}
+                    onClick={(e) => {
+                      if (!activeFestiveBanner.ctaLink || activeFestiveBanner.ctaLink === '/' || activeFestiveBanner.ctaLink === '#search') {
+                        e.preventDefault();
+                        window.scrollTo({ top: 120, behavior: 'smooth' });
+                      }
+                    }}
                     className={`w-full sm:w-auto text-center justify-center inline-flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm md:text-base shadow-lg hover:shadow-xl transition-all transform hover:scale-105 ${
                       FESTIVE_THEMES[activeFestiveBanner.bgTheme]?.buttonBg || 'bg-white text-slate-900'
                     }`}
