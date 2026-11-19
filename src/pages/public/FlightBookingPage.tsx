@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated, updateProfileData } from '../../store/authSlice';
@@ -116,6 +116,16 @@ export default function FlightBookingPage() {
   const [issuingStage, setIssuingStage] = useState<'verifying' | 'securing' | 'finalizing'>('verifying');
   const [paymentMethod, setPaymentMethod] = useState<'RAZORPAY' | 'WALLET'>('RAZORPAY');
   const [showWalletConfirm, setShowWalletConfirm] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const checkoutStorageKey = `tc_checkout_key_${selectedOutbound?._id || 'flight'}`;
+  const idempotencyKeyRef = useRef<string>(
+    sessionStorage.getItem(checkoutStorageKey) ||
+    (() => {
+      const generated = `TC-FL-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`.toUpperCase();
+      sessionStorage.setItem(checkoutStorageKey, generated);
+      return generated;
+    })()
+  );
 
   // Fare summary states
   const [showBaseFare, setShowBaseFare] = useState(false);
@@ -310,8 +320,15 @@ export default function FlightBookingPage() {
         return;
       }
 
+      const rzpKey = orderData?.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!rzpKey) {
+        toast.error('Payment gateway configuration is missing. Please contact support.');
+        setIsToppingUp(false);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
+        key: rzpKey,
         amount: orderData.amount * 100,
         currency: orderData.currency,
         name: 'TrippeChalo India Wallet',
@@ -320,7 +337,7 @@ export default function FlightBookingPage() {
         handler: async function (response: any) {
           try {
             toast.loading('Verifying payment...', { id: 'topup-verify' });
-            await api.post('/api/wallet/verify-payment', {
+            const verifyRes = await api.post('/api/wallet/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -330,11 +347,15 @@ export default function FlightBookingPage() {
             });
             
             const profileRes = await api.get('/api/users/profile');
-            dispatch(updateProfileData({ walletBalance: profileRes.data.user.walletBalance }));
+            const updatedBalance = profileRes.data?.walletBalance ?? verifyRes.data?.balance;
+            dispatch(updateProfileData({ walletBalance: updatedBalance }));
             toast.success('Wallet recharged successfully!', { id: 'topup-verify' });
             setShowQuickTopup(false);
+            setIsToppingUp(false);
           } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Payment verification failed', { id: 'topup-verify' });
+            console.error('Quick topup verification error:', err);
+            toast.error(err.response?.data?.message || err.message || 'Payment verification failed', { id: 'topup-verify' });
+            setIsToppingUp(false);
           }
         },
         modal: {
@@ -402,6 +423,9 @@ export default function FlightBookingPage() {
   };
 
   const handlePaymentSubmit = () => {
+    if (isSubmittingRef.current || isProcessing) {
+      return;
+    }
     if (timeLeft <= 0) {
       toast.error('Session expired. Please search again.');
       return;
@@ -418,6 +442,10 @@ export default function FlightBookingPage() {
   };
 
   const processPayment = async () => {
+    // 1. Synchronous Frontend Click Lock (guarantees 0ms window duplicate requests)
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     try {
       setIsProcessing(true);
       setShowWalletConfirm(false);
@@ -428,6 +456,7 @@ export default function FlightBookingPage() {
         if (!res) {
           toast.error('Razorpay SDK failed to load. Are you online?');
           setIsProcessing(false);
+          isSubmittingRef.current = false;
           return;
         }
       }
@@ -445,12 +474,14 @@ export default function FlightBookingPage() {
       } catch (err: any) {
         toast.error(err.response?.data?.message || 'Flight is no longer available. Please search again.');
         setIsProcessing(false);
+        isSubmittingRef.current = false;
         return;
       }
 
       const generatedPnr = Math.random().toString(36).substring(2, 8).toUpperCase();
       
       const { data } = await api.post('/api/bookings/flight', {
+        idempotencyKey: idempotencyKeyRef.current,
         bookingMode: user?.roles?.includes('B2B_AGENT') ? 'B2B' : 'PERSONAL',
         paymentMethod: paymentMethod,
         totalAmount: cartTotalAmount,
@@ -502,21 +533,34 @@ export default function FlightBookingPage() {
           toast.error(data.message || 'Booking failed. Refund has been initiated.');
           setIsProcessing(false);
           setIsIssuingTicket(false);
+          isSubmittingRef.current = false;
           return;
         }
         setIssuingStage('finalizing');
         toast.success('Payment successful! Booking confirmed using Wallet.');
         sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(checkoutStorageKey);
         setTimeout(() => {
           navigate(`/dashboard/ticket/${data.booking._id}`);
           setIsProcessing(false);
           setIsIssuingTicket(false);
+          isSubmittingRef.current = false;
+        }, 1000);
+        return;
+      }
+
+      const rzpKey = data.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!rzpKey) {
+        toast.error('Payment gateway configuration is missing. Please contact support.');
+        setIsProcessing(false);
+        setTimeout(() => {
+          isSubmittingRef.current = false;
         }, 1000);
         return;
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
+        key: rzpKey,
         amount: data.amount,
         currency: data.currency,
         name: 'TrippeChalo India',
@@ -537,30 +581,63 @@ export default function FlightBookingPage() {
               razorpay_signature: response.razorpay_signature
             });
             
+            if (verifyRes.data.isDuplicateRefunded) {
+              toast.error(verifyRes.data.message || 'Duplicate payment detected and automatically refunded.', { duration: 8000 });
+              sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(checkoutStorageKey);
+              navigate(`/dashboard/ticket/${verifyRes.data.booking._id || data.booking._id}`);
+              setIsProcessing(false);
+              setIsIssuingTicket(false);
+              isSubmittingRef.current = false;
+              return;
+            }
+
+            if (verifyRes.data.isPendingReconciliation) {
+              toast.success('Payment received! Ticket issuance is in progress with the airline.', { duration: 6000 });
+              sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(checkoutStorageKey);
+              navigate(`/dashboard/ticket/${data.booking._id}`);
+              setIsProcessing(false);
+              setIsIssuingTicket(false);
+              isSubmittingRef.current = false;
+              return;
+            }
+
             if (verifyRes.data.apiFailed) {
               toast.error(verifyRes.data.message || 'Payment successful but flight booking API failed. Full refund initiated.');
               setIsProcessing(false);
               setIsIssuingTicket(false);
+              isSubmittingRef.current = false;
               return;
             }
 
             setIssuingStage('finalizing');
             toast.success('Payment successful! Flight ticket issued.');
             sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(checkoutStorageKey);
             
             setTimeout(() => {
               navigate(`/dashboard/ticket/${data.booking._id}`);
               setIsProcessing(false);
               setIsIssuingTicket(false);
+              isSubmittingRef.current = false;
             }, 1200);
           } catch (error) {
-            toast.error('Payment verification failed.');
-            setIsProcessing(false);
-            setIsIssuingTicket(false);
+            console.warn('Network timeout during payment verification callback:', error);
+            toast.error('Network response interrupted. Your payment was processed and your booking is being automatically verified in the background. Redirecting to your ticket...', { duration: 8000 });
+            sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(checkoutStorageKey);
+            setTimeout(() => {
+              navigate(`/dashboard/ticket/${data.booking._id}`);
+              setIsProcessing(false);
+              setIsIssuingTicket(false);
+              isSubmittingRef.current = false;
+            }, 2500);
           }
         },
         modal: {
           ondismiss: function () {
+            isSubmittingRef.current = false;
             setIsProcessing(false);
             setIsIssuingTicket(false);
           }
@@ -579,6 +656,7 @@ export default function FlightBookingPage() {
       paymentObject.open();
 
     } catch (error: any) {
+      isSubmittingRef.current = false;
       console.error(error);
       toast.error(error.response?.data?.message || 'Could not initiate payment. Please try again.');
     } finally {
@@ -781,8 +859,30 @@ export default function FlightBookingPage() {
                  )}
                  
                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 text-[12px] text-gray-800 font-bold border-t border-gray-100 pt-4 mb-2">
-                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).cabinBaggage || 'Included'}</span></div>
-                    <div className="flex items-center gap-2"><span className="text-yellow-600 text-[14px]">🧳</span> Check-In Baggage: <span className="font-normal text-gray-600 ml-1">{(selectedOutbound as any).checkinBaggage || 'Included'}</span></div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-600 text-[14px]">🎒</span> Cabin Baggage: 
+                      <span className="font-normal text-gray-600 ml-1">
+                        {(() => {
+                          const b = (selectedOutbound as any).cabinBaggage;
+                          if (!b) return '7 Kg';
+                          const s = String(b).trim();
+                          const n = parseInt(s, 10);
+                          return !isNaN(n) && n > 0 ? `${n} Kg` : s.replace(/\s*kg\s*kg/i, ' Kg');
+                        })()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-600 text-[14px]">🧳</span> Check-In Baggage: 
+                      <span className="font-normal text-gray-600 ml-1">
+                        {(() => {
+                          const b = (selectedOutbound as any).checkinBaggage;
+                          if (!b) return '15 Kg';
+                          const s = String(b).trim();
+                          const n = parseInt(s, 10);
+                          return !isNaN(n) && n > 0 ? `${n} Kg` : s.replace(/\s*kg\s*kg/i, ' Kg');
+                        })()}
+                      </span>
+                    </div>
                  </div>
                </div>
 
@@ -1067,28 +1167,29 @@ export default function FlightBookingPage() {
                      </div>
                    </label>
                    
-                   <label className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'WALLET' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                     <div className="flex items-center gap-3">
-                       <input 
-                         type="radio" 
-                         name="paymentMethod" 
-                         className="w-4 h-4 text-blue-600"
-                         checked={paymentMethod === 'WALLET'} 
-                         onChange={() => setPaymentMethod('WALLET')} 
-                       />
-                       <div>
-                         <span className="font-bold text-gray-700 text-sm">Agent Wallet</span>
-                         {user && user.walletBalance !== undefined && (
-                           <div className="text-right">
-                             <div className="text-xs text-gray-500">Available Balance</div>
-                             <div className={`font-bold text-sm ${(user.walletBalance < cartTotalAmount) ? 'text-red-500' : 'text-green-600'}`}>
-                               ₹ {user.walletBalance.toLocaleString('en-IN')}
-                             </div>
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   </label>
+                    <label className={`flex items-center justify-between p-3.5 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'WALLET' ? 'border-blue-500 bg-blue-50/70' : 'border-gray-200 hover:bg-gray-50'}`}>
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          className="w-4 h-4 text-blue-600 cursor-pointer"
+                          checked={paymentMethod === 'WALLET'} 
+                          onChange={() => setPaymentMethod('WALLET')} 
+                        />
+                        <div>
+                          <span className="font-bold text-gray-800 text-sm">Agent Wallet</span>
+                          <span className="block text-xs text-gray-400">Pay directly from your balance</span>
+                        </div>
+                      </div>
+                      {user && user.walletBalance !== undefined && (
+                        <div className="text-right pl-4">
+                          <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Available Balance</div>
+                          <div className={`font-black text-base ${(user.walletBalance < cartTotalAmount) ? 'text-red-500' : 'text-emerald-600'}`}>
+                            ₹ {user.walletBalance.toLocaleString('en-IN')}
+                          </div>
+                        </div>
+                      )}
+                    </label>
                  </div>
                </div>
                
@@ -1126,35 +1227,75 @@ export default function FlightBookingPage() {
                <h3 className="font-bold text-[18px] text-gray-900">Fare Summary</h3>
              </div>
              <div className="p-4">
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-gray-300">
-                    {selectedOutbound.adultPrice ? (
-                      <>
+                {(() => {
+                  const adultTotal = Math.round(selectedOutbound.adultPrice || 0);
+                  const adultBase = (selectedOutbound as any).baseFarePerPax || Math.round(adultTotal * 0.72);
+                  const adultTaxes = adultTotal - adultBase;
+                  const totalBase = (adultBase * adultsCount) + (childrenCount > 0 && selectedOutbound.childPrice ? Math.round(selectedOutbound.childPrice * 0.72) * childrenCount : 0);
+                  const totalTaxes = (adultTaxes * adultsCount) + (childrenCount > 0 && selectedOutbound.childPrice ? (selectedOutbound.childPrice - Math.round(selectedOutbound.childPrice * 0.72)) * childrenCount : 0);
+                  const fuelSurcharge = (selectedOutbound as any).taxBreakdown?.fuelSurcharge || Math.round(totalTaxes * 0.58);
+                  const airportFee = (selectedOutbound as any).taxBreakdown?.airportDevelopmentFee || Math.round(totalTaxes * 0.24);
+                  const govtTaxes = totalTaxes - fuelSurcharge - airportFee;
+
+                  return (
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-gray-200">
                         <tr className="py-2">
-                          <td className="py-3 font-bold text-gray-500">Adult Fare ({adultsCount} x {Math.round(selectedOutbound.adultPrice).toLocaleString('en-IN')})</td>
-                          <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {Math.round(selectedOutbound.adultPrice * adultsCount).toLocaleString('en-IN')}</td>
+                          <td className="py-2.5 font-bold text-gray-700">
+                            Base Fare <span className="text-xs text-gray-400 font-normal">({adultsCount} Adult{adultsCount > 1 ? 's' : ''}{childrenCount > 0 ? `, ${childrenCount} Child` : ''})</span>
+                          </td>
+                          <td className="py-2.5 px-1 text-right font-black text-[#0c1a40]">₹ {totalBase.toLocaleString('en-IN')}</td>
                         </tr>
-                        {childrenCount > 0 && selectedOutbound.childPrice ? (
-                          <tr className="py-2">
-                            <td className="py-3 font-bold text-gray-500">Child Fare ({childrenCount} x {Math.round(selectedOutbound.childPrice).toLocaleString('en-IN')})</td>
-                            <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {Math.round(selectedOutbound.childPrice * childrenCount).toLocaleString('en-IN')}</td>
+
+                        <tr className="py-2">
+                          <td className="py-2.5">
+                            <div 
+                              onClick={() => setShowTaxes(!showTaxes)}
+                              className="flex items-center gap-1.5 font-bold text-gray-700 cursor-pointer select-none hover:text-blue-600 transition-colors"
+                            >
+                              <span>Taxes & Surcharges</span>
+                              <span className="text-[10px] text-blue-500 font-black">{showTaxes ? '▲' : '▼'}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-1 text-right font-black text-[#0c1a40]">₹ {totalTaxes.toLocaleString('en-IN')}</td>
+                        </tr>
+
+                        {showTaxes && (
+                          <tr className="bg-slate-50/80">
+                            <td colSpan={2} className="py-2.5 px-3 space-y-1.5 text-xs text-gray-600 border-l-2 border-blue-400 rounded-r">
+                              <div className="flex justify-between items-center">
+                                <span>Airline Fuel Surcharge (YQ)</span>
+                                <span className="font-semibold text-gray-800">₹ {fuelSurcharge.toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span>Airport Dev & Passenger Fee (UDF/PSF)</span>
+                                <span className="font-semibold text-gray-800">₹ {airportFee.toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span>Aviation Security & Govt. GST</span>
+                                <span className="font-semibold text-gray-800">₹ {govtTaxes.toLocaleString('en-IN')}</span>
+                              </div>
+                            </td>
                           </tr>
-                        ) : null}
+                        )}
+
                         {infantsCount > 0 && selectedOutbound.infantPrice ? (
                           <tr className="py-2">
-                            <td className="py-3 font-bold text-gray-500">Infant Fare ({infantsCount} x {Math.round(selectedOutbound.infantPrice).toLocaleString('en-IN')})</td>
-                            <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {Math.round(selectedOutbound.infantPrice * infantsCount).toLocaleString('en-IN')}</td>
+                            <td className="py-2.5 font-bold text-gray-500">Infant Fare ({infantsCount} x {Math.round(selectedOutbound.infantPrice).toLocaleString('en-IN')})</td>
+                            <td className="py-2.5 px-1 text-right font-black text-[#0c1a40]">₹ {Math.round(selectedOutbound.infantPrice * infantsCount).toLocaleString('en-IN')}</td>
                           </tr>
                         ) : null}
-                      </>
-                    ) : (
-                      <tr className="py-2">
-                        <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
-                        <td className="py-3 px-1 text-right font-black text-[#0c1a40]">₹ {cartBaseAmount.toLocaleString('en-IN')}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+
+                        {appliedPromo && (
+                          <tr className="py-2 text-emerald-600 font-bold bg-emerald-50/50">
+                            <td className="py-2.5 px-1">Promo Discount ({appliedPromo.code})</td>
+                            <td className="py-2.5 px-1 text-right font-black">- ₹ {Math.round(appliedPromo.discountAmount || 0).toLocaleString('en-IN')}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
              <div className="bg-gray-50 p-4 border-t border-gray-200 rounded-b-lg flex justify-between items-center">
                 <span className="font-black text-gray-900 text-[18px]">Total Amount</span>

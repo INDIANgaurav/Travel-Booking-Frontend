@@ -179,9 +179,16 @@ export default function B2BWalletPage() {
         paymentMethod
       });
 
+      const rzpKey = orderData?.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!rzpKey) {
+        toast.error('Payment gateway configuration is missing.');
+        setLoading(false);
+        return;
+      }
+
       // 2. Initialize Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
+        key: rzpKey,
         amount: orderData.amount * 100, // in paise
         currency: orderData.currency,
         name: 'TrippeChalo India B2B Wallet',

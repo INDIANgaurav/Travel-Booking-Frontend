@@ -4,6 +4,7 @@ import { LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, User as UserIc
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk, selectCurrentUser } from '../store/authSlice';
 import TopNavbar from '../components/layout/TopNavbar';
+import AdminPageGuide from '../components/admin/AdminPageGuide';
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -42,7 +43,7 @@ export default function AdminLayout() {
   const isParentActive = (item: { name: string; path?: string; subItems?: { name: string; path: string }[] }) => {
     if (item.path && isPathActive(item.path)) return true;
     if (item.subItems?.some(sub => isPathActive(sub.path))) return true;
-    if (item.name === 'User Directory' && location.pathname.startsWith('/admin/user-profile')) return true;
+    if ((item.name === 'User Directory' || item.name === 'Active B2B Agents') && location.pathname.startsWith('/admin/user-profile')) return true;
     if (item.name === 'Booking Operations' && (
       location.pathname.startsWith('/admin/bookings') || 
       location.pathname.startsWith('/admin/group-bookings') || 
@@ -53,9 +54,26 @@ export default function AdminLayout() {
 
   const navGroups = [
     {
-      title: 'Main',
+      title: 'Main & Operations',
       items: [
         { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
+        { 
+          name: 'Booking Operations', 
+          icon: <Briefcase size={20} />,
+          subItems: [
+            { name: 'All Bookings', path: '/admin/bookings' },
+            { name: 'Group Bookings RFQ', path: '/admin/group-bookings' },
+            { name: 'Cancellations', path: '/admin/cancellations' }
+          ]
+        },
+      ]
+    },
+    {
+      title: 'B2B & Channel Partners',
+      items: [
+        { name: 'API Partners (B2B)', path: '/admin/b2b-partners', icon: <Server size={20} /> },
+        { name: 'B2B Registrations', path: '/admin/b2b-requests', icon: <Briefcase size={20} /> },
+        { name: 'Active B2B Agents', path: '/admin/manage-users', icon: <Users size={20} /> },
       ]
     },
     {
@@ -89,47 +107,43 @@ export default function AdminLayout() {
       ]
     },
     {
-      title: 'People & Access',
-      items: [
-        { 
-          name: 'User Directory', 
-          icon: <Users size={20} />,
-          subItems: [
-            { name: 'Active Agents', path: '/admin/manage-users' },
-            { name: 'User Management', path: '/admin/users' },
-            { name: 'Pending Approvals', path: '/admin/pending-users' }
-          ]
-        },
-        { name: 'Sub-Admin Roles', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
-        { name: 'B2B Registrations', path: '/admin/b2b-requests', icon: <Briefcase size={20} /> },
-      ]
-    },
-    {
       title: 'Finance & Accounts',
       items: [
         { 
           name: 'Treasury & Payments', 
           icon: <DollarSign size={20} />,
           subItems: [
-            { name: 'Bank Accounts', path: '/admin/treasury/banks' },
-            { name: 'Record Payment', path: '/admin/treasury/record-payment' },
-            { name: 'Settlement Queue', path: '/admin/treasury/queue' },
+            { name: 'Wallet Recharge', path: '/admin/offline-topups' },
             { name: 'Invoice Center', path: '/admin/treasury/invoices' },
-            { name: 'Wallet Recharge', path: '/admin/offline-topups' }
+            { name: 'Settlement Queue', path: '/admin/treasury/queue' },
+            { name: 'Bank Accounts', path: '/admin/treasury/banks' },
+            { name: 'Record Payment', path: '/admin/treasury/record-payment' }
           ]
         },
         { name: 'Financial Hub', path: '/admin/finance', icon: <DollarSign size={20} /> },
         { name: 'Global Ledger', path: '/admin/ledger', icon: <CreditCard size={20} /> },
-        { name: 'Withdrawal Reqs', path: '/admin/withdrawals', icon: <CreditCard size={20} /> },
         { name: 'Commissions & Fees', path: '/admin/commissions', icon: <DollarSign size={20} /> },
+        { name: 'Withdrawal Reqs', path: '/admin/withdrawals', icon: <CreditCard size={20} /> },
       ]
     },
     {
-      title: 'Marketing & Promos',
+      title: 'People & Access',
       items: [
-        { name: 'Festive Banners', path: '/admin/marketing/banners', icon: <Sparkles size={20} /> },
-        { name: 'Promo Codes', path: '/admin/marketing/promos', icon: <Tag size={20} /> },
-        { name: 'Announcements', path: '/admin/marketing/announcements', icon: <Megaphone size={20} /> },
+        { 
+          name: 'User Directory', 
+          icon: <Users size={20} />,
+          subItems: [
+            { name: 'User Management', path: '/admin/users' },
+            { name: 'Pending Approvals', path: '/admin/pending-users' }
+          ]
+        },
+        { name: 'Sub-Admin Roles', path: '/admin/sub-admins', icon: <ShieldCheck size={20} /> },
+      ]
+    },
+    {
+      title: 'Support & Helpdesk',
+      items: [
+        { name: 'Helpdesk Tickets', path: '/admin/helpdesk', icon: <MessageSquare size={20} /> },
       ]
     },
     {
@@ -156,25 +170,16 @@ export default function AdminLayout() {
       ]
     },
     {
-      title: 'Operations & Logs',
+      title: 'Marketing & Promos',
       items: [
-        { 
-          name: 'Booking Operations', 
-          icon: <Briefcase size={20} />,
-          subItems: [
-            { name: 'All Bookings', path: '/admin/bookings' },
-            { name: 'Group Bookings RFQ', path: '/admin/group-bookings' },
-            { name: 'Cancellations', path: '/admin/cancellations' }
-          ]
-        },
-        { name: 'Helpdesk Tickets', path: '/admin/helpdesk', icon: <MessageSquare size={20} /> },
+        { name: 'Festive Banners', path: '/admin/marketing/banners', icon: <Sparkles size={20} /> },
+        { name: 'Promo Codes', path: '/admin/marketing/promos', icon: <Tag size={20} /> },
+        { name: 'Announcements', path: '/admin/marketing/announcements', icon: <Megaphone size={20} /> },
       ]
     },
     {
-      title: 'System',
+      title: 'System Settings',
       items: [
-        { name: 'My Profile', path: '/admin/profile', icon: <UserIcon size={20} /> },
-        { name: 'API Partners (B2B)', path: '/admin/b2b-partners', icon: <Server size={20} /> },
         { 
           name: 'System Settings', 
           icon: <Settings size={20} />,
@@ -185,6 +190,7 @@ export default function AdminLayout() {
             { name: 'General Settings', path: '/admin/settings/general' }
           ]
         },
+        { name: 'My Profile', path: '/admin/profile', icon: <UserIcon size={20} /> },
       ]
     }
   ];
@@ -404,8 +410,7 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0 h-[calc(100dvh-76px)] overflow-hidden relative pb-16 lg:pb-0">
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-slate-50 p-3 lg:p-4">
-
-
+          <AdminPageGuide />
           <div className="h-full">
             <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
           </div>

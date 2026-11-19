@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plane, ChevronUp, Clock, Info, X, Tag } from 'lucide-react';
 import api from '../../services/api';
@@ -120,6 +120,16 @@ const B2BAgentCheckout: React.FC = () => {
   const [showTaxesDetails, setShowTaxesDetails] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Agency Account');
+  const isSubmittingRef = useRef(false);
+  const b2bStorageKey = `tc_b2b_checkout_${flight?._id || 'flight'}`;
+  const idempotencyKeyRef = useRef<string>(
+    sessionStorage.getItem(b2bStorageKey) ||
+    (() => {
+      const generated = `TC-B2B-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`.toUpperCase();
+      sessionStorage.setItem(b2bStorageKey, generated);
+      return generated;
+    })()
+  );
 
   // Extract fare details from router state
   const fareType = location.state?.fareType || 'Coupon fares';
@@ -273,12 +283,18 @@ const B2BAgentCheckout: React.FC = () => {
   };
 
   const handleConfirmBooking = async () => {
+    // 1. Synchronous Frontend Click Lock
+    if (isSubmittingRef.current || isBooking) return;
+    isSubmittingRef.current = true;
+
     if (timeLeft <= 0) {
       toast.error('Session expired. Please search again.');
+      isSubmittingRef.current = false;
       return;
     }
     if (holdError) {
       toast.error(holdError);
+      isSubmittingRef.current = false;
       return;
     }
     try {
@@ -289,11 +305,13 @@ const B2BAgentCheckout: React.FC = () => {
         if (!scriptLoaded) {
           toast.error('Razorpay SDK failed to load. Are you online?');
           setIsBooking(false);
+          isSubmittingRef.current = false;
           return;
         }
       }
 
       const { data } = await api.post('/api/bookings/flight', {
+        idempotencyKey: idempotencyKeyRef.current,
         totalAmount: totalFare,
         promoCode: appliedPromo?.code,
         date: flight.departureTime,
@@ -332,10 +350,18 @@ const B2BAgentCheckout: React.FC = () => {
       if (paymentMethod === 'Agency Account') {
         toast.success('Booking Created successfully!');
         sessionStorage.removeItem(storageKey);
+        sessionStorage.removeItem(b2bStorageKey);
         navigate('/b2b/booking-status', { state: { booking: data.booking } });
       } else {
+        const rzpKey = data.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+        if (!rzpKey) {
+          toast.error('Payment gateway configuration is missing.');
+          setIsBooking(false);
+          return;
+        }
+
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
+          key: rzpKey,
           amount: data.amount,
           currency: data.currency,
           name: 'Travel Booking App',
@@ -343,17 +369,30 @@ const B2BAgentCheckout: React.FC = () => {
           order_id: data.orderId,
           handler: async function (response: any) {
             try {
-              await api.post('/api/bookings/payment/verify', {
+              const verifyRes = await api.post('/api/bookings/payment/verify', {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature
               });
-              
-              toast.success('Payment successful! Booking confirmed.');
+
+              if (verifyRes.data?.isDuplicateRefunded) {
+                toast.error(verifyRes.data.message || 'Duplicate payment detected and automatically refunded.', { duration: 8000 });
+              } else {
+                toast.success('Payment successful! Booking confirmed.');
+              }
               sessionStorage.removeItem(storageKey);
-              navigate('/b2b/booking-status', { state: { booking: data.booking } });
+        sessionStorage.removeItem(b2bStorageKey);
+              navigate('/b2b/booking-status', { state: { booking: verifyRes.data?.booking || data.booking } });
             } catch (error) {
               toast.error('Payment verification failed.');
+            } finally {
+              isSubmittingRef.current = false;
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              isSubmittingRef.current = false;
+              setIsBooking(false);
             }
           },
           prefill: {
@@ -368,12 +407,14 @@ const B2BAgentCheckout: React.FC = () => {
 
         const paymentObject = new (window as any).Razorpay(options);
         paymentObject.on('payment.failed', function(response: any) {
+           isSubmittingRef.current = false;
            toast.error(response.error.description);
         });
         paymentObject.open();
       }
     } catch (e: any) {
-      toast.error('Failed to create booking');
+      isSubmittingRef.current = false;
+      toast.error(e.response?.data?.message || 'Failed to create booking');
     } finally {
       setIsBooking(false);
     }

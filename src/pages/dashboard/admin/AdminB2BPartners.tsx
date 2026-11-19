@@ -3,12 +3,28 @@ import {
   Plus, Server, CheckCircle, XCircle, Activity, Key, Copy, Eye, EyeOff, 
   Download, ExternalLink, Edit, Trash2, Printer, FileText,
   Search, Ticket, Calendar, Plane, User as UserIcon, RefreshCw, CheckCheck, Clock, ShieldCheck, ArrowRight,
-  Filter, X, ArrowUpDown
+  Filter, X, ArrowUpDown, Wallet, History, ArrowDownLeft, ArrowUpRight, FileSpreadsheet
 } from 'lucide-react';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
 import Dropdown from '../../../components/ui/Dropdown';
+
+interface B2BWalletTx {
+  _id: string;
+  partnerId: string;
+  transactionType: 'DEBIT' | 'CREDIT' | 'ADJUSTMENT' | 'REVERSAL';
+  amount: number;
+  currency: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  referenceId: string;
+  bookingRef?: string;
+  description?: string;
+  performedBy?: string;
+  status: 'PENDING' | 'POSTED' | 'VOIDED';
+  createdAt: string;
+}
 
 interface B2BClient {
   _id: string;
@@ -26,6 +42,7 @@ interface B2BClient {
   apiWalletBalance: number;
   rateLimitPerMinute: number;
   markupPercentage: number;
+  allowedIPs?: string[];
   createdAt: string;
   totalBookings?: number;
   testBookings?: number;
@@ -104,13 +121,120 @@ export default function AdminB2BPartners() {
     isVerified: false,
     rateLimitPerMinute: 60,
     markupPercentage: 0,
-    apiWalletBalance: 0
+    apiWalletBalance: 0,
+    allowedIPs: ''
   });
 
   // UI state
   const [showTestKey, setShowTestKey] = useState(false);
   const [showLiveKey, setShowLiveKey] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // Holds one-time plaintext credentials returned on create or password reset (never fetched from DB)
+  const [ephemeralCredentials, setEphemeralCredentials] = useState<
+    Record<string, { username: string; password: string; basicAuthKey: string }>
+  >({});
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  // Partner Wallet Ledger Modal state
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [walletPartner, setWalletPartner] = useState<B2BClient | null>(null);
+  const [walletTransactions, setWalletTransactions] = useState<B2BWalletTx[]>([]);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletFilterTab, setWalletFilterTab] = useState<'ALL' | 'DEBIT' | 'CREDIT' | 'ADJUSTMENT'>('ALL');
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustType, setAdjustType] = useState<'CREDIT' | 'DEBIT' | 'SET'>('CREDIT');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [isSubmittingAdjust, setIsSubmittingAdjust] = useState(false);
+
+  const fetchWalletTransactions = async (partnerId: string) => {
+    try {
+      setWalletLoading(true);
+      const res = await api.get(`/api/admin/b2b-clients/${partnerId}/wallet-transactions?limit=100`);
+      if (res.data.success) {
+        setWalletTransactions(res.data.data || []);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to fetch wallet transactions');
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const openWalletModal = (partner: B2BClient) => {
+    setWalletPartner(partner);
+    setIsWalletModalOpen(true);
+    setIsTopUpOpen(false);
+    setAdjustAmount('');
+    setAdjustReason('');
+    fetchWalletTransactions(partner._id);
+  };
+
+  const handleWalletAdjustment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!walletPartner) return;
+    const num = Number(adjustAmount);
+    if (isNaN(num) || num <= 0) {
+      toast.error('Please enter a valid positive amount');
+      return;
+    }
+    let targetBalance = walletPartner.apiWalletBalance;
+    if (adjustType === 'CREDIT') {
+      targetBalance += num;
+    } else if (adjustType === 'DEBIT') {
+      if (targetBalance < num) {
+        toast.error(`Insufficient balance. Current: ₹${targetBalance}, Debit: ₹${num}`);
+        return;
+      }
+      targetBalance -= num;
+    } else if (adjustType === 'SET') {
+      targetBalance = num;
+    }
+
+    try {
+      setIsSubmittingAdjust(true);
+      const res = await api.put(`/api/admin/b2b-clients/${walletPartner._id}`, {
+        apiWalletBalance: targetBalance,
+      });
+      if (res.data.success) {
+        const updated = res.data.data;
+        toast.success(`Wallet updated! New balance: ₹${updated.apiWalletBalance.toLocaleString('en-IN')}`);
+        setWalletPartner(updated);
+        setPartners((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
+        setIsTopUpOpen(false);
+        setAdjustAmount('');
+        setAdjustReason('');
+        await fetchWalletTransactions(updated._id);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to adjust wallet');
+    } finally {
+      setIsSubmittingAdjust(false);
+    }
+  };
+
+  const exportWalletTransactionsToCSV = () => {
+    if (!walletPartner || walletTransactions.length === 0) return;
+    const headers = ['Date', 'Type', 'Amount (INR)', 'Balance Before', 'Balance After', 'Reference ID', 'Description', 'Status'];
+    const rows = walletTransactions.map(tx => [
+      new Date(tx.createdAt).toLocaleString('en-IN'),
+      tx.transactionType,
+      tx.amount,
+      tx.balanceBefore,
+      tx.balanceAfter,
+      `"${tx.referenceId}"`,
+      `"${(tx.description || '').replace(/"/g, '""')}"`,
+      tx.status
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Wallet_Ledger_${walletPartner.companyName.replace(/\s+/g, '_')}_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const fetchPartners = async () => {
     try {
@@ -219,7 +343,8 @@ export default function AdminB2BPartners() {
       isVerified: false,
       rateLimitPerMinute: 60,
       markupPercentage: 0,
-      apiWalletBalance: 0
+      apiWalletBalance: 0,
+      allowedIPs: ''
     });
     setIsAddModalOpen(true);
   };
@@ -231,12 +356,13 @@ export default function AdminB2BPartners() {
       contactName: partner.contactName || '',
       email: partner.email || '',
       username: partner.username || '',
-      password: partner.password || '',
+      password: '',
       status: partner.status || 'Testing',
       isVerified: partner.isVerified ?? (partner.status === 'Live'),
       rateLimitPerMinute: partner.rateLimitPerMinute || 60,
       markupPercentage: partner.markupPercentage || 0,
-      apiWalletBalance: partner.apiWalletBalance || 0
+      apiWalletBalance: partner.apiWalletBalance || 0,
+      allowedIPs: Array.isArray(partner.allowedIPs) ? partner.allowedIPs.join(', ') : ''
     });
     setIsAddModalOpen(true);
   };
@@ -244,12 +370,25 @@ export default function AdminB2BPartners() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const parsedIPs = formData.allowedIPs
+        ? formData.allowedIPs.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+
       if (editingPartner) {
-        // UPDATE EXISTING PARTNER
-        const res = await api.put(`/api/admin/b2b-clients/${editingPartner._id}`, formData);
+        // UPDATE EXISTING PARTNER (omit empty password so existing hash stays untouched)
+        const payload: any = { ...formData, allowedIPs: parsedIPs };
+        if (!payload.password || !payload.password.trim()) {
+          delete payload.password;
+        }
+        const res = await api.put(`/api/admin/b2b-clients/${editingPartner._id}`, payload);
         if (res.data.success) {
           const updated = res.data.data;
-          toast.success(`Partner "${updated.companyName}" updated successfully!`);
+          if (res.data.issuedCredentials) {
+            setEphemeralCredentials((prev) => ({ ...prev, [updated._id]: res.data.issuedCredentials }));
+            toast.success(`Partner "${updated.companyName}" updated & password rotated (one-time view ready)!`);
+          } else {
+            toast.success(`Partner "${updated.companyName}" updated successfully!`);
+          }
           setPartners(prev => prev.map(p => p._id === updated._id ? updated : p));
           setIsAddModalOpen(false);
           setEditingPartner(null);
@@ -259,10 +398,14 @@ export default function AdminB2BPartners() {
         }
       } else {
         // CREATE NEW PARTNER
-        const res = await api.post('/api/admin/b2b-clients', formData);
+        const payload: any = { ...formData, allowedIPs: parsedIPs };
+        const res = await api.post('/api/admin/b2b-clients', payload);
         if (res.data.success) {
           const created = res.data.data;
-          toast.success(`B2B Partner "${created.companyName}" onboarded successfully!`);
+          if (res.data.issuedCredentials) {
+            setEphemeralCredentials((prev) => ({ ...prev, [created._id]: res.data.issuedCredentials }));
+          }
+          toast.success(`B2B Partner "${created.companyName}" onboarded! Save one-time password now.`);
           setPartners(prev => [created, ...prev]);
           setIsAddModalOpen(false);
           openDocs(created);
@@ -270,6 +413,22 @@ export default function AdminB2BPartners() {
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to save partner');
+    }
+  };
+
+  const handleResetPartnerPassword = async (partner: B2BClient) => {
+    try {
+      setIsResettingPassword(true);
+      const res = await api.post(`/api/admin/b2b-clients/${partner._id}/reset-password`);
+      if (res.data.success && res.data.issuedCredentials) {
+        setEphemeralCredentials((prev) => ({ ...prev, [partner._id]: res.data.issuedCredentials }));
+        setShowPassword(true);
+        toast.success('New one-time password generated! Copy it now — old tokens were revoked.');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to reset partner password');
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -302,6 +461,8 @@ export default function AdminB2BPartners() {
   };
 
   const copyWelcomeKit = (partner: B2BClient) => {
+    const oneTime = ephemeralCredentials[partner._id];
+    const displayPass = oneTime?.password || '<HASHED - RESET PASSWORD IN ADMIN TO ISSUE NEW>';
     const text = `=========================================
 TrippeChalo India B2B Flight API - Access Details
 =========================================
@@ -314,7 +475,7 @@ URL:  POST /api/v1/b2b/auth/token
 Send this in body (JSON):
 {
   "username": "${partner.username || 'N/A'}",
-  "password": "${partner.password || 'N/A'}"
+  "password": "${displayPass}"
 }
 
 You will receive a "tokenId" in response.
@@ -331,7 +492,7 @@ Available APIs:
 
 ── YOUR CREDENTIALS ──
 Username:  ${partner.username || 'N/A'}
-Password:  ${partner.password || 'N/A'}
+Password:  ${displayPass}
 API Key:   ${partner.testApiKey}
 
 Note: Keep these credentials safe. Do not share publicly.
@@ -352,6 +513,8 @@ Note: Keep these credentials safe. Do not share publicly.
     const serverUrl = getServerUrl();
     const isLive = env === 'live';
     const apiKey = isLive ? partner.liveApiKey : partner.testApiKey;
+    const oneTimePassword = ephemeralCredentials[partner._id]?.password;
+    const docPasswordText = oneTimePassword || '&lt;HASHED_SECRET_USE_ISSUED_OR_RESET&gt;';
     const envBadge = isLive ? 'PRODUCTION (LIVE)' : 'SANDBOX (TESTING & UAT)';
     const envColor = isLive ? '#15803d' : '#b45309';
     const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -560,8 +723,8 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><strong>Password (Secret)</strong></td>
-        <td><code style="font-weight: bold; font-size: 11pt;">${partner.password || 'N/A'}</code></td>
-        <td>Used in Step 1 session authentication</td>
+        <td><code style="font-weight: bold; font-size: 11pt;">${docPasswordText}</code></td>
+        <td>Used in Step 1 session authentication (hashed in DB; shown once on creation/reset)</td>
       </tr>
       <tr>
         <td><strong>API Key (${isLive ? 'Production Key' : 'Sandbox Test Key'})</strong></td>
@@ -877,7 +1040,7 @@ Note: Keep these credentials safe. Do not share publicly.
   <p><strong>Sample Request Payload (Option 1: Username & Password):</strong></p>
   <pre class="code-box">{
   "username": "${partner.username || 'YOUR_USERNAME'}",
-  "password": "${partner.password || 'YOUR_PASSWORD'}"
+  "password": "${docPasswordText}"
 }</pre>
 
   <p><strong>Sample Request Payload (Option 2: API Key):</strong></p>
@@ -1366,18 +1529,18 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><code>401 Unauthorized</code></td>
-        <td><code>UNAUTHORIZED / INVALID_TOKEN</code></td>
-        <td>Token has expired or invalid API credentials supplied. Re-authenticate via Step 1.</td>
+        <td><code>UNAUTHORIZED / INVALID_TOKEN / TOKEN_REVOKED / QUERY_CREDENTIALS_NOT_ALLOWED</code></td>
+        <td>Token has expired, credentials are invalid, session was revoked, or credentials were inadvertently passed via URL query parameters. Re-authenticate via Step 1.</td>
       </tr>
       <tr>
         <td><code>402 Payment Required</code></td>
         <td><code>INSUFFICIENT_FUNDS</code></td>
-        <td>(Production Mode) Partner API Wallet has insufficient funds. Top up wallet via TrippeChalo India Admin.</td>
+        <td>(Production Mode) Partner API Wallet has insufficient funds. Top up wallet via TrippeChalo India Admin or transfer funds.</td>
       </tr>
       <tr>
         <td><code>403 Forbidden</code></td>
-        <td><code>ENVIRONMENT_MISMATCH</code></td>
-        <td>Attempted to book a Sandbox test flight in Live Production, or partner account is suspended.</td>
+        <td><code>ENVIRONMENT_MISMATCH / IP_NOT_WHITELISTED / LIVE_FLIGHT_IN_SANDBOX / PARTNER_NOT_ACTIVE</code></td>
+        <td>Attempted cross-environment operation, request originated from an IP outside the approved whitelist, or partner account is suspended/pending.</td>
       </tr>
       <tr>
         <td><code>404 Not Found</code></td>
@@ -1386,13 +1549,13 @@ Note: Keep these credentials safe. Do not share publicly.
       </tr>
       <tr>
         <td><code>409 Conflict</code></td>
-        <td><code>SEATS_NOT_AVAILABLE</code></td>
-        <td>Inventory exhausted! Another concurrent request claimed remaining seats (prevented by Atomic CAS).</td>
+        <td><code>SEATS_NOT_AVAILABLE / IDEMPOTENCY_KEY_REUSED</code></td>
+        <td>Inventory exhausted (all seats booked by concurrent caller), or an existing <code>Idempotency-Key</code> was reused with different flight/passenger payload.</td>
       </tr>
       <tr>
         <td><code>422 Unprocessable</code></td>
-        <td><code>INFANT_COUNT_EXCEEDED</code></td>
-        <td>Infants count exceeds adult count (1 infant per adult on lap rule) or duplicate passenger names in request.</td>
+        <td><code>PASSENGER_LIMIT_EXCEEDED / INFANT_COUNT_EXCEEDED / AGE_CATEGORY_MISMATCH / PASSPORT_EXPIRED</code></td>
+        <td>Aviation rule violation: total passengers &gt; 9, infants &gt; adults, traveler DOB mismatch with category, or expired passport on international routes.</td>
       </tr>
       <tr>
         <td><code>429 Too Many Requests</code></td>
@@ -1468,6 +1631,8 @@ Note: Keep these credentials safe. Do not share publicly.
     const serverUrl = getServerUrl();
     const isLive = env === 'live';
     const apiKey = isLive ? partner.liveApiKey : partner.testApiKey;
+    const oneTimePassword = ephemeralCredentials[partner._id]?.password;
+    const docPasswordText = oneTimePassword || '&lt;HASHED_SECRET_USE_ISSUED_OR_RESET&gt;';
     const collection = {
       info: {
         name: `TrippeChalo India B2B Flight API (${isLive ? 'LIVE' : 'SANDBOX'}) - ${partner.companyName}`,
@@ -1972,9 +2137,19 @@ Note: Keep these credentials safe. Do not share publicly.
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      <p className="text-[11px] text-gray-500 font-semibold mb-0.5">API Wallet</p>
-                      <p className="font-extrabold text-gray-900 text-sm">₹{partner.apiWalletBalance.toLocaleString('en-IN')}</p>
+                    <div 
+                      onClick={() => openWalletModal(partner)}
+                      className="bg-gray-50 hover:bg-emerald-50/80 p-3 rounded-xl border border-gray-100 hover:border-emerald-200 transition cursor-pointer group"
+                      title="Click to view detailed immutable wallet ledger & adjust balance"
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className="text-[11px] text-gray-500 group-hover:text-emerald-700 font-semibold flex items-center gap-1">
+                          <Wallet size={12} className="text-gray-400 group-hover:text-emerald-600" />
+                          API Wallet
+                        </p>
+                        <History size={12} className="text-gray-400 group-hover:text-emerald-600 transition" />
+                      </div>
+                      <p className="font-extrabold text-gray-900 group-hover:text-emerald-900 text-sm">₹{partner.apiWalletBalance.toLocaleString('en-IN')}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                       <p className="text-[11px] text-gray-500 font-semibold mb-0.5">Added Markup</p>
@@ -1997,6 +2172,23 @@ Note: Keep these credentials safe. Do not share publicly.
                       )}
                     </div>
                   </div>
+
+                  {/* IP Whitelist Pill */}
+                  <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                      <ShieldCheck size={14} className={partner.allowedIPs && partner.allowedIPs.length > 0 ? 'text-emerald-600' : 'text-slate-400'} />
+                      <span>Allowed IPs</span>
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-700 truncate max-w-[170px]" title={partner.allowedIPs?.join(', ') || 'Any IP allowed'}>
+                      {partner.allowedIPs && partner.allowedIPs.length > 0 ? (
+                        <span className="font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                          {partner.allowedIPs.length} {partner.allowedIPs.length === 1 ? 'IP' : 'IPs'}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 italic">All allowed</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="pt-2 mt-auto space-y-2.5">
@@ -2013,20 +2205,27 @@ Note: Keep these credentials safe. Do not share publicly.
                     )}
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <button 
+                      onClick={() => openWalletModal(partner)}
+                      className="w-full flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-1.5 rounded-xl transition text-xs font-bold shadow-xs cursor-pointer"
+                      title="View immutable wallet ledger audit trail & adjust balance"
+                    >
+                      <Wallet size={13} /> Ledger
+                    </button>
                     <button 
                       onClick={() => openDocs(partner)}
-                      className="w-full flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white py-2 px-2.5 rounded-xl transition text-xs font-semibold shadow-xs cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1 bg-gray-900 hover:bg-gray-800 text-white py-2 px-1.5 rounded-xl transition text-xs font-semibold shadow-xs cursor-pointer"
                       title="View API Keys & Authentication Credentials"
                     >
-                      <Key size={13} /> View Keys
+                      <Key size={13} /> Keys
                     </button>
                     <button 
                       onClick={() => openDocViewer(partner, partner.status === 'Live' ? 'live' : 'test')}
-                      className="w-full flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-2.5 rounded-xl transition text-xs font-bold shadow-xs cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-1.5 rounded-xl transition text-xs font-bold shadow-xs cursor-pointer"
                       title="View & Read Full API Specification"
                     >
-                      <Eye size={13} /> View Docs
+                      <Eye size={13} /> Docs
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -2059,11 +2258,11 @@ Note: Keep these credentials safe. Do not share publicly.
         </div>
       )}
 
-      {/* Add Partner Modal */}
+      {/* Add / Edit Partner Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-visible">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[88vh] flex flex-col overflow-hidden my-auto border border-gray-100">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl shrink-0">
               <div>
                 <h2 className="font-bold text-lg text-gray-900">
                   {editingPartner ? `Edit Partner: ${editingPartner.companyName}` : 'Onboard New B2B Partner'}
@@ -2072,117 +2271,155 @@ Note: Keep these credentials safe. Do not share publicly.
                   {editingPartner ? 'Update partner credentials, verification status, and environment settings.' : 'Generate live & sandbox credentials for external integration.'}
                 </p>
               </div>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-gray-500 hover:text-red-500"><XCircle size={20}/></button>
+              <button type="button" onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
+                <XCircle size={22} />
+              </button>
             </div>
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Company Name</label>
-                  <input placeholder="e.g. Skyline Travels" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Contact Name</label>
-                  <input placeholder="Full Name" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
-                  <input placeholder="agent@company.com" type="email" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Partner Status</label>
-                  <Dropdown 
-                    value={formData.status}
-                    onChange={(val) => {
-                      const newStatus = val as any;
-                      setFormData({
-                        ...formData, 
-                        status: newStatus,
-                        isVerified: newStatus === 'Live' ? true : formData.isVerified
-                      });
-                    }}
-                    direction="bottom"
-                    options={[
-                      { 
-                        value: 'Testing', 
-                        label: 'Testing (Sandbox Mode)',
-                        icon: <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 inline-block"/>
-                      },
-                      { 
-                        value: 'Live', 
-                        label: 'Live (Production Active)',
-                        icon: <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 inline-block"/>
-                      },
-                      { 
-                        value: 'Suspended', 
-                        label: 'Suspended (Access Blocked)',
-                        icon: <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 inline-block"/>
-                      }
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Partner API Credentials</p>
+            
+            <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0">
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Username (Client ID)</label>
-                    <input placeholder="Auto-generated if empty" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm font-mono" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Company Name</label>
+                    <input placeholder="e.g. Skyline Travels" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Password</label>
-                    <input placeholder="Auto-generated if empty" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm font-mono" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Contact Name</label>
+                    <input placeholder="Full Name" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={formData.contactName} onChange={e => setFormData({...formData, contactName: e.target.value})} />
                   </div>
                 </div>
-              </div>
-              
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Financials & Rate Limits</p>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Added Markup (%)</label>
-                    <input type="number" min="0" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.markupPercentage} onChange={e => setFormData({...formData, markupPercentage: Number(e.target.value)})} />
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Contact Email</label>
+                    <input placeholder="agent@company.com" type="email" className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Rate Limit (Req / Min)</label>
-                    <input type="number" min="1" className="w-full p-2 border border-gray-300 rounded-lg text-sm" value={formData.rateLimitPerMinute} onChange={e => setFormData({...formData, rateLimitPerMinute: Number(e.target.value)})} />
-                  </div>
-                </div>
-              </div>
-
-              {editingPartner && (
-                <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">API Wallet Balance (₹)</label>
-                    <input 
-                      type="number" 
-                      min="0" 
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-900" 
-                      value={formData.apiWalletBalance} 
-                      onChange={e => setFormData({...formData, apiWalletBalance: Number(e.target.value)})} 
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Partner Status</label>
+                    <Dropdown 
+                      value={formData.status}
+                      onChange={(val) => {
+                        const newStatus = val as any;
+                        setFormData({
+                          ...formData, 
+                          status: newStatus,
+                          isVerified: newStatus === 'Live' ? true : formData.isVerified
+                        });
+                      }}
+                      direction="bottom"
+                      options={[
+                        { 
+                          value: 'Testing', 
+                          label: 'Testing (Sandbox Mode)',
+                          icon: <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 inline-block"/>
+                        },
+                        { 
+                          value: 'Live', 
+                          label: 'Live (Production Active)',
+                          icon: <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 inline-block"/>
+                        },
+                        { 
+                          value: 'Suspended', 
+                          label: 'Suspended (Access Blocked)',
+                          icon: <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 inline-block"/>
+                        }
+                      ]}
                     />
                   </div>
-                  <div className="flex flex-col justify-end">
-                    <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-800 cursor-pointer p-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.isVerified} 
-                        onChange={e => setFormData({ ...formData, isVerified: e.target.checked })}
-                        className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Partner API Credentials</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Username (Client ID)</label>
+                      <input placeholder="Auto-generated if empty" type="text" className="w-full p-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        {editingPartner ? 'Reset Password (Optional)' : 'Password'}
+                      </label>
+                      <input
+                        placeholder={editingPartner ? 'Leave blank to keep existing' : 'Auto-generated if empty'}
+                        type="text"
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500"
+                        value={formData.password}
+                        onChange={e => setFormData({...formData, password: e.target.value})}
                       />
-                      <span className="flex items-center gap-1.5">
-                        <CheckCircle size={14} className="text-emerald-600"/> Verified & Approved
-                      </span>
-                    </label>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              <div className="pt-4 flex gap-3 justify-end border-t border-gray-100">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm">
+                {/* SECURITY & ALLOWED STATIC IPS (WHITELIST) */}
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <ShieldCheck size={14} className="text-blue-600" />
+                      Allowed Static IPs (Whitelist)
+                    </label>
+                    <span className="text-[10px] text-gray-400 font-medium">Comma-separated</span>
+                  </div>
+                  <input
+                    placeholder="e.g. 49.36.12.84, 13.233.15.20 (leave blank to allow all in Sandbox)"
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.allowedIPs}
+                    onChange={e => setFormData({ ...formData, allowedIPs: e.target.value })}
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Partner can only hit the API from these IPs. All other IPs will receive <span className="font-mono text-red-600 font-semibold">403 IP_NOT_WHITELISTED</span>.
+                  </p>
+                </div>
+                
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Financials & Rate Limits</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Added Markup (%)</label>
+                      <input type="number" min="0" className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" value={formData.markupPercentage} onChange={e => setFormData({...formData, markupPercentage: Number(e.target.value)})} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Rate Limit (Req / Min)</label>
+                      <input type="number" min="1" className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" value={formData.rateLimitPerMinute} onChange={e => setFormData({...formData, rateLimitPerMinute: Number(e.target.value)})} />
+                    </div>
+                  </div>
+                </div>
+
+                {editingPartner && (
+                  <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">API Wallet Balance (₹)</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-500" 
+                        value={formData.apiWalletBalance} 
+                        onChange={e => setFormData({...formData, apiWalletBalance: Number(e.target.value)})} 
+                      />
+                    </div>
+                    <div className="flex flex-col justify-end">
+                      <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-800 cursor-pointer p-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.isVerified} 
+                          onChange={e => setFormData({ ...formData, isVerified: e.target.checked })}
+                          className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
+                        />
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle size={14} className="text-emerald-600"/> Verified & Approved
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Modal Action Buttons */}
+              <div className="p-4 bg-gray-50 border-t border-gray-200 flex gap-3 justify-end rounded-b-2xl shrink-0">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium text-sm transition">
+                  Cancel
+                </button>
+                <button type="submit" className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm shadow transition">
                   {editingPartner ? 'Update Partner' : 'Generate Keys & Save'}
                 </button>
               </div>
@@ -2193,8 +2430,8 @@ Note: Keep these credentials safe. Do not share publicly.
 
       {/* Docs Modal */}
       {isDocsModalOpen && selectedPartner && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col my-auto">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <div>
                 <h2 className="font-bold text-lg flex items-center gap-2 text-gray-900">
@@ -2332,38 +2569,59 @@ Note: Keep these credentials safe. Do not share publicly.
                   </div>
 
                   <div>
-                    <label className="block text-gray-500 font-semibold mb-1">Password</label>
-                    <div className="flex">
-                      <input 
-                        type={showPassword ? "text" : "password"} 
-                        readOnly 
-                        value={selectedPartner.password || 'N/A'}
-                        className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-l-lg font-mono text-gray-900 select-all"
+                    <label className="flex items-center justify-between text-gray-500 font-semibold mb-1">
+                      <span>Password {ephemeralCredentials[selectedPartner._id] ? '(One-Time View)' : '(Hashed)'}</span>
+                      <button
+                        type="button"
+                        disabled={isResettingPassword}
+                        onClick={() => handleResetPartnerPassword(selectedPartner)}
+                        className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold disabled:opacity-50"
+                      >
+                        {isResettingPassword ? 'Rotating...' : 'Reset Password'}
+                      </button>
+                    </label>
+                    {ephemeralCredentials[selectedPartner._id] ? (
+                      <div className="flex">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          readOnly
+                          value={ephemeralCredentials[selectedPartner._id].password}
+                          className="flex-1 p-2 bg-amber-50 border border-amber-300 rounded-l-lg font-mono text-gray-900 select-all"
+                        />
+                        <button onClick={() => setShowPassword(!showPassword)} className="px-2 bg-gray-100 border border-l-0 border-gray-200 hover:bg-gray-200 text-gray-600">
+                          {showPassword ? <EyeOff size={12}/> : <Eye size={12}/>}
+                        </button>
+                        <button onClick={() => copyToClipboard(ephemeralCredentials[selectedPartner._id].password)} className="px-2.5 bg-gray-100 border border-l-0 border-gray-200 rounded-r-lg hover:bg-gray-200 text-gray-600">
+                          <Copy size={12}/>
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        readOnly
+                        value="Hashed in DB (hidden — click Reset Password to issue new)"
+                        className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg font-mono text-[11px] text-gray-500"
                       />
-                      <button onClick={() => setShowPassword(!showPassword)} className="px-2 bg-gray-100 border border-l-0 border-gray-200 hover:bg-gray-200 text-gray-600">
-                        {showPassword ? <EyeOff size={12}/> : <Eye size={12}/>}
-                      </button>
-                      <button onClick={() => copyToClipboard(selectedPartner.password || '')} className="px-2.5 bg-gray-100 border border-l-0 border-gray-200 rounded-r-lg hover:bg-gray-200 text-gray-600">
-                        <Copy size={12}/>
-                      </button>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-gray-500 text-xs font-semibold mb-1">Basic Auth Key (Base64)</label>
-                  <div className="flex">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={`Basic ${selectedPartner.basicAuthKey || ''}`}
-                      className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-l-lg font-mono text-xs text-gray-900 select-all"
-                    />
-                    <button onClick={() => copyToClipboard(`Basic ${selectedPartner.basicAuthKey || ''}`)} className="px-3 bg-emerald-50 border border-l-0 border-emerald-200 rounded-r-lg hover:bg-emerald-100 text-emerald-700 font-semibold text-xs flex items-center gap-1">
-                      <Copy size={12}/> Copy Header
-                    </button>
+                {ephemeralCredentials[selectedPartner._id] && (
+                  <div>
+                    <label className="block text-gray-500 text-xs font-semibold mb-1">Basic Auth Header (One-Time View — Save Now)</label>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        readOnly
+                        value={`Basic ${ephemeralCredentials[selectedPartner._id].basicAuthKey}`}
+                        className="flex-1 p-2 bg-amber-50 border border-amber-300 rounded-l-lg font-mono text-xs text-gray-900 select-all"
+                      />
+                      <button onClick={() => copyToClipboard(`Basic ${ephemeralCredentials[selectedPartner._id].basicAuthKey}`)} className="px-3 bg-emerald-50 border border-l-0 border-emerald-200 rounded-r-lg hover:bg-emerald-100 text-emerald-700 font-semibold text-xs flex items-center gap-1">
+                        <Copy size={12}/> Copy Header
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Direct API Keys Card */}
@@ -2474,8 +2732,8 @@ Note: Keep these credentials safe. Do not share publicly.
 
       {/* Partner Bookings Verification Modal */}
       {isBookingsModalOpen && partnerForBookings && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[92vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[92vh] flex flex-col my-auto">
             {/* Modal Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
               <div className="flex items-center gap-3">
@@ -2781,8 +3039,8 @@ Note: Keep these credentials safe. Do not share publicly.
 
       {/* Full Interactive Document Viewer Modal */}
       {isDocViewerOpen && docViewerPartner && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border border-gray-200">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[200] flex items-center justify-center p-2 sm:p-4 pb-20 sm:pb-4 animate-fade-in overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border border-gray-200 my-auto">
             {/* Modal Header */}
             <div className="px-5 py-3.5 bg-gray-900 text-white flex flex-wrap items-center justify-between gap-3 border-b border-gray-800">
               <div className="flex items-center gap-3 min-w-0">
@@ -2890,6 +3148,313 @@ Note: Keep these credentials safe. Do not share publicly.
                 srcDoc={generateDocumentHtml(docViewerPartner, docViewerEnv, false, true)}
                 className="w-full h-full border-0"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Partner Wallet Ledger Audit Modal */}
+      {isWalletModalOpen && walletPartner && (
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-gray-100">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50/80 gap-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <Wallet size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold text-lg text-gray-900">
+                      Wallet Ledger: {walletPartner.companyName}
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Immutable Audit Trail
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Live balance, transaction logs, CAS debit records, and administrative ledger adjustments.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTopUpOpen(!isTopUpOpen)}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Plus size={14} /> {isTopUpOpen ? 'Close Adjustment' : 'Top-Up / Adjust Balance'}
+                </button>
+                <button
+                  type="button"
+                  onClick={exportWalletTransactionsToCSV}
+                  disabled={walletTransactions.length === 0}
+                  className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 disabled:opacity-40 cursor-pointer shadow-xs"
+                  title="Export ledger entries to CSV"
+                >
+                  <FileSpreadsheet size={14} className="text-emerald-600" /> Export CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fetchWalletTransactions(walletPartner._id)}
+                  className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                  title="Refresh transactions"
+                >
+                  <RefreshCw size={16} className={walletLoading ? 'animate-spin' : ''} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsWalletModalOpen(false)}
+                  className="text-gray-400 hover:text-red-500 transition-colors ml-1"
+                >
+                  <XCircle size={22} />
+                </button>
+              </div>
+            </div>
+
+            {/* Top-up / Adjustment Drawer (Collapsible) */}
+            {isTopUpOpen && (
+              <form onSubmit={handleWalletAdjustment} className="p-4 bg-emerald-50/60 border-b border-emerald-100 shrink-0">
+                <div className="max-w-3xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <Wallet size={14} className="text-emerald-700" /> Administrative Wallet Adjustment
+                    </p>
+                    <span className="text-xs text-emerald-800">
+                      Current: <strong>₹{walletPartner.apiWalletBalance.toLocaleString('en-IN')}</strong>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Adjustment Type</label>
+                      <select
+                        value={adjustType}
+                        onChange={(e: any) => setAdjustType(e.target.value)}
+                        className="w-full p-2 border border-emerald-200 rounded-lg text-xs font-semibold bg-white focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="CREDIT">+ Credit / Top-Up Funds</option>
+                        <option value="DEBIT">- Debit / Penalty / Deduction</option>
+                        <option value="SET">= Set Exact New Balance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        {adjustType === 'SET' ? 'Target Balance (₹)' : 'Amount (₹)'}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 50000"
+                        value={adjustAmount}
+                        onChange={(e) => setAdjustAmount(e.target.value)}
+                        className="w-full p-2 border border-emerald-200 rounded-lg text-xs font-bold bg-white focus:ring-2 focus:ring-emerald-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Reference / Note</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Bank IMPS / NEFT ref 998811"
+                        value={adjustReason}
+                        onChange={(e) => setAdjustReason(e.target.value)}
+                        className="w-full p-2 border border-emerald-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsTopUpOpen(false)}
+                      className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-200 rounded-lg transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingAdjust}
+                      className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs transition disabled:opacity-50"
+                    >
+                      {isSubmittingAdjust ? 'Processing...' : 'Apply Transaction & Log to Ledger'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* Quick Summary Strip */}
+            <div className="p-4 bg-gray-50/50 border-b border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+              <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                <span className="text-[11px] text-gray-500 font-semibold block">Active API Wallet</span>
+                <span className="text-base font-extrabold text-emerald-700">
+                  ₹{walletPartner.apiWalletBalance.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                <span className="text-[11px] text-gray-500 font-semibold block">Ledger Records</span>
+                <span className="text-base font-extrabold text-gray-900">
+                  {walletTransactions.length} Total
+                </span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                <span className="text-[11px] text-gray-500 font-semibold block">Total Debited (Bookings)</span>
+                <span className="text-base font-extrabold text-rose-600">
+                  ₹{walletTransactions
+                    .filter((t) => t.transactionType === 'DEBIT')
+                    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+                    .toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                <span className="text-[11px] text-gray-500 font-semibold block">Total Credits / Top-Ups</span>
+                <span className="text-base font-extrabold text-emerald-600">
+                  ₹{walletTransactions
+                    .filter((t) => t.transactionType === 'CREDIT' || t.transactionType === 'ADJUSTMENT')
+                    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+                    .toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="px-5 pt-3 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+              <div className="flex gap-2">
+                {(['ALL', 'DEBIT', 'CREDIT', 'ADJUSTMENT'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setWalletFilterTab(tab)}
+                    className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition ${
+                      walletFilterTab === tab
+                        ? 'border-emerald-600 text-emerald-700'
+                        : 'border-transparent text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    {tab === 'ALL' ? 'All Transactions' : tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Table Content */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 min-h-[300px]">
+              {walletLoading ? (
+                <div className="py-16 text-center text-gray-400 flex flex-col items-center justify-center">
+                  <RefreshCw size={28} className="animate-spin text-emerald-600 mb-2" />
+                  <p className="text-sm font-semibold">Loading ledger transactions...</p>
+                </div>
+              ) : walletTransactions.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <History size={36} className="mx-auto mb-2 text-gray-300" />
+                  <p className="font-semibold text-gray-700">No transactions recorded yet.</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Bookings and administrative adjustments will generate immutable ledger records here.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-2xs">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-50 text-gray-600 font-bold border-b border-gray-200 uppercase tracking-wider text-[11px]">
+                      <tr>
+                        <th className="p-3">Date / Time</th>
+                        <th className="p-3">Type</th>
+                        <th className="p-3 text-right">Amount</th>
+                        <th className="p-3 text-center">Balance Flow</th>
+                        <th className="p-3">Reference ID</th>
+                        <th className="p-3">Description</th>
+                        <th className="p-3 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {walletTransactions
+                        .filter((tx) => walletFilterTab === 'ALL' || tx.transactionType === walletFilterTab)
+                        .map((tx) => {
+                          const isDebit = tx.transactionType === 'DEBIT';
+                          return (
+                            <tr key={tx._id} className="hover:bg-gray-50/70 transition">
+                              <td className="p-3 font-medium text-gray-700 whitespace-nowrap">
+                                {new Date(tx.createdAt).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                                <span className="block text-[10px] text-gray-400">
+                                  {new Date(tx.createdAt).toLocaleTimeString('en-IN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })}
+                                </span>
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                    isDebit
+                                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                      : tx.transactionType === 'CREDIT'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  }`}
+                                >
+                                  {isDebit ? <ArrowDownLeft size={11} /> : <ArrowUpRight size={11} />}
+                                  {tx.transactionType}
+                                </span>
+                              </td>
+                              <td
+                                className={`p-3 text-right font-extrabold whitespace-nowrap ${
+                                  isDebit ? 'text-rose-600' : 'text-emerald-700'
+                                }`}
+                              >
+                                {isDebit ? '-' : '+'}₹{Number(tx.amount || 0).toLocaleString('en-IN')}
+                              </td>
+                              <td className="p-3 text-center font-mono text-[11px] text-gray-600 whitespace-nowrap">
+                                <span>₹{Number(tx.balanceBefore || 0).toLocaleString('en-IN')}</span>
+                                <span className="mx-1 text-gray-400">➔</span>
+                                <span className="font-bold text-gray-900">
+                                  ₹{Number(tx.balanceAfter || 0).toLocaleString('en-IN')}
+                                </span>
+                              </td>
+                              <td className="p-3 font-mono text-[11px] text-blue-700 font-semibold whitespace-nowrap">
+                                <span
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(tx.referenceId);
+                                    toast.success('Copied Reference ID');
+                                  }}
+                                  className="cursor-pointer hover:underline"
+                                  title="Click to copy Reference ID"
+                                >
+                                  {tx.referenceId}
+                                </span>
+                              </td>
+                              <td className="p-3 text-gray-600 max-w-[240px] truncate" title={tx.description || ''}>
+                                {tx.description || 'N/A'}
+                              </td>
+                              <td className="p-3 text-center whitespace-nowrap">
+                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px] font-bold">
+                                  {tx.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center rounded-b-2xl shrink-0">
+              <span className="text-xs text-gray-500 font-mono">
+                Partner ID: {walletPartner._id}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsWalletModalOpen(false)}
+                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-semibold transition"
+              >
+                Close Ledger
+              </button>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import type { RootState } from '../../store/store';
 import api from '../../services/api';
 import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
+import DateRangePicker from '../../components/ui/DateRangePicker';
 import CityPicker from '../../components/common/CityPicker';
 import toast from 'react-hot-toast';
 
@@ -27,7 +28,7 @@ interface ISeriesFare {
   totalSeats: number;
   availableSeats: number;
   realtimeBook: boolean;
-  status: 'Active' | 'Inactive' | 'SoldOut';
+  status: 'Active' | 'Inactive' | 'SoldOut' | 'Expired';
 }
 
 const CitySelect = ({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) => {
@@ -121,6 +122,7 @@ const SeriesFareManager: React.FC = () => {
 
   // Filters
   const [travelDateFilter, setTravelDateFilter] = useState('');
+  const [travelDateToFilter, setTravelDateToFilter] = useState('');
   const [airlineFilter, setAirlineFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState(supplierName);
   const [travelTypeFilter, setTravelTypeFilter] = useState('All');
@@ -234,9 +236,18 @@ const SeriesFareManager: React.FC = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (travelDateFilter) params.append('date', travelDateFilter);
-      if (airlineFilter) params.append('airline', airlineFilter);
-      if (moreOptionsFilter === 'Active') params.append('status', 'Active');
+      if (travelDateFilter && travelDateToFilter) {
+        params.append('startDate', travelDateFilter);
+        params.append('endDate', travelDateToFilter);
+      } else if (travelDateFilter) {
+        params.append('startDate', travelDateFilter);
+      } else if (travelDateToFilter) {
+        params.append('endDate', travelDateToFilter);
+      }
+
+      if (airlineFilter.trim()) params.append('airline', airlineFilter.trim());
+      if (travelTypeFilter && travelTypeFilter !== 'All') params.append('bookingType', travelTypeFilter);
+      if (moreOptionsFilter && moreOptionsFilter !== 'All') params.append('status', moreOptionsFilter);
       
       const response = await api.get(`/api/series-fare?${params.toString()}`);
       if (Array.isArray(response.data)) {
@@ -292,6 +303,30 @@ const SeriesFareManager: React.FC = () => {
 
   const filteredFares = safeFares.filter(f => {
     if (airlineFilter && !f.airline.toLowerCase().includes(airlineFilter.toLowerCase())) return false;
+    
+    // Check expiry
+    const isExp = (() => {
+      if ((f.status as string) === 'Expired') return true;
+      if (!f.travelDate) return false;
+      try {
+        const datePart = typeof f.travelDate === 'string'
+          ? f.travelDate.split('T')[0]
+          : new Date(f.travelDate).toISOString().split('T')[0];
+        const [y, m, d] = datePart.split('-').map(Number);
+        let depH = 23, depM = 59;
+        if (f.departureTime && typeof f.departureTime === 'string') {
+          const parts = f.departureTime.split(':').map(Number);
+          if (!isNaN(parts[0])) depH = parts[0];
+          if (!isNaN(parts[1])) depM = parts[1];
+        }
+        return new Date(y, m - 1, d, depH, depM, 0).getTime() < Date.now();
+      } catch {
+        return new Date(f.travelDate).getTime() < Date.now();
+      }
+    })();
+
+    if (moreOptionsFilter === 'Expired' && !isExp) return false;
+
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return f.sfId.toLowerCase().includes(q) || f.airlinePnr.toLowerCase().includes(q) || f.origin.toLowerCase().includes(q) || f.destination.toLowerCase().includes(q);
@@ -384,18 +419,36 @@ const SeriesFareManager: React.FC = () => {
 
       {/* Filter Toolbar */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(5,1fr)_auto] gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1.1fr_auto] gap-3 items-end">
+          {/* Unified Travel Date Range */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-700 mb-1">Travel Date</label>
-            <div className="h-[34px] flex items-center">
-              <DOBCalendar 
-                value={travelDateFilter}
-                onChange={setTravelDateFilter}
-                placeholder="Select Date"
-              />
-            </div>
+            <label className="block text-[11px] font-bold text-gray-700 mb-1 flex items-center justify-between">
+              <span>Travel Date Range</span>
+              {(travelDateFilter || travelDateToFilter) && (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setTravelDateFilter('');
+                    setTravelDateToFilter('');
+                  }} 
+                  className="text-[10px] text-blue-600 hover:underline font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </label>
+            <DateRangePicker 
+              startDate={travelDateFilter}
+              endDate={travelDateToFilter}
+              onChange={({ startDate, endDate }) => {
+                setTravelDateFilter(startDate);
+                setTravelDateToFilter(endDate);
+              }}
+              placeholder="Select Date Range..."
+            />
           </div>
 
+          {/* Travel Type */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Travel Type *</label>
             <Dropdown 
@@ -409,6 +462,7 @@ const SeriesFareManager: React.FC = () => {
             />
           </div>
 
+          {/* Airline */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Airline *</label>
             <input 
@@ -416,10 +470,11 @@ const SeriesFareManager: React.FC = () => {
               placeholder="e.g. Akasa Air"
               value={airlineFilter}
               onChange={e => setAirlineFilter(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 outline-none"
+              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 outline-none h-[38px]"
             />
           </div>
 
+          {/* Supplier */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Supplier *</label>
             <Dropdown 
@@ -431,6 +486,7 @@ const SeriesFareManager: React.FC = () => {
             />
           </div>
 
+          {/* More Options */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">More Options</label>
             <Dropdown 
@@ -438,18 +494,37 @@ const SeriesFareManager: React.FC = () => {
               onChange={setMoreOptionsFilter}
               options={[
                 { value: 'Active', label: 'Show Active Inventory' },
+                { value: 'Expired', label: 'Show Expired' },
                 { value: 'All', label: 'Show All' }
               ]}
             />
           </div>
 
-          <div className="flex items-end">
+          {/* Actions: Fetch & Reset */}
+          <div className="flex items-center gap-2">
             <button 
               onClick={fetchFares}
-              className="bg-[#0b1031] text-white text-xs font-bold px-8 py-2 rounded-lg hover:bg-gray-900 transition-all h-[36px] w-full lg:w-auto shadow-sm"
+              className="bg-[#0b1031] text-white text-xs font-bold px-5 py-2 rounded-lg hover:bg-gray-900 transition-all h-[38px] w-full lg:w-auto shadow-sm flex items-center justify-center gap-1.5"
             >
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
               Fetch
             </button>
+            {(travelDateFilter || travelDateToFilter || airlineFilter || travelTypeFilter !== 'All' || moreOptionsFilter !== 'Active') && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setTravelDateFilter('');
+                  setTravelDateToFilter('');
+                  setAirlineFilter('');
+                  setTravelTypeFilter('All');
+                  setMoreOptionsFilter('Active');
+                }}
+                title="Reset all filters"
+                className="px-2.5 h-[38px] rounded-lg border border-gray-300 text-gray-600 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 text-xs font-semibold transition-all flex items-center justify-center shrink-0"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 
@@ -506,9 +581,37 @@ const SeriesFareManager: React.FC = () => {
                 const isExpanded = expandedId === fare._id;
                 const formattedDate = new Date(fare.travelDate).toLocaleDateString('en-GB');
 
+                // Check if flight travel date & departure time is in the past (expired)
+                const isExpired = (() => {
+                  if ((fare.status as string) === 'Expired') return true;
+                  if (!fare.travelDate) return false;
+                  try {
+                    const datePart = typeof fare.travelDate === 'string'
+                      ? fare.travelDate.split('T')[0]
+                      : new Date(fare.travelDate).toISOString().split('T')[0];
+                    const [y, m, d] = datePart.split('-').map(Number);
+                    let depH = 23, depM = 59;
+                    if (fare.departureTime && typeof fare.departureTime === 'string') {
+                      const parts = fare.departureTime.split(':').map(Number);
+                      if (!isNaN(parts[0])) depH = parts[0];
+                      if (!isNaN(parts[1])) depM = parts[1];
+                    }
+                    const flightDate = new Date(y, m - 1, d, depH, depM, 0);
+                    return flightDate.getTime() < Date.now();
+                  } catch {
+                    return new Date(fare.travelDate).getTime() < Date.now();
+                  }
+                })();
+
                 return (
                   <React.Fragment key={fare._id}>
-                    <tr className={`hover:bg-blue-50/50 transition-colors ${isExpanded ? 'bg-blue-50/80 font-medium' : ''}`}>
+                    <tr className={`transition-all ${
+                      isExpired 
+                        ? 'opacity-65 bg-gray-50/70 hover:opacity-100 hover:bg-gray-100/80' 
+                        : isExpanded 
+                          ? 'bg-blue-50/80 font-medium hover:bg-blue-50/90' 
+                          : 'hover:bg-blue-50/50'
+                    }`}>
                       <td className="p-3 text-center">
                         <input type="checkbox" className="rounded border-gray-300" />
                       </td>
@@ -536,21 +639,38 @@ const SeriesFareManager: React.FC = () => {
                       <td className="p-3 font-bold">{fare.destination}</td>
                       <td className="p-3 text-gray-600 font-mono">{fare.flightNo}</td>
                       <td className="p-3 text-gray-600">
-                        {formattedDate} - {fare.departureTime}-{fare.arrivalTime}
-                        <button 
-                          onClick={() => setExpandedId(isExpanded ? null : fare._id)}
-                          className="ml-2 text-blue-600 font-bold hover:underline"
-                        >
-                          {isExpanded ? 'Hide' : 'Duplicate / Edit'}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={isExpired ? "text-gray-500 font-medium" : "text-gray-900"}>{formattedDate}</span>
+                          {isExpired && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                              Past Date
+                            </span>
+                          )}
+                          <span className="text-gray-400">-</span>
+                          <span>{fare.departureTime}-{fare.arrivalTime}</span>
+                          <button 
+                            onClick={() => setExpandedId(isExpanded ? null : fare._id)}
+                            className="ml-2 text-blue-600 font-bold hover:underline"
+                          >
+                            {isExpanded ? 'Hide' : 'Duplicate / Edit'}
+                          </button>
+                        </div>
                       </td>
                       <td className="p-3 text-center font-bold text-gray-800">{fare.totalSeats}</td>
                       <td className="p-3 text-center font-bold text-blue-600">{fare.availableSeats}</td>
                       <td className="p-3 text-center">
-                        <span className="inline-flex items-center gap-1 bg-[#f0f7ff] text-[#0b1031] px-2 py-0.5 rounded-md text-[10px] font-bold border border-[#0b1031]/20">
-                          <UserCheck size={12} />
-                          {fare.status}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="inline-flex items-center gap-1 bg-[#f0f7ff] text-[#0b1031] px-2 py-0.5 rounded-md text-[10px] font-bold border border-[#0b1031]/20">
+                            <UserCheck size={12} />
+                            {fare.status}
+                          </span>
+                          {isExpired && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black bg-rose-100 text-rose-700 border border-rose-300 shadow-2xs tracking-tight" title="Flight travel date has passed">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse" />
+                              EXPIRED
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
 

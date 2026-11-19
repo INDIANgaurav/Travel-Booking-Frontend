@@ -55,21 +55,51 @@ export default function FlightTicket() {
     const element = document.getElementById('ticket-content');
     if (!element) return;
     
-    const toastId = toast.loading('Generating PDF...');
+    const toastId = toast.loading('Generating A4 PDF...');
     
     try {
-      // Temporarily hide UI controls for PDF generation
       const originalTitle = document.title;
       document.title = `Ticket_${displayPnr}`;
       
-      const canvas = await htmlToImage.toCanvas(element, { pixelRatio: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const dataUrl = await htmlToImage.toPng(element, {
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        style: {
+          margin: '0',
+          transform: 'none',
+          left: '0',
+          top: '0',
+          position: 'static'
+        }
+      });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Ticket_${pnr}.pdf`);
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 8;
+      const maxW = pageWidth - (margin * 2);
+      const maxH = pageHeight - (margin * 2);
+
+      const widthScale = maxW / img.width;
+      const heightScale = maxH / img.height;
+      const scale = Math.min(widthScale, heightScale);
+      
+      const imgWidth = img.width * scale;
+      const imgHeight = img.height * scale;
+      const xPos = (pageWidth - imgWidth) / 2;
+      const yPos = margin;
+      
+      pdf.addImage(dataUrl, 'PNG', xPos, yPos, imgWidth, imgHeight, undefined, 'FAST');
+      pdf.save(`Ticket_${displayPnr || pnr}.pdf`);
       
       document.title = originalTitle;
       toast.success('PDF downloaded successfully!', { id: toastId });
@@ -234,20 +264,27 @@ export default function FlightTicket() {
       </div>
 
       {booking.type === 'HOTEL' ? (
-        <div id="ticket-content" className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-4 gap-4">
+        <div id="ticket-content" className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-xl border-2 border-slate-300 rounded-2xl print:shadow-none print:border print:border-slate-400 print:p-6 print:rounded-none mx-auto relative overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 -mx-6 -mt-6 md:-mx-10 md:-mt-10 mb-6 print:hidden"></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-blue-600 mb-4">Hotel Booking Voucher</h1>
+              <div className="inline-block bg-blue-50 text-blue-800 text-[11px] font-black uppercase px-2.5 py-1 rounded tracking-wider border border-blue-200 mb-2">HOTEL BOOKING VOUCHER</div>
+              <h1 className="text-2xl font-black text-slate-900 mb-2">{booking.details?.hotelName || 'Hotel Booking'}</h1>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>Booking Ref: <span className="font-bold text-gray-900">{booking.bookingId}</span></p>
-                <p>Booking Date: {new Date(booking.createdAt).toLocaleDateString()}</p>
-                <p>Status: <span className="font-bold text-green-600">{booking.status}</span></p>
+                <p>Booking Date: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                <p>Status: <span className="font-bold text-green-600 uppercase bg-green-50 px-2 py-0.5 rounded border border-green-200 text-xs">{booking.status}</span></p>
               </div>
             </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center justify-end gap-1">
-                Trippe<span className="text-blue-500">Chalo</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span>
-              </h2>
+            <div className="flex flex-col items-start md:items-end text-left md:text-right">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-10 md:h-12 object-contain mb-2" />
+              <div className="text-[11px] text-gray-600">
+                <p className="font-black text-gray-900 uppercase text-[12px]">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+                <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, UP - 201304'}</p>
+                <p className="font-bold text-gray-800 mt-0.5">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+                <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'} | Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
+              </div>
             </div>
           </div>
 
@@ -292,26 +329,31 @@ export default function FlightTicket() {
             </div>
           </div>
           
-          <div className="text-[10px] text-gray-500 mt-8 pt-4 border-t border-gray-200 text-center">
-            <p>Please present this voucher along with a valid photo ID at the time of check-in.</p>
+          <div className="mt-8 pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-6 object-contain" />
+              <span>© {new Date().getFullYear()} TrippeChalo India Private Limited. All rights reserved.</span>
+            </div>
+            <span className="font-bold text-blue-600">support@trippechalo.com | www.trippechalo.com</span>
           </div>
         </div>
       ) : (
-        <div id="ticket-content" className="w-full max-w-5xl bg-white p-6 md:p-8 shadow-sm border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-sm text-black box-border mx-auto">
+        <div id="ticket-content" className="w-full max-w-5xl bg-white p-6 md:p-10 shadow-xl border-2 border-slate-300 rounded-2xl print:shadow-none print:border print:border-slate-400 print:p-6 print:rounded-none text-black box-border mx-auto relative overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 -mx-6 -mt-6 md:-mx-10 md:-mt-10 mb-6 print:hidden"></div>
+
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-gray-300 pb-4 mb-6 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-slate-200 pb-5 mb-6 gap-6">
             <div>
-              <h2 className="text-3xl font-black text-[#0b1031] tracking-tight flex items-center gap-2 mb-1">
-                <Plane size={28} className="text-blue-600" />
-                <span>{platformInfo?.companyName?.split(' ')[0] || 'Trippe'}<span className="text-blue-600">{platformInfo?.companyName?.split(' ').slice(1).join(' ') || 'Chalo'}</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span></span>
-              </h2>
-              <p className="text-[11px] text-gray-500 font-medium tracking-widest uppercase">E-Ticket / Reservation Voucher</p>
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-10 md:h-12 object-contain mb-2" />
+              <div className="inline-block bg-blue-50 text-blue-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded tracking-wider border border-blue-200">
+                E-TICKET / RESERVATION VOUCHER
+              </div>
             </div>
-            <div className="text-left md:text-right text-[11px] text-gray-700">
-              <p className="font-bold text-gray-900 mb-1 uppercase">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+            <div className="text-left md:text-right text-[11px] text-gray-600 space-y-0.5">
+              <p className="font-black text-gray-900 uppercase text-[12px]">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
               <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
-              <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
-              <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
+              <p className="font-bold text-gray-800 mt-0.5">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+              <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'} | Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
             </div>
           </div>
 
@@ -528,11 +570,20 @@ export default function FlightTicket() {
           {/* End of Content Box */}
           </div>
 
-          <div className="text-[10px] text-gray-500 mt-4 text-center">
-            <p className="font-bold mb-1">IMPORTANT INFORMATION</p>
+          <div className="text-[10px] text-gray-500 mt-6 pt-4 border-t border-gray-200 text-center space-y-1">
+            <p className="font-bold text-[11px] text-slate-800 mb-1">IMPORTANT INFORMATION</p>
             <p>1. This is an E-Ticket. A boarding pass will be issued after Web Check-in on the airline's website.</p>
             <p>2. Passengers must carry a valid photo ID and this E-Ticket to enter the airport.</p>
             <p>3. Web Check-in usually opens 48 hours prior to the scheduled departure time.</p>
+          </div>
+
+          {/* Brand Footer with Logo */}
+          <div className="mt-8 pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-6 object-contain" />
+              <span>© {new Date().getFullYear()} TrippeChalo India Private Limited. All rights reserved.</span>
+            </div>
+            <span className="font-bold text-blue-600">support@trippechalo.com | www.trippechalo.com</span>
           </div>
           
         </div>

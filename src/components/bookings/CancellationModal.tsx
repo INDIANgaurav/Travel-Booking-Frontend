@@ -63,19 +63,19 @@ export default function CancellationModal({ bookingId, onClose, onSuccess }: Can
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Cancel Booking</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
-            <X size={24} />
+        <div className="flex justify-between items-center p-5 border-b border-gray-100 shrink-0">
+          <h2 className="text-xl font-black text-gray-900 tracking-tight">Cancel Booking</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-lg">
+            <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5">
+        <div className="p-5 overflow-y-auto space-y-5">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
@@ -86,61 +86,67 @@ export default function CancellationModal({ bookingId, onClose, onSuccess }: Can
               <p className="text-red-500 font-medium">{error}</p>
             </div>
           ) : (
-            <div className="space-y-5">
-              
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">
-                <span className="font-bold block mb-1">Cancellation Policy:</span>
-                {preview.policy}
+            <>
+              <div className="bg-blue-50/80 border border-blue-200/60 rounded-xl p-3.5 text-xs text-blue-900">
+                <span className="font-extrabold block text-blue-950 uppercase tracking-wider text-[11px] mb-1">Cancellation Policy:</span>
+                <span className="leading-relaxed">{preview.policy}</span>
               </div>
 
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="flex justify-between p-3 border-b border-gray-100">
-                  <span className="text-gray-600">Booking Amount</span>
+              <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="flex justify-between p-3.5 border-b border-gray-100 text-sm">
+                  <span className="text-gray-600 font-medium">Booking Amount</span>
                   <span className="font-bold text-gray-900">₹{preview.originalAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between p-3 border-b border-gray-100 bg-red-50 text-red-700">
-                  <span>Cancellation Charges</span>
+                <div className="flex justify-between p-3.5 border-b border-gray-100 bg-red-50/50 text-red-700 text-sm">
+                  <span className="font-medium">Cancellation Charges</span>
                   <span className="font-bold">- ₹{preview.deductionAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between p-4 bg-gray-50">
+                <div className="flex justify-between p-4 bg-gray-50/80">
                   <span className="font-black text-gray-900">Total Refund</span>
                   <span className="font-black text-green-600 text-lg">₹{preview.refundAmount.toLocaleString()}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Reason for cancellation <span className="text-red-500">*</span></label>
-                <Dropdown 
-                  value={reason} 
-                  onChange={(val) => {
-                    setReason(val);
-                    if (error) setError('');
-                  }}
-                  options={cancellationReasons.map(r => ({ value: r, label: r }))}
-                  placeholder="Select a reason"
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none"
-                />
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Reason for cancellation <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <select 
+                    value={reason} 
+                    onChange={(e) => {
+                      setReason(e.target.value);
+                      if (error) setError('');
+                    }}
+                    className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none bg-white font-medium cursor-pointer appearance-none pr-10 text-gray-800 shadow-xs"
+                  >
+                    <option value="" disabled>Select a cancellation reason</option>
+                    {cancellationReasons.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                  </div>
+                </div>
                 {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
               </div>
-
-            </div>
+            </>
           )}
         </div>
 
         {/* Footer */}
         {!loading && preview && (
-          <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+          <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 shrink-0">
             <button 
               onClick={onClose}
               disabled={cancelling}
-              className="px-5 py-2.5 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-200 transition disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200/70 transition disabled:opacity-50"
             >
               No, Keep It
             </button>
             <button 
               onClick={handleCancelClick}
               disabled={cancelling}
-              className="px-5 py-2.5 rounded-lg text-sm font-bold bg-red-600 text-white hover:bg-red-700 transition flex items-center gap-2 disabled:opacity-70"
+              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-red-600 text-white hover:bg-red-700 shadow-md transition flex items-center gap-2 disabled:opacity-70"
             >
               {cancelling ? (
                 <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Cancelling...</>

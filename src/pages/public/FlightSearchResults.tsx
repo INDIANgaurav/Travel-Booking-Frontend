@@ -815,41 +815,62 @@ export default function FlightSearchResults() {
                 <button onClick={() => setShowFareSummaryModal(false)} className="text-gray-500 hover:text-gray-700 font-bold text-xl">✕</button>
               </div>
               <div className="p-4">
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-gray-100">
-                    {selectedOutbound?.adultPrice ? (
-                      <>
+                {(() => {
+                  const outPrice = selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0;
+                  const adultTotal = Math.round(selectedOutbound?.adultPrice ? selectedOutbound.adultPrice * (outPrice / (selectedOutbound.price || 1)) : outPrice);
+                  const adultBase = (selectedOutbound as any)?.baseFarePerPax || Math.round(adultTotal * 0.72);
+                  const adultTaxes = adultTotal - adultBase;
+                  const totalBase = (adultBase * adults) + (children > 0 && selectedOutbound?.childPrice ? Math.round(selectedOutbound.childPrice * 0.72) * children : 0);
+                  const totalTaxes = (adultTaxes * adults) + (children > 0 && selectedOutbound?.childPrice ? (selectedOutbound.childPrice - Math.round(selectedOutbound.childPrice * 0.72)) * children : 0);
+                  const fuelSurcharge = Math.round(totalTaxes * 0.58);
+                  const airportFee = Math.round(totalTaxes * 0.24);
+                  const govtTaxes = totalTaxes - fuelSurcharge - airportFee;
+
+                  return (
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-gray-100">
                         <tr className="py-2">
-                          <td className="py-3 font-bold text-gray-600">Adult Fare ({adults} x {Math.round(selectedOutbound.adultPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
-                          <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.adultPrice * adults * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
+                          <td className="py-2.5 font-bold text-gray-700">
+                            Base Fare <span className="text-xs text-gray-400 font-normal">({adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child` : ''})</span>
+                          </td>
+                          <td className="py-2.5 text-right font-black text-gray-900">₹ {totalBase.toLocaleString('en-IN')}</td>
                         </tr>
-                        {children > 0 && selectedOutbound.childPrice ? (
+                        <tr className="py-2">
+                          <td className="py-2.5 font-bold text-gray-700">Taxes & Surcharges</td>
+                          <td className="py-2.5 text-right font-black text-gray-900">₹ {totalTaxes.toLocaleString('en-IN')}</td>
+                        </tr>
+                        <tr className="bg-slate-50/80">
+                          <td colSpan={2} className="py-2 px-3 space-y-1 text-xs text-gray-500 border-l-2 border-blue-500 rounded-r">
+                            <div className="flex justify-between">
+                              <span>• Airline Fuel Surcharge (YQ)</span>
+                              <span className="font-semibold text-gray-700">₹ {fuelSurcharge.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>• Airport Dev & User Fee (UDF/PSF)</span>
+                              <span className="font-semibold text-gray-700">₹ {airportFee.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>• Aviation Security Fee & GST</span>
+                              <span className="font-semibold text-gray-700">₹ {govtTaxes.toLocaleString('en-IN')}</span>
+                            </div>
+                          </td>
+                        </tr>
+                        {infants > 0 && selectedOutbound?.infantPrice ? (
                           <tr className="py-2">
-                            <td className="py-3 font-bold text-gray-600">Child Fare ({children} x {Math.round(selectedOutbound.childPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
-                            <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.childPrice * children * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
+                            <td className="py-2.5 font-bold text-gray-600">Infant Fare ({infants} x ₹{Math.round(selectedOutbound.infantPrice).toLocaleString('en-IN')})</td>
+                            <td className="py-2.5 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.infantPrice * infants).toLocaleString('en-IN')}</td>
                           </tr>
                         ) : null}
-                        {infants > 0 && selectedOutbound.infantPrice ? (
-                          <tr className="py-2">
-                            <td className="py-3 font-bold text-gray-600">Infant Fare ({infants} x {Math.round(selectedOutbound.infantPrice * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')})</td>
-                            <td className="py-3 text-right font-black text-gray-900">₹ {Math.round(selectedOutbound.infantPrice * infants * (getDisplayPrice(selectedOutbound.price) / selectedOutbound.price)).toLocaleString('en-IN')}</td>
-                          </tr>
-                        ) : null}
-                      </>
-                    ) : (
-                      <tr className="py-2">
-                        <td className="py-3 font-bold text-gray-600">Total Pax Fare</td>
-                        <td className="py-3 text-right font-black text-gray-900">₹ {getDisplayPrice(selectedOutbound?.price || 0).toLocaleString('en-IN')}</td>
-                      </tr>
-                    )}
-                    <tr className="bg-gray-50">
-                      <td className="py-4 font-black text-gray-900 text-base">Total Amount</td>
-                      <td className="py-4 text-right font-black text-blue-600 text-lg">
-                        ₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        <tr className="bg-gray-50 font-black">
+                          <td className="py-3 text-gray-900 text-base">Total Amount</td>
+                          <td className="py-3 text-right text-blue-600 text-lg">
+                            ₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
           </div>

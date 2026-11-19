@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../../services/api';
-import { PlusCircle, Edit2, DollarSign, Activity, RefreshCw } from 'lucide-react';
+import { PlusCircle, Edit2, DollarSign, Activity, RefreshCw, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Dropdown from '../../../components/ui/Dropdown';
 
@@ -206,6 +207,19 @@ const SupplierManagement = () => {
                     Sync
                   </button>
                 )}
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <Link 
+                  to={`/admin/bookings?supplier=${encodeURIComponent(supplier.name)}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  View {supplier.name} Bookings
+                </Link>
+                <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                  Filtered View
+                </span>
               </div>
             </div>
           ))}

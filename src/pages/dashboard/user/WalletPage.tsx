@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../../store/authSlice';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw, ArrowUpRight, ArrowDownLeft, CheckCircle2, Copy, X } from 'lucide-react';
 
 // Extend window for Razorpay
 declare global {
@@ -25,6 +25,7 @@ export default function WalletPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const PAYMENT_METHODS = [
     { id: 'UPI', label: 'UPI', fee: 0, disabled: true },
@@ -59,9 +60,13 @@ export default function WalletPage() {
   };
 
   const handleTopUp = async () => {
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
+
     const topUpAmount = Number(amount);
     if (!topUpAmount || topUpAmount <= 0) {
       toast.error('Please enter a valid amount');
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -73,9 +78,16 @@ export default function WalletPage() {
         paymentMethod
       });
 
+      const rzpKey = orderData?.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!rzpKey) {
+        toast.error('Payment gateway configuration is missing.');
+        setLoading(false);
+        return;
+      }
+
       // 2. Initialize Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
+        key: rzpKey,
         amount: orderData.amount * 100, // in paise
         currency: orderData.currency,
         name: 'TrippeChalo India Wallet',
@@ -99,6 +111,14 @@ export default function WalletPage() {
             fetchWallet(); // refresh balance
           } catch (err: any) {
             toast.error(err.response?.data?.message || 'Verification failed', { id: 'verify' });
+          } finally {
+            isSubmittingRef.current = false;
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            isSubmittingRef.current = false;
+            setLoading(false);
           }
         },
         prefill: {
@@ -113,11 +133,13 @@ export default function WalletPage() {
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
+        isSubmittingRef.current = false;
         toast.error(response.error.description || 'Payment failed');
       });
       rzp.open();
 
     } catch (err: any) {
+      isSubmittingRef.current = false;
       toast.error(err.response?.data?.message || 'Failed to initiate top-up');
     } finally {
       setLoading(false);
@@ -136,7 +158,7 @@ export default function WalletPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
       </div>
       
-      <div className="relative z-10 w-full pt-32 max-w-[1200px] mx-auto px-6">
+      <div className="relative z-10 w-full pt-32 max-w-7xl mx-auto px-6">
         
         <div className="text-white mb-8 flex items-center gap-4">
           <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center border border-blue-400/30">
@@ -148,10 +170,10 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left Column: Top Up */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-7 space-y-6">
             
             {/* Balance Card */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex justify-between items-center bg-[url('/pattern.png')] bg-cover">
@@ -267,16 +289,19 @@ export default function WalletPage() {
           </div>
 
           {/* Right Column: Transactions */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-5">
             <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 h-[500px] lg:h-full lg:max-h-[800px] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg font-black text-gray-900">Recent Transactions</h2>
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                <div>
+                  <h2 className="text-lg font-black text-gray-900">Recent Transactions</h2>
+                  <p className="text-xs text-gray-400 font-medium mt-0.5">Click any transaction to view full details</p>
+                </div>
                 <button 
                   onClick={() => fetchWallet()}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition"
                   title="Refresh Transactions"
                 >
-                  <RefreshCw size={14} className={pageLoading ? 'animate-spin text-blue-600' : ''} />
+                  <RefreshCw size={15} className={pageLoading ? 'animate-spin text-blue-600' : ''} />
                 </button>
               </div>
               
@@ -307,22 +332,43 @@ export default function WalletPage() {
                     <div 
                       key={idx} 
                       onClick={() => setSelectedTransaction(t)}
-                      className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer border border-transparent hover:border-gray-200"
+                      className="group p-3.5 bg-gray-50/80 hover:bg-blue-50/50 rounded-xl transition-all duration-200 cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-xs"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                          {t.type === 'CREDIT' ? '+' : '-'}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black text-sm mt-0.5 ${
+                            t.type === 'CREDIT' 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-rose-100 text-rose-700'
+                          }`}>
+                            {t.type === 'CREDIT' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-gray-900 leading-snug group-hover:text-blue-600 transition-colors break-words">
+                              {t.description || (t.type === 'CREDIT' ? 'Wallet Top-up' : 'Wallet Debit')}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                              <span className="text-[11px] text-gray-500 font-medium">
+                                {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} • {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {t.pnr && (
+                                <span className="text-[10px] font-bold bg-white text-gray-700 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
+                                  PNR: {t.pnr}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-sm text-gray-900 capitalize truncate max-w-[150px]">{t.description}</p>
-                          <p className="text-[10px] text-gray-500 font-medium">{new Date(t.date).toLocaleDateString()} • {new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        <div className="text-right shrink-0 pl-2">
+                          <p className={`font-black text-base whitespace-nowrap ${
+                            t.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
+                          }`}>
+                            {t.type === 'CREDIT' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                          </p>
+                          <span className="inline-block text-[10px] font-extrabold text-gray-500 bg-gray-200/60 px-1.5 py-0.5 rounded mt-1 uppercase">
+                            {t.paymentMethod || 'WALLET'}
+                          </span>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-black text-sm ${t.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
-                          {t.type === 'CREDIT' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
-                        </p>
-                        {t.paymentMethod && <p className="text-[9px] font-bold text-gray-400 uppercase">{t.paymentMethod}</p>}
                       </div>
                     </div>
                   ))
@@ -334,66 +380,117 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* Transaction Details Modal */}
+      {/* Modern Transaction Details Modal */}
       {selectedTransaction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <h3 className="font-black text-xl text-gray-900">Transaction Details</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedTransaction.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                  {selectedTransaction.type === 'CREDIT' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                </div>
+                <h3 className="font-black text-lg text-gray-900">Transaction Details</h3>
+              </div>
               <button 
                 onClick={() => setSelectedTransaction(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 transition"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
             
-            <div className="p-6 space-y-5">
-              <div className="flex justify-center mb-6">
-                <div className="text-center">
-                  <p className="text-sm font-bold text-gray-500 mb-1 uppercase tracking-wider">{selectedTransaction.type === 'CREDIT' ? 'Amount Added' : 'Amount Deducted'}</p>
-                  <p className={`text-4xl font-black ${selectedTransaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
-                    {selectedTransaction.type === 'CREDIT' ? '+' : '-'}₹{selectedTransaction.amount.toLocaleString('en-IN')}
-                  </p>
-                  <p className="text-xs text-gray-400 font-bold mt-2">
-                    {new Date(selectedTransaction.date).toLocaleDateString()} at {new Date(selectedTransaction.date).toLocaleTimeString()}
-                  </p>
-                </div>
+            <div className="p-6 space-y-6">
+              {/* Highlight Amount Banner */}
+              <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 text-center">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-2 ${
+                  selectedTransaction.type === 'CREDIT' 
+                    ? 'bg-emerald-100 text-emerald-800' 
+                    : 'bg-rose-100 text-rose-800'
+                }`}>
+                  {selectedTransaction.type === 'CREDIT' ? 'Funds Credited' : 'Funds Debited'}
+                </span>
+                <p className={`text-4xl font-black ${selectedTransaction.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {selectedTransaction.type === 'CREDIT' ? '+' : '-'}₹{selectedTransaction.amount.toLocaleString('en-IN')}
+                </p>
+                <p className="text-xs text-gray-500 font-semibold mt-2">
+                  {new Date(selectedTransaction.date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })} at {new Date(selectedTransaction.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </p>
               </div>
 
-              <div className="space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-gray-500">Description</span>
-                  <span className="text-sm font-bold text-gray-900 text-right max-w-[200px]">{selectedTransaction.description}</span>
+              {/* Detail Rows */}
+              <div className="divide-y divide-gray-100 text-sm">
+                <div className="py-3 flex justify-between items-start gap-4">
+                  <span className="text-gray-500 font-medium shrink-0">Description</span>
+                  <span className="font-bold text-gray-900 text-right break-words">{selectedTransaction.description}</span>
                 </div>
                 
-                {selectedTransaction.paymentMethod && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-gray-500">Method</span>
-                    <span className="text-sm font-bold text-gray-900 uppercase">{selectedTransaction.paymentMethod}</span>
+                <div className="py-3 flex justify-between items-center gap-4">
+                  <span className="text-gray-500 font-medium shrink-0">Payment Mode</span>
+                  <span className="font-bold text-gray-900 uppercase bg-gray-100 px-2 py-0.5 rounded text-xs">
+                    {selectedTransaction.paymentMethod || 'WALLET'}
+                  </span>
+                </div>
+
+                {selectedTransaction.pnr && (
+                  <div className="py-3 flex justify-between items-center gap-4">
+                    <span className="text-gray-500 font-medium shrink-0">Flight PNR</span>
+                    <span className="font-black text-blue-600 uppercase tracking-wider font-mono bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                      {selectedTransaction.pnr}
+                    </span>
+                  </div>
+                )}
+
+                {selectedTransaction.referenceNo && (
+                  <div className="py-3 flex justify-between items-center gap-4">
+                    <span className="text-gray-500 font-medium shrink-0">Booking Reference</span>
+                    <span className="font-mono text-xs font-bold text-gray-800 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                      {selectedTransaction.referenceNo}
+                    </span>
                   </div>
                 )}
 
                 {selectedTransaction.surcharge > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-gray-500">Convenience Fee Paid</span>
-                    <span className="text-sm font-bold text-gray-900">₹{selectedTransaction.surcharge}</span>
+                  <div className="py-3 flex justify-between items-center gap-4">
+                    <span className="text-gray-500 font-medium shrink-0">Convenience Fee</span>
+                    <span className="font-bold text-gray-900">₹{selectedTransaction.surcharge}</span>
                   </div>
                 )}
                 
                 {selectedTransaction.razorpayPaymentId && (
-                  <div className="flex justify-between pt-3 border-t border-gray-200">
-                    <span className="text-sm font-bold text-gray-500">Transaction ID</span>
-                    <span className="text-sm font-bold text-gray-900 font-mono text-xs">{selectedTransaction.razorpayPaymentId}</span>
+                  <div className="py-3 flex justify-between items-center gap-4">
+                    <span className="text-gray-500 font-medium shrink-0">Payment ID</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-xs font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded">
+                        {selectedTransaction.razorpayPaymentId}
+                      </span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedTransaction.razorpayPaymentId);
+                          toast.success('Copied Payment ID');
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-700 transition"
+                        title="Copy Payment ID"
+                      >
+                        <Copy size={13} />
+                      </button>
+                    </div>
                   </div>
                 )}
+
+                <div className="py-3 flex justify-between items-center gap-4">
+                  <span className="text-gray-500 font-medium shrink-0">Status</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    <CheckCircle2 size={13} /> Successful
+                  </span>
+                </div>
               </div>
             </div>
             
             <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
               <button 
                 onClick={() => setSelectedTransaction(null)}
-                className="px-6 py-2 bg-[#0b1031] text-white font-bold rounded-lg hover:bg-blue-900 transition"
+                className="px-6 py-2.5 bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm rounded-xl transition shadow-sm"
               >
                 Close
               </button>

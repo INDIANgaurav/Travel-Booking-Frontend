@@ -8,6 +8,7 @@ const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
   withCredentials: true,
+  timeout: 25000, // 25s timeout for mobile networks to prevent hanging UI
 });
 
 let currentToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -107,6 +108,17 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Surface rate-limit errors visibly across all login/signup portals
+    if (error.response && error.response.status === 429) {
+      const rateLimitMsg =
+        error.response.data?.message ||
+        'Too many attempts. Please wait a few minutes and try again.';
+      toast.error(rateLimitMsg, {
+        id: 'rate-limit-toast',
+        duration: 5000,
+      });
+    }
 
     // Check if error is 401
     if (error.response && error.response.status === 401) {

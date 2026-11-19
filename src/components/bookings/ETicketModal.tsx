@@ -20,16 +20,47 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
     const element = componentRef.current;
     if (!element) return;
     
-    const toastId = toast.loading(`Generating ${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF...`);
+    const toastId = toast.loading(`Generating A4 ${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF...`);
     
     try {
-      const canvas = await htmlToImage.toCanvas(element, { pixelRatio: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const dataUrl = await htmlToImage.toPng(element, {
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        style: {
+          margin: '0',
+          transform: 'none',
+          left: '0',
+          top: '0',
+          position: 'static'
+        }
+      });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 8;
+      const maxW = pageWidth - (margin * 2);
+      const maxH = pageHeight - (margin * 2);
+
+      const widthScale = maxW / img.width;
+      const heightScale = maxH / img.height;
+      const scale = Math.min(widthScale, heightScale);
+      
+      const imgWidth = img.width * scale;
+      const imgHeight = img.height * scale;
+      const xPos = (pageWidth - imgWidth) / 2;
+      const yPos = margin;
+      
+      pdf.addImage(dataUrl, 'PNG', xPos, yPos, imgWidth, imgHeight, undefined, 'FAST');
       pdf.save(`${type === 'ticket' ? 'Ticket' : 'Invoice'}_${booking?.bookingId}.pdf`);
       
       toast.success(`${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF downloaded successfully!`, { id: toastId });
@@ -177,14 +208,16 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-100 flex justify-center w-full">
           
           {/* Printable Area */}
-          <div ref={componentRef} className="bg-white w-full max-w-[820px] shadow-sm border border-gray-300 p-6 md:p-8 text-black font-sans box-border my-auto">
+          <div ref={componentRef} className="bg-white w-full max-w-[840px] shadow-2xl border-2 border-slate-300 rounded-xl p-6 md:p-8 text-black font-sans box-border my-auto relative overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 -mx-6 -mt-6 md:-mx-8 md:-mt-8 mb-6"></div>
             
-            {/* Ticket/Invoice Header */}
-            <div className="text-center mb-6">
-              <h1 className="text-lg font-bold tracking-widest uppercase">
-                {viewType === 'ticket' ? 'E-Ticket / Reservation Voucher' : 'TAX INVOICE'}
+            {/* Ticket/Invoice Header with Logo */}
+            <div className="flex flex-col items-center justify-center text-center mb-6">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-10 md:h-12 object-contain mb-2" />
+              <h1 className="text-sm md:text-base font-black tracking-widest uppercase text-slate-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded">
+                {viewType === 'ticket' ? 'E-Ticket / Reservation Voucher' : 'TAX INVOICE / RECEIPT'}
               </h1>
-              <div className="border-b border-gray-300 w-full mt-2"></div>
+              <div className="border-b border-gray-200 w-full mt-4"></div>
             </div>
 
             {viewType === 'invoice' ? (
@@ -517,11 +550,19 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
             </>
             )}
 
-            <div className="text-[10px] text-gray-500 mt-4 text-center">
-              <p className="font-bold mb-1">IMPORTANT INFORMATION</p>
+            <div className="text-[10px] text-gray-500 mt-6 pt-4 border-t border-gray-200 text-center space-y-1">
+              <p className="font-bold text-[11px] text-slate-800 mb-1">IMPORTANT INFORMATION</p>
               <p>1. This is an E-Ticket. A boarding pass will be issued after Web Check-in on the airline's website.</p>
               <p>2. Passengers must carry a valid photo ID and this E-Ticket to enter the airport.</p>
               <p>3. Web Check-in usually opens 48 hours prior to the scheduled departure time.</p>
+            </div>
+
+            <div className="mt-6 pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-[10px] text-gray-500 gap-2">
+              <div className="flex items-center gap-1.5">
+                <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-5 object-contain" />
+                <span>© {new Date().getFullYear()} TrippeChalo India Pvt. Ltd.</span>
+              </div>
+              <span className="font-bold text-blue-600">www.trippechalo.com</span>
             </div>
             
           </div>

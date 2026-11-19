@@ -157,20 +157,27 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
       </div>
 
       {booking.type === 'HOTEL' ? (
-        <div className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-lg border border-gray-200 print:shadow-none print:border-none print:p-0 rounded-2xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-4 gap-4">
+        <div className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-xl border-2 border-slate-300 rounded-2xl print:shadow-none print:border print:border-slate-400 print:p-6 print:rounded-none mx-auto relative overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 -mx-6 -mt-6 md:-mx-10 md:-mt-10 mb-6 print:hidden"></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b-2 border-blue-500 pb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-blue-600 mb-4">Hotel Booking Voucher</h1>
+              <div className="inline-block bg-blue-50 text-blue-800 text-[11px] font-black uppercase px-2.5 py-1 rounded tracking-wider border border-blue-200 mb-2">HOTEL BOOKING VOUCHER</div>
+              <h1 className="text-2xl font-black text-slate-900 mb-2">{booking.details?.hotelName || 'Hotel Booking'}</h1>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>Booking Ref: <span className="font-bold text-gray-900">{booking.bookingId}</span></p>
-                <p>Booking Date: {new Date(booking.createdAt).toLocaleDateString()}</p>
-                <p>Status: <span className="font-bold text-green-600">{booking.status}</span></p>
+                <p>Booking Date: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                <p>Status: <span className="font-bold text-green-600 uppercase bg-green-50 px-2 py-0.5 rounded border border-green-200 text-xs">{booking.status}</span></p>
               </div>
             </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center justify-end gap-1">
-                Trippe<span className="text-blue-500">Chalo</span> <span className="text-xs bg-orange-500 text-white font-black px-1.5 py-0.5 rounded tracking-wide ml-1">INDIA</span>
-              </h2>
+            <div className="flex flex-col items-start md:items-end text-left md:text-right">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-10 md:h-12 object-contain mb-2" />
+              <div className="text-[11px] text-gray-600">
+                <p className="font-black text-gray-900 uppercase text-[12px]">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
+                <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, UP - 201304'}</p>
+                <p className="font-bold text-gray-800 mt-0.5">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+                <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'} | Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
+              </div>
             </div>
           </div>
 
@@ -215,94 +222,189 @@ export default function FlightInvoice({ bookingId, isModal }: { bookingId?: stri
             </div>
           </div>
           
-          <div className="text-[10px] text-gray-500 mt-8 pt-4 border-t border-gray-200 text-center">
-            <p>Please present this voucher along with a valid photo ID at the time of check-in.</p>
+          <div className="mt-8 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-6 object-contain" />
+              <span>© {new Date().getFullYear()} TrippeChalo India Private Limited. All rights reserved.</span>
+            </div>
+            <span className="font-semibold text-blue-600">www.trippechalo.com</span>
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-4xl bg-white p-6 md:p-8 shadow-lg print:shadow-none print:p-0 rounded-sm text-black mx-auto">
-          <div className="flex justify-between mb-4 text-[13px] gap-2 md:gap-6">
-            <div className="w-1/2">
-              <p className="font-bold text-lg mb-4 tracking-widest">{airlineName}</p>
+        <div className="w-full max-w-4xl bg-white p-6 md:p-10 shadow-xl border-2 border-slate-300 rounded-2xl print:shadow-none print:border print:border-slate-400 print:p-6 print:rounded-none text-black mx-auto relative overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 -mx-6 -mt-6 md:-mx-10 md:-mt-10 mb-6 print:hidden"></div>
+
+          {/* Top Header with Logo and Company Info */}
+          <div className="flex flex-col md:flex-row justify-between items-start mb-6 text-[13px] gap-6 border-b border-gray-200 pb-6">
+            <div className="w-full md:w-1/2">
+              <div className="inline-block bg-blue-50 text-blue-800 text-[11px] font-black uppercase px-2.5 py-1 rounded tracking-wider border border-blue-200 mb-2">
+                TAX INVOICE / RECEIPT
+              </div>
+              <p className="font-black text-xl md:text-2xl mb-3 tracking-wide text-slate-900">{airlineName}</p>
               
-              <div className="flex flex-col space-y-2 md:space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-col gap-2 md:gap-3 text-xs">
                 <div>
-                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Agency Booking ID</p>
-                  <p className="font-bold">{agentRef}</p>
+                  <p className="text-gray-500 mb-0.5 text-[10px] uppercase font-bold tracking-wider">Agency Booking ID</p>
+                  <p className="font-mono font-bold text-slate-900 text-[11px] break-all">{agentRef}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Booking Reference</p>
-                  <p className="font-bold text-[12px] md:text-lg">{displayPnr}</p>
+                  <p className="text-gray-500 mb-0.5 text-[10px] uppercase font-bold tracking-wider">Booking Reference / PNR</p>
+                  <p className="font-mono font-black text-blue-700 text-sm md:text-base tracking-widest">{displayPnr}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 mb-0.5 text-[9px] md:text-[11px] uppercase tracking-wider">Issue Date</p>
-                  <p className="font-bold">{dateStr}</p>
+                  <p className="text-gray-500 mb-0.5 text-[10px] uppercase font-bold tracking-wider">Invoice Date</p>
+                  <p className="font-bold text-slate-800">{dateStr}</p>
                 </div>
               </div>
             </div>
-            <div className="w-1/2 flex flex-col items-end text-right">
-              <div className="text-[11px] text-gray-700">
-                <p className="font-bold text-gray-900 mb-1 uppercase text-[12px]">{platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}</p>
-                <p>{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
-                <p className="font-bold mt-1">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
+
+            <div className="w-full md:w-1/2 flex flex-col items-start md:items-end text-left md:text-right">
+              {/* Company Logo */}
+              <img 
+                src="/trippechalo-logo.png" 
+                alt="TrippeChalo India" 
+                className="h-10 md:h-12 object-contain mb-2" 
+              />
+              <div className="text-[11px] text-gray-600 space-y-0.5">
+                <p className="font-black text-gray-900 uppercase text-[12px] tracking-tight">
+                  {platformInfo?.companyName || 'TRIPPECHALO INDIA PRIVATE LIMITED'}
+                </p>
+                <p className="max-w-xs">{platformInfo?.officeAddress || 'First Floor, D 42, Greater Noida Expressway, Sector 108, Noida, Uttar Pradesh - 201304'}</p>
+                <p className="font-bold text-gray-900 pt-0.5">GSTIN: {platformInfo?.gstn || '09AAMCT8505A1ZB'}</p>
                 <p>Phone: +91 {platformInfo?.officePhone || '95559 34205'}</p>
                 <p>Email: {platformInfo?.email || 'trippechaloindia@gmail.com'}</p>
               </div>
             </div>
           </div>
-          
 
-          <div className="border-t border-dashed border-gray-300 my-6"></div>
-
-          {/* Customer & Booked By */}
-          <div className="flex flex-row justify-between text-[11px] mb-6 gap-4">
+          {/* Customer & Booked By Card */}
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 flex flex-row justify-between text-xs gap-4">
             <div className="w-1/2">
-              <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Customer Name</p>
-              <p className="font-bold text-[13px]">{passengers[0]?.name || booking.user?.name}</p>
+              <p className="text-gray-500 mb-0.5 text-[10px] uppercase font-bold tracking-wider">Billed To (Customer)</p>
+              <p className="font-black text-sm text-slate-900 uppercase">{passengers[0]?.name || booking.user?.name}</p>
+              {booking.details?.contactDetails?.email && (
+                <p className="text-gray-600 text-[11px] mt-0.5">{booking.details.contactDetails.email}</p>
+              )}
+              {booking.details?.contactDetails?.phone && (
+                <p className="text-gray-600 text-[11px]">+91 {booking.details.contactDetails.phone}</p>
+              )}
             </div>
             <div className="w-1/2 text-right">
-              <p className="text-gray-500 mb-0.5 uppercase tracking-wider">Booked By</p>
-              <p className="font-bold text-[13px]">{booking.user?.name || 'Agent'}</p>
+              <p className="text-gray-500 mb-0.5 text-[10px] uppercase font-bold tracking-wider">Booked By / Channel</p>
+              <p className="font-bold text-sm text-slate-900">{booking.user?.name || 'Authorized Agent'}</p>
+              <p className="text-[11px] text-gray-600 mt-0.5">Status: <span className={`font-bold px-2 py-0.5 rounded border uppercase text-[10px] ${
+                booking.status === 'CANCELLED'
+                  ? 'text-rose-700 bg-rose-50 border-rose-200'
+                  : booking.status === 'CONFIRMED'
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : 'text-amber-700 bg-amber-50 border-amber-200'
+              }`}>{booking.status}</span></p>
             </div>
           </div>
 
-          {/* Flight Table */}
-          <div className="border border-black rounded-[4px] overflow-hidden mb-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 border-b border-black bg-white gap-2">
-              <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({travelDateStr.toUpperCase()})</p>
-              <p className="text-[12px] text-gray-700">{flightNo}</p>
+          {/* Flight Details Table */}
+          <div className="border border-slate-300 rounded-lg overflow-hidden mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-4 py-2.5 bg-slate-800 text-white gap-2">
+              <p className="font-black text-xs md:text-sm tracking-wide uppercase">{originCode} ➔ {destCode} ({travelDateStr.toUpperCase()})</p>
+              <p className="text-xs text-slate-200 font-mono font-semibold">{flightNo}</p>
             </div>
-            <div className="w-full">
-              <table className="w-full text-left text-[9px] md:text-[11px]">
-                <thead className="bg-white border-b border-gray-200">
-                <tr>
-                  <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
-                  <th className="px-3 py-2 font-normal text-gray-600 w-1/4">PNR</th>
-                  <th className="px-3 py-2 font-normal text-gray-600 w-1/6">Seat No.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {passengers.map((pax: any, i: number) => {
-                  const paxConfirmation = nexusData?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
-                  const tktNo = paxConfirmation?.pnr || pax.airlinepnr || pax.pnr || displayPnr;
-                  return (
-                    <tr key={i}>
-                      <td className="px-3 py-3 font-bold text-[13px]">{pax.name || pax.firstName + ' ' + pax.lastName}</td>
-                      <td className="px-3 py-3 text-gray-600">{tktNo}</td>
-                      <td className="px-3 py-3 text-gray-600 font-bold">{booking.details?.seats?.[i] || pax.seat || 'Unassigned'}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
+                  <tr>
+                    <th className="px-4 py-2.5 w-1/3">Passenger Name(s)</th>
+                    <th className="px-4 py-2.5 w-1/4">PNR</th>
+                    <th className="px-4 py-2.5 w-1/4">Seat No.</th>
+                    <th className="px-4 py-2.5 w-1/6 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {passengers.map((pax: any, i: number) => {
+                    const paxConfirmation = nexusData?.booking_items?.[0]?.confirmations?.find((c: any) => c.pax_id === pax.id || c.pax_id === i);
+                    const tktNo = paxConfirmation?.pnr || pax.airlinepnr || pax.pnr || displayPnr;
+                    return (
+                      <tr key={i} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3 font-bold text-slate-900 uppercase">{pax.name || pax.firstName + ' ' + (pax.lastName || '')}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-blue-700">{tktNo}</td>
+                        <td className="px-4 py-3 text-slate-700 font-medium">{booking.details?.seats?.[i] || pax.seat || 'Assigned at Check-in'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
+                            booking.status === 'CANCELLED'
+                              ? 'text-rose-700 bg-rose-50 border-rose-200'
+                              : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                          }`}>
+                            {booking.status === 'CANCELLED' ? 'CANCELLED' : 'CONFIRMED'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
             </div>
           </div>
 
-          <div className="text-[10px] text-gray-500 mt-12 text-center space-y-1">
-            <p className="font-bold text-[11px] mb-2">IMPORTANT INFORMATION</p>
-            <p>1. This is an E-Ticket. A boarding pass will be issued after Web Check-in on the airline's website.</p>
-            <p>2. Passengers must carry a valid photo ID and this E-Ticket to enter the airport.</p>
-            <p>3. Web Check-in usually opens 48 hours prior to the scheduled departure time.</p>
+          {/* Payment & Fare Breakdown */}
+          <div className="mb-6">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Payment & Fare Summary</h3>
+            <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+              <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
+                <tr>
+                  <th className="p-3">Description</th>
+                  <th className="p-3 text-right">Amount (INR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr>
+                  <td className="p-3 text-slate-700">Flight Base Fare</td>
+                  <td className="p-3 text-right font-medium text-slate-900">₹ {(Number(booking.totalAmount) * 0.72).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                </tr>
+                <tr>
+                  <td className="p-3 text-slate-700">Airline Taxes, Fuel & Regulatory Fees (UDF / PSF / GST)</td>
+                  <td className="p-3 text-right font-medium text-slate-900">₹ {(Number(booking.totalAmount) * 0.28).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                </tr>
+                {booking.discountAmount > 0 && (
+                  <tr className="text-green-700 bg-green-50/50">
+                    <td className="p-3 font-medium">Promo Discount Applied ({booking.promoCodeApplied || 'PROMO'})</td>
+                    <td className="p-3 text-right font-bold">- ₹ {Number(booking.discountAmount).toLocaleString('en-IN')}</td>
+                  </tr>
+                )}
+                <tr className="bg-slate-50 font-black text-slate-900 border-t-2 border-slate-300">
+                  <td className="p-3.5 text-sm uppercase">Total Amount Paid</td>
+                  <td className="p-3.5 text-right text-base text-blue-700">₹ {Number(booking.totalAmount).toLocaleString('en-IN')}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div className="mt-2.5 flex flex-wrap justify-between items-center text-xs text-gray-500 gap-2 px-1">
+              <span>Payment Mode: <strong className="text-slate-800">{booking.paymentMethod || 'Online (Razorpay)'}</strong></span>
+              {booking.status === 'CANCELLED' ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded text-[11px]">
+                  ✕ Payment Status: CANCELLED {booking.refundAmount ? `(REFUND ₹${booking.refundAmount.toLocaleString('en-IN')})` : ''}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded text-[11px]">
+                  ✓ Payment Status: {booking.status === 'CONFIRMED' ? 'PAID IN FULL' : booking.status}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Important Information & Footer */}
+          <div className="text-[10px] text-gray-500 mt-6 pt-4 border-t border-gray-200 space-y-1">
+            <p className="font-bold text-[11px] text-slate-800 mb-1.5 uppercase">Important Information</p>
+            <p>1. This is an electronic invoice and confirmed booking receipt issued by TrippeChalo India Private Limited.</p>
+            <p>2. A boarding pass must be generated during Airline Web Check-in prior to airport arrival.</p>
+            <p>3. Please carry a valid government-issued photo ID (Aadhaar / Passport / Driving License) for airport entry.</p>
+          </div>
+
+          {/* Brand Footer with Logo */}
+          <div className="mt-8 pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/trippechalo-logo.png" alt="TrippeChalo India" className="h-6 object-contain" />
+              <span>© {new Date().getFullYear()} TrippeChalo India Private Limited. All rights reserved.</span>
+            </div>
+            <span className="font-bold text-blue-600">support@trippechalo.com | www.trippechalo.com</span>
           </div>
         </div>
       )}

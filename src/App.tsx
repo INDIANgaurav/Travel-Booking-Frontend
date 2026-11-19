@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { useEffect } from 'react'
-import {  selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout, logoutUserThunk, updateToken } from './store/authSlice'
+import { useEffect, Suspense, lazy } from 'react'
+import {  selectIsAuthenticated, selectCurrentUser, selectShowAgentOnboarding, logout, logoutUserThunk, updateToken, updateProfileData } from './store/authSlice'
 
-// Pages
+// Core Public Pages & Layouts (Fast Initial Load)
 import LandingPage from './pages/public/LandingPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import FlightTicket from './pages/dashboard/user/FlightTicket'
@@ -12,6 +12,8 @@ import PlaceholderPage from './pages/dashboard/user/PlaceholderPage'
 import SearchResultsPage from './pages/dashboard/user/SearchResultsPage'
 import GlobalMobileBottomNav from './components/layout/GlobalMobileBottomNav'
 import NetworkStatus from './components/common/NetworkStatus'
+import Loader from './components/common/Loader'
+import ErrorBoundary from './components/common/ErrorBoundary'
 
 import BookingsPage from './pages/dashboard/user/BookingsPage'
 import ProfilePage from './pages/dashboard/user/ProfilePage'
@@ -32,97 +34,104 @@ import FeatureComingSoonPage from './pages/public/FeatureComingSoonPage'
 import InactiveAccountPage from './pages/public/InactiveAccountPage'
 import AgentSignUpPage from './pages/public/AgentSignUpPage'
 import RetailAgentLoginPage from './pages/public/RetailAgentLoginPage'
-import B2BAgentHomePage from './pages/public/B2BAgentHomePage'
-import B2BAgentCheckout from './pages/public/B2BAgentCheckout'
 import DynamicPageViewer from './pages/public/DynamicPageViewer'
-import B2BDocsPage from './pages/public/B2BDocsPage'
-import B2BAgentDashboard from './pages/public/B2BAgentDashboard'
-import B2BBankDetails from './pages/public/B2BBankDetails'
-import B2BWalletPage from './pages/public/B2BWalletPage'
-import B2BPaxCalendar from './pages/public/B2BPaxCalendar'
-import B2BInvoice from './pages/public/B2BInvoice'
-import B2BCreditNote from './pages/public/B2BCreditNote'
-import B2BDebitNote from './pages/public/B2BDebitNote'
-import B2BGstInvoice from './pages/public/B2BGstInvoice'
-import B2BOfflineBooking from './pages/public/B2BOfflineBooking'
-import B2BMarkup from './pages/public/B2BMarkup'
-import B2BAccountStatement from './pages/public/B2BAccountStatement'
-import B2BBookingStatus from './pages/public/B2BBookingStatus'
-import B2BManageBooking from './pages/public/B2BManageBooking'
+
+// Layouts
 import B2BDashboardLayout from './layouts/B2BDashboardLayout'
-import SupplierLoginPage from './pages/public/SupplierLoginPage'
 import SupplierDashboardLayout from './layouts/SupplierDashboardLayout'
-import SupplierDashboard from './pages/supplier/SupplierDashboard'
-import SupplierPromoCodes from './pages/dashboard/supplier/marketing/SupplierPromoCodes'
-import SeriesFareManager from './pages/supplier/SeriesFareManager'
-import SupplierUserManagement from './pages/supplier/SupplierUserManagement'
-import SupplierBookingHistory from './pages/supplier/SupplierBookingHistory'
-import SupplierQueueHistory from './pages/supplier/SupplierQueueHistory'
-
 import AdminLayout from './layouts/AdminLayout'
-import AdminLoginPage from './pages/public/AdminLoginPage'
-import AdminDashboard from './pages/dashboard/admin/AdminDashboard'
-import AdminPendingUsers from './pages/dashboard/admin/AdminPendingUsers'
-import AdminManageUsers from './pages/dashboard/admin/AdminManageUsers'
-import AdminUsers from './pages/dashboard/admin/AdminUsers'
-import AdminPendingQueue from './pages/dashboard/admin/AdminPendingQueue'
-import AdminBookings from './pages/dashboard/admin/AdminBookings'
-import AdminProfile from './pages/dashboard/admin/AdminProfile'
-import AdminFinance from './pages/dashboard/admin/AdminFinance'
-import AdminLedger from './pages/dashboard/admin/AdminLedger'
-import SupplierManagement from './pages/dashboard/admin/SupplierManagement'
-import CugSuppliersManager from './pages/dashboard/admin/CugSuppliersManager'
-import AdminInventory from './pages/dashboard/admin/AdminInventory'
-import AdminSubAdmins from './pages/dashboard/admin/AdminSubAdmins'
-import AdminB2BPartners from './pages/dashboard/admin/AdminB2BPartners'
-import AdminRoleMaster from './pages/dashboard/admin/settings/AdminRoleMaster'
-import AdminPGMapping from './pages/dashboard/admin/settings/AdminPGMapping'
-import AdminDynamicPages from './pages/dashboard/admin/settings/AdminDynamicPages'
-import AdminGeneralSettings from './pages/dashboard/admin/settings/AdminGeneralSettings'
-import AdminNotifications from './pages/dashboard/admin/AdminNotifications'
-import AdminB2BRequests from './pages/dashboard/admin/AdminB2BRequests'
-import AdminGroupBookings from './pages/dashboard/admin/AdminGroupBookings'
-import AdminUserProfile from './pages/dashboard/admin/AdminUserProfile'
-import AdminFDMaker from './pages/dashboard/admin/AdminFDMaker'
-import AdminFDReport from './pages/dashboard/admin/AdminFDReport'
-import AdminFDArchive from './pages/dashboard/admin/AdminFDArchive'
-import AdminFDSlowMovingSector from './pages/dashboard/admin/AdminFDSlowMovingSector'
-import AdminPromoCodes from './pages/dashboard/admin/marketing/AdminPromoCodes'
-import AdminFestiveBanners from './pages/dashboard/admin/marketing/AdminFestiveBanners'
-import AdminAnnouncements from './pages/dashboard/admin/settings/AdminAnnouncements'
-import AdminOfflineTopUps from './pages/dashboard/admin/AdminOfflineTopUps'
-import AdminWithdrawals from './pages/dashboard/admin/AdminWithdrawals'
-import AdminCommissionList from './pages/dashboard/admin/commissions/AdminCommissionList'
-import AdminCommissionAdd from './pages/dashboard/admin/commissions/AdminCommissionAdd'
-import AdminCommissionGroups from './pages/dashboard/admin/commissions/AdminCommissionGroups'
-import AdminBankAccounts from './pages/dashboard/admin/treasury/AdminBankAccounts'
-import AdminRecordPayment from './pages/dashboard/admin/treasury/AdminRecordPayment'
-import AdminSettlementQueue from './pages/dashboard/admin/treasury/AdminSettlementQueue'
-import AdminInvoiceCenter from './pages/dashboard/admin/treasury/AdminInvoiceCenter'
-import AdminFlightSalesReport from './pages/dashboard/admin/reports/AdminFlightSalesReport'
-import AdminDebitNoteReport from './pages/dashboard/admin/reports/AdminDebitNoteReport'
-import AdminCreditNoteReport from './pages/dashboard/admin/reports/AdminCreditNoteReport'
-import AdminCancellationHistory from './pages/dashboard/admin/reports/AdminCancellationHistory'
-import AdminHotelCancellations from './pages/dashboard/admin/reports/AdminHotelCancellations'
-import AdminPGReport from './pages/dashboard/admin/reports/AdminPGReport'
-import AdminAgentOutstanding from './pages/dashboard/admin/reports/AdminAgentOutstanding'
-import AdminAgentActivation from './pages/dashboard/admin/reports/AdminAgentActivation'
-import AdminSupplierMapping from './pages/dashboard/admin/reports/AdminSupplierMapping'
-import AdminFareQuoteReport from './pages/dashboard/admin/reports/AdminFareQuoteReport'
-import AdminPassengerCalendar from './pages/dashboard/admin/reports/AdminPassengerCalendar'
-import AgentAnalytics from './pages/dashboard/admin/AgentAnalytics'
-import CancellationsManager from './pages/dashboard/admin/CancellationsManager'
-import SubAdminDashboard from './pages/dashboard/subadmin/SubAdminDashboard'
-
 import SubAdminLayout from './layouts/SubAdminLayout'
 import AgentLayout from './layouts/AgentLayout'
-import AgentDashboard from './pages/dashboard/agent/AgentDashboard'
-import AgentGroupBookings from './pages/dashboard/agent/AgentGroupBookings'
-import ManageGroupBooking from './pages/dashboard/agent/ManageGroupBooking'
+
+// Lazy-Loaded B2B Agent Modules
+const B2BAgentHomePage = lazy(() => import('./pages/public/B2BAgentHomePage'))
+const B2BAgentCheckout = lazy(() => import('./pages/public/B2BAgentCheckout'))
+const B2BDocsPage = lazy(() => import('./pages/public/B2BDocsPage'))
+const B2BAgentDashboard = lazy(() => import('./pages/public/B2BAgentDashboard'))
+const B2BBankDetails = lazy(() => import('./pages/public/B2BBankDetails'))
+const B2BWalletPage = lazy(() => import('./pages/public/B2BWalletPage'))
+const B2BPaxCalendar = lazy(() => import('./pages/public/B2BPaxCalendar'))
+const B2BInvoice = lazy(() => import('./pages/public/B2BInvoice'))
+const B2BCreditNote = lazy(() => import('./pages/public/B2BCreditNote'))
+const B2BDebitNote = lazy(() => import('./pages/public/B2BDebitNote'))
+const B2BGstInvoice = lazy(() => import('./pages/public/B2BGstInvoice'))
+const B2BOfflineBooking = lazy(() => import('./pages/public/B2BOfflineBooking'))
+const B2BMarkup = lazy(() => import('./pages/public/B2BMarkup'))
+const B2BAccountStatement = lazy(() => import('./pages/public/B2BAccountStatement'))
+const B2BBookingStatus = lazy(() => import('./pages/public/B2BBookingStatus'))
+const B2BManageBooking = lazy(() => import('./pages/public/B2BManageBooking'))
+const AgentDashboard = lazy(() => import('./pages/dashboard/agent/AgentDashboard'))
+const AgentGroupBookings = lazy(() => import('./pages/dashboard/agent/AgentGroupBookings'))
+const ManageGroupBooking = lazy(() => import('./pages/dashboard/agent/ManageGroupBooking'))
+
+// Lazy-Loaded Supplier Portal Modules
+const SupplierLoginPage = lazy(() => import('./pages/public/SupplierLoginPage'))
+const SupplierDashboard = lazy(() => import('./pages/supplier/SupplierDashboard'))
+const SupplierPromoCodes = lazy(() => import('./pages/dashboard/supplier/marketing/SupplierPromoCodes'))
+const SeriesFareManager = lazy(() => import('./pages/supplier/SeriesFareManager'))
+const SupplierUserManagement = lazy(() => import('./pages/supplier/SupplierUserManagement'))
+const SupplierBookingHistory = lazy(() => import('./pages/supplier/SupplierBookingHistory'))
+const SupplierQueueHistory = lazy(() => import('./pages/supplier/SupplierQueueHistory'))
+
+// Lazy-Loaded Admin & Treasury Modules
+const AdminLoginPage = lazy(() => import('./pages/public/AdminLoginPage'))
+const AdminDashboard = lazy(() => import('./pages/dashboard/admin/AdminDashboard'))
+const AdminPendingUsers = lazy(() => import('./pages/dashboard/admin/AdminPendingUsers'))
+const AdminManageUsers = lazy(() => import('./pages/dashboard/admin/AdminManageUsers'))
+const AdminUsers = lazy(() => import('./pages/dashboard/admin/AdminUsers'))
+const AdminPendingQueue = lazy(() => import('./pages/dashboard/admin/AdminPendingQueue'))
+const AdminBookings = lazy(() => import('./pages/dashboard/admin/AdminBookings'))
+const AdminProfile = lazy(() => import('./pages/dashboard/admin/AdminProfile'))
+const AdminFinance = lazy(() => import('./pages/dashboard/admin/AdminFinance'))
+const AdminLedger = lazy(() => import('./pages/dashboard/admin/AdminLedger'))
+const SupplierManagement = lazy(() => import('./pages/dashboard/admin/SupplierManagement'))
+const CugSuppliersManager = lazy(() => import('./pages/dashboard/admin/CugSuppliersManager'))
+const AdminInventory = lazy(() => import('./pages/dashboard/admin/AdminInventory'))
+const AdminSubAdmins = lazy(() => import('./pages/dashboard/admin/AdminSubAdmins'))
+const AdminB2BPartners = lazy(() => import('./pages/dashboard/admin/AdminB2BPartners'))
+const AdminRoleMaster = lazy(() => import('./pages/dashboard/admin/settings/AdminRoleMaster'))
+const AdminPGMapping = lazy(() => import('./pages/dashboard/admin/settings/AdminPGMapping'))
+const AdminDynamicPages = lazy(() => import('./pages/dashboard/admin/settings/AdminDynamicPages'))
+const AdminGeneralSettings = lazy(() => import('./pages/dashboard/admin/settings/AdminGeneralSettings'))
+const AdminNotifications = lazy(() => import('./pages/dashboard/admin/AdminNotifications'))
+const AdminB2BRequests = lazy(() => import('./pages/dashboard/admin/AdminB2BRequests'))
+const AdminGroupBookings = lazy(() => import('./pages/dashboard/admin/AdminGroupBookings'))
+const AdminUserProfile = lazy(() => import('./pages/dashboard/admin/AdminUserProfile'))
+const AdminFDMaker = lazy(() => import('./pages/dashboard/admin/AdminFDMaker'))
+const AdminFDReport = lazy(() => import('./pages/dashboard/admin/AdminFDReport'))
+const AdminFDArchive = lazy(() => import('./pages/dashboard/admin/AdminFDArchive'))
+const AdminFDSlowMovingSector = lazy(() => import('./pages/dashboard/admin/AdminFDSlowMovingSector'))
+const AdminPromoCodes = lazy(() => import('./pages/dashboard/admin/marketing/AdminPromoCodes'))
+const AdminFestiveBanners = lazy(() => import('./pages/dashboard/admin/marketing/AdminFestiveBanners'))
+const AdminAnnouncements = lazy(() => import('./pages/dashboard/admin/settings/AdminAnnouncements'))
+const AdminOfflineTopUps = lazy(() => import('./pages/dashboard/admin/AdminOfflineTopUps'))
+const AdminWithdrawals = lazy(() => import('./pages/dashboard/admin/AdminWithdrawals'))
+const AdminCommissionList = lazy(() => import('./pages/dashboard/admin/commissions/AdminCommissionList'))
+const AdminCommissionAdd = lazy(() => import('./pages/dashboard/admin/commissions/AdminCommissionAdd'))
+const AdminCommissionGroups = lazy(() => import('./pages/dashboard/admin/commissions/AdminCommissionGroups'))
+const AdminBankAccounts = lazy(() => import('./pages/dashboard/admin/treasury/AdminBankAccounts'))
+const AdminRecordPayment = lazy(() => import('./pages/dashboard/admin/treasury/AdminRecordPayment'))
+const AdminSettlementQueue = lazy(() => import('./pages/dashboard/admin/treasury/AdminSettlementQueue'))
+const AdminInvoiceCenter = lazy(() => import('./pages/dashboard/admin/treasury/AdminInvoiceCenter'))
+const AdminFlightSalesReport = lazy(() => import('./pages/dashboard/admin/reports/AdminFlightSalesReport'))
+const AdminDebitNoteReport = lazy(() => import('./pages/dashboard/admin/reports/AdminDebitNoteReport'))
+const AdminCreditNoteReport = lazy(() => import('./pages/dashboard/admin/reports/AdminCreditNoteReport'))
+const AdminCancellationHistory = lazy(() => import('./pages/dashboard/admin/reports/AdminCancellationHistory'))
+const AdminHotelCancellations = lazy(() => import('./pages/dashboard/admin/reports/AdminHotelCancellations'))
+const AdminPGReport = lazy(() => import('./pages/dashboard/admin/reports/AdminPGReport'))
+const AdminAgentOutstanding = lazy(() => import('./pages/dashboard/admin/reports/AdminAgentOutstanding'))
+const AdminAgentActivation = lazy(() => import('./pages/dashboard/admin/reports/AdminAgentActivation'))
+const AdminSupplierMapping = lazy(() => import('./pages/dashboard/admin/reports/AdminSupplierMapping'))
+const AdminFareQuoteReport = lazy(() => import('./pages/dashboard/admin/reports/AdminFareQuoteReport'))
+const AdminPassengerCalendar = lazy(() => import('./pages/dashboard/admin/reports/AdminPassengerCalendar'))
+const AgentAnalytics = lazy(() => import('./pages/dashboard/admin/AgentAnalytics'))
+const CancellationsManager = lazy(() => import('./pages/dashboard/admin/CancellationsManager'))
+const SubAdminDashboard = lazy(() => import('./pages/dashboard/subadmin/SubAdminDashboard'))
+const Helpdesk = lazy(() => import('./pages/dashboard/common/Helpdesk'))
+const AdminHelpdesk = lazy(() => import('./pages/dashboard/admin/AdminHelpdesk'))
+
 import { Toaster } from 'react-hot-toast'
 import AgentOnboardingModal from './components/agent/AgentOnboardingModal'
-import Helpdesk from './pages/dashboard/common/Helpdesk'
-import AdminHelpdesk from './pages/dashboard/admin/AdminHelpdesk'
 import { ConfirmProvider } from './context/ConfirmContext'
 
 function App() {
@@ -150,16 +159,22 @@ function App() {
     };
   }, [dispatch]);
 
-  // Validate token on app load if authenticated
+  // Validate token on app load if authenticated and sync user profile/balance
   useEffect(() => {
     if (isAuthenticated) {
       import('./services/api').then(({ default: api }) => {
-        api.get('/api/users/profile').catch(() => {
-          // If it fails (e.g. 401), the interceptor will automatically trigger 'auth-unauthorized'
-        });
+        api.get('/api/users/profile')
+          .then((res) => {
+            if (res.data) {
+              dispatch(updateProfileData(res.data));
+            }
+          })
+          .catch(() => {
+            // If it fails (e.g. 401), the interceptor will automatically trigger 'auth-unauthorized'
+          });
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, dispatch]);
 
   const getRedirectPath = (roles: string[] = []) => {
     if (roles.includes('SUPER_ADMIN')) return '/admin';
@@ -227,6 +242,8 @@ function App() {
           }}
         />
       <AgentOnboardingModal isOpen={showAgentOnboarding} />
+      <ErrorBoundary>
+      <Suspense fallback={<Loader fullScreen />}>
       <Routes>
         {/* Partner Routes */}
         <Route path="/partner/connect" element={<PartnerConnect />} />
@@ -436,6 +453,8 @@ function App() {
           <Route path="invoice/:id" element={<FlightInvoice />} />
         </Route>
       </Routes>
+      </Suspense>
+      </ErrorBoundary>
       <GlobalMobileBottomNav />
       <NetworkStatus />
       </BrowserRouter>

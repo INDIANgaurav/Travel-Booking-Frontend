@@ -147,8 +147,15 @@ export default function HotelCheckout() {
         return;
       }
 
+      const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+      if (!rzpKey) {
+        toast.error("Payment gateway configuration is missing.");
+        setLoading(false);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TAetNo496ol1Iz',
+        key: rzpKey,
         amount,
         currency,
         name: "TrippeChalo India",

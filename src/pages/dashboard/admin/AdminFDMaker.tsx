@@ -6,6 +6,7 @@ import type { RootState } from '../../../store/store';
 import api from '../../../services/api';
 import Dropdown from '../../../components/ui/Dropdown';
 import DOBCalendar from '../../../components/ui/DOBCalendar';
+import DateRangePicker from '../../../components/ui/DateRangePicker';
 import CityPicker from '../../../components/common/CityPicker';
 import toast from 'react-hot-toast';
 import RefreshButton from '../../../components/ui/RefreshButton';
@@ -41,7 +42,7 @@ interface ISeriesFare {
   totalSeats: number;
   availableSeats: number;
   realtimeBook: boolean;
-  status: 'Active' | 'Inactive' | 'SoldOut';
+  status: 'Active' | 'Inactive' | 'SoldOut' | 'Expired';
   supplierName?: string;
   supplierId?: string;
   isTestFlight?: boolean;
@@ -393,12 +394,13 @@ const AdminSeriesFareMaker: React.FC = () => {
 
   // Filters
   const [travelDateFilter, setTravelDateFilter] = useState('');
+  const [travelDateToFilter, setTravelDateToFilter] = useState('');
   const [airlineFilter, setAirlineFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('All');
   const [suppliersList, setSuppliersList] = useState<{value: string, label: string}[]>([{ value: 'All', label: 'All Suppliers' }]);
   const [travelTypeFilter, setTravelTypeFilter] = useState('All');
   const [moreOptionsFilter, setMoreOptionsFilter] = useState('Active');
-  const [flightModeFilter, setFlightModeFilter] = useState<'All' | 'LIVE' | 'TEST'>('All');
+  const [flightModeFilter, setFlightModeFilter] = useState<'All' | 'LIVE' | 'TEST' | 'EXPIRED'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -516,19 +518,28 @@ const AdminSeriesFareMaker: React.FC = () => {
       return;
     }
     fetchFares();
-  }, [flightModeFilter, moreOptionsFilter, supplierFilter, travelTypeFilter, travelDateFilter]);
+  }, [flightModeFilter, moreOptionsFilter, supplierFilter, travelTypeFilter, travelDateFilter, travelDateToFilter]);
 
   const fetchFares = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (travelDateFilter) params.append('date', travelDateFilter);
+      if (travelDateFilter && travelDateToFilter) {
+        params.append('startDate', travelDateFilter);
+        params.append('endDate', travelDateToFilter);
+      } else if (travelDateFilter) {
+        params.append('startDate', travelDateFilter);
+      } else if (travelDateToFilter) {
+        params.append('endDate', travelDateToFilter);
+      }
+
       if (airlineFilter.trim()) params.append('airline', airlineFilter.trim());
       if (supplierFilter && supplierFilter !== 'All') params.append('supplierName', supplierFilter);
       if (travelTypeFilter && travelTypeFilter !== 'All') params.append('bookingType', travelTypeFilter);
       if (moreOptionsFilter && moreOptionsFilter !== 'All') params.append('status', moreOptionsFilter);
       if (flightModeFilter === 'LIVE') params.append('isTestFlight', 'false');
       if (flightModeFilter === 'TEST') params.append('isTestFlight', 'true');
+      if (flightModeFilter === 'EXPIRED') params.append('isExpired', 'true');
       
       const response = await api.get(`/api/series-fare?${params.toString()}`);
       if (Array.isArray(response.data)) {
@@ -845,6 +856,31 @@ const AdminSeriesFareMaker: React.FC = () => {
     if (airlineFilter && !f.airline.toLowerCase().includes(airlineFilter.toLowerCase())) return false;
     if (flightModeFilter === 'LIVE' && f.isTestFlight === true) return false;
     if (flightModeFilter === 'TEST' && f.isTestFlight !== true) return false;
+    
+    // Check expiry
+    const isExp = (() => {
+      if ((f.status as string) === 'Expired') return true;
+      if (!f.travelDate) return false;
+      try {
+        const datePart = typeof f.travelDate === 'string'
+          ? f.travelDate.split('T')[0]
+          : new Date(f.travelDate).toISOString().split('T')[0];
+        const [y, m, d] = datePart.split('-').map(Number);
+        let depH = 23, depM = 59;
+        if (f.departureTime && typeof f.departureTime === 'string') {
+          const parts = f.departureTime.split(':').map(Number);
+          if (!isNaN(parts[0])) depH = parts[0];
+          if (!isNaN(parts[1])) depM = parts[1];
+        }
+        return new Date(y, m - 1, d, depH, depM, 0).getTime() < Date.now();
+      } catch {
+        return new Date(f.travelDate).getTime() < Date.now();
+      }
+    })();
+
+    if (flightModeFilter === 'EXPIRED' && !isExp) return false;
+    if (moreOptionsFilter === 'Expired' && !isExp) return false;
+
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return f.sfId.toLowerCase().includes(q) || f.airlinePnr.toLowerCase().includes(q) || f.origin.toLowerCase().includes(q) || f.destination.toLowerCase().includes(q);
@@ -860,7 +896,7 @@ const AdminSeriesFareMaker: React.FC = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, airlineFilter, flightModeFilter, travelDateFilter, supplierFilter, moreOptionsFilter]);
+  }, [searchQuery, airlineFilter, flightModeFilter, travelDateFilter, travelDateToFilter, supplierFilter, moreOptionsFilter]);
 
   const downloadTemplate = () => {
     const headers = [
@@ -947,16 +983,36 @@ const AdminSeriesFareMaker: React.FC = () => {
 
       {/* Filter Toolbar */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(6,1fr)_auto] gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-[1.5fr_1fr_1fr_1fr_1.1fr_1.1fr_auto] gap-3 items-end">
+          {/* Unified Travel Date Range */}
           <div>
-            <label className="block text-[11px] font-bold text-gray-700 mb-1">Travel Date</label>
-            <DOBCalendar 
-              value={travelDateFilter}
-              onChange={setTravelDateFilter}
-              placeholder="Select date..."
+            <label className="block text-[11px] font-bold text-gray-700 mb-1 flex items-center justify-between">
+              <span>Travel Date Range</span>
+              {(travelDateFilter || travelDateToFilter) && (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setTravelDateFilter('');
+                    setTravelDateToFilter('');
+                  }} 
+                  className="text-[10px] text-blue-600 hover:underline font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </label>
+            <DateRangePicker 
+              startDate={travelDateFilter}
+              endDate={travelDateToFilter}
+              onChange={({ startDate, endDate }) => {
+                setTravelDateFilter(startDate);
+                setTravelDateToFilter(endDate);
+              }}
+              placeholder="Select Date Range..."
             />
           </div>
 
+          {/* Travel Type */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Travel Type *</label>
             <Dropdown 
@@ -970,6 +1026,7 @@ const AdminSeriesFareMaker: React.FC = () => {
             />
           </div>
 
+          {/* Airline */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Airline *</label>
             <input 
@@ -977,10 +1034,11 @@ const AdminSeriesFareMaker: React.FC = () => {
               placeholder="e.g. Akasa Air"
               value={airlineFilter}
               onChange={e => setAirlineFilter(e.target.value)}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 outline-none"
+              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 outline-none h-[38px]"
             />
           </div>
 
+          {/* Supplier */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Supplier *</label>
             <Dropdown 
@@ -990,6 +1048,7 @@ const AdminSeriesFareMaker: React.FC = () => {
             />
           </div>
 
+          {/* More Options */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">More Options</label>
             <Dropdown 
@@ -1004,6 +1063,7 @@ const AdminSeriesFareMaker: React.FC = () => {
             />
           </div>
 
+          {/* Mode / Environment */}
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">Mode / Environment</label>
             <Dropdown 
@@ -1012,18 +1072,39 @@ const AdminSeriesFareMaker: React.FC = () => {
               options={[
                 { value: 'All', label: 'All Modes' },
                 { value: 'LIVE', label: 'Live Inventory' },
-                { value: 'TEST', label: 'Sandbox Test (999)' }
+                { value: 'TEST', label: 'Sandbox Test (999)' },
+                { value: 'EXPIRED', label: 'Expired Inventory' }
               ]}
             />
           </div>
 
-          <div className="flex items-end">
+          {/* Actions: Fetch & Reset */}
+          <div className="flex items-center gap-2">
             <button 
               onClick={fetchFares}
-              className="bg-gray-900 text-white text-xs font-bold px-8 py-2 rounded-lg hover:bg-gray-900 transition-all h-[36px] w-full lg:w-auto shadow-sm"
+              className="bg-gray-900 text-white text-xs font-bold px-5 py-2 rounded-lg hover:bg-gray-800 transition-all h-[38px] w-full lg:w-auto shadow-sm flex items-center justify-center gap-1.5"
             >
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
               Fetch
             </button>
+            {(travelDateFilter || travelDateToFilter || airlineFilter || supplierFilter !== 'All' || travelTypeFilter !== 'All' || moreOptionsFilter !== 'Active' || flightModeFilter !== 'All') && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setTravelDateFilter('');
+                  setTravelDateToFilter('');
+                  setAirlineFilter('');
+                  setSupplierFilter('All');
+                  setTravelTypeFilter('All');
+                  setMoreOptionsFilter('Active');
+                  setFlightModeFilter('All');
+                }}
+                title="Reset all filters"
+                className="px-2.5 h-[38px] rounded-lg border border-gray-300 text-gray-600 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 text-xs font-semibold transition-all flex items-center justify-center shrink-0"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 
@@ -1096,9 +1177,38 @@ const AdminSeriesFareMaker: React.FC = () => {
                 const buyFare = fare.adtFare - (fare.agentCommission || 0);
                 const sellFare = fare.adtFare;
 
+                // Check if flight travel date & departure time is in the past (expired)
+                const isExpired = (() => {
+                  if (fare.status === 'Expired') return true;
+                  if (!fare.travelDate) return false;
+                  try {
+                    const datePart = typeof fare.travelDate === 'string'
+                      ? fare.travelDate.split('T')[0]
+                      : new Date(fare.travelDate).toISOString().split('T')[0];
+                    const [y, m, d] = datePart.split('-').map(Number);
+                    let depH = 23, depM = 59;
+                    if (fare.departureTime && typeof fare.departureTime === 'string') {
+                      const parts = fare.departureTime.split(':').map(Number);
+                      if (!isNaN(parts[0])) depH = parts[0];
+                      if (!isNaN(parts[1])) depM = parts[1];
+                    }
+                    const flightDate = new Date(y, m - 1, d, depH, depM, 0);
+                    return flightDate.getTime() < Date.now();
+                  } catch {
+                    return new Date(fare.travelDate).getTime() < Date.now();
+                  }
+                })();
+
                 return (
                   <React.Fragment key={fare._id}>
-                    <tr key={fare._id} className="hover:bg-blue-50/50 transition-colors group">
+                    <tr 
+                      key={fare._id} 
+                      className={`transition-all group ${
+                        isExpired 
+                          ? 'opacity-65 bg-gray-50/70 hover:opacity-100 hover:bg-gray-100/80' 
+                          : 'hover:bg-blue-50/50'
+                      }`}
+                    >
                       <td className="p-3 text-center">
                         <input 
                           type="checkbox" 
@@ -1109,9 +1219,17 @@ const AdminSeriesFareMaker: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col gap-1 items-start">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : fare.status === 'SoldOut' ? 'bg-purple-50 text-purple-600 border-purple-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
-                            {fare.status}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${fare.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-600/20' : fare.status === 'SoldOut' ? 'bg-purple-50 text-purple-600 border-purple-600/20' : 'bg-gray-50 text-gray-600 border-gray-600/20'}`}>
+                              {fare.status}
+                            </span>
+                            {isExpired && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black bg-rose-100 text-rose-700 border border-rose-300 shadow-2xs tracking-tight" title="Flight travel date has passed">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse" />
+                                EXPIRED
+                              </span>
+                            )}
+                          </div>
                           {fare.isTestFlight ? (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 tracking-tight" title="Test Flight for B2B Sandbox Testing">
                               TEST (999)
@@ -1143,7 +1261,14 @@ const AdminSeriesFareMaker: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-3 text-gray-600">
-                        <span className="text-gray-900">{formattedDate}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={isExpired ? "text-gray-500 font-semibold" : "text-gray-900"}>{formattedDate}</span>
+                          {isExpired && (
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                              Past Date
+                            </span>
+                          )}
+                        </div>
                         <span className="block text-[10px] opacity-75">{fare.departureTime} - {fare.arrivalTime}</span>
                       </td>
                       <td className="p-3 text-center font-bold text-blue-800 bg-blue-50/50">{fare.totalSeats}</td>
