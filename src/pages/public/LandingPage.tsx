@@ -147,12 +147,19 @@ export default function LandingPage() {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // Automatically open login modal if redirected with ?login=true
+  // Automatically open login modal if redirected with ?login=true, then immediately clean the URL
   useEffect(() => {
-    if (searchParams.get('login') === 'true' && !isAuthenticated) {
-      setIsLoginModalOpen(true);
+    if (searchParams.get('login') === 'true') {
+      if (!isAuthenticated) {
+        setIsLoginModalOpen(true);
+      }
+      // Clean query params so Back button or history navigation never re-triggers the modal
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('login');
+      const cleanSearch = newParams.toString();
+      navigate({ search: cleanSearch ? `?${cleanSearch}` : '' }, { replace: true });
     }
-  }, [searchParams, isAuthenticated]);
+  }, [searchParams, isAuthenticated, navigate]);
 
   const CITY_LANDMARKS: Record<string, { landmark: string; img: string }> = {
     BOM: { landmark: 'Gateway of India', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
@@ -527,7 +534,18 @@ export default function LandingPage() {
         onDismissFestiveBanner={() => setIsBannerDismissed(true)} 
       />
 
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          if (searchParams.get('login') === 'true') {
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete('login');
+            const cleanSearch = newParams.toString();
+            navigate({ search: cleanSearch ? `?${cleanSearch}` : '' }, { replace: true });
+          }
+        }} 
+      />
 
       {/* Massive Hero Section */}
       <div className={`relative ${activeFestiveBanner && activeFestiveBanner.showTopStrip && !isBannerDismissed ? 'pt-24 sm:pt-28 lg:pt-32' : 'pt-16 pb-20 lg:pt-20 lg:pb-24'} pb-20 lg:pb-24 bg-[#00224f]`}>

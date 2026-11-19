@@ -106,6 +106,183 @@ export default function AgentFlightSearchResults(props: any) {
   const [showFareRulesForFlight, setShowFareRulesForFlight] = useState<Flight | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
+  // B2B Feature States
+  const [showIncentive, setShowIncentive] = useState<boolean>(true);
+  const [filterRefundable, setFilterRefundable] = useState<'ALL' | 'REFUNDABLE' | 'NON_REFUNDABLE'>('ALL');
+  const [filterStops, setFilterStops] = useState<number | null>(null);
+  const [filterDepTime, setFilterDepTime] = useState<string | null>(null);
+  const [filterArrTime, setFilterArrTime] = useState<string | null>(null);
+  const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
+
+  // Navigation handlers for Previous Day / Next Day
+  const handlePrevDay = () => {
+    try {
+      const parts = (date || '').split('-');
+      const currentDate = parts.length === 3 
+        ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) 
+        : new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const prev = new Date(currentDate);
+      prev.setDate(prev.getDate() - 1);
+      if (prev < today) {
+        toast.error('Cannot select a past date');
+        return;
+      }
+      setDate(format(prev, 'yyyy-MM-dd'));
+    } catch (e) {
+      console.error('Error shifting date backwards', e);
+    }
+  };
+
+  const handleNextDay = () => {
+    try {
+      const parts = (date || '').split('-');
+      const currentDate = parts.length === 3 
+        ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) 
+        : new Date(date);
+      const next = new Date(currentDate);
+      next.setDate(next.getDate() + 1);
+      setDate(format(next, 'yyyy-MM-dd'));
+    } catch (e) {
+      console.error('Error shifting date forwards', e);
+    }
+  };
+
+  // Dynamic Available Airlines extracted from outboundFlights
+  const availableAirlines = React.useMemo(() => {
+    const list = outboundFlights || [];
+    const map = new Map<string, { name: string; count: number; minPrice: number }>();
+    list.forEach((f: any) => {
+      const name = f.airline || 'Other';
+      const cur = map.get(name) || { name, count: 0, minPrice: f.price };
+      cur.count += 1;
+      if (f.price < cur.minPrice) cur.minPrice = f.price;
+      map.set(name, cur);
+    });
+    return Array.from(map.values());
+  }, [outboundFlights]);
+
+  const hasActiveFilters = filterRefundable !== 'ALL' || filterStops !== null || filterDepTime !== null || filterArrTime !== null || selectedAirlines.length > 0;
+
+  const handleResetFilters = () => {
+    setFilterRefundable('ALL');
+    setFilterStops(null);
+    setFilterDepTime(null);
+    setFilterArrTime(null);
+    setSelectedAirlines([]);
+  };
+
+  const toggleAirlineFilter = (airlineName: string) => {
+    setSelectedAirlines(prev => 
+      prev.includes(airlineName) ? prev.filter(a => a !== airlineName) : [...prev, airlineName]
+    );
+  };
+
+  // Filter application helper
+  const applyFilters = (flightsToFilter: any[]) => {
+    if (!flightsToFilter) return [];
+    return flightsToFilter.filter((f: any) => {
+      // 1. Refundable
+      if (filterRefundable === 'REFUNDABLE' && !f.isRefundable) return false;
+      if (filterRefundable === 'NON_REFUNDABLE' && f.isRefundable) return false;
+
+      // 2. Stops
+      if (filterStops !== null) {
+        if (filterStops === 2 && (f.stops ?? 0) < 2) return false;
+        if (filterStops !== 2 && (f.stops ?? 0) !== filterStops) return false;
+      }
+
+      // 3. Departure Time
+      if (filterDepTime) {
+        const h = new Date(f.departureTime).getHours();
+        if (filterDepTime === '00-06' && !(h >= 0 && h < 6)) return false;
+        if (filterDepTime === '06-12' && !(h >= 6 && h < 12)) return false;
+        if (filterDepTime === '12-18' && !(h >= 12 && h < 18)) return false;
+        if (filterDepTime === '18-00' && !(h >= 18 && h < 24)) return false;
+      }
+
+      // 4. Arrival Time
+      if (filterArrTime) {
+        const h = new Date(f.arrivalTime).getHours();
+        if (filterArrTime === '00-06' && !(h >= 0 && h < 6)) return false;
+        if (filterArrTime === '06-12' && !(h >= 6 && h < 12)) return false;
+        if (filterArrTime === '12-18' && !(h >= 12 && h < 18)) return false;
+        if (filterArrTime === '18-00' && !(h >= 18 && h < 24)) return false;
+      }
+
+      // 5. Airlines
+      if (selectedAirlines.length > 0 && !selectedAirlines.includes(f.airline)) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredOutboundFlights = React.useMemo(() => {
+    const list = applyFilters(outboundFlights || []);
+    if (sortBy === 'price_asc') {
+      return [...list].sort((a: any, b: any) => a.price - b.price);
+    } else if (sortBy === 'price_desc') {
+      return [...list].sort((a: any, b: any) => b.price - a.price);
+    } else if (sortBy === 'duration_asc') {
+      return [...list].sort((a: any, b: any) => a.durationMinutes - b.durationMinutes);
+    } else if (sortBy === 'departure_asc') {
+      return [...list].sort((a: any, b: any) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
+    }
+    return list;
+  }, [outboundFlights, filterRefundable, filterStops, filterDepTime, filterArrTime, selectedAirlines, sortBy]);
+
+  const filteredReturnFlights = React.useMemo(() => {
+    return applyFilters(returnFlights || []);
+  }, [returnFlights, filterRefundable, filterStops, filterDepTime, filterArrTime, selectedAirlines]);
+
+  // Quotation generator for WhatsApp & Email sharing
+  const generateFlightQuotationText = () => {
+    const flightList = (filteredOutboundFlights && filteredOutboundFlights.length > 0 ? filteredOutboundFlights : outboundFlights || []).slice(0, 5);
+    if (!flightList || flightList.length === 0) {
+      return `Flight options for ${from} to ${to} on ${date}: No flights currently available.`;
+    }
+
+    let text = `✈️ *TRIPPE CHALO INDIA - FLIGHT QUOTATION*\n`;
+    text += `📍 *Route:* ${from} ➔ ${to}\n`;
+    text += `📅 *Date:* ${new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}\n`;
+    text += `👥 *Pax:* ${adults || 1} Adult(s)${children ? `, ${children} Child` : ''}${infants ? `, ${infants} Infant` : ''}\n`;
+    text += `-------------------------------------------\n`;
+
+    flightList.forEach((f: any, idx: number) => {
+      const dep = formatTime(f.departureTime);
+      const arr = formatTime(f.arrivalTime);
+      const dur = formatDuration(f.durationMinutes);
+      const stopsStr = f.stops === 0 ? 'Non-Stop' : `${f.stops} Stop(s)`;
+      text += `*${idx + 1}. ${f.airline}* (${f.flightNumber})\n`;
+      text += `   🕒 ${dep} ➔ ${arr} (${dur} | ${stopsStr})\n`;
+      text += `   💰 Fare: ₹${Number(f.price).toLocaleString('en-IN')}/pax\n`;
+      text += `   🧳 Baggage: 15 Kg Check-in | 7 Kg Cabin\n\n`;
+    });
+
+    text += `-------------------------------------------\n`;
+    text += `_Fares and seats are subject to availability at the time of final confirmation._\n`;
+    text += `📞 TrippeChalo B2B Desk: +91 9555934205`;
+    return text;
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = generateFlightQuotationText();
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+    toast.success('Opening WhatsApp to share quotation!');
+  };
+
+  const handleShareEmail = () => {
+    const text = generateFlightQuotationText();
+    const subject = encodeURIComponent(`Flight Quotation: ${from} to ${to} (${date})`);
+    const body = encodeURIComponent(text);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -256,8 +433,13 @@ export default function AgentFlightSearchResults(props: any) {
            )}
 
            <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? 'border-t border-gray-100 pt-3 mt-1' : 'md:w-[32%] md:flex-col md:items-end gap-2 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-gray-100 md:border-t-0'}`}>
-             <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-0.5' : 'items-end gap-0.5'}`}>
+             <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-1' : 'items-end gap-1'}`}>
                <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
+               {showIncentive && (
+                 <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
+                   Incentive: ₹ {flight.agentCommission ? flight.agentCommission : Math.round(flight.price * 0.03) || 150}
+                 </span>
+               )}
                {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
                  <span className="text-[9px] font-bold text-gray-500 uppercase">(Includes ₹ {flight.agentCommission} Taxes)</span>
                )}
@@ -932,26 +1114,51 @@ export default function AgentFlightSearchResults(props: any) {
             </h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-white/10 rounded-full p-1">
-                <button className="px-3 py-1 text-xs font-bold hover:bg-white/20 rounded-full transition">« Previous Day</button>
+                <button 
+                  onClick={handlePrevDay} 
+                  title="Search previous day"
+                  className="px-3 py-1 text-xs font-bold hover:bg-white/20 active:scale-95 rounded-full transition cursor-pointer"
+                >
+                  « Previous Day
+                </button>
                 <div className="w-px h-4 bg-white/20" />
-                <button className="px-3 py-1 text-xs font-bold hover:bg-white/20 rounded-full transition">Next Day »</button>
+                <button 
+                  onClick={handleNextDay} 
+                  title="Search next day"
+                  className="px-3 py-1 text-xs font-bold hover:bg-white/20 active:scale-95 rounded-full transition cursor-pointer"
+                >
+                  Next Day »
+                </button>
               </div>
 
               <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-                <span className="text-xs font-bold">Show Incentive</span>
+                <span className="text-xs font-bold cursor-pointer select-none" onClick={() => setShowIncentive(!showIncentive)}>Show Incentive</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" />
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={showIncentive} 
+                    onChange={(e) => setShowIncentive(e.target.checked)} 
+                  />
                   <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
               </div>
 
               <div className="flex items-center gap-2 border-l border-white/20 pl-4 text-xs font-bold text-gray-300">
                 Share By:
-                <button className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white hover:bg-green-600 transition">
-                  <span className="text-[10px]">W</span>
+                <button 
+                  onClick={handleShareWhatsApp}
+                  title="Share quotation via WhatsApp"
+                  className="w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center text-white font-bold transition shadow-sm active:scale-90 cursor-pointer"
+                >
+                  <span className="text-xs">W</span>
                 </button>
-                <button className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition">
-                  <span className="text-[10px]">@</span>
+                <button 
+                  onClick={handleShareEmail}
+                  title="Share quotation via Email"
+                  className="w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white font-bold transition shadow-sm active:scale-90 cursor-pointer"
+                >
+                  <span className="text-xs">@</span>
                 </button>
               </div>
             </div>
@@ -1003,17 +1210,40 @@ export default function AgentFlightSearchResults(props: any) {
         {/* Left Sidebar Filters */}
         <div className="w-[260px] shrink-0 space-y-4">
           
+          {/* Header with Clear Filter option */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-black text-gray-500 tracking-wider uppercase">Filter Results</span>
+            {hasActiveFilters && (
+              <button 
+                onClick={handleResetFilters}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline transition cursor-pointer"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+
           {/* Refundability */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Refundable</h3>
             <div className="space-y-2 text-xs">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
-                <span className="font-bold text-gray-700 group-hover:text-blue-600">Refundable</span>
+                <input 
+                  type="checkbox" 
+                  checked={filterRefundable === 'REFUNDABLE'}
+                  onChange={() => setFilterRefundable(filterRefundable === 'REFUNDABLE' ? 'ALL' : 'REFUNDABLE')}
+                  className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                />
+                <span className={`font-bold transition ${filterRefundable === 'REFUNDABLE' ? 'text-blue-600' : 'text-gray-700 group-hover:text-blue-600'}`}>Refundable</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
-                <span className="font-bold text-gray-700 group-hover:text-blue-600">Non Refundable</span>
+                <input 
+                  type="checkbox" 
+                  checked={filterRefundable === 'NON_REFUNDABLE'}
+                  onChange={() => setFilterRefundable(filterRefundable === 'NON_REFUNDABLE' ? 'ALL' : 'NON_REFUNDABLE')}
+                  className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                />
+                <span className={`font-bold transition ${filterRefundable === 'NON_REFUNDABLE' ? 'text-blue-600' : 'text-gray-700 group-hover:text-blue-600'}`}>Non Refundable</span>
               </label>
             </div>
           </div>
@@ -1022,9 +1252,24 @@ export default function AgentFlightSearchResults(props: any) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Stops</h3>
             <div className="flex gap-2">
-              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">0</button>
-              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">1</button>
-              <button className="flex-1 py-1.5 border border-gray-300 rounded text-xs font-bold hover:border-blue-600 hover:text-blue-600 transition">2+</button>
+              <button 
+                onClick={() => setFilterStops(filterStops === 0 ? null : 0)}
+                className={`flex-1 py-1.5 border rounded text-xs font-bold transition cursor-pointer ${filterStops === 0 ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-300 text-gray-700 hover:border-blue-600 hover:text-blue-600'}`}
+              >
+                0
+              </button>
+              <button 
+                onClick={() => setFilterStops(filterStops === 1 ? null : 1)}
+                className={`flex-1 py-1.5 border rounded text-xs font-bold transition cursor-pointer ${filterStops === 1 ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-300 text-gray-700 hover:border-blue-600 hover:text-blue-600'}`}
+              >
+                1
+              </button>
+              <button 
+                onClick={() => setFilterStops(filterStops === 2 ? null : 2)}
+                className={`flex-1 py-1.5 border rounded text-xs font-bold transition cursor-pointer ${filterStops === 2 ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-300 text-gray-700 hover:border-blue-600 hover:text-blue-600'}`}
+              >
+                2+
+              </button>
             </div>
           </div>
 
@@ -1032,17 +1277,29 @@ export default function AgentFlightSearchResults(props: any) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Departure Time</h3>
             <div className="grid grid-cols-2 gap-2">
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">00:00 - 06:00</span>
+              <button 
+                onClick={() => setFilterDepTime(filterDepTime === '00-06' ? null : '00-06')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterDepTime === '00-06' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">00:00 - 06:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">06:00 - 12:00</span>
+              <button 
+                onClick={() => setFilterDepTime(filterDepTime === '06-12' ? null : '06-12')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterDepTime === '06-12' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">06:00 - 12:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">12:00 - 18:00</span>
+              <button 
+                onClick={() => setFilterDepTime(filterDepTime === '12-18' ? null : '12-18')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterDepTime === '12-18' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">12:00 - 18:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">18:00 - 00:00</span>
+              <button 
+                onClick={() => setFilterDepTime(filterDepTime === '18-00' ? null : '18-00')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterDepTime === '18-00' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">18:00 - 00:00</span>
               </button>
             </div>
           </div>
@@ -1051,17 +1308,29 @@ export default function AgentFlightSearchResults(props: any) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Arrival Time</h3>
             <div className="grid grid-cols-2 gap-2">
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">00:00 - 06:00</span>
+              <button 
+                onClick={() => setFilterArrTime(filterArrTime === '00-06' ? null : '00-06')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterArrTime === '00-06' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">00:00 - 06:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">06:00 - 12:00</span>
+              <button 
+                onClick={() => setFilterArrTime(filterArrTime === '06-12' ? null : '06-12')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterArrTime === '06-12' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">06:00 - 12:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">12:00 - 18:00</span>
+              <button 
+                onClick={() => setFilterArrTime(filterArrTime === '12-18' ? null : '12-18')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterArrTime === '12-18' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">12:00 - 18:00</span>
               </button>
-              <button className="p-2 border border-gray-200 rounded flex flex-col items-center gap-1 hover:border-blue-600 transition group">
-                <span className="text-[10px] font-bold text-gray-600 group-hover:text-blue-600">18:00 - 00:00</span>
+              <button 
+                onClick={() => setFilterArrTime(filterArrTime === '18-00' ? null : '18-00')}
+                className={`p-2 border rounded flex flex-col items-center gap-1 transition cursor-pointer group ${filterArrTime === '18-00' ? 'border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-500 shadow-xs' : 'border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'}`}
+              >
+                <span className="text-[10px] font-bold">18:00 - 00:00</span>
               </button>
             </div>
           </div>
@@ -1070,19 +1339,24 @@ export default function AgentFlightSearchResults(props: any) {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
             <h3 className="font-black text-[#0c1a40] mb-3 text-xs uppercase border-b border-gray-100 pb-2">Airlines</h3>
             <div className="space-y-2 text-xs">
-              {/* Dynamic Airlines will be injected here. Mocking some for UI layout */}
-              <label className="flex items-center justify-between cursor-pointer group">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
-                  <span className="font-bold text-gray-700 group-hover:text-blue-600">IndiGo</span>
-                </div>
-              </label>
-              <label className="flex items-center justify-between cursor-pointer group">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
-                  <span className="font-bold text-gray-700 group-hover:text-blue-600">Air India</span>
-                </div>
-              </label>
+              {availableAirlines.length > 0 ? (
+                availableAirlines.map(airline => (
+                  <label key={airline.name} className="flex items-center justify-between cursor-pointer group hover:bg-gray-50 p-1 rounded transition">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAirlines.includes(airline.name)}
+                        onChange={() => toggleAirlineFilter(airline.name)}
+                        className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                      />
+                      <span className={`font-bold transition ${selectedAirlines.includes(airline.name) ? 'text-blue-600' : 'text-gray-700 group-hover:text-blue-600'}`}>{airline.name}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-semibold">₹{airline.minPrice.toLocaleString('en-IN')}</span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-[11px] text-gray-400 italic">No airlines found</p>
+              )}
             </div>
           </div>
         </div>
@@ -1097,14 +1371,14 @@ export default function AgentFlightSearchResults(props: any) {
                   <span>Departure Flights</span>
                   <span className="text-xs text-gray-500 font-medium">{from} → {to}</span>
                 </h3>
-                {sortedOutboundFlights && sortedOutboundFlights.length > 0 ? (
-                  sortedOutboundFlights.map((flight: any, idx: number) => (
+                {filteredOutboundFlights && filteredOutboundFlights.length > 0 ? (
+                  filteredOutboundFlights.map((flight: any, idx: number) => (
                     <React.Fragment key={flight._id || idx}>
                       {renderFlightCard(flight, false)}
                     </React.Fragment>
                   ))
                 ) : !loading ? (
-                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No outbound flights found.</p></div>
+                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No outbound flights found matching criteria.</p></div>
                 ) : null}
               </div>
               
@@ -1114,21 +1388,21 @@ export default function AgentFlightSearchResults(props: any) {
                   <span>Return Flights</span>
                   <span className="text-xs text-gray-500 font-medium">{to} → {from}</span>
                 </h3>
-                {returnFlights && returnFlights.length > 0 ? (
-                  returnFlights.map((flight: any, idx: number) => (
+                {filteredReturnFlights && filteredReturnFlights.length > 0 ? (
+                  filteredReturnFlights.map((flight: any, idx: number) => (
                     <React.Fragment key={flight._id || idx}>
                       {renderFlightCard(flight, true)}
                     </React.Fragment>
                   ))
                 ) : !loading ? (
-                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No return flights found.</p></div>
+                   <div className="bg-white p-6 text-center border border-gray-100 rounded-lg"><p className="text-gray-500 font-bold text-sm text-center py-8">No return flights found matching criteria.</p></div>
                 ) : null}
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              {sortedOutboundFlights && sortedOutboundFlights.length > 0 ? (
-                sortedOutboundFlights.map((flight: any, idx: number) => (
+              {filteredOutboundFlights && filteredOutboundFlights.length > 0 ? (
+                filteredOutboundFlights.map((flight: any, idx: number) => (
                   <React.Fragment key={flight._id || idx}>
                     {renderFlightCard(flight, false)}
                   </React.Fragment>
@@ -1136,7 +1410,19 @@ export default function AgentFlightSearchResults(props: any) {
               ) : !loading ? (
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center">
                   <h3 className="text-lg font-bold text-gray-800 mb-2">No flights found</h3>
-                  <p className="text-gray-500">Try adjusting your dates or filters to find more options.</p>
+                  <p className="text-gray-500 text-sm">
+                    {hasActiveFilters 
+                      ? 'No flights match your active filter criteria. Try resetting filters.'
+                      : 'Try adjusting your dates or search criteria to find more options.'}
+                  </p>
+                  {hasActiveFilters && (
+                    <button 
+                      onClick={handleResetFilters} 
+                      className="mt-4 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition shadow-sm cursor-pointer"
+                    >
+                      Reset All Filters
+                    </button>
+                  )}
                 </div>
               ) : null}
             </div>
