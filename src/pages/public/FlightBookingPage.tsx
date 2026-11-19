@@ -17,7 +17,7 @@ export default function FlightBookingPage() {
   const user = useSelector(selectCurrentUser);
   const isAgentDiscount = user?.roles?.includes('B2B_AGENT');
 
-  const { selectedOutbound, selectedReturn, tripType, adults: initialAdults = 1, children: initialChildren = 0, infants: initialInfants = 0 } = location.state || {};
+  const { selectedOutbound, selectedReturn, selectedLegs = [], tripType, adults: initialAdults = 1, children: initialChildren = 0, infants: initialInfants = 0 } = location.state || {};
 
   const [bookingStep, setBookingStep] = useState(1); 
   const [maxStepReached, setMaxStepReached] = useState(1); 
@@ -149,7 +149,9 @@ export default function FlightBookingPage() {
     return flight.price;
   };
   
-  const cartBaseAmount = calculateBaseFare(selectedOutbound) + (tripType === 'Round Trip' ? calculateBaseFare(selectedReturn) : 0);
+  const cartBaseAmount = (tripType === 'Multi City' && Array.isArray(selectedLegs) && selectedLegs.length > 0)
+    ? selectedLegs.reduce((sum: number, leg: any) => sum + calculateBaseFare(leg), 0)
+    : calculateBaseFare(selectedOutbound) + (tripType === 'Round Trip' ? calculateBaseFare(selectedReturn) : 0);
   const cartTotalAmount = appliedPromo ? Math.max(0, cartBaseAmount - (appliedPromo.discountAmount || 0)) : cartBaseAmount;
 
   useEffect(() => {
@@ -501,11 +503,24 @@ export default function FlightBookingPage() {
           isGapiFare: Boolean(selectedOutbound.isGapiFare || selectedOutbound._id?.startsWith('GAPI_')),
           resultSessionId: selectedOutbound.resultSessionId,
           searchSessionId: selectedOutbound.searchSessionId,
-          segments: selectedOutbound.allSegments || (
-            tripType === 'Round Trip' && selectedReturn?.segments
-              ? [...(selectedOutbound.segments || []), ...(selectedReturn.segments || [])]
-              : selectedOutbound.segments
-          ),
+          isMultiCity: tripType === 'Multi City',
+          legs: (tripType === 'Multi City' && Array.isArray(selectedLegs) && selectedLegs.length > 0) ? selectedLegs : undefined,
+          segments: (tripType === 'Multi City' && Array.isArray(selectedLegs) && selectedLegs.length > 0)
+            ? selectedLegs.flatMap((leg: any) => leg.segments || [{
+                airline: leg.airline,
+                flightNo: leg.flightNumber,
+                origin: leg.departureAirportCode,
+                destination: leg.arrivalAirportCode,
+                departureTime: leg.departureTime,
+                arrivalTime: leg.arrivalTime,
+                departureTerminal: leg.departureTerminal,
+                arrivalTerminal: leg.arrivalTerminal
+              }])
+            : (selectedOutbound.allSegments || (
+                tripType === 'Round Trip' && selectedReturn?.segments
+                  ? [...(selectedOutbound.segments || []), ...(selectedReturn.segments || [])]
+                  : selectedOutbound.segments
+              )),
           passengers: passengers.map((p: any) => ({
             name: `${p.firstName} ${p.lastName}`,
             type: p.type,

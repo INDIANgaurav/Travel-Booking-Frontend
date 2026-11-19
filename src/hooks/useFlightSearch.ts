@@ -33,6 +33,12 @@ export interface Flight {
   segments?: any[];
 }
 
+export interface MultiCityLegItem {
+  from: string;
+  to: string;
+  date: string;
+}
+
 export const CITIES: Record<string, string> = {
   DEL: 'New Delhi',
   BOM: 'Mumbai',
@@ -75,6 +81,21 @@ export function useFlightSearch() {
   const [date, setDate] = useState<Date>(new Date(searchParams.get('date') || defaultDate));
   const [tripType, setTripType] = useState(searchParams.get('tripType') || 'Round Trip');
   const [returnDate, setReturnDate] = useState<Date>(new Date(searchParams.get('returnDate') || defaultReturnDate));
+
+  // Multi-City support
+  const rawLegs = searchParams.get('legs');
+  let initialParsedLegs: MultiCityLegItem[] = [];
+  if (rawLegs) {
+    try {
+      initialParsedLegs = JSON.parse(rawLegs);
+    } catch (e) {
+      console.error('Failed to parse search legs', e);
+    }
+  }
+
+  const [multiCityLegs, setMultiCityLegs] = useState<MultiCityLegItem[]>(initialParsedLegs);
+  const [activeLegIndex, setActiveLegIndex] = useState(0);
+  const [selectedLegFlights, setSelectedLegFlights] = useState<Record<number, Flight>>({});
 
   const [outboundFlights, setOutboundFlights] = useState<Flight[]>([]);
   const [returnFlights, setReturnFlights] = useState<Flight[]>([]);
@@ -123,7 +144,10 @@ export function useFlightSearch() {
       if (morningFilter) baseParams += `&morningDeparture=true`;
 
       let outUrl = `/api/searches/flights?from=${qFrom}&to=${qTo}&date=${getLocalISO(qDate)}&${baseParams}`;
-      if (qTripType === 'Round Trip' && qReturnDate) {
+      if (qTripType === 'Multi City' && multiCityLegs.length > 0) {
+        const cur = multiCityLegs[activeLegIndex] || multiCityLegs[0];
+        outUrl = `/api/searches/flights?from=${cur.from}&to=${cur.to}&date=${cur.date}&${baseParams}`;
+      } else if (qTripType === 'Round Trip' && qReturnDate) {
         outUrl += `&tripType=Round Trip&returnDate=${getLocalISO(qReturnDate)}`;
       }
 
@@ -131,6 +155,14 @@ export function useFlightSearch() {
       const fetchedOutbound = outRes.data || [];
       setOutboundFlights(fetchedOutbound);
       if (fetchedOutbound.length > 0) {
+        if (qTripType === 'Multi City') {
+          setSelectedLegFlights(prev => {
+            if (!prev[activeLegIndex]) {
+              return { ...prev, [activeLegIndex]: fetchedOutbound[0] };
+            }
+            return prev;
+          });
+        }
         setSelectedOutbound(fetchedOutbound[0]);
         setSuggestedFlights([]);
       } else {
@@ -177,7 +209,7 @@ export function useFlightSearch() {
       fetchFlights(true);
     } else {
       fetchFlights(false);
-      const query = new URLSearchParams({
+      const queryObj: Record<string, string> = {
         tripType,
         from,
         to,
@@ -187,15 +219,19 @@ export function useFlightSearch() {
         adults: adults.toString(),
         children: children.toString(),
         infants: infants.toString()
-      }).toString();
+      };
+      if (tripType === 'Multi City' && multiCityLegs.length > 0) {
+        queryObj.legs = JSON.stringify(multiCityLegs);
+      }
+      const query = new URLSearchParams(queryObj).toString();
       navigate(`/flights/search?${query}`, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nonStopFilter, morningFilter, date, adults, children, infants, cabinClass, tripType]);
+  }, [nonStopFilter, morningFilter, date, adults, children, infants, cabinClass, tripType, activeLegIndex]);
 
   const handleSearch = () => {
     fetchFlights(false);
-    const query = new URLSearchParams({
+    const queryObj: Record<string, string> = {
       tripType,
       from,
       to,
@@ -205,7 +241,11 @@ export function useFlightSearch() {
       adults: adults.toString(),
       children: children.toString(),
       infants: infants.toString()
-    }).toString();
+    };
+    if (tripType === 'Multi City' && multiCityLegs.length > 0) {
+      queryObj.legs = JSON.stringify(multiCityLegs);
+    }
+    const query = new URLSearchParams(queryObj).toString();
     navigate(`/flights/search?${query}`, { replace: true });
   };
 
@@ -275,6 +315,14 @@ export function useFlightSearch() {
     handleSearch,
     getDisplayPrice,
     user,
+
+    // Multi-City exports
+    multiCityLegs,
+    setMultiCityLegs,
+    activeLegIndex,
+    setActiveLegIndex,
+    selectedLegFlights,
+    setSelectedLegFlights,
 
     isAgentDiscount,
     navigate

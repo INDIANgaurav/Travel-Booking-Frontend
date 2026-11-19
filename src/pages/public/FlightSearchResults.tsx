@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { useFlightSearch } from '../../hooks/useFlightSearch';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import InteractiveGridBackground from '../../components/ui/InteractiveGridBackground';
+import { format } from 'date-fns';
 
 interface Flight {
   _id: string;
@@ -102,6 +103,14 @@ export default function FlightSearchResults() {
     handleSearch,
     getDisplayPrice,
     user,
+
+    // Multi-City State
+    multiCityLegs,
+    setMultiCityLegs,
+    activeLegIndex,
+    setActiveLegIndex,
+    selectedLegFlights,
+    setSelectedLegFlights,
 
     isAgentDiscount,
     navigate
@@ -599,12 +608,81 @@ export default function FlightSearchResults() {
               </>
             )}
 
+            {/* Multi-City Itinerary Progress Bar */}
+            {tripType === 'Multi City' && multiCityLegs && multiCityLegs.length > 0 && (
+              <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-3 mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plane size={14} className="text-blue-600" />
+                    Multi-City Sectors ({multiCityLegs.length} Flights)
+                  </span>
+                  <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    {Object.keys(selectedLegFlights).length} of {multiCityLegs.length} Selected
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {multiCityLegs.map((leg, idx) => {
+                    const isSelected = activeLegIndex === idx;
+                    const flightChosen = selectedLegFlights[idx];
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => setActiveLegIndex(idx)}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50/80 shadow-xs ring-2 ring-blue-500/20'
+                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/60'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-black uppercase text-slate-500">
+                            Flight #{idx + 1}
+                          </span>
+                          {flightChosen ? (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full">
+                              ✓ Selected
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded-full">
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-black text-sm text-slate-900 flex items-center gap-1.5">
+                          <span>{leg.from}</span>
+                          <span className="text-blue-500 text-xs">➔</span>
+                          <span>{leg.to}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                          {format(new Date(leg.date), "dd MMM, yyyy")}
+                        </p>
+                        {flightChosen && (
+                          <p className="text-[11px] font-bold text-blue-700 mt-1 truncate">
+                            {flightChosen.airline} • ₹{getDisplayPrice(flightChosen.price).toLocaleString('en-IN')}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className={`grid gap-4 ${tripType === 'Round Trip' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
               
               {/* Outbound Flights Column */}
               <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden relative z-10">
                 <div className="p-3 border-b border-gray-200 bg-white">
-                  <h3 className="font-bold text-gray-900 text-[15px]">{getCityName(from)} → {getCityName(to)} <span className="text-gray-500 font-normal text-sm ml-1">{new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span></h3>
+                  <h3 className="font-bold text-gray-900 text-[15px]">
+                    {tripType === 'Multi City' && multiCityLegs[activeLegIndex]
+                      ? `Flight #${activeLegIndex + 1}: ${getCityName(multiCityLegs[activeLegIndex].from)} → ${getCityName(multiCityLegs[activeLegIndex].to)}`
+                      : `${getCityName(from)} → ${getCityName(to)}`}
+                    <span className="text-gray-500 font-normal text-sm ml-1">
+                      {tripType === 'Multi City' && multiCityLegs[activeLegIndex]
+                        ? new Date(multiCityLegs[activeLegIndex].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+                        : new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                  </h3>
                 </div>
                 <div className="hidden md:grid grid-cols-[1fr_1.5fr_1fr_1fr] items-center w-full px-4 py-2 bg-gray-50 border-b border-gray-200 text-[12px] text-gray-500 capitalize font-medium">
                   <div className="text-left">Departure</div>
@@ -621,8 +699,25 @@ export default function FlightSearchResults() {
                       <FlightCard 
                         key={`${flight._id}-${index}`} 
                         flight={flight} 
-                        isSelected={selectedOutbound?._id === flight._id}
-                        onSelect={() => setSelectedOutbound(flight)}
+                        isSelected={
+                          tripType === 'Multi City'
+                            ? selectedLegFlights[activeLegIndex]?._id === flight._id
+                            : selectedOutbound?._id === flight._id
+                        }
+                        onSelect={() => {
+                          if (tripType === 'Multi City') {
+                            setSelectedLegFlights(prev => ({ ...prev, [activeLegIndex]: flight }));
+                            setSelectedOutbound(flight);
+                            if (activeLegIndex < multiCityLegs.length - 1) {
+                              toast.success(`Flight #${activeLegIndex + 1} chosen! Now select Flight #${activeLegIndex + 2}`);
+                              setActiveLegIndex(activeLegIndex + 1);
+                            } else {
+                              toast.success(`Flight #${activeLegIndex + 1} chosen! All sectors confirmed.`);
+                            }
+                          } else {
+                            setSelectedOutbound(flight);
+                          }
+                        }}
                         isRoundTrip={tripType === 'Round Trip'}
                         displayPrice={getDisplayPrice(flight.price)}
                       />
@@ -714,6 +809,7 @@ export default function FlightSearchResults() {
 
             {/* Sticky Footer for Selection */}
             {(
+              (tripType === 'Multi City' && multiCityLegs && multiCityLegs.length > 0 && Object.keys(selectedLegFlights).length > 0) ||
               (tripType === 'Round Trip' && selectedOutbound && selectedReturn) ||
               (tripType === 'One Way' && selectedOutbound)
             ) ? createPortal(
@@ -721,52 +817,75 @@ export default function FlightSearchResults() {
                 <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-xl md:rounded-full pointer-events-auto w-full max-w-[1000px] p-1.5 md:p-2.5 flex flex-row items-center justify-between gap-2 md:gap-4">
                    
                   <div className="hidden md:flex w-auto items-center gap-4 flex-1 overflow-hidden px-2">
-                    {/* Outbound */}
-                    <div className="flex-1 flex items-center gap-3 md:gap-4">
-                       <div className="relative">
-                         <div className="absolute inset-0 bg-blue-500 blur opacity-20 rounded-full"></div>
-                         <img src={selectedOutbound.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
-                       </div>
-                       <div className="flex flex-col">
-                         <div className="flex items-center gap-2 mb-0.5">
-                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.departureTime))}</span>
-                           <span className="text-blue-500 text-[10px] md:text-xs">➔</span>
-                           <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedOutbound.arrivalTime))}</span>
-                          {((selectedOutbound as any).dayChange > 0 || parseDate(selectedOutbound.arrivalTime) < parseDate(selectedOutbound.departureTime)) && (
-                            <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
-                          )}
-                         </div>
-                         <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                           <span>{selectedOutbound.airline} {selectedOutbound.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
-                           <span className="text-blue-400 hover:text-blue-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
-                         </div>
-                       </div>
-                    </div>
-
-                    {/* Return if roundtrip */}
-                    {tripType === 'Round Trip' && selectedReturn && (
+                    {tripType === 'Multi City' ? (
+                      <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar py-1">
+                        {multiCityLegs.map((leg, idx) => {
+                          const flight = selectedLegFlights[idx];
+                          return (
+                            <div key={idx} className="flex items-center gap-2 shrink-0 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                              <span className="text-[10px] font-black text-blue-600">#{idx + 1}</span>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-slate-800">{leg.from} ➔ {leg.to}</span>
+                                {flight ? (
+                                  <span className="text-[10px] font-bold text-slate-500">{flight.airline} • ₹{getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
+                                ) : (
+                                  <span className="text-[10px] font-bold text-amber-600">Pending</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
                       <>
-                        <div className="w-[1px] h-8 md:h-10 bg-gray-200/80 mx-1 md:mx-2"></div>
+                        {/* Outbound */}
                         <div className="flex-1 flex items-center gap-3 md:gap-4">
                            <div className="relative">
-                             <div className="absolute inset-0 bg-emerald-500 blur opacity-20 rounded-full"></div>
-                             <img src={selectedReturn.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                             <div className="absolute inset-0 bg-blue-500 blur opacity-20 rounded-full"></div>
+                             <img src={selectedOutbound?.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
                            </div>
                            <div className="flex flex-col">
                              <div className="flex items-center gap-2 mb-0.5">
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.departureTime))}</span>
-                               <span className="text-emerald-500 text-[10px] md:text-xs">➔</span>
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
-                              {((selectedReturn as any).dayChange > 0 || parseDate(selectedReturn.arrivalTime) < parseDate(selectedReturn.departureTime)) && (
-                                <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
+                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{selectedOutbound ? formatTime(parseDate(selectedOutbound.departureTime)) : ''}</span>
+                               <span className="text-blue-500 text-[10px] md:text-xs">➔</span>
+                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{selectedOutbound ? formatTime(parseDate(selectedOutbound.arrivalTime)) : ''}</span>
+                              {selectedOutbound && ((selectedOutbound as any).dayChange > 0 || parseDate(selectedOutbound.arrivalTime) < parseDate(selectedOutbound.departureTime)) && (
+                                <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
                               )}
                              </div>
                              <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                               <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
-                               <span className="text-emerald-500 hover:text-emerald-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
+                               <span>{selectedOutbound?.airline} {selectedOutbound?.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
+                               <span className="text-blue-400 hover:text-blue-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
                              </div>
                            </div>
                         </div>
+
+                        {/* Return if roundtrip */}
+                        {tripType === 'Round Trip' && selectedReturn && (
+                          <>
+                            <div className="w-[1px] h-8 md:h-10 bg-gray-200/80 mx-1 md:mx-2"></div>
+                            <div className="flex-1 flex items-center gap-3 md:gap-4">
+                               <div className="relative">
+                                 <div className="absolute inset-0 bg-emerald-500 blur opacity-20 rounded-full"></div>
+                                 <img src={selectedReturn.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                               </div>
+                               <div className="flex flex-col">
+                                 <div className="flex items-center gap-2 mb-0.5">
+                                   <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.departureTime))}</span>
+                                   <span className="text-emerald-500 text-[10px] md:text-xs">➔</span>
+                                   <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
+                                  {((selectedReturn as any).dayChange > 0 || parseDate(selectedReturn.arrivalTime) < parseDate(selectedReturn.departureTime)) && (
+                                    <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
+                                  )}
+                                 </div>
+                                 <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                   <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
+                                   <span className="text-emerald-500 hover:text-emerald-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
+                                 </div>
+                               </div>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -775,7 +894,9 @@ export default function FlightSearchResults() {
                   <div className="flex items-center justify-between md:justify-end gap-2 md:gap-6 px-4 md:px-6 py-1.5 md:py-2 rounded-xl md:rounded-full w-full md:w-auto shadow-none md:shadow-sm bg-transparent md:bg-white/60 border-none md:border md:border-white/60">
                     <div className="flex flex-col items-start md:items-end justify-center">
                       <p className="font-black text-lg md:text-[22px] text-[#0c1a40] leading-none mb-1">
-                        ₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}
+                        ₹ {(tripType === 'Multi City'
+                          ? Object.values(selectedLegFlights).reduce((sum, f) => sum + getDisplayPrice(f.price), 0)
+                          : ((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0))).toLocaleString('en-IN')}
                       </p>
                       <p className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase cursor-pointer hover:text-blue-600 transition flex items-center gap-1" onClick={() => setShowFareSummaryModal(true)}>
                         Fare Summary
@@ -788,12 +909,37 @@ export default function FlightSearchResults() {
                           toast.error('Please login or signup first to book flights.', { id: 'login-required-toast' });
                           setIsLoginModalOpen(true);
                         } else {
-                          navigate('/flights/booking', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
+                          if (tripType === 'Multi City') {
+                            const unselectedIdx = multiCityLegs.findIndex((_, idx) => !selectedLegFlights[idx]);
+                            if (unselectedIdx !== -1) {
+                              setActiveLegIndex(unselectedIdx);
+                              toast(`Please select a flight for Sector #${unselectedIdx + 1}`);
+                              return;
+                            }
+                            const legsArray = multiCityLegs.map((_, idx) => selectedLegFlights[idx]);
+                            navigate('/flights/booking', {
+                              state: {
+                                selectedOutbound: legsArray[0],
+                                selectedReturn: legsArray[1] || null,
+                                selectedLegs: legsArray,
+                                tripType: 'Multi City',
+                                adults,
+                                children,
+                                infants
+                              }
+                            });
+                          } else {
+                            navigate('/flights/booking', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
+                          }
                         }
                       }}
                       className="group bg-[#0c1a40] hover:bg-blue-600 text-white font-black py-2 md:py-3 px-6 md:px-8 rounded-full text-xs md:text-sm shadow-[0_5px_15px_rgba(12,26,64,0.3)] hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wider flex items-center gap-1 md:gap-2 whitespace-nowrap"
                     >
-                      Book Ticket
+                      {tripType === 'Multi City'
+                        ? (multiCityLegs && Object.keys(selectedLegFlights).length === multiCityLegs.length
+                            ? `Book All (${multiCityLegs.length} Flights)`
+                            : `Sector #${activeLegIndex + 1} (${Object.keys(selectedLegFlights).length}/${multiCityLegs.length})`)
+                        : 'Book Ticket'}
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform md:w-4 md:h-4 w-3.5 h-3.5" />
                     </button>
                   </div>

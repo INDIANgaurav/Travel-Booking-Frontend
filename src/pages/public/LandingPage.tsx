@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp, X, Check, EyeOff, Eye, Sparkles, Copy, ArrowRight } from 'lucide-react';
+import { Plane, Building2, Map, Search, Globe, Shield, CreditCard, ChevronRight, User, Briefcase, Calendar, ChevronDown, Bus, Car, Navigation, Ticket, Users, Gift, History, ArrowRightLeft, Baby, Smile, Heart, Share2, ThumbsUp, X, Check, EyeOff, Eye, Sparkles, Copy, ArrowRight, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser } from '../../store/authSlice';
@@ -26,16 +27,102 @@ interface Destination {
 }
 
 const CITIES: Record<string, string> = {
-  'DEL': 'New Delhi',
-  'BOM': 'Mumbai',
-  'BLR': 'Bengaluru',
-  'GOI': 'Goa',
-  'CCU': 'Kolkata',
-  'HYD': 'Hyderabad',
-  'MAA': 'Chennai',
-  'DXB': 'Dubai',
-  'BKK': 'Bangkok',
-  'LHR': 'London'
+  DEL: 'New Delhi',
+  BOM: 'Mumbai',
+  NMI: 'Navi Mumbai',
+  BLR: 'Bengaluru',
+  GOI: 'Goa (Dabolim)',
+  GOX: 'Goa (Mopa)',
+  CCU: 'Kolkata',
+  HYD: 'Hyderabad',
+  MAA: 'Chennai',
+  AMD: 'Ahmedabad',
+  PNQ: 'Pune',
+  JAI: 'Jaipur',
+  LKO: 'Lucknow',
+  COK: 'Kochi',
+  TRV: 'Thiruvananthapuram',
+  CCJ: 'Kozhikode',
+  IXB: 'Bagdogra',
+  GAU: 'Guwahati',
+  SXR: 'Srinagar',
+  IXC: 'Chandigarh',
+  PAT: 'Patna',
+  VNS: 'Varanasi',
+  NAG: 'Nagpur',
+  BBI: 'Bhubaneswar',
+  ATQ: 'Amritsar',
+  IDR: 'Indore',
+  RPR: 'Raipur',
+  IXZ: 'Port Blair',
+  BDQ: 'Vadodara',
+  STV: 'Surat',
+  BHO: 'Bhopal',
+  DXB: 'Dubai',
+  SHJ: 'Sharjah',
+  AUH: 'Abu Dhabi',
+  BKK: 'Bangkok',
+  DMK: 'Bangkok (Don Mueang)',
+  LHR: 'London',
+  SYD: 'Sydney',
+  BNE: 'Brisbane',
+  AKL: 'Auckland',
+  DPS: 'Bali',
+  SIN: 'Singapore',
+  KUL: 'Kuala Lumpur',
+  DOH: 'Doha'
+};
+
+const AIRPORT_NAMES: Record<string, string> = {
+  DEL: 'DEL, Indira Gandhi International Airport',
+  BOM: 'BOM, Chhatrapati Shivaji International Airport',
+  NMI: 'NMI, Navi Mumbai International Airport',
+  BLR: 'BLR, Kempegowda International Airport India',
+  GOI: 'GOI, Dabolim Airport India',
+  GOX: 'GOX, Manohar International Airport Goa',
+  CCU: 'CCU, Netaji Subhash Chandra Bose Airport',
+  HYD: 'HYD, Rajiv Gandhi International Airport',
+  MAA: 'MAA, Chennai International Airport',
+  AMD: 'AMD, Sardar Vallabhbhai Patel Airport',
+  PNQ: 'PNQ, Pune International Airport',
+  JAI: 'JAI, Jaipur International Airport',
+  LKO: 'LKO, Chaudhary Charan Singh Airport',
+  COK: 'COK, Cochin International Airport',
+  TRV: 'TRV, Trivandrum International Airport',
+  CCJ: 'CCJ, Calicut International Airport',
+  IXB: 'IXB, Bagdogra Airport',
+  GAU: 'GAU, Lokpriya Gopinath Bordoloi Airport',
+  SXR: 'SXR, Sheikh ul-Alam International Airport',
+  IXC: 'IXC, Shaheed Bhagat Singh Airport',
+  PAT: 'PAT, Jay Prakash Narayan Airport',
+  VNS: 'VNS, Lal Bahadur Shastri Airport',
+  NAG: 'NAG, Dr. Babasaheb Ambedkar Airport',
+  BBI: 'BBI, Biju Patnaik International Airport',
+  ATQ: 'ATQ, Sri Guru Ram Dass Jee Airport',
+  IDR: 'IDR, Devi Ahilyabai Holkar Airport',
+  RPR: 'RPR, Swami Vivekananda Airport',
+  IXZ: 'IXZ, Veer Savarkar International Airport',
+  BDQ: 'BDQ, Vadodara Airport',
+  STV: 'STV, Surat Airport',
+  BHO: 'BHO, Raja Bhoj Airport',
+  DXB: 'DXB, Dubai International Airport UAE',
+  SHJ: 'SHJ, Sharjah International Airport UAE',
+  AUH: 'AUH, Abu Dhabi International Airport UAE',
+  BKK: 'BKK, Suvarnabhumi Airport Thailand',
+  DMK: 'DMK, Don Mueang International Airport',
+  LHR: 'LHR, Heathrow Airport UK',
+  SYD: 'SYD, Kingsford Smith Airport Australia',
+  BNE: 'BNE, Brisbane Airport Australia',
+  AKL: 'AKL, Auckland Airport New Zealand',
+  DPS: 'DPS, Ngurah Rai International Airport Bali',
+  SIN: 'SIN, Changi Airport Singapore',
+  KUL: 'KUL, Kuala Lumpur International Airport',
+  DOH: 'DOH, Hamad International Airport Qatar'
+};
+
+const getAirportSubtext = (code: string) => {
+  if (!code) return 'Select City';
+  return AIRPORT_NAMES[code] || `${code}, Airport`;
 };
 
 export default function LandingPage() {
@@ -238,6 +325,60 @@ export default function LandingPage() {
   const [isToPickerOpen, setIsToPickerOpen] = useState(false);
   const [isTripTypePickerOpen, setIsTripTypePickerOpen] = useState(false);
 
+  // Multi-City State (MakeMyTrip Style)
+  const [multiCityLegs, setMultiCityLegs] = useState<Array<{ id: string; from: string; to: string; date: Date }>>([
+    { id: '1', from: 'DEL', to: 'BLR', date: new Date() },
+    { id: '2', from: 'BLR', to: 'BOM', date: new Date(Date.now() + 86400000) }
+  ]);
+  const [activeMultiPicker, setActiveMultiPicker] = useState<{ legIndex: number; type: 'from' | 'to' | 'date' } | null>(null);
+
+  const handleAddMultiCityLeg = () => {
+    if (multiCityLegs.length >= 5) {
+      toast.error('Maximum 5 cities can be added for Multi-City itineraries');
+      return;
+    }
+    const lastLeg = multiCityLegs[multiCityLegs.length - 1];
+    const nextDate = new Date(lastLeg.date.getTime() + 86400000);
+    setMultiCityLegs(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substring(7),
+        from: lastLeg.to || 'DEL',
+        to: '',
+        date: nextDate
+      }
+    ]);
+  };
+
+  const handleRemoveMultiCityLeg = (index: number) => {
+    if (multiCityLegs.length <= 2) return;
+    setMultiCityLegs(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      // Auto connect previous destination to next departure
+      for (let i = 1; i < updated.length; i++) {
+        if (updated[i - 1].to) {
+          updated[i].from = updated[i - 1].to;
+        }
+      }
+      return updated;
+    });
+    if (activeMultiPicker?.legIndex === index) {
+      setActiveMultiPicker(null);
+    }
+  };
+
+  const handleUpdateMultiCityLeg = (index: number, field: 'from' | 'to' | 'date', value: any) => {
+    setMultiCityLegs(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      // MMT Auto-fill: changing leg i 'to' automatically updates leg i+1 'from'
+      if (field === 'to' && updated[index + 1]) {
+        updated[index + 1] = { ...updated[index + 1], from: value };
+      }
+      return updated;
+    });
+  };
+
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
@@ -267,7 +408,22 @@ export default function LandingPage() {
     setIsFromPickerOpen(false);
     setIsToPickerOpen(false);
     setIsTripTypePickerOpen(false);
+    setActiveMultiPicker(null);
   };
+
+  // Close all pickers on outside click without requiring blocking overlay
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('.picker-popup') || target.closest('.picker-trigger')) {
+        return;
+      }
+      closeAllPickers();
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   // Handle scroll for sticky nav
   useEffect(() => {
@@ -298,6 +454,46 @@ export default function LandingPage() {
         checkOut: getLocalISO(returnDate)
       }).toString();
       navigate(`/hotels/search?${query}`);
+      return;
+    }
+
+    if (tripType === 'Multi City') {
+      for (let i = 0; i < multiCityLegs.length; i++) {
+        const leg = multiCityLegs[i];
+        if (!leg.from) {
+          toast.error(`Please select Departure City for Flight #${i + 1}`);
+          return;
+        }
+        if (!leg.to) {
+          toast.error(`Please select Destination City for Flight #${i + 1}`);
+          return;
+        }
+        if (leg.from === leg.to) {
+          toast.error(`Flight #${i + 1}: Departure and Destination cannot be the same city`);
+          return;
+        }
+      }
+
+      const serializedLegs = multiCityLegs.map(l => ({
+        from: l.from,
+        to: l.to,
+        date: getLocalISO(l.date)
+      }));
+
+      const query = new URLSearchParams({
+        tab: activeTab,
+        tripType: 'Multi City',
+        from: multiCityLegs[0].from,
+        to: multiCityLegs[0].to,
+        date: getLocalISO(multiCityLegs[0].date),
+        legs: JSON.stringify(serializedLegs),
+        adults: adults.toString(),
+        children: children.toString(),
+        infants: infants.toString(),
+        cabinClass: cabinClass
+      }).toString();
+
+      navigate(`/flights/search?${query}`);
       return;
     }
 
@@ -341,12 +537,15 @@ export default function LandingPage() {
             {/* Main Image with slow zoom effect */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center opacity-80" style={{ animation: 'zoomInOut 30s infinite alternate ease-in-out' }}></div>
             
-            {/* Rich Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-transparent to-gray-50"></div>
+            {/* Rich Atmospheric Sky Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#021333]/90 via-[#0a2552]/60 to-[#031538]/95"></div>
+            {/* Smooth transition into page content at the very bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-white pointer-events-none"></div>
             
             {/* Decorative Floating Glowing Orbs */}
-            <div className="absolute top-[15%] left-[10%] w-64 h-64 bg-blue-400/20 rounded-full blur-[80px]"></div>
-            <div className="absolute top-[30%] right-[10%] w-80 h-80 bg-purple-500/20 rounded-full blur-[100px]"></div>
+            <div className="absolute top-[15%] left-[10%] w-72 h-72 bg-blue-400/25 rounded-full blur-[90px]"></div>
+            <div className="absolute top-[30%] right-[10%] w-96 h-96 bg-purple-500/25 rounded-full blur-[110px]"></div>
+            <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[85%] max-w-[1100px] h-[380px] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-sky-400/20 rounded-full blur-[120px] pointer-events-none"></div>
             
             {/* Extra inline style for the subtle zoom animation */}
             <style>{`
@@ -360,181 +559,444 @@ export default function LandingPage() {
               }
             `}</style>
           </div>        {/* Search Widget Container */}
-        <div className={`mx-auto w-full px-4 relative z-40 transition-all duration-300 max-w-[1250px]`} onClick={closeAllPickers}>
+        <div className={`mx-auto w-full px-4 relative z-40 transition-all duration-300 max-w-[1250px]`}>
           
           {/* Welcome Headline */}
-            <div className="text-center mb-6 lg:mb-8 animate-[fadeInUp_1s_ease-out]">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tight drop-shadow-2xl">
-                Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-300">Dream Vacation</span>
+            <div className="text-center mb-7 lg:mb-9 animate-[fadeInUp_1s_ease-out]">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold mb-3.5 shadow-sm">
+                <Sparkles size={14} className="text-amber-300 animate-pulse" />
+                <span>Special Deals & Guaranteed Best Fares</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-2 tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.45)]">
+                Let's Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-indigo-200 to-purple-200">Dream Vacation</span>
               </h1>
             </div>
-          {/* Top Tabs Pill - Centered with Flights and Hotels only */}
-          <div className="flex bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] items-center justify-center px-8 lg:px-12 py-3.5 lg:py-4 mx-auto relative z-30 w-fit max-w-[360px] mb-[-20px] lg:mb-[-40px] gap-10 sm:gap-14">
+          {/* Top Tabs Pill - Floating Glass Capsule */}
+          <div className="flex bg-white/85 backdrop-blur-2xl border border-white/90 rounded-full shadow-[0_12px_36px_rgba(0,18,50,0.18),0_0_0_1px_rgba(255,255,255,0.7)_inset] items-center justify-center p-1.5 mx-auto relative z-30 w-fit mb-[-24px] lg:mb-[-28px] gap-2">
             {[
               { name: 'Flights', icon: Plane },
               { name: 'Hotels', icon: Building2 }
-            ].map(tab => (
-              <button
-                key={tab.name}
-                className={`flex flex-col items-center gap-1.5 relative px-3 py-1 cursor-pointer transition-all ${activeTab === tab.name ? 'text-blue-600 font-extrabold' : 'text-gray-500 hover:text-blue-600 font-semibold'}`}
-                onClick={() => setActiveTab(tab.name)}
-              >
-                <tab.icon size={22} className={activeTab === tab.name ? 'text-blue-600 scale-110 transition-transform' : 'text-gray-400'} />
-                <span className="text-xs sm:text-[13px] text-center leading-tight whitespace-nowrap">{tab.name}</span>
-                {activeTab === tab.name && (
-                  <div className="absolute -bottom-3.5 lg:-bottom-4 left-1/2 -translate-x-1/2 w-10 h-[3px] bg-blue-600 rounded-t-full shadow-[0_-2px_10px_rgba(37,99,235,0.5)]"></div>
-                )}
-              </button>
-            ))}
+            ].map(tab => {
+              const isActive = activeTab === tab.name;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.name}
+                  type="button"
+                  className={`flex items-center gap-2.5 px-6 sm:px-8 py-2.5 rounded-full cursor-pointer transition-all duration-300 font-black text-xs sm:text-sm tracking-wide ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white shadow-[0_4px_18px_rgba(37,99,235,0.45)] scale-[1.02]' 
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-white/60'
+                  }`}
+                  onClick={() => setActiveTab(tab.name)}
+                >
+                  <Icon size={18} className={isActive ? 'text-white' : 'text-slate-500'} />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl pt-8 lg:pt-14 pb-14 lg:pb-16 px-4 lg:px-8 relative z-20">
-            
-            {/* Click-away overlay */}
-            {(activeDatePicker || isFromPickerOpen || isToPickerOpen || isCabinPickerOpen || isBookingForOpen) && (
-              <div 
-                className="fixed inset-0 z-40" 
-                onClick={(e) => { e.stopPropagation(); closeAllPickers(); }}
-              ></div>
-            )}
+          {/* Main Glass Card */}
+          <div className="relative z-20">
+            {/* Ambient Backlight Glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/25 via-indigo-500/20 to-sky-400/25 rounded-3xl blur-2xl opacity-75 -z-10 pointer-events-none"></div>
+
+            <div className="bg-white/[0.84] backdrop-blur-2xl rounded-3xl border border-white/90 shadow-[0_25px_65px_-15px_rgba(8,30,80,0.22),0_0_0_1px_rgba(255,255,255,0.7)_inset] pt-9 lg:pt-12 pb-14 lg:pb-16 px-4 sm:px-6 lg:px-8 relative">
             
             {activeTab === 'Flights' ? (
               <div className="pb-6 lg:pb-8">
-                {/* Flight Types */}
-                <div className="flex flex-wrap items-center gap-4 lg:gap-6 mb-4 lg:mb-6 relative">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="tripType" checked={tripType === 'One Way'} onChange={() => setTripType('One Way')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className={`text-[13px] font-bold transition-colors ${tripType === 'One Way' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>One Way</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="tripType" checked={tripType === 'Round Trip'} onChange={() => setTripType('Round Trip')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className={`text-[13px] font-bold transition-colors ${tripType === 'Round Trip' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Round Trip</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="tripType" checked={tripType === 'Multi City'} onChange={() => setTripType('Multi City')} className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className={`text-[13px] font-bold transition-colors ${tripType === 'Multi City' ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>Multi City</span>
-                  </label>
+                {/* Flight Types & Tagline */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-5 lg:mb-6 relative">
+                  <div className="inline-flex items-center p-1 bg-slate-900/[0.04] backdrop-blur-md border border-slate-200/60 rounded-full gap-1">
+                    {[
+                      { label: 'One Way', value: 'One Way' },
+                      { label: 'Round Trip', value: 'Round Trip' },
+                      { label: 'Multi City', value: 'Multi City' }
+                    ].map(item => {
+                      const isSelected = tripType === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => {
+                            setTripType(item.value as any);
+                            if (item.value === 'One Way') {
+                              setReturnDate(null);
+                            } else if (item.value === 'Round Trip' && !returnDate) {
+                              setReturnDate(new Date((departureDate || new Date()).getTime() + 86400000 * 2));
+                            } else if (item.value === 'Multi City') {
+                              setMultiCityLegs(prev => {
+                                const copy = [...prev];
+                                copy[0].from = searchFrom || 'DEL';
+                                if (searchTo) {
+                                  copy[0].to = searchTo;
+                                  if (copy[1]) copy[1].from = searchTo;
+                                }
+                                if (departureDate) copy[0].date = departureDate;
+                                return copy;
+                              });
+                            }
+                          }}
+                          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${
+                            isSelected 
+                              ? 'bg-white text-blue-700 shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/70' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full transition-all ${isSelected ? 'bg-blue-600 scale-100 ring-2 ring-blue-200' : 'bg-slate-300'}`}></span>
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                   
-                  <div className="ml-auto text-[13px] font-bold text-gray-700 hidden lg:block">
-                    Book International and Domestic Flights
+                  <div className="hidden lg:inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white/70 backdrop-blur-xs border border-white/80 px-3.5 py-1.5 rounded-full shadow-xs">
+                    <Plane size={13} className="text-blue-600" />
+                    <span>Book International and Domestic Flights</span>
                   </div>
                 </div>
 
-                {/* Main Inputs Box */}
-                <div className="flex flex-col lg:flex-row border border-gray-300 rounded-lg overflow-visible lg:h-[110px] relative hover:border-gray-400 transition-colors">
+                {tripType === 'Multi City' ? (
+                  /* MULTI-CITY STACKED ROWS (MakeMyTrip Architecture) */
+                  <div className="space-y-3 relative z-30">
+                    {multiCityLegs.map((leg, index) => {
+                      const isFirstLeg = index === 0;
+                      const isLastLeg = index === multiCityLegs.length - 1;
+                      const canRemove = multiCityLegs.length > 2 && index >= 2;
+                      const isPickerOpen = activeMultiPicker?.legIndex === index;
+
+                      return (
+                        <div 
+                          key={leg.id}
+                          className={`flex flex-col lg:flex-row bg-white/85 backdrop-blur-xl border border-white/95 rounded-2xl shadow-[0_6px_25px_rgba(15,23,42,0.07),0_0_0_1px_rgba(255,255,255,0.85)_inset] overflow-visible lg:h-[105px] relative divide-y lg:divide-y-0 lg:divide-x divide-slate-200/70 transition-all duration-200 ${
+                            isPickerOpen ? 'z-50 ring-2 ring-blue-500/25' : 'z-20'
+                          }`}
+                        >
+                          {/* FROM */}
+                          <div
+                            className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-t-2xl lg:rounded-t-none lg:rounded-l-2xl transition-all group relative picker-trigger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              closeAllPickers();
+                              setActiveMultiPicker({ legIndex: index, type: 'from' });
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">
+                                From <span className="text-blue-600 font-extrabold ml-1">#{index + 1}</span>
+                              </span>
+                            </div>
+                            <div className="w-full text-2xl lg:text-[28px] leading-none font-black text-slate-900 truncate bg-transparent flex flex-col mt-1">
+                              {CITIES[leg.from] || leg.from || 'Select City'}
+                            </div>
+                            <p className="text-[12px] font-semibold text-slate-500 truncate mt-1">
+                              {getAirportSubtext(leg.from)}
+                            </p>
+
+                            {isPickerOpen && activeMultiPicker?.type === 'from' && (
+                              <div className="absolute top-[100%] left-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
+                                <CityPicker
+                                  value={leg.from}
+                                  onChange={(c) => {
+                                    handleUpdateMultiCityLeg(index, 'from', c);
+                                    setActiveMultiPicker(null);
+                                  }}
+                                  onClose={() => setActiveMultiPicker(null)}
+                                  title={`FLIGHT #${index + 1} - FROM`}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* TO */}
+                          <div
+                            className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group relative picker-trigger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              closeAllPickers();
+                              setActiveMultiPicker({ legIndex: index, type: 'to' });
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">
+                                To
+                              </span>
+                            </div>
+                            <div className={`w-full text-2xl lg:text-[28px] leading-none font-black truncate bg-transparent flex flex-col mt-1 ${
+                              leg.to ? 'text-slate-900' : 'text-slate-400 font-bold'
+                            }`}>
+                              {leg.to ? (CITIES[leg.to] || leg.to) : 'Select City'}
+                            </div>
+                            <p className="text-[12px] font-semibold text-slate-500 truncate mt-1">
+                              {leg.to ? getAirportSubtext(leg.to) : 'Tap to select destination'}
+                            </p>
+
+                            {isPickerOpen && activeMultiPicker?.type === 'to' && (
+                              <div className="absolute top-[100%] left-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
+                                <CityPicker
+                                  value={leg.to}
+                                  onChange={(c) => {
+                                    handleUpdateMultiCityLeg(index, 'to', c);
+                                    setActiveMultiPicker(null);
+                                  }}
+                                  onClose={() => setActiveMultiPicker(null)}
+                                  title={`FLIGHT #${index + 1} - TO`}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* DEPARTURE */}
+                          <div
+                            className="flex-1 lg:w-[150px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group relative picker-trigger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              closeAllPickers();
+                              setActiveMultiPicker({ legIndex: index, type: 'date' });
+                            }}
+                          >
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Departure</span>
+                              <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
+                            </div>
+                            <div className="flex items-baseline gap-1 mt-1">
+                              <h3 className="text-3xl lg:text-[34px] leading-none font-black text-slate-900">{format(leg.date, 'd')}</h3>
+                              <span className="text-xl font-bold text-slate-900">{format(leg.date, "MMM''yy")}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 font-semibold mt-1">{format(leg.date, 'EEEE')}</p>
+
+                            {isPickerOpen && activeMultiPicker?.type === 'date' && (
+                              <div className="absolute top-[100%] left-0 sm:left-[-80px] z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
+                                <CustomCalendar
+                                  startDate={leg.date}
+                                  endDate={null}
+                                  isOneWay={true}
+                                  minDate={index > 0 ? multiCityLegs[index - 1].date : new Date()}
+                                  onChange={(start) => {
+                                    if (start) {
+                                      handleUpdateMultiCityLeg(index, 'date', start);
+                                    }
+                                    setActiveMultiPicker(null);
+                                  }}
+                                  onClose={() => setActiveMultiPicker(null)}
+                                  origin={leg.from}
+                                  destination={leg.to}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* ROW 1: TRAVELLERS & CABIN CLASS (Global for trip) */}
+                          {isFirstLeg ? (
+                            <div className="relative flex flex-col sm:flex-row w-full lg:w-auto divide-y sm:divide-y-0 sm:divide-x divide-slate-200/70">
+                              {/* Travellers */}
+                              <div
+                                className="w-full sm:flex-1 lg:w-[125px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group picker-trigger"
+                                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(!isTravellerPickerOpen); }}
+                              >
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Travellers</span>
+                                  <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
+                                </div>
+                                <div className="flex items-baseline gap-1 mt-1">
+                                  <h3 className="text-3xl lg:text-[34px] leading-none font-black text-slate-900">{adults + children + infants}</h3>
+                                </div>
+                                <p className="text-[12px] text-slate-700 font-bold mt-1 flex items-center gap-2">
+                                  <span className="flex items-center gap-0.5"><User size={13} className="text-slate-800" /> {adults}</span>
+                                  {children > 0 && <span className="flex items-center gap-0.5"><Smile size={13} className="text-slate-800" /> {children}</span>}
+                                  {infants > 0 && <span className="flex items-center gap-0.5"><Baby size={13} className="text-slate-800" /> {infants}</span>}
+                                </p>
+                              </div>
+
+                              {isTravellerPickerOpen && (
+                                <div className="absolute top-[100%] right-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
+                                  <TravellerPicker
+                                    adults={adults}
+                                    children={children}
+                                    infants={infants}
+                                    cabinClass={cabinClass}
+                                    onChange={(a, c, i, cabin) => {
+                                      setAdults(a);
+                                      setChildren(c);
+                                      setInfants(i);
+                                      setCabinClass(cabin);
+                                    }}
+                                    onClose={() => setIsTravellerPickerOpen(false)}
+                                  />
+                                </div>
+                              )}
+
+                              {/* Cabin Class */}
+                              <div
+                                className="w-full sm:flex-1 lg:w-[170px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-b-2xl sm:rounded-b-none lg:rounded-r-2xl transition-all group picker-trigger"
+                                onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
+                              >
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
+                                  <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
+                                </div>
+                                <p className="text-[14px] font-black text-slate-900 mt-2 leading-tight truncate" title={cabinClass}>
+                                  {cabinClass}
+                                </p>
+                              </div>
+
+                              {isCabinPickerOpen && (
+                                <div className="absolute top-[100%] right-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
+                                  <CabinClassPicker cabinClass={cabinClass} onChange={(c) => { setCabinClass(c); setIsCabinPickerOpen(false); }} />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            /* ROW 2 & BEYOND: + ADD ANOTHER CITY / REMOVE */
+                            <div className="flex items-center justify-between lg:justify-end gap-3 p-3 px-5 lg:w-[295px] rounded-b-2xl lg:rounded-b-none lg:rounded-r-2xl bg-slate-50/50">
+                              {canRemove && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMultiCityLeg(index)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                                  title="Remove this city leg"
+                                >
+                                  <X size={15} />
+                                  <span>Remove</span>
+                                </button>
+                              )}
+
+                              {isLastLeg && multiCityLegs.length < 5 && (
+                                <button
+                                  type="button"
+                                  onClick={handleAddMultiCityLeg}
+                                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border-2 border-blue-600 text-blue-600 font-extrabold text-xs tracking-wider uppercase hover:bg-blue-600 hover:text-white transition-all shadow-xs active:scale-95 cursor-pointer ml-auto"
+                                >
+                                  <Plus size={15} strokeWidth={2.8} />
+                                  <span>+ ADD ANOTHER CITY</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Main Inputs Glass Box (One Way & Round Trip) */
+                  <div className={`flex flex-col lg:flex-row bg-white/85 backdrop-blur-xl border border-white/95 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.85)_inset] overflow-visible lg:h-[110px] relative divide-y lg:divide-y-0 lg:divide-x divide-slate-200/70 transition-all duration-200 ${
+                    (isFromPickerOpen || isToPickerOpen || activeDatePicker || isTravellerPickerOpen || isCabinPickerOpen || isBookingForOpen) ? 'z-50' : 'z-20'
+                  }`}>
                   
                   {/* FROM */}
                   <div 
-                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-t-2xl lg:rounded-t-none lg:rounded-l-2xl transition-all group relative picker-trigger"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsFromPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">From</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">From</span>
                     </div>
-                    <div className="w-full text-2xl lg:text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    <div className="w-full text-2xl lg:text-[30px] leading-none font-black text-slate-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchFrom] || searchFrom}
                     </div>
-                    <p className="text-[12px] text-gray-500 truncate mt-1">{searchFrom}, Airport</p>
+                    <p className="text-[12px] font-semibold text-slate-500 truncate mt-1">{getAirportSubtext(searchFrom)}</p>
                     
                     {isFromPickerOpen && (
-                      <div className="absolute top-[100%] left-0 z-50" onClick={e => e.stopPropagation()}>
+                      <div className="absolute top-[100%] left-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                         <CityPicker value={searchFrom} onChange={(c) => { setSearchFrom(c); setIsFromPickerOpen(false); }} onClose={() => setIsFromPickerOpen(false)} title="FROM" />
                       </div>
                     )}
                     
                     {/* Swap Button */}
                     <div 
-                      className="absolute right-4 lg:-right-4 top-[100%] lg:top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center cursor-pointer hover:shadow-md transition"
+                      className="absolute right-4 lg:-right-4.5 top-[100%] lg:top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center cursor-pointer hover:bg-blue-600 hover:text-white hover:border-blue-600 group/swap transition-all duration-300 hover:scale-110 active:scale-95"
                       onClick={(e) => {
                         e.stopPropagation();
                         const temp = searchFrom;
                         setSearchFrom(searchTo);
                         setSearchTo(temp);
                       }}
+                      title="Swap Origin and Destination"
                     >
-                      <ArrowRightLeft size={14} className="text-blue-600 transform lg:rotate-0 rotate-90" />
+                      <ArrowRightLeft size={14} className="text-blue-600 group-hover/swap:text-white transform lg:rotate-0 rotate-90 transition-colors" />
                     </div>
                   </div>
 
                   {/* TO */}
                   <div 
-                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
+                    className="w-full lg:flex-1 min-w-0 p-3 px-5 border-b lg:border-b-0 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group relative picker-trigger"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">To</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">To</span>
                     </div>
-                    <div className="w-full text-2xl lg:text-[32px] leading-none font-black text-gray-900 truncate bg-transparent flex flex-col mt-1">
+                    <div className="w-full text-2xl lg:text-[30px] leading-none font-black text-slate-900 truncate bg-transparent flex flex-col mt-1">
                       {CITIES[searchTo] || searchTo}
                     </div>
-                    <p className="text-[12px] text-gray-500 truncate mt-1">{searchTo}, Airport</p>
+                    <p className="text-[12px] font-semibold text-slate-500 truncate mt-1">{getAirportSubtext(searchTo)}</p>
 
                     {isToPickerOpen && (
-                      <div className="absolute top-[100%] left-0 z-50" onClick={e => e.stopPropagation()}>
+                      <div className="absolute top-[100%] left-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                         <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="TO" />
                       </div>
                     )}
                   </div>
 
-                <div className="relative flex flex-row w-full lg:w-auto">
+                <div className="relative flex flex-row w-full lg:w-auto divide-x divide-slate-200/70">
                   <div 
-                    className="flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="flex-1 lg:w-[150px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group picker-trigger"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Departure</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Departure</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
                     {departureDate ? (
                       <>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{format(departureDate, 'd')}</h3>
-                          <span className="text-xl font-bold text-gray-900">{format(departureDate, "MMM''yy")}</span>
+                          <h3 className="text-3xl lg:text-[38px] leading-none font-black text-slate-900">{format(departureDate, 'd')}</h3>
+                          <span className="text-xl font-bold text-slate-900">{format(departureDate, "MMM''yy")}</span>
                         </div>
-                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
+                        <p className="text-[12px] text-slate-500 font-semibold mt-1">{format(departureDate, 'EEEE')}</p>
                       </>
                     ) : (
-                      <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
+                      <p className="text-sm font-bold text-slate-400 mt-3">Select Date</p>
                     )}
                   </div>
 
-                  <div 
-                    className={`flex-1 lg:w-[150px] p-3 px-3 lg:px-5 border-b lg:border-b-0 lg:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative ${tripType === 'One Way' ? 'opacity-70 hover:bg-transparent' : ''}`}
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      closeAllPickers(); 
-                      if (tripType === 'One Way') {
-                        setTripType('Round Trip');
-                      }
-                      setActiveDatePicker('return'); 
-                    }}
-                  >
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Return</span>
-                      <ChevronDown size={16} className="text-blue-600" />
-                    </div>
-                    {returnDate ? (
-                      <>
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{format(returnDate, 'd')}</h3>
-                          <span className="text-xl font-bold text-gray-900">{format(returnDate, "MMM''yy")}</span>
-                        </div>
-                        <p className="text-[12px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
-                      </>
-                    ) : (
-                      <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Tap to add a return date for bigger discounts</p>
-                    )}
-
-                    {show30DaysWarning && (
-                      <div className="absolute top-[85%] left-4 bg-[#cc7700] text-white text-[12px] px-3 py-1.5 rounded shadow-lg z-50 whitespace-nowrap animate-fade-in-up">
-                        <div className="absolute -top-1 left-4 w-3 h-3 bg-[#cc7700] transform rotate-45"></div>
-                        You are booking for more than 30 days
+                  {/* Return Column - ONLY visible when Round Trip is selected */}
+                  {tripType === 'Round Trip' && (
+                    <div 
+                      className="flex-1 lg:w-[150px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group relative animate-in fade-in duration-200 picker-trigger"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        closeAllPickers(); 
+                        setActiveDatePicker('return'); 
+                      }}
+                    >
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Return</span>
+                        <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                       </div>
-                    )}
-                  </div>
+                      {returnDate ? (
+                        <>
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <h3 className="text-3xl lg:text-[38px] leading-none font-black text-slate-900">{format(returnDate, 'd')}</h3>
+                            <span className="text-xl font-bold text-slate-900">{format(returnDate, "MMM''yy")}</span>
+                          </div>
+                          <p className="text-[12px] text-slate-500 font-semibold mt-1">{format(returnDate, 'EEEE')}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-bold text-slate-400 mt-3">Select Date</p>
+                      )}
+
+                      {show30DaysWarning && (
+                        <div className="absolute top-[85%] left-4 bg-[#cc7700] text-white text-[12px] px-3 py-1.5 rounded shadow-lg z-50 whitespace-nowrap animate-fade-in-up">
+                          <div className="absolute -top-1 left-4 w-3 h-3 bg-[#cc7700] transform rotate-45"></div>
+                          You are booking for more than 30 days
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {activeDatePicker === 'depart' && (
-                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] left-0 sm:left-[-80px] z-50 mt-1 sm:mt-0" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] left-0 sm:left-[-80px] z-[100] mt-1 sm:mt-0 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={departureDate} 
                         endDate={null}
@@ -550,8 +1012,8 @@ export default function LandingPage() {
                     </div>
                   )}
 
-                  {activeDatePicker === 'return' && (
-                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] right-0 sm:left-[-80px] sm:right-auto z-50 mt-1 sm:mt-0" onClick={e => e.stopPropagation()}>
+                  {activeDatePicker === 'return' && tripType === 'Round Trip' && (
+                    <div className="absolute top-[100%] sm:top-[calc(100%-4px)] right-0 sm:left-[-80px] sm:right-auto z-[100] mt-1 sm:mt-0 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                       <CustomCalendar 
                         startDate={returnDate} 
                         endDate={null}
@@ -569,28 +1031,28 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto">
+                <div className="relative flex flex-col sm:flex-row w-full lg:w-auto divide-y sm:divide-y-0 sm:divide-x divide-slate-200/70">
                   {/* Travellers */}
                   <div 
-                    className="w-full sm:flex-1 lg:w-[120px] p-3 px-3 lg:px-5 border-b lg:border-b-0 border-gray-200 lg:border-r cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[125px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group picker-trigger"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsTravellerPickerOpen(!isTravellerPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Travellers</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Travellers</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <h3 className="text-3xl lg:text-[40px] leading-none font-black text-gray-900">{adults + children + infants}</h3>
+                      <h3 className="text-3xl lg:text-[38px] leading-none font-black text-slate-900">{adults + children + infants}</h3>
                     </div>
-                    <p className="text-[12px] text-gray-700 font-bold mt-1 flex items-center gap-2.5">
-                      <span className="flex items-center gap-0.5" title="Adults"><User size={14} className="text-gray-900" /> {adults}</span>
-                      <span className="flex items-center gap-0.5" title="Children"><Smile size={14} className="text-gray-900" /> {children}</span>
-                      <span className="flex items-center gap-0.5" title="Infants"><Baby size={14} className="text-gray-900" /> {infants}</span>
+                    <p className="text-[12px] text-slate-700 font-bold mt-1 flex items-center gap-2.5">
+                      <span className="flex items-center gap-0.5" title="Adults"><User size={13} className="text-slate-800" /> {adults}</span>
+                      <span className="flex items-center gap-0.5" title="Children"><Smile size={13} className="text-slate-800" /> {children}</span>
+                      <span className="flex items-center gap-0.5" title="Infants"><Baby size={13} className="text-slate-800" /> {infants}</span>
                     </p>
                   </div>
 
                   {isTravellerPickerOpen && (
-                    <div className="absolute top-[100%] right-0 z-50" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] right-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                       <TravellerPicker 
                         adults={adults}
                         children={children}
@@ -609,19 +1071,19 @@ export default function LandingPage() {
                   
                   {/* Cabin Class */}
                   <div 
-                    className="w-full sm:flex-1 lg:w-[170px] p-3 px-3 lg:px-5 border-b lg:border-b-0 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full sm:flex-1 lg:w-[170px] p-3 px-3 lg:px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-b-2xl sm:rounded-b-none lg:rounded-r-2xl transition-all group picker-trigger"
                     onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsCabinPickerOpen(!isCabinPickerOpen); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Cabin Class</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
-                    <p className="text-[15px] font-black text-gray-900 mt-2 leading-tight truncate" title={cabinClass}>
+                    <p className="text-[15px] font-black text-slate-900 mt-2 leading-tight truncate" title={cabinClass}>
                       {cabinClass}
                     </p>
                   </div>
                   {isCabinPickerOpen && (
-                    <div className="absolute top-[100%] right-0 z-50" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-[100%] right-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                       <CabinClassPicker cabinClass={cabinClass} onChange={(c) => { setCabinClass(c); setIsCabinPickerOpen(false); }} />
                     </div>
                   )}
@@ -630,7 +1092,7 @@ export default function LandingPage() {
                 {user?.roles?.includes('B2B_AGENT') && (
                   <div className="relative flex flex-col sm:flex-row w-full lg:w-[150px] border-t md:border-t-0 md:border-l border-gray-200">
                     <div 
-                      className="w-full sm:flex-1 p-3 px-5 cursor-pointer hover:bg-orange-50/30 transition-colors group"
+                      className="w-full sm:flex-1 p-3 px-5 cursor-pointer hover:bg-orange-50/30 transition-colors group picker-trigger"
                       onClick={(e) => {
                         e.stopPropagation();
                         closeAllPickers();
@@ -650,7 +1112,7 @@ export default function LandingPage() {
                     </div>
 
                     {isBookingForOpen && (
-                      <div className="absolute top-[100%] right-0 z-50 w-[300px] bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden py-2 mt-2 animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                      <div className="absolute top-[100%] right-0 z-[100] w-[300px] bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden py-2 mt-2 animate-in fade-in zoom-in-95 picker-popup" onClick={e => e.stopPropagation()}>
                         <div className="px-4 py-3 bg-blue-50/50 border-b border-gray-100">
                           <input type="text" placeholder="Primary Traveller's Email ID" className="w-full bg-white border border-gray-200 rounded-md px-3 py-1.5 text-xs outline-none focus:border-blue-400" />
                           <p className="text-[10px] text-gray-500 mt-2">Enter Primary Traveller Email ID for whom you are making the booking.</p>
@@ -689,30 +1151,30 @@ export default function LandingPage() {
                 )}
 
                 </div>
-
-
-
+              )}
 
               </div>
             ) : activeTab === 'Hotels' ? (
               <div className="relative pb-10 md:pb-0">
                 {/* Hotel Search Inputs */}
-                <div className="flex flex-col md:flex-row border border-gray-300 rounded-lg overflow-visible md:h-[110px] relative hover:border-gray-400 transition-colors">
+                <div className={`flex flex-col md:flex-row bg-white/75 backdrop-blur-xl border border-white/95 rounded-2xl shadow-[0_8px_30px_rgba(15,23,42,0.06),0_0_0_1px_rgba(255,255,255,0.85)_inset] overflow-visible md:h-[110px] relative divide-y md:divide-y-0 md:divide-x divide-slate-200/70 transition-all duration-200 ${
+                  (isToPickerOpen || activeDatePicker) ? 'z-50' : 'z-20'
+                }`}>
                   
                   {/* Destination */}
                   <div 
-                    className="w-full md:flex-[2] p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { closeAllPickers(); setIsToPickerOpen(true); }}
+                    className="w-full md:flex-[2] p-3 px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-t-2xl md:rounded-t-none md:rounded-l-2xl transition-all group relative picker-trigger"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setIsToPickerOpen(true); }}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">City, Property name or Location</span>
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">City, Property name or Location</span>
                     </div>
-                    <div className="w-full text-3xl font-black text-gray-900 truncate bg-transparent flex flex-col mt-2">
-                      {searchTo}
+                    <div className="w-full text-2xl lg:text-[30px] font-black text-slate-900 truncate bg-transparent flex flex-col mt-2">
+                      {CITIES[searchTo] || searchTo}
                     </div>
                     
                     {isToPickerOpen && (
-                      <div className="absolute top-[100%] left-0 z-50">
+                      <div className="absolute top-[100%] left-0 z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                         <CityPicker value={searchTo} onChange={(c) => { setSearchTo(c); setIsToPickerOpen(false); }} onClose={() => setIsToPickerOpen(false)} title="DESTINATION" type="hotel" />
                       </div>
                     )}
@@ -720,49 +1182,49 @@ export default function LandingPage() {
 
                   {/* Check-In */}
                   <div 
-                    className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group"
-                    onClick={() => { setActiveDatePicker('depart'); }}
+                    className="w-full md:flex-1 p-3 px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group picker-trigger"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('depart'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-In</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Check-In</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
                     {departureDate ? (
                       <>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-3xl font-black text-gray-900">{format(departureDate, 'd')}</h3>
-                          <span className="text-xl font-bold text-gray-900">{format(departureDate, "MMM''yy")}</span>
+                          <h3 className="text-3xl lg:text-[38px] leading-none font-black text-slate-900">{format(departureDate, 'd')}</h3>
+                          <span className="text-xl font-bold text-slate-900">{format(departureDate, "MMM''yy")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(departureDate, 'EEEE')}</p>
+                        <p className="text-[11px] text-slate-500 font-semibold mt-1">{format(departureDate, 'EEEE')}</p>
                       </>
                     ) : (
-                      <p className="text-sm font-bold text-gray-400 mt-3">Select Date</p>
+                      <p className="text-sm font-bold text-slate-400 mt-3">Select Date</p>
                     )}
                   </div>
 
                   {/* Check-Out */}
                   <div 
-                    className="w-full md:flex-1 p-3 px-5 border-b md:border-b-0 md:border-r border-gray-200 cursor-pointer hover:bg-blue-50/30 transition-colors group relative"
-                    onClick={() => { setActiveDatePicker('return'); }}
+                    className="w-full md:flex-1 p-3 px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] transition-all group relative picker-trigger"
+                    onClick={(e) => { e.stopPropagation(); closeAllPickers(); setActiveDatePicker('return'); }}
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Check-Out</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Check-Out</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
                     {returnDate ? (
                       <>
                         <div className="flex items-baseline gap-1 mt-1">
-                          <h3 className="text-3xl font-black text-gray-900">{format(returnDate, 'd')}</h3>
-                          <span className="text-xl font-bold text-gray-900">{format(returnDate, "MMM''yy")}</span>
+                          <h3 className="text-3xl lg:text-[38px] leading-none font-black text-slate-900">{format(returnDate, 'd')}</h3>
+                          <span className="text-xl font-bold text-slate-900">{format(returnDate, "MMM''yy")}</span>
                         </div>
-                        <p className="text-[11px] text-gray-500 font-medium mt-1">{format(returnDate, 'EEEE')}</p>
+                        <p className="text-[11px] text-slate-500 font-semibold mt-1">{format(returnDate, 'EEEE')}</p>
                       </>
                     ) : (
-                      <p className="text-[10px] text-gray-500 mt-2 leading-tight font-medium">Select checkout date</p>
+                      <p className="text-[10px] text-slate-500 mt-2 leading-tight font-medium">Select checkout date</p>
                     )}
 
                     {(activeDatePicker === 'depart' || activeDatePicker === 'return') && (
-                      <div className="absolute top-[100%] left-0 sm:left-[-200px] z-50 mt-2 sm:mt-0">
+                      <div className="absolute top-[100%] left-0 sm:left-[-200px] z-[100] mt-1 shadow-2xl picker-popup" onClick={e => e.stopPropagation()}>
                         <DualMonthCalendar 
                           checkIn={departureDate} 
                           checkOut={returnDate}
@@ -785,17 +1247,17 @@ export default function LandingPage() {
 
                   {/* Rooms & Guests */}
                   <div 
-                    className="w-full md:flex-1 p-3 px-5 cursor-pointer hover:bg-blue-50/30 transition-colors group"
+                    className="w-full md:flex-1 p-3 px-5 cursor-pointer hover:bg-gradient-to-b hover:from-blue-500/[0.06] hover:to-indigo-500/[0.03] rounded-b-2xl md:rounded-b-none md:rounded-r-2xl transition-all group"
                   >
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-blue-600 transition-colors">Rooms & Guests</span>
-                      <ChevronDown size={16} className="text-blue-600" />
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">Rooms & Guests</span>
+                      <ChevronDown size={14} className="text-blue-600 group-hover:translate-y-0.5 transition-transform" />
                     </div>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <h3 className="text-2xl font-black text-gray-900">1</h3>
-                      <span className="text-lg font-bold text-gray-900">Room, </span>
-                      <h3 className="text-2xl font-black text-gray-900">2</h3>
-                      <span className="text-lg font-bold text-gray-900">Adults</span>
+                      <h3 className="text-2xl font-black text-slate-900">1</h3>
+                      <span className="text-lg font-bold text-slate-900">Room, </span>
+                      <h3 className="text-2xl font-black text-slate-900">2</h3>
+                      <span className="text-lg font-bold text-slate-900">Adults</span>
                     </div>
                   </div>
 
@@ -812,17 +1274,19 @@ export default function LandingPage() {
             )}
 
             {/* Massive Search Button Overlapping Bottom */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-auto">
+            <div className="absolute -bottom-6 sm:-bottom-7 left-1/2 -translate-x-1/2 z-10 w-[90%] sm:w-auto">
               <button 
                 onClick={handleSearch} 
-                className={`w-full sm:w-auto px-8 md:px-14 py-3 rounded-full text-white font-black text-base md:text-xl shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 hover:scale-105 ${
+                className={`w-full sm:w-auto px-10 md:px-16 py-3.5 sm:py-4 rounded-full text-white font-black text-sm md:text-lg tracking-wider uppercase transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-3 border border-white/30 shadow-[0_12px_32px_rgba(37,99,235,0.45)] hover:shadow-[0_16px_38px_rgba(37,99,235,0.6)] ${
                   activeTab === 'Hotels' && user?.roles?.includes('B2B_AGENT')
-                    ? 'bg-gradient-to-r from-[#ff6d38] to-[#ff501a] hover:shadow-[0_8px_25px_rgba(255,109,56,0.5)]' 
-                    : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:shadow-[0_10px_25px_rgba(37,99,235,0.5)]'
+                    ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600' 
+                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] hover:bg-right'
                 }`}
               >
-                {activeTab === 'Hotels' ? 'SEARCH HOTELS' : 'SEARCH FLIGHTS'}
+                <Search size={20} strokeWidth={2.8} className="shrink-0" />
+                <span>{activeTab === 'Hotels' ? 'SEARCH HOTELS' : 'SEARCH FLIGHTS'}</span>
               </button>
+            </div>
             </div>
           </div>
           
@@ -832,42 +1296,57 @@ export default function LandingPage() {
               onClick={() => {
                 document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="flex items-center gap-1 mx-auto text-white font-bold hover:text-blue-200 transition"
+              className="inline-flex items-center gap-2 mx-auto text-white/90 hover:text-white font-bold text-xs uppercase tracking-wider bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 transition-all shadow-sm cursor-pointer"
             >
-              <ChevronDown size={16} /> Explore More <ChevronDown size={16} />
+              <span>Explore Destinations</span>
+              <ChevronDown size={14} className="animate-bounce" />
             </button>
           </div>
 
-          {/* Bottom Pill Banners */}
-          <div className="bg-white rounded-xl lg:rounded-full shadow-lg flex items-center justify-start lg:justify-between px-4 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[1100px] gap-6 text-sm overflow-x-auto hidden-scrollbar">
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1 rounded-l-full">
-              <Globe size={20} className="text-blue-600" />
-              <span className="font-bold text-gray-700">Where2Go</span>
+          {/* Bottom Pill Banners - Frosted Glass Bar */}
+          <div className="bg-white/80 backdrop-blur-2xl border border-white/80 rounded-2xl lg:rounded-full shadow-[0_12px_40px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.7)_inset] flex items-center justify-start lg:justify-between px-5 lg:px-8 py-3 mx-auto w-[95%] lg:max-w-[1100px] gap-6 text-sm overflow-x-auto hidden-scrollbar">
+            <div className="flex items-center gap-3 border-r border-slate-200/80 pr-6 shrink-0 cursor-pointer hover:bg-white/60 p-1.5 px-3 rounded-xl transition-all group">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
+                <Globe size={18} />
+              </div>
+              <span className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Where2Go</span>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
-              <Shield size={20} className="text-blue-600" />
+
+            <div className="flex items-center gap-3 border-r border-slate-200/80 pr-6 shrink-0 cursor-pointer hover:bg-white/60 p-1.5 px-3 rounded-xl transition-all group">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
+                <Shield size={18} />
+              </div>
               <div>
-                <span className="font-bold text-gray-700">Insurance</span>
-                <p className="text-[10px] text-gray-500">For International Trips</p>
+                <span className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Insurance</span>
+                <p className="text-[10px] text-slate-500 font-medium">For International Trips</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
-              <Plane size={20} className="text-blue-600" />
+
+            <div className="flex items-center gap-3 border-r border-slate-200/80 pr-6 shrink-0 cursor-pointer hover:bg-white/60 p-1.5 px-3 rounded-xl transition-all group">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
+                <Plane size={18} />
+              </div>
               <div>
-                <span className="font-bold text-gray-700">Explore International Flights</span>
-                <p className="text-[10px] text-gray-500">Cheapest Flights to Paris, Bali, Tokyo & more</p>
+                <span className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Explore International Flights</span>
+                <p className="text-[10px] text-slate-500 font-medium">Cheapest Flights to Paris, Bali, Tokyo & more</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-6 shrink-0 cursor-pointer hover:bg-gray-50 py-1">
-              <Users size={20} className="text-blue-600" />
+
+            <div className="flex items-center gap-3 border-r border-slate-200/80 pr-6 shrink-0 cursor-pointer hover:bg-white/60 p-1.5 px-3 rounded-xl transition-all group">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
+                <Users size={18} />
+              </div>
               <div>
-                <span className="font-bold text-gray-700">MICE</span>
-                <p className="text-[10px] text-gray-500">Offsites, Events & Meetings</p>
+                <span className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">MICE</span>
+                <p className="text-[10px] text-slate-500 font-medium">Offsites, Events & Meetings</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 cursor-pointer hover:bg-gray-50 py-1 rounded-r-full pr-2">
-              <Gift size={20} className="text-blue-600" />
-              <span className="font-bold text-gray-700">Gift Cards</span>
+
+            <div className="flex items-center gap-3 shrink-0 cursor-pointer hover:bg-white/60 p-1.5 px-3 rounded-xl transition-all group pr-2">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xs">
+                <Gift size={18} />
+              </div>
+              <span className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Gift Cards</span>
             </div>
           </div>
 

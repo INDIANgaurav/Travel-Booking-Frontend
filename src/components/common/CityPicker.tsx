@@ -83,8 +83,9 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
 
   return (
     <div 
-      className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 w-[calc(100vw-48px)] sm:w-[380px] flex flex-col overflow-hidden cursor-default"
+      className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 w-[calc(100vw-48px)] sm:w-[380px] flex flex-col overflow-hidden cursor-default picker-popup"
       onClick={e => e.stopPropagation()}
+      onMouseDown={e => e.stopPropagation()}
     >
       <div className="p-4 border-b border-gray-100 bg-gray-50">
         <h3 className="text-xs font-black text-gray-800 mb-3">{title}</h3>
@@ -93,9 +94,16 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
             type="text" 
             autoFocus
             className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 font-semibold"
-            placeholder="From"
+            placeholder={
+              title.toUpperCase().includes('TO') 
+                ? 'To (e.g. Mumbai, Bengaluru)' 
+                : title.toUpperCase().includes('DESTINATION')
+                  ? 'Enter destination city'
+                  : 'From (e.g. Delhi, Mumbai)'
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onMouseDown={e => e.stopPropagation()}
           />
         </div>
       </div>
@@ -115,8 +123,15 @@ export default function CityPicker({ value, onChange, onClose, title = "SELECT C
             {filteredCities.map(city => (
               <div 
                 key={city.code}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0"
-                onClick={() => { onChange(city.code); onClose(); }}
+                className="flex items-center justify-between px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0 transition-colors"
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                }}
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  onChange(city.code); 
+                  onClose(); 
+                }}
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 text-gray-400">
