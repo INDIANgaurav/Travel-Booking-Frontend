@@ -716,7 +716,7 @@ const B2BAgentCheckout: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 flex gap-6 items-start">
+      <div className="max-w-[1200px] mx-auto px-4 flex flex-col lg:flex-row gap-6 items-start pb-36 lg:pb-28">
         
         {/* Left Column - Main Content */}
         <div className="flex-1 space-y-6">
@@ -1238,7 +1238,7 @@ const B2BAgentCheckout: React.FC = () => {
         </div>
 
         {/* Right Column - Fare Summary Sidebar */}
-        <div className="w-[320px] shrink-0 sticky top-24">
+        <div className="w-full lg:w-[320px] shrink-0 lg:sticky lg:top-24">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative">
             <div className="bg-[#f8f9fc] px-4 py-4 text-[10px] font-black text-[#0c1a40] uppercase border-b border-gray-100">
               FARE SUMMARY
@@ -1389,9 +1389,9 @@ const B2BAgentCheckout: React.FC = () => {
       </div>
 
       {/* Bottom Sticky Timer Bar */}
-      <div className="fixed bottom-0 left-0 w-full bg-[#0b1031] text-white py-2 text-center text-[10px] font-bold shadow-2xl z-50 flex items-center justify-center gap-2">
-        <Clock size={12} />
-        Your Session will Expire in {minutes}m {seconds}s , you must complete the booking within the time .
+      <div className={`fixed bottom-[64px] lg:bottom-0 left-0 w-full text-white py-2 px-4 text-center text-xs font-bold shadow-2xl z-40 flex items-center justify-center gap-2 backdrop-blur-md transition-colors duration-300 ${minutes === 0 && seconds <= 60 ? 'bg-red-600/95 animate-pulse' : minutes <= 5 ? 'bg-amber-600/95' : 'bg-[#0b1031]/95'} border-t border-white/10`}>
+        <Clock size={14} className="shrink-0" />
+        <span>Your Session will Expire in <span className="font-mono bg-black/30 px-2 py-0.5 rounded border border-white/10">{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}</span>. Please complete your booking within the time.</span>
       </div>
 
       {/* Review Booking Modal */}

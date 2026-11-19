@@ -747,7 +747,7 @@ export default function FlightBookingPage() {
       </div>
 
       {/* Main Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-4 pt-6 pb-36 lg:pb-28 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column (Main Content) */}
         <div className="lg:col-span-2 space-y-4">
@@ -1304,7 +1304,7 @@ export default function FlightBookingPage() {
           </div>
 
           {/* Coupons */}
-          <div className="bg-white shadow-sm border border-gray-200 rounded-b-lg">
+          <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
              <div className="p-4 bg-[#fdf2e9] border-b border-[#f7e0ce] flex justify-between items-center">
                <h3 className="font-bold text-[16px] text-gray-900">Coupons and Offers</h3>
                <div className="text-orange-500">🏷️</div>
@@ -1386,13 +1386,13 @@ export default function FlightBookingPage() {
       </div>
 
       {/* Bottom Sticky Timer Bar */}
-      <div className={`fixed bottom-[64px] lg:bottom-0 left-0 w-full text-white py-3 px-6 text-center text-sm md:text-base font-black shadow-2xl z-50 flex items-center justify-center gap-3 transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600 animate-pulse' : timeLeft <= 300 ? 'bg-orange-500' : 'bg-[#0b1031]'}`}>
-        <Clock size={18} />
+      <div className={`fixed bottom-[64px] lg:bottom-0 left-0 w-full text-white py-2.5 px-4 text-center text-xs md:text-sm font-bold shadow-2xl z-40 flex items-center justify-center gap-2 backdrop-blur-md transition-colors duration-300 ${timeLeft <= 60 ? 'bg-red-600/95 animate-pulse' : timeLeft <= 300 ? 'bg-amber-600/95' : 'bg-[#0b1031]/95'} border-t border-white/10`}>
+        <Clock size={16} className="shrink-0" />
         {timeLeft <= 0 ? (
-          'Your Session has Expired. Please restart your search.'
+          <span>Your Session has Expired. Please restart your search.</span>
         ) : (
           <span>
-            Your Session will Expire in <span className="font-mono text-lg bg-black/20 px-2 py-0.5 rounded">{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{Math.floor(timeLeft % 60).toString().padStart(2, '0')}</span>. Please complete your booking.
+            Your Session will Expire in <span className="font-mono text-sm font-black bg-black/30 px-2 py-0.5 rounded border border-white/10">{Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{Math.floor(timeLeft % 60).toString().padStart(2, '0')}</span>. Please complete your booking.
           </span>
         )}
       </div>
