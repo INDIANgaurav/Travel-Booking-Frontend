@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Search, ExternalLink } from 'lucide-react';
 import Loader from '../../../../components/common/Loader';
 import Dropdown from '../../../../components/ui/Dropdown';
+import ConfirmModal from '../../../../components/ui/ConfirmModal';
 
 export default function AdminSettlementQueue() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -11,6 +12,7 @@ export default function AdminSettlementQueue() {
   const [tab, setTab] = useState<'INCOMING' | 'OUTGOING'>('INCOMING');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [confirmModalState, setConfirmModalState] = useState<{ id: string; status: 'APPROVED' | 'REJECTED' } | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -32,14 +34,17 @@ export default function AdminSettlementQueue() {
     }
   };
 
-  const handleStatusUpdate = async (id: string, status: 'APPROVED' | 'REJECTED') => {
-    if (!window.confirm(`Are you sure you want to ${status.toLowerCase()} this payment?`)) return;
+  const handleStatusUpdate = async () => {
+    if (!confirmModalState) return;
+    const { id, status } = confirmModalState;
     try {
       await api.put(`/api/finance/payment/${id}/status`, { status });
       toast.success(`Payment ${status.toLowerCase()} successfully`);
+      setConfirmModalState(null);
       fetchPayments();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update payment status');
+      setConfirmModalState(null);
     }
   };
 
@@ -157,14 +162,14 @@ export default function AdminSettlementQueue() {
                       {payment.status === 'PENDING' ? (
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => handleStatusUpdate(payment._id, 'APPROVED')}
+                            onClick={() => setConfirmModalState({ id: payment._id, status: 'APPROVED' })}
                             className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded transition-colors"
                             title="Approve"
                           >
                             <CheckCircle size={16} />
                           </button>
                           <button
-                            onClick={() => handleStatusUpdate(payment._id, 'REJECTED')}
+                            onClick={() => setConfirmModalState({ id: payment._id, status: 'REJECTED' })}
                             className="p-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded transition-colors"
                             title="Reject"
                           >
@@ -189,6 +194,17 @@ export default function AdminSettlementQueue() {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(confirmModalState)}
+        title={confirmModalState?.status === 'APPROVED' ? 'Approve Payment' : 'Reject Payment'}
+        message={`Are you sure you want to ${confirmModalState?.status.toLowerCase()} this payment?`}
+        confirmText={confirmModalState?.status === 'APPROVED' ? 'Approve' : 'Reject'}
+        cancelText="Cancel"
+        isDestructive={confirmModalState?.status === 'REJECTED'}
+        onConfirm={handleStatusUpdate}
+        onCancel={() => setConfirmModalState(null)}
+      />
     </div>
   );
 }

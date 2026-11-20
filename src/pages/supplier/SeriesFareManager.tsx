@@ -7,6 +7,7 @@ import Dropdown from '../../components/ui/Dropdown';
 import DOBCalendar from '../../components/ui/DOBCalendar';
 import DateRangePicker from '../../components/ui/DateRangePicker';
 import CityPicker from '../../components/common/CityPicker';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import toast from 'react-hot-toast';
 
 interface ISeriesFare {
@@ -289,13 +290,18 @@ const SeriesFareManager: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this Series Fare?')) return;
+  const [deleteSfId, setDeleteSfId] = useState<string | null>(null);
+
+  const confirmDeleteSf = async () => {
+    if (!deleteSfId) return;
     try {
-      await api.delete(`/api/series-fare/${id}`);
-      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== id));
+      await api.delete(`/api/series-fare/${deleteSfId}`);
+      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== deleteSfId));
+      toast.success('Series Fare deleted successfully');
     } catch (err) {
-      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== id));
+      setFares(prev => (Array.isArray(prev) ? prev : []).filter(f => f._id !== deleteSfId));
+    } finally {
+      setDeleteSfId(null);
     }
   };
 
@@ -624,7 +630,7 @@ const SeriesFareManager: React.FC = () => {
                           <Edit2 size={14} />
                         </button>
                         <button 
-                          onClick={() => handleDelete(fare._id)}
+                          onClick={() => setDeleteSfId(fare._id)}
                           className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
                           title="Delete"
                         >
@@ -818,7 +824,7 @@ const SeriesFareManager: React.FC = () => {
                                     </td>
                                     <td className="p-2.5 flex items-center justify-center gap-2">
                                       <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">👤</span>
-                                      <button onClick={() => handleDelete(fare._id)} className="text-gray-400 hover:text-red-600 transition-colors">🗑️</button>
+                                      <button onClick={() => setDeleteSfId(fare._id)} className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete">🗑️</button>
                                       <span className="bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-[10px] font-bold">Live</span>
                                     </td>
                                   </tr>
@@ -1362,6 +1368,17 @@ const SeriesFareManager: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(deleteSfId)}
+        title="Delete Series Fare"
+        message="Are you sure you want to delete this Series Fare? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={confirmDeleteSf}
+        onCancel={() => setDeleteSfId(null)}
+      />
     </div>
   );
 };

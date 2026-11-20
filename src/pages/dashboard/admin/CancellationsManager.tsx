@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import { CheckCircle, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const CancellationsManager: React.FC = () => {
   const [requests, setRequests] = useState<any[]>([]);
@@ -41,7 +42,8 @@ const CancellationsManager: React.FC = () => {
   const handleApprove = async () => {
     if (!selectedRequest) return;
     if (penalty === '' || platformFee === '' || refundAmount === '') {
-      return alert('Please fill in all penalty and refund fields.');
+      toast.error('Please fill in all penalty and refund fields.');
+      return;
     }
 
     const paxIds = selectedRequest.details.passengers
@@ -56,11 +58,11 @@ const CancellationsManager: React.FC = () => {
         platformFee: Number(platformFee),
         refundAmount: Number(refundAmount)
       });
-      alert('Cancellation processed successfully!');
+      toast.success('Cancellation processed successfully!');
       setSelectedRequest(null);
       fetchRequests();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error processing cancellation');
+      toast.error(err.response?.data?.message || 'Error processing cancellation');
     } finally {
       setIsProcessing(false);
     }

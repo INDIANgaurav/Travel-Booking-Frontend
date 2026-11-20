@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Building2, Star, Edit, Trash2, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import TopNavbar from '../../../components/layout/TopNavbar';
 import EditPropertyModal from './EditPropertyModal';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
 
@@ -21,6 +22,7 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [deletePropertyId, setDeletePropertyId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProperties();
@@ -39,17 +41,21 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) return;
+  const confirmDeleteProperty = async () => {
+    if (!deletePropertyId) return;
     try {
-      const response = await api.delete(`/api/hotels/my-properties/${id}`);
+      const response = await api.delete(`/api/hotels/my-properties/${deletePropertyId}`);
       if (response.data) {
-        setProperties(properties.filter(p => p._id !== id));
+        setProperties(properties.filter(p => p._id !== deletePropertyId));
+        toast.success('Property deleted successfully');
       } else {
         toast.error('Failed to delete property');
       }
     } catch (error) {
       console.error('Error deleting property:', error);
+      toast.error('Failed to delete property');
+    } finally {
+      setDeletePropertyId(null);
     }
   };
 
@@ -122,7 +128,7 @@ export default function PropertiesPage() {
                     <button onClick={() => setEditingProperty(property)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                       <Edit size={18} />
                     </button>
-                    <button onClick={() => handleDelete(property._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                    <button onClick={() => setDeletePropertyId(property._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -144,6 +150,17 @@ export default function PropertiesPage() {
           }} 
         />
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(deletePropertyId)}
+        title="Delete Property"
+        message="Are you sure you want to delete this property? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={confirmDeleteProperty}
+        onCancel={() => setDeletePropertyId(null)}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Dropdown from '../../components/ui/Dropdown';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -41,14 +42,18 @@ const B2BMarkup: React.FC = () => {
     fetchMarkups();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this markup?')) return;
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
     try {
-      await api.delete(`/api/markup/${id}`);
+      await api.delete(`/api/markup/${deleteTargetId}`);
       toast.success('Markup deleted successfully');
+      setDeleteTargetId(null);
       fetchMarkups();
     } catch (error) {
       toast.error('Failed to delete markup');
+      setDeleteTargetId(null);
     }
   };
 
@@ -195,8 +200,8 @@ const B2BMarkup: React.FC = () => {
                         <td className="px-4 py-3 text-green-600 font-bold">{r.status || 'ACTIVE'}</td>
                         <td className="px-4 py-3">
                           <button 
-                            onClick={() => handleDelete(r._id)}
-                            className="text-red-500 font-bold hover:text-red-700 hover:underline transition"
+                            onClick={() => setDeleteTargetId(r._id)}
+                            className="text-red-500 font-bold hover:text-red-700 hover:underline transition cursor-pointer"
                           >
                             Delete
                           </button>
@@ -243,8 +248,8 @@ const B2BMarkup: React.FC = () => {
                     </div>
                     <div className="pt-2 mt-1 border-t border-gray-100 flex justify-end">
                       <button 
-                        onClick={() => handleDelete(r._id)}
-                        className="text-xs font-bold text-red-500 uppercase tracking-widest hover:underline"
+                        onClick={() => setDeleteTargetId(r._id)}
+                        className="text-xs font-bold text-red-500 uppercase tracking-widest hover:underline cursor-pointer"
                       >
                         Delete
                       </button>
@@ -323,6 +328,17 @@ const B2BMarkup: React.FC = () => {
         )}
 
       </div>
+
+      <ConfirmModal 
+        isOpen={Boolean(deleteTargetId)}
+        title="Delete Markup Rule"
+        message="Are you sure you want to delete this markup rule? It will no longer be applied to future flight searches."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

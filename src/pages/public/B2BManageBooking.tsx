@@ -6,6 +6,7 @@ import DOBCalendar from '../../components/ui/DOBCalendar';
 import { Plane, Building2, ShieldCheck, Compass } from 'lucide-react';
 import FlightInvoice from '../dashboard/user/FlightInvoice';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const B2BManageBooking: React.FC = () => {
   const navigate = useNavigate();
@@ -38,8 +39,14 @@ const B2BManageBooking: React.FC = () => {
   const [isCancelling, setIsCancelling] = useState(false);
 
   const handleInitiateCancel = async () => {
-    if (selectedPaxToCancel.length === 0) return alert('Select at least one passenger');
-    if (!cancelReason) return alert('Enter a reason for cancellation');
+    if (selectedPaxToCancel.length === 0) {
+      toast.error('Select at least one passenger');
+      return;
+    }
+    if (!cancelReason) {
+      toast.error('Enter a reason for cancellation');
+      return;
+    }
     
     try {
       setIsCancelling(true);
@@ -47,11 +54,11 @@ const B2BManageBooking: React.FC = () => {
         passengerIds: selectedPaxToCancel,
         reason: cancelReason
       });
-      alert('Cancellation request submitted to Admin!');
+      toast.success('Cancellation request submitted to Admin!');
       setModalView('summary');
       handleGetHistory(page);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error initiating cancellation');
+      toast.error(err.response?.data?.message || 'Error initiating cancellation');
     } finally {
       setIsCancelling(false);
     }
