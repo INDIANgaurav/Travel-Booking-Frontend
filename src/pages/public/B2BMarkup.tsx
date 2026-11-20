@@ -104,8 +104,27 @@ const B2BMarkup: React.FC = () => {
       <div className="max-w-[1400px] mx-auto flex flex-col gap-4 md:gap-6">
         
         {/* Header Title Panel */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 md:px-6 py-4">
-          <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">MARK-UP</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-4 md:px-6 py-4 flex justify-between items-center">
+          <h2 className="text-sm font-black uppercase tracking-widest text-[#0c1a40]">MARK-UP SETTINGS</h2>
+          <span className="text-[11px] font-bold text-gray-500">Configure your customer commissions & wholesale margins</span>
+        </div>
+
+        {/* How it works info card */}
+        <div className="bg-gradient-to-r from-[#0b1031] to-blue-950 text-white rounded-xl p-5 shadow-sm border border-blue-900/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wide flex items-center gap-2 text-white">
+              <span>💼</span> How Customer Markup Works
+            </h3>
+            <p className="text-xs text-gray-300 mt-1 max-w-2xl leading-relaxed">
+              Set your fixed or percentage markup here (e.g. ₹300 per passenger). Flight search results will quietly include this markup directly into the fare shown on screen. When booking, only the wholesale net fare is deducted from your wallet, and you retain your full markup as direct profit.
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowAddForm(true)}
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center gap-2 shrink-0 self-start md:self-auto cursor-pointer"
+          >
+            <span>+ Add Markup Rule</span>
+          </button>
         </div>
 
         {!showAddForm ? (

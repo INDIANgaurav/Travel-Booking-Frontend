@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store/store';
 import {  logout, logoutUserThunk } from '../../store/authSlice';
-import { ChevronDown, Check, Plane, Users, ArrowRightLeft, Calendar, FileText, Download, Briefcase, RefreshCw, X, Shield, Clock, TrendingUp, Building2, ShieldCheck, CreditCard, Compass, ArrowLeftRight, Search, LogOut, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, Check, Plane, Users, ArrowRightLeft, Calendar, FileText, Download, Briefcase, RefreshCw, X, Shield, Clock, TrendingUp, Building2, ShieldCheck, CreditCard, Compass, ArrowLeftRight, Search, LogOut, MoreHorizontal, Tag } from 'lucide-react';
 import Dropdown from '../../components/ui/Dropdown';
 import DualMonthCalendar from '../../components/ui/DualMonthCalendar';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
@@ -430,6 +430,7 @@ interface RecentSearch {
                 <div className="absolute top-full mt-4 w-56 bg-[#161c3f] rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)] py-2 border border-white/10 z-50 -ml-20 overflow-hidden backdrop-blur-xl">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard', icon: <TrendingUp size={14}/> },
+                    { label: 'Markup Settings', path: '/b2b/markup', icon: <Tag size={14}/> },
                     { label: 'Account Statement', path: '/b2b/account-statement', icon: <FileText size={14}/> },
                     { label: 'Booking Status', path: '/b2b/booking-status', icon: <Check size={14}/> },
                     { label: 'Manage Booking', path: '/b2b/manage-booking', icon: <Briefcase size={14}/> },
@@ -508,6 +509,13 @@ interface RecentSearch {
                 >
                   <Users size={14} className="text-blue-400" />
                   <span>My Profile</span>
+                </button>
+                <button 
+                  onClick={() => navigate('/b2b/markup')}
+                  className="w-full text-left px-5 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-3 transition-colors"
+                >
+                  <Tag size={14} className="text-emerald-400" />
+                  <span>Markup Settings</span>
                 </button>
                 <button 
                   onClick={handleLogout}

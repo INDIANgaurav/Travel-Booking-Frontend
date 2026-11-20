@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { Plane, Building2, Shield, ShieldCheck, CreditCard, Compass, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Users, Smile, Baby, ArrowRightLeft } from 'lucide-react';
+import { Plane, Building2, Shield, ShieldCheck, CreditCard, Compass, ChevronDown, Check, ArrowLeft, LogOut, Search, Clock, MoreHorizontal, ChevronLeft, ChevronRight, X, User, Users, Smile, Baby, ArrowRightLeft, Tag } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {  logout, logoutUserThunk } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -111,55 +111,6 @@ export default function AgentFlightSearchResults(props: any) {
 
   // B2B Feature States
   const [showIncentive, setShowIncentive] = useState<boolean>(true);
-  const [showMarkupModal, setShowMarkupModal] = useState(false);
-  const [activeMarkupValue, setActiveMarkupValue] = useState<number>(() => {
-    const saved = localStorage.getItem('agentCustomerMarkup');
-    return saved ? Number(saved) : 0;
-  });
-  const [tempMarkupInput, setTempMarkupInput] = useState<string>(activeMarkupValue ? String(activeMarkupValue) : '300');
-  const [markupTypeInput, setMarkupTypeInput] = useState<'fixed' | 'percentage'>('fixed');
-
-  useEffect(() => {
-    // Fetch active markup from server for this agent
-    api.get('/api/markup').then(res => {
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const flightMarkup = res.data.find((m: any) => m.product?.toLowerCase().startsWith('flight') && m.status === 'ACTIVE') || res.data[0];
-        if (flightMarkup && flightMarkup.value) {
-          setActiveMarkupValue(flightMarkup.value);
-          setTempMarkupInput(String(flightMarkup.value));
-          if (flightMarkup.type === 'percentage') setMarkupTypeInput('percentage');
-          localStorage.setItem('agentCustomerMarkup', String(flightMarkup.value));
-        }
-      }
-    }).catch(() => {});
-  }, []);
-
-  const handleSaveMarkup = async () => {
-    const num = Number(tempMarkupInput) || 0;
-    try {
-      await api.post('/api/markup', {
-        product: 'Flight',
-        type: markupTypeInput,
-        markupType: markupTypeInput,
-        operator: 'ALL',
-        airline: 'ALL',
-        fareType: 'BASIC',
-        value: num,
-        min: 0,
-        max: 100000,
-        status: 'ACTIVE'
-      });
-      setActiveMarkupValue(num);
-      localStorage.setItem('agentCustomerMarkup', String(num));
-      setShowMarkupModal(false);
-      toast.success(`Markup of ${markupTypeInput === 'percentage' ? `${num}%` : `₹${num}`} applied to all search fares!`);
-      if (handleSearch) {
-        handleSearch();
-      }
-    } catch (e) {
-      toast.error('Failed to save markup');
-    }
-  };
   const [filterRefundable, setFilterRefundable] = useState<'ALL' | 'REFUNDABLE' | 'NON_REFUNDABLE'>('ALL');
   const [filterStops, setFilterStops] = useState<number | null>(null);
   const [filterDepTime, setFilterDepTime] = useState<string | null>(null);
@@ -518,11 +469,7 @@ export default function AgentFlightSearchResults(props: any) {
                    <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
                      Incentive: ₹ {flight.agentCommission ? flight.agentCommission : Math.round(flight.price * 0.03) || 150}
                    </span>
-                   {activeMarkupValue > 0 && (
-                     <span className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
-                       Your Markup: +{markupTypeInput === 'percentage' ? `${activeMarkupValue}%` : `₹${activeMarkupValue}`}
-                     </span>
-                   )}
+                   
                  </div>
                )}
                {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
@@ -1136,6 +1083,7 @@ export default function AgentFlightSearchResults(props: any) {
                 <div className="absolute top-full mt-3 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] py-2 border border-gray-100 z-50 -ml-16">
                   {[
                     { label: 'Dashboard', path: '/b2b/dashboard' },
+                    { label: 'Markup Settings', path: '/b2b/markup' },
                     { label: 'Account Statement', path: '/b2b/account-statement' },
                     { label: 'Booking Status', path: '/b2b/booking-status' },
                     { label: 'Manage Booking', path: '/b2b/manage-booking' },
@@ -1205,6 +1153,13 @@ export default function AgentFlightSearchResults(props: any) {
                   <span>My Profile</span>
                 </button>
                 <button 
+                  onClick={() => navigate('/b2b/markup')}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#0c1a40] hover:bg-blue-50 flex items-center gap-2 transition"
+                >
+                  <Tag size={14} />
+                  <span>Markup Settings</span>
+                </button>
+                <button 
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
                 >
@@ -1258,17 +1213,7 @@ export default function AgentFlightSearchResults(props: any) {
                 </label>
               </div>
 
-              <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-                <button 
-                  onClick={() => setShowMarkupModal(true)}
-                  className="flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/35 border border-blue-400/40 text-blue-200 hover:text-white px-2.5 py-1 rounded-full text-xs font-bold transition cursor-pointer select-none"
-                  title="Configure your commission / markup added to all flight fares on screen"
-                >
-                  <span className="text-[11px] text-gray-300">My Markup:</span>
-                  <span className="text-white font-black">{activeMarkupValue > 0 ? (markupTypeInput === 'percentage' ? `${activeMarkupValue}%` : `₹${activeMarkupValue}`) : '₹0'}</span>
-                  <span className="text-[9px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.2 rounded font-black uppercase tracking-wider">Set</span>
-                </button>
-              </div>
+              
 
               <div className="flex items-center gap-2 border-l border-white/20 pl-4 text-xs font-bold text-gray-300">
                 Share By:
@@ -2023,83 +1968,6 @@ export default function AgentFlightSearchResults(props: any) {
         </div>
       , document.body)}
       
-      {/* Quick Agent Markup Modal */}
-      {showMarkupModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden text-gray-800 animate-in zoom-in-95 duration-200">
-            <div className="bg-[#0b1031] text-white px-6 py-4 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-black tracking-wide uppercase">Set Customer Markup</h3>
-                <p className="text-[11px] text-gray-400 mt-0.5">Automatically added to all fares shown on your screen</p>
-              </div>
-              <button onClick={() => setShowMarkupModal(false)} className="text-gray-400 hover:text-white transition p-1 cursor-pointer">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Markup Mode</label>
-                <div className="flex gap-2">
-                  <button 
-                    type="button"
-                    onClick={() => setMarkupTypeInput('fixed')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg border transition cursor-pointer ${markupTypeInput === 'fixed' ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    Fixed Amount (₹ per pax)
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setMarkupTypeInput('percentage')}
-                    className={`flex-1 py-2 text-xs font-bold rounded-lg border transition cursor-pointer ${markupTypeInput === 'percentage' ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    Percentage (%)
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Markup Value ({markupTypeInput === 'percentage' ? '%' : '₹'})
-                </label>
-                <div className="relative">
-                  <input 
-                    type="number"
-                    value={tempMarkupInput}
-                    onChange={(e) => setTempMarkupInput(e.target.value)}
-                    placeholder={markupTypeInput === 'percentage' ? 'e.g. 5' : 'e.g. 300'}
-                    className="w-full h-11 px-3 pr-8 border border-gray-300 rounded-lg text-sm font-black outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold pointer-events-none">
-                    {markupTypeInput === 'percentage' ? '%' : '₹'}
-                  </span>
-                </div>
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mt-3 text-[11px] text-blue-900 leading-relaxed">
-                  💡 <strong>How it works for Walk-in Customers:</strong> If a flight costs ₹4,000 and you set ₹{tempMarkupInput || '300'}, your customer sitting in front of you will see <strong>₹{4000 + (Number(tempMarkupInput) || 0)}</strong> on screen. When you click Book, only ₹4,000 is deducted from your wallet, and you keep ₹{tempMarkupInput || '300'} direct cash!
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setShowMarkupModal(false)}
-                  className="flex-1 py-2.5 rounded-full border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="button"
-                  onClick={handleSaveMarkup}
-                  className="flex-1 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-md cursor-pointer"
-                >
-                  Save & Apply
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </>
   );
