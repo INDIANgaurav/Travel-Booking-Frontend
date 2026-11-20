@@ -113,6 +113,56 @@ export default function AgentFlightSearchResults(props: any) {
   const [showIncentive, setShowIncentive] = useState<boolean>(() => {
     return localStorage.getItem('b2b_show_incentive') === 'true'; // Default is false (Customer Safe Mode)
   });
+  // Agent Customer Markup State & Dynamic Rule Fetcher
+  const [applyMarkup, setApplyMarkup] = useState<boolean>(() => {
+    return localStorage.getItem('b2b_apply_markup') !== 'false'; // Default is true (Customer View Mode)
+  });
+  const [agentMarkups, setAgentMarkups] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get('/api/markup')
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setAgentMarkups(res.data);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load agent markup rules:', err);
+      });
+  }, []);
+
+  const getFlightMarkup = (airline?: string, rawPrice: number = 0): number => {
+    if (!applyMarkup || !agentMarkups.length) return 0;
+    const activeRules = agentMarkups.filter(r => r.status === 'ACTIVE');
+    if (!activeRules.length) return 0;
+
+    // 1. Specific airline rule match (e.g. IndiGo, SpiceJet)
+    const specific = activeRules.find(r => 
+      airline && r.operator && r.operator !== 'ALL' && r.operator !== 'All Airlines' &&
+      (r.operator.trim().toLowerCase() === airline.trim().toLowerCase() ||
+       airline.trim().toLowerCase().includes(r.operator.trim().toLowerCase()))
+    );
+    // 2. Fallback to 'ALL' / All Airlines rule
+    const generic = activeRules.find(r => 
+      !r.operator || r.operator === 'ALL' || r.operator === 'All Airlines' || r.airline === 'ALL'
+    );
+    const rule = specific || generic;
+    if (!rule) return 0;
+
+    if (rule.type === 'percentage') {
+      let val = Math.round((rawPrice * Number(rule.value || 0)) / 100);
+      if (rule.min && val < rule.min) val = rule.min;
+      if (rule.max && val > rule.max) val = rule.max;
+      return val;
+    }
+    return Number(rule.value || 0);
+  };
+
+  const getEffectivePrice = (rawPrice: number, airline?: string): number => {
+    const base = getDisplayPrice ? getDisplayPrice(rawPrice) : rawPrice;
+    return base + getFlightMarkup(airline, base);
+  };
+
   const [filterRefundable, setFilterRefundable] = useState<'ALL' | 'REFUNDABLE' | 'NON_REFUNDABLE'>('ALL');
   const [filterStops, setFilterStops] = useState<number | null>(null);
   const [filterDepTime, setFilterDepTime] = useState<string | null>(null);
@@ -186,13 +236,14 @@ export default function AgentFlightSearchResults(props: any) {
     const map = new Map<string, { name: string; count: number; minPrice: number }>();
     list.forEach((f: any) => {
       const name = f.airline || 'Other';
-      const cur = map.get(name) || { name, count: 0, minPrice: f.price };
+      const effPrice = getEffectivePrice(f.price, f.airline);
+      const cur = map.get(name) || { name, count: 0, minPrice: effPrice };
       cur.count += 1;
-      if (f.price < cur.minPrice) cur.minPrice = f.price;
+      if (effPrice < cur.minPrice) cur.minPrice = effPrice;
       map.set(name, cur);
     });
     return Array.from(map.values());
-  }, [outboundFlights]);
+  }, [outboundFlights, applyMarkup, agentMarkups]);
 
   const hasActiveFilters = filterRefundable !== 'ALL' || filterStops !== null || filterDepTime !== null || filterArrTime !== null || selectedAirlines.length > 0;
 
@@ -290,7 +341,7 @@ export default function AgentFlightSearchResults(props: any) {
       const stopsStr = f.stops === 0 ? 'Non-Stop' : `${f.stops} Stop(s)`;
       text += `*${idx + 1}. ${f.airline}* (${f.flightNumber})\n`;
       text += `   🕒 ${dep} ➔ ${arr} (${dur} | ${stopsStr})\n`;
-      text += `   💰 Fare: ₹${Number(f.price).toLocaleString('en-IN')}/pax\n`;
+      text += `   💰 Fare: ₹${Number(getEffectivePrice(f.price, f.airline)).toLocaleString('en-IN')}/pax\n`;
       text += `   🧳 Baggage: 15 Kg Check-in | 7 Kg Cabin\n\n`;
     });
 
@@ -465,7 +516,7 @@ export default function AgentFlightSearchResults(props: any) {
 
            <div className={`flex items-center justify-between w-full ${tripType === 'Round Trip' ? 'border-t border-gray-100 pt-3 mt-1' : 'md:w-[32%] md:flex-col md:items-end gap-2 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-gray-100 md:border-t-0'}`}>
              <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-1' : 'items-end gap-1'}`}>
-               <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
+               <span className="font-black text-2xl text-[#0c1a40]">₹ {getEffectivePrice(flight.price, flight.airline).toLocaleString('en-IN')}</span>
                {showIncentive && (
                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
                    <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
@@ -489,7 +540,7 @@ export default function AgentFlightSearchResults(props: any) {
 
                {tripType !== 'Round Trip' && (
                  <button 
-                   onClick={(e) => { e.stopPropagation(); setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: flight, fareType: 'INSTANT FARE', adults, children, infants } }) }} 
+                   onClick={(e) => { e.stopPropagation(); setSelectedOutbound(flight); navigate('/b2b/checkout', { state: { flight: { ...flight, appliedMarkup: getFlightMarkup(flight.airline, flight.price), isSelfBooking: !applyMarkup }, fareType: 'INSTANT FARE', adults, children, infants } }); }} 
                    className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold px-6 py-1.5 rounded-full text-xs transition shadow-sm"
                  >
                    Book
@@ -638,31 +689,31 @@ export default function AgentFlightSearchResults(props: any) {
                       {flight.adultPrice ? (
                         <>
                           <tr className="py-2">
-                            <td className="py-3 font-bold text-gray-500">Adult Fare ({adults} x {Math.round(flight.adultPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                            <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.adultPrice * adults * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                            <td className="py-3 font-bold text-gray-500">Adult Fare ({adults} x {Math.round(flight.adultPrice * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')})</td>
+                            <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.adultPrice * adults * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')}</td>
                           </tr>
                           {children > 0 && flight.childPrice ? (
                             <tr className="py-2">
-                              <td className="py-3 font-bold text-gray-500">Child Fare ({children} x {Math.round(flight.childPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.childPrice * children * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                              <td className="py-3 font-bold text-gray-500">Child Fare ({children} x {Math.round(flight.childPrice * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')})</td>
+                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.childPrice * children * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')}</td>
                             </tr>
                           ) : null}
                           {infants > 0 && flight.infantPrice ? (
                             <tr className="py-2">
-                              <td className="py-3 font-bold text-gray-500">Infant Fare ({infants} x {Math.round(flight.infantPrice * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')})</td>
-                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.infantPrice * infants * (getDisplayPrice(flight.price) / flight.price)).toLocaleString('en-IN')}</td>
+                              <td className="py-3 font-bold text-gray-500">Infant Fare ({infants} x {Math.round(flight.infantPrice * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')})</td>
+                              <td className="py-3 text-right font-black text-[#0c1a40]">₹ {Math.round(flight.infantPrice * infants * (getEffectivePrice(flight.price, flight.airline) / flight.price)).toLocaleString('en-IN')}</td>
                             </tr>
                           ) : null}
                         </>
                       ) : (
                         <tr className="py-2">
                           <td className="py-3 font-bold text-gray-500">Total Pax Fare</td>
-                          <td className="py-3 text-right font-black text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                          <td className="py-3 text-right font-black text-[#0c1a40]">₹ {getEffectivePrice(flight.price, flight.airline).toLocaleString('en-IN')}</td>
                         </tr>
                       )}
                       <tr className="bg-gray-50">
                         <td className="py-3 px-1 font-black text-[#0c1a40]">Total Fare</td>
-                        <td className="py-3 px-1 text-right font-black text-blue-600 text-lg">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</td>
+                        <td className="py-3 px-1 text-right font-black text-blue-600 text-lg">₹ {getEffectivePrice(flight.price, flight.airline).toLocaleString('en-IN')}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -804,7 +855,7 @@ export default function AgentFlightSearchResults(props: any) {
 
             {/* 4 Fare Option Cards */}
             {(() => {
-              const baseFare = getDisplayPrice(moreFaresFlight.price);
+              const baseFare = getEffectivePrice(moreFaresFlight.price, moreFaresFlight.airline);
               const couponFare = Math.round(baseFare * 1.12);
               const specialFare = Math.round(baseFare * 1.18);
               const corporateFare = Math.round(baseFare * 1.25);
@@ -1215,6 +1266,36 @@ export default function AgentFlightSearchResults(props: any) {
                     }} 
                   />
                   <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                </label>
+              </div>
+
+              {/* Customer Markup / Self Booking Mode Toggle */}
+              <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+                <span 
+                  className={`text-xs font-bold cursor-pointer select-none transition-colors ${applyMarkup ? 'text-white' : 'text-amber-300'}`}
+                  onClick={() => {
+                    const next = !applyMarkup;
+                    setApplyMarkup(next);
+                    localStorage.setItem('b2b_apply_markup', String(next));
+                    toast(next ? 'Customer Mode: Markup Applied (+₹ added to fares)' : 'Self Booking Mode: Markup OFF (Wholesale Net Fare)', { icon: next ? '💼' : '👤' });
+                  }}
+                  title={applyMarkup ? "Customer Mode: Displaying fares with your markup added" : "Self Booking Mode: Displaying pure wholesale net fare"}
+                >
+                  {applyMarkup ? 'Markup: ON' : 'Markup: OFF (Self)'}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={applyMarkup} 
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setApplyMarkup(next);
+                      localStorage.setItem('b2b_apply_markup', String(next));
+                      toast(next ? 'Customer Mode: Markup Applied (+₹ added to fares)' : 'Self Booking Mode: Markup OFF (Wholesale Net Fare)', { icon: next ? '💼' : '👤' });
+                    }} 
+                  />
+                  <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -1928,7 +2009,7 @@ export default function AgentFlightSearchResults(props: any) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-black text-lg text-white">₹ {getDisplayPrice(selectedOutbound.price).toLocaleString('en-IN')}</span>
+                    <span className="font-black text-lg text-white">₹ {getEffectivePrice(selectedOutbound.price, selectedOutbound.airline).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -1947,7 +2028,7 @@ export default function AgentFlightSearchResults(props: any) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="font-black text-lg text-white">₹ {getDisplayPrice(selectedReturn.price).toLocaleString('en-IN')}</span>
+                      <span className="font-black text-lg text-white">₹ {getEffectivePrice(selectedReturn.price, selectedReturn.airline).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 )}
@@ -1955,12 +2036,12 @@ export default function AgentFlightSearchResults(props: any) {
 
               <div className="flex items-center gap-6 pr-2">
                 <div className="text-right flex flex-col justify-center">
-                  <p className="font-black text-[22px] text-white leading-none">₹ {((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (selectedReturn ? getDisplayPrice(selectedReturn.price) : 0)).toLocaleString('en-IN')}</p>
+                  <p className="font-black text-[22px] text-white leading-none">₹ {((selectedOutbound ? getEffectivePrice(selectedOutbound.price, selectedOutbound.airline) : 0) + (selectedReturn ? getEffectivePrice(selectedReturn.price, selectedReturn.airline) : 0)).toLocaleString('en-IN')}</p>
                   <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Total Fare</p>
                 </div>
                 <button 
                   onClick={() => {
-                    navigate('/b2b/checkout', { state: { selectedOutbound, selectedReturn, tripType, adults, children, infants } });
+                    navigate('/b2b/checkout', { state: { selectedOutbound: { ...selectedOutbound, appliedMarkup: getFlightMarkup(selectedOutbound.airline, selectedOutbound.price), isSelfBooking: !applyMarkup }, selectedReturn: { ...selectedReturn, appliedMarkup: getFlightMarkup(selectedReturn.airline, selectedReturn.price), isSelfBooking: !applyMarkup }, tripType, adults, children, infants } });
                   }}
                   className="bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 px-8 rounded-lg text-sm transition uppercase shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
                 >
