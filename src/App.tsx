@@ -279,6 +279,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['B2B_AGENT', 'B2B_AGENT', 'SELLER', 'SUPPLIER_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
           <Route element={<B2BDashboardLayout />}>
             <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
+            <Route path="/b2b/markup" element={<B2BMarkup />} />
             <Route path="/b2b/booking-status" element={<B2BBookingStatus />} />
             <Route path="/b2b/manage-booking" element={<B2BManageBooking />} />
             <Route path="/b2b/group-bookings" element={<AgentGroupBookings />} />

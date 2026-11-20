@@ -110,7 +110,9 @@ export default function AgentFlightSearchResults(props: any) {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   // B2B Feature States
-  const [showIncentive, setShowIncentive] = useState<boolean>(true);
+  const [showIncentive, setShowIncentive] = useState<boolean>(() => {
+    return localStorage.getItem('b2b_show_incentive') === 'true'; // Default is false (Customer Safe Mode)
+  });
   const [filterRefundable, setFilterRefundable] = useState<'ALL' | 'REFUNDABLE' | 'NON_REFUNDABLE'>('ALL');
   const [filterStops, setFilterStops] = useState<number | null>(null);
   const [filterDepTime, setFilterDepTime] = useState<string | null>(null);
@@ -1207,7 +1209,10 @@ export default function AgentFlightSearchResults(props: any) {
                     type="checkbox" 
                     className="sr-only peer" 
                     checked={showIncentive} 
-                    onChange={(e) => setShowIncentive(e.target.checked)} 
+                    onChange={(e) => {
+                      setShowIncentive(e.target.checked);
+                      localStorage.setItem('b2b_show_incentive', String(e.target.checked));
+                    }} 
                   />
                   <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
