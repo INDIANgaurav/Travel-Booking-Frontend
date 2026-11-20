@@ -5,8 +5,8 @@ import toast from 'react-hot-toast';
 
 const statuses = [{ value: 'ALL', label: 'ALL' }, { value: 'ACTIVE', label: 'ACTIVE' }, { value: 'INACTIVE', label: 'INACTIVE' }];
 const products = [{ value: 'Flight', label: 'Flight' }, { value: 'Hotel', label: 'Hotel' }];
-const types = [{ value: 'Select Biller', label: 'Select Biller' }, { value: 'B2B', label: 'B2B' }];
-const operators = [{ value: 'Select Operator', label: 'Select Operator' }, { value: 'IndiGo', label: 'IndiGo' }, { value: 'Air India', label: 'Air India' }];
+const markupTypeOptions = [{ value: 'fixed', label: 'Fixed Amount (₹)' }, { value: 'percentage', label: 'Percentage (%)' }];
+const operators = [{ value: 'ALL', label: 'All Airlines' }, { value: 'IndiGo', label: 'IndiGo' }, { value: 'Air India', label: 'Air India' }, { value: 'SpiceJet', label: 'SpiceJet' }, { value: 'Akasa Air', label: 'Akasa Air' }];
 const fareTypes = [{ value: 'BASIC', label: 'BASIC' }, { value: 'PREMIUM', label: 'PREMIUM' }];
 
 const B2BMarkup: React.FC = () => {
@@ -18,12 +18,12 @@ const B2BMarkup: React.FC = () => {
   
   // Add Form state
   const [product, setProduct] = useState('Flight');
-  const [type, setType] = useState('Select Biller');
-  const [operator, setOperator] = useState('Select Operator');
+  const [markupType, setMarkupType] = useState('fixed');
+  const [operator, setOperator] = useState('ALL');
   const [fareType, setFareType] = useState('BASIC');
   const [value, setValue] = useState('');
-  const [minValue, setMinValue] = useState('');
-  const [maxValue, setMaxValue] = useState('');
+  const [minValue, setMinValue] = useState('0');
+  const [maxValue, setMaxValue] = useState('10000');
 
   const fetchMarkups = async () => {
     try {
@@ -41,9 +41,20 @@ const B2BMarkup: React.FC = () => {
     fetchMarkups();
   }, []);
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this markup?')) return;
+    try {
+      await api.delete(`/api/markup/${id}`);
+      toast.success('Markup deleted successfully');
+      fetchMarkups();
+    } catch (error) {
+      toast.error('Failed to delete markup');
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!value || !minValue || !maxValue) {
-      toast.error('Please fill all required fields');
+    if (!value) {
+      toast.error('Please enter a markup value');
       return;
     }
     
@@ -51,12 +62,16 @@ const B2BMarkup: React.FC = () => {
       setSubmitting(true);
       await api.post('/api/markup', {
         product,
-        type,
-        airline: operator,
+        type: markupType,
+        markupType,
+        operator: operator || 'ALL',
+        airline: operator || 'ALL',
         fareType,
         value: Number(value),
-        minimumValue: Number(minValue),
-        maximumValue: Number(maxValue),
+        min: Number(minValue) || 0,
+        max: Number(maxValue) || 100000,
+        minimumValue: Number(minValue) || 0,
+        maximumValue: Number(maxValue) || 100000,
         status: 'ACTIVE'
       });
       toast.success('Markup added successfully');
@@ -64,12 +79,12 @@ const B2BMarkup: React.FC = () => {
       
       // Reset form
       setProduct('Flight');
-      setType('Select Biller');
-      setOperator('Select Operator');
+      setMarkupType('fixed');
+      setOperator('ALL');
       setFareType('BASIC');
       setValue('');
-      setMinValue('');
-      setMaxValue('');
+      setMinValue('0');
+      setMaxValue('10000');
       
       fetchMarkups();
     } catch (error) {
@@ -148,16 +163,25 @@ const B2BMarkup: React.FC = () => {
                     </tr>
                   ) : (
                     filteredRecords.map((r, i) => (
-                      <tr key={i} className="hover:bg-gray-50 transition">
-                        <td className="px-4 py-3">{r.product}</td>
-                        <td className="px-4 py-3">{r.type}</td>
-                        <td className="px-4 py-3">{r.airline}</td>
-                        <td className="px-4 py-3">{r.fareType}</td>
-                        <td className="px-4 py-3">{r.value}%</td>
-                        <td className="px-4 py-3">{r.minimumValue}</td>
-                        <td className="px-4 py-3">{r.maximumValue}</td>
-                        <td className="px-4 py-3 text-green-600">{r.status}</td>
-                        <td className="px-4 py-3 text-blue-600 cursor-pointer hover:underline">Edit</td>
+                      <tr key={r._id || i} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-3">{r.product || 'Flight'}</td>
+                        <td className="px-4 py-3 font-semibold">{r.type === 'percentage' ? 'Percentage' : 'Fixed'}</td>
+                        <td className="px-4 py-3">{r.operator || r.airline || 'ALL'}</td>
+                        <td className="px-4 py-3">{r.fareType || 'BASIC'}</td>
+                        <td className="px-4 py-3 font-black text-blue-600">
+                          {r.type === 'percentage' ? `${r.value}%` : `₹${r.value}`}
+                        </td>
+                        <td className="px-4 py-3">₹{r.min ?? r.minimumValue ?? 0}</td>
+                        <td className="px-4 py-3">₹{r.max ?? r.maximumValue ?? '-'}</td>
+                        <td className="px-4 py-3 text-green-600 font-bold">{r.status || 'ACTIVE'}</td>
+                        <td className="px-4 py-3">
+                          <button 
+                            onClick={() => handleDelete(r._id)}
+                            className="text-red-500 font-bold hover:text-red-700 hover:underline transition"
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -173,33 +197,38 @@ const B2BMarkup: React.FC = () => {
                 <div className="px-4 py-12 text-center text-amber-500 font-bold text-xs">No Records Found Yet...!</div>
               ) : (
                 filteredRecords.map((r, i) => (
-                  <div key={i} className="p-4 flex flex-col gap-3">
+                  <div key={r._id || i} className="p-4 flex flex-col gap-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5">{r.product} • {r.type}</p>
-                        <p className="font-black text-[#0c1a40] text-sm uppercase">{r.airline} ({r.fareType})</p>
+                        <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5">{r.product || 'Flight'} • {r.type === 'percentage' ? 'Percentage' : 'Fixed'}</p>
+                        <p className="font-black text-[#0c1a40] text-sm uppercase">{r.operator || r.airline || 'ALL'} ({r.fareType})</p>
                       </div>
                       <span className="px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest bg-green-100 text-green-700">
-                        {r.status}
+                        {r.status || 'ACTIVE'}
                       </span>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-2 mt-1">
                       <div>
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Value</p>
-                        <p className="text-xs font-bold text-gray-800">{r.value}%</p>
+                        <p className="text-xs font-bold text-blue-600">{r.type === 'percentage' ? `${r.value}%` : `₹${r.value}`}</p>
                       </div>
                       <div>
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Min</p>
-                        <p className="text-xs font-bold text-gray-800">{r.minimumValue}</p>
+                        <p className="text-xs font-bold text-gray-800">₹{r.min ?? r.minimumValue ?? 0}</p>
                       </div>
                       <div>
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Max</p>
-                        <p className="text-xs font-bold text-gray-800">{r.maximumValue}</p>
+                        <p className="text-xs font-bold text-gray-800">₹{r.max ?? r.maximumValue ?? '-'}</p>
                       </div>
                     </div>
                     <div className="pt-2 mt-1 border-t border-gray-100 flex justify-end">
-                      <button className="text-xs font-bold text-blue-600 uppercase tracking-widest">Edit</button>
+                      <button 
+                        onClick={() => handleDelete(r._id)}
+                        className="text-xs font-bold text-red-500 uppercase tracking-widest hover:underline"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 ))
@@ -215,11 +244,11 @@ const B2BMarkup: React.FC = () => {
                 <Dropdown value={product} onChange={setProduct} options={products} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Type <span className="text-red-500">*</span></label>
-                <Dropdown value={type} onChange={setType} options={types} />
+                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Markup Type <span className="text-red-500">*</span></label>
+                <Dropdown value={markupType} onChange={setMarkupType} options={markupTypeOptions} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Operator <span className="text-red-500">*</span></label>
+                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Airline Operator <span className="text-red-500">*</span></label>
                 <Dropdown value={operator} onChange={setOperator} options={operators} />
               </div>
               <div>
@@ -227,22 +256,32 @@ const B2BMarkup: React.FC = () => {
                 <Dropdown value={fareType} onChange={setFareType} options={fareTypes} />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Value <span className="text-red-500">*</span></label>
+                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">
+                  Markup Value ({markupType === 'percentage' ? '%' : '₹'}) <span className="text-red-500">*</span>
+                </label>
                 <div className="relative">
-                  <input type="number" value={value} onChange={(e) => setValue(e.target.value)} className="w-full h-[38px] pl-3 pr-8 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="Value*" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">%</span>
+                  <input 
+                    type="number" 
+                    value={value} 
+                    onChange={(e) => setValue(e.target.value)} 
+                    className="w-full h-[38px] pl-3 pr-8 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" 
+                    placeholder={markupType === 'percentage' ? "e.g. 3" : "e.g. 350"} 
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold pointer-events-none">
+                    {markupType === 'percentage' ? '%' : '₹'}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-[500px]">
               <div>
-                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Minimum Value <span className="text-red-500">*</span></label>
-                <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Minimum Value (₹)</label>
+                <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" placeholder="0" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Maximum Value <span className="text-red-500">*</span></label>
-                <input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                <label className="block text-[11px] font-bold text-[#0c1a40] mb-1.5">Maximum Value (₹)</label>
+                <input type="number" value={maxValue} onChange={(e) => setMaxValue(e.target.value)} className="w-full h-[38px] px-3 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" placeholder="10000" />
               </div>
             </div>
 

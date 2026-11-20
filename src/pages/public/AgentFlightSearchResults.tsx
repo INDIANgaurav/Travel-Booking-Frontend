@@ -12,6 +12,7 @@ import CityPicker from '../../components/common/CityPicker';
 import TripTypePicker from '../../components/common/TripTypePicker';
 import { format } from 'date-fns';
 import B2BMobileBottomNav from '../../components/layout/B2BMobileBottomNav';
+import api from '../../services/api';
 
 interface Flight {
   _id: string;
@@ -40,6 +41,8 @@ interface Flight {
   cabinClass?: string;
   mealsIncluded?: boolean;
   isRefundable?: boolean;
+  refundable?: boolean | string;
+  fareRules?: any[];
   segments?: {
     origin: string;
     destination: string;
@@ -108,11 +111,75 @@ export default function AgentFlightSearchResults(props: any) {
 
   // B2B Feature States
   const [showIncentive, setShowIncentive] = useState<boolean>(true);
+  const [showMarkupModal, setShowMarkupModal] = useState(false);
+  const [activeMarkupValue, setActiveMarkupValue] = useState<number>(() => {
+    const saved = localStorage.getItem('agentCustomerMarkup');
+    return saved ? Number(saved) : 0;
+  });
+  const [tempMarkupInput, setTempMarkupInput] = useState<string>(activeMarkupValue ? String(activeMarkupValue) : '300');
+  const [markupTypeInput, setMarkupTypeInput] = useState<'fixed' | 'percentage'>('fixed');
+
+  useEffect(() => {
+    // Fetch active markup from server for this agent
+    api.get('/api/markup').then(res => {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const flightMarkup = res.data.find((m: any) => m.product?.toLowerCase().startsWith('flight') && m.status === 'ACTIVE') || res.data[0];
+        if (flightMarkup && flightMarkup.value) {
+          setActiveMarkupValue(flightMarkup.value);
+          setTempMarkupInput(String(flightMarkup.value));
+          if (flightMarkup.type === 'percentage') setMarkupTypeInput('percentage');
+          localStorage.setItem('agentCustomerMarkup', String(flightMarkup.value));
+        }
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleSaveMarkup = async () => {
+    const num = Number(tempMarkupInput) || 0;
+    try {
+      await api.post('/api/markup', {
+        product: 'Flight',
+        type: markupTypeInput,
+        markupType: markupTypeInput,
+        operator: 'ALL',
+        airline: 'ALL',
+        fareType: 'BASIC',
+        value: num,
+        min: 0,
+        max: 100000,
+        status: 'ACTIVE'
+      });
+      setActiveMarkupValue(num);
+      localStorage.setItem('agentCustomerMarkup', String(num));
+      setShowMarkupModal(false);
+      toast.success(`Markup of ${markupTypeInput === 'percentage' ? `${num}%` : `₹${num}`} applied to all search fares!`);
+      if (handleSearch) {
+        handleSearch();
+      }
+    } catch (e) {
+      toast.error('Failed to save markup');
+    }
+  };
   const [filterRefundable, setFilterRefundable] = useState<'ALL' | 'REFUNDABLE' | 'NON_REFUNDABLE'>('ALL');
   const [filterStops, setFilterStops] = useState<number | null>(null);
   const [filterDepTime, setFilterDepTime] = useState<string | null>(null);
   const [filterArrTime, setFilterArrTime] = useState<string | null>(null);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
+
+  // Helper for accurate flight refundability detection across Series Fares, AirIQ and GAPI
+  const isFlightRefundable = (f: any): boolean => {
+    if (!f) return false;
+    if (f.isSeriesFare) return false;
+    if (typeof f.isRefundable === 'boolean') return f.isRefundable;
+    if (typeof f.refundable === 'boolean') return f.refundable;
+    if (typeof f.refundable === 'string') {
+      return !f.refundable.toLowerCase().includes('non');
+    }
+    if (typeof f.fareType === 'string' && f.fareType.toUpperCase().includes('INSTANT')) {
+      return false;
+    }
+    return false;
+  };
 
   // Navigation handlers for Previous Day / Next Day
   const handlePrevDay = () => {
@@ -130,7 +197,12 @@ export default function AgentFlightSearchResults(props: any) {
         toast.error('Cannot select a past date');
         return;
       }
-      setDate(format(prev, 'yyyy-MM-dd'));
+      const newDateStr = format(prev, 'yyyy-MM-dd');
+      setDate(newDateStr);
+      toast.loading(`Loading flights for ${format(prev, 'dd MMM yyyy')}...`, { id: 'date-shift', duration: 1500 });
+      if (handleSearch) {
+        handleSearch({ date: newDateStr } as any);
+      }
     } catch (e) {
       console.error('Error shifting date backwards', e);
     }
@@ -144,7 +216,12 @@ export default function AgentFlightSearchResults(props: any) {
         : new Date(date);
       const next = new Date(currentDate);
       next.setDate(next.getDate() + 1);
-      setDate(format(next, 'yyyy-MM-dd'));
+      const newDateStr = format(next, 'yyyy-MM-dd');
+      setDate(newDateStr);
+      toast.loading(`Loading flights for ${format(next, 'dd MMM yyyy')}...`, { id: 'date-shift', duration: 1500 });
+      if (handleSearch) {
+        handleSearch({ date: newDateStr } as any);
+      }
     } catch (e) {
       console.error('Error shifting date forwards', e);
     }
@@ -185,8 +262,9 @@ export default function AgentFlightSearchResults(props: any) {
     if (!flightsToFilter) return [];
     return flightsToFilter.filter((f: any) => {
       // 1. Refundable
-      if (filterRefundable === 'REFUNDABLE' && !f.isRefundable) return false;
-      if (filterRefundable === 'NON_REFUNDABLE' && f.isRefundable) return false;
+      const isRef = isFlightRefundable(f);
+      if (filterRefundable === 'REFUNDABLE' && !isRef) return false;
+      if (filterRefundable === 'NON_REFUNDABLE' && isRef) return false;
 
       // 2. Stops
       if (filterStops !== null) {
@@ -436,9 +514,16 @@ export default function AgentFlightSearchResults(props: any) {
              <div className={`flex flex-col ${tripType === 'Round Trip' ? 'items-start gap-1' : 'items-end gap-1'}`}>
                <span className="font-black text-2xl text-[#0c1a40]">₹ {getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
                {showIncentive && (
-                 <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
-                   Incentive: ₹ {flight.agentCommission ? flight.agentCommission : Math.round(flight.price * 0.03) || 150}
-                 </span>
+                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                   <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
+                     Incentive: ₹ {flight.agentCommission ? flight.agentCommission : Math.round(flight.price * 0.03) || 150}
+                   </span>
+                   {activeMarkupValue > 0 && (
+                     <span className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-2xs inline-flex items-center gap-1">
+                       Your Markup: +{markupTypeInput === 'percentage' ? `${activeMarkupValue}%` : `₹${activeMarkupValue}`}
+                     </span>
+                   )}
+                 </div>
                )}
                {flight.isSeriesFare && flight.agentCommission && flight.agentCommission > 0 && (
                  <span className="text-[9px] font-bold text-gray-500 uppercase">(Includes ₹ {flight.agentCommission} Taxes)</span>
@@ -769,188 +854,217 @@ export default function AgentFlightSearchResults(props: any) {
             </div>
 
             {/* 4 Fare Option Cards */}
-            <div className="p-6 relative flex-1 overflow-y-auto">
-              <button onClick={() => scrollCarousel('left')} className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition shadow-sm z-10 hidden md:flex">
-                <ChevronLeft size={20} />
-              </button>
-              
-              <div ref={carouselRef} className="flex overflow-x-auto snap-x gap-4 pb-4 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
-              {/* Card 1: INSTANT FARE */}
-              <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'INSTANT FARE' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('INSTANT FARE')}>
-                <div>
-                  <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
-                    INSTANT FARE
-                  </div>
-                  <div className="text-[11px] text-red-500 font-bold text-center mb-3">Non Refundable</div>
+            {(() => {
+              const baseFare = getDisplayPrice(moreFaresFlight.price);
+              const couponFare = Math.round(baseFare * 1.12);
+              const specialFare = Math.round(baseFare * 1.18);
+              const corporateFare = Math.round(baseFare * 1.25);
 
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'INSTANT FARE' ? 'border-blue-600' : 'border-gray-300'}`}>
-                        {selectedFareType === 'INSTANT FARE' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+              const getTierPrice = (tier: string) => {
+                if (tier === 'Coupon fares' || tier === 'COUPON FARES') return couponFare;
+                if (tier === 'Special fares' || tier === 'SPECIAL FARES') return specialFare;
+                if (tier === 'Corporate Fares' || tier === 'CORPORATE FARES') return corporateFare;
+                return baseFare;
+              };
+
+              return (
+                <>
+                  <div className="p-6 relative flex-1 overflow-y-auto">
+                    <button onClick={() => scrollCarousel('left')} className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition shadow-sm z-10 hidden md:flex">
+                      <ChevronLeft size={20} />
+                    </button>
+                    
+                    <div ref={carouselRef} className="flex overflow-x-auto snap-x gap-4 pb-4 pt-4 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <style>{`.flex::-webkit-scrollbar { display: none; }`}</style>
+                    {/* Card 1: INSTANT FARE */}
+                    <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'INSTANT FARE' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('INSTANT FARE')}>
+                      <div>
+                        <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
+                          INSTANT FARE
+                        </div>
+                        <div className="text-[11px] text-red-500 font-bold text-center mb-3">Non Refundable</div>
+
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'INSTANT FARE' ? 'border-blue-600' : 'border-gray-300'}`}>
+                              {selectedFareType === 'INSTANT FARE' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                            </div>
+                            <span className="text-xl font-black text-red-500">₹ {baseFare.toLocaleString('en-IN')}.00</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
+                        </div>
+
+                        <div className="flex gap-2 mb-3">
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
+                        </div>
+
+                        <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Special fare</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Names will be updated 1 day prior to Departure</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Please reconfirm your flight departure time at least 24 hours prior</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Strictly non-refundable upon cancellation</li>
+                        </ul>
                       </div>
-                      <span className="text-xl font-black text-red-500">₹ {getDisplayPrice(moreFaresFlight.price).toLocaleString('en-IN')}.00</span>
+
+                      <button 
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'INSTANT FARE' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
+                      >
+                        {selectedFareType === 'INSTANT FARE' ? 'Selected ✓' : 'Select'}
+                      </button>
                     </div>
-                    <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
-                  </div>
 
-                  <div className="flex gap-2 mb-3">
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
-                  </div>
+                    {/* Card 2: Coupon Fares */}
+                    <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Coupon fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Coupon fares')}>
+                      <div>
+                        <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
+                          Coupon fares
+                        </div>
+                        <div className="text-[11px] text-[#8dc63f] font-bold text-center mb-3">Partially Refundable</div>
 
-                  <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Special fare</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Names will be updated 1 day prior to Departure</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Please reconfirm your flight departure time at least 24 hours prior</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Cancellation is possible subjected to Series terms</li>
-                  </ul>
-                </div>
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Coupon fares' ? 'border-blue-600' : 'border-gray-300'}`}>
+                              {selectedFareType === 'Coupon fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                            </div>
+                            <span className="text-xl font-black text-red-500">₹ {couponFare.toLocaleString('en-IN')}.00</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
+                        </div>
 
-                <button 
-                  className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'INSTANT FARE' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
-                >
-                  {selectedFareType === 'INSTANT FARE' ? 'Selected ✓' : 'Select'}
-                </button>
-              </div>
+                        <div className="flex gap-2 mb-3">
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
+                        </div>
 
-              {/* Card 2: Coupon Fares */}
-              <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Coupon fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Coupon fares')}>
-                <div>
-                  <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
-                    Coupon fares
-                  </div>
-                  <div className="text-[11px] text-[#8dc63f] font-bold text-center mb-3">Partially Refundable</div>
-
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Coupon fares' ? 'border-blue-600' : 'border-gray-300'}`}>
-                        {selectedFareType === 'Coupon fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Cancellation / Re-issue Permitted at nominal charges</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Seat & Meals available at add-on charge</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Check Fare Rules For Accurate Fees</li>
+                        </ul>
                       </div>
-                      <span className="text-xl font-black text-red-500">₹ {(getDisplayPrice(moreFaresFlight.price) + 1035).toLocaleString('en-IN')}.00</span>
+
+                      <button 
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Coupon fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
+                      >
+                        {selectedFareType === 'Coupon fares' ? 'Selected ✓' : 'Select'}
+                      </button>
                     </div>
-                    <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
-                  </div>
 
-                  <div className="flex gap-2 mb-3">
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
-                  </div>
+                    {/* Card 3: Special Fares */}
+                    <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Special fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Special fares')}>
+                      <div>
+                        <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
+                          Special fares
+                        </div>
+                        <div className="text-[11px] text-[#8dc63f] font-bold text-center mb-3">Partially Refundable</div>
 
-                  <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Cancellation / Re-issue Permitted at higher charges</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Seat & Meals not included in the fare</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Check Fare Rules For Accurate Fees</li>
-                  </ul>
-                </div>
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Special fares' ? 'border-blue-600' : 'border-gray-300'}`}>
+                              {selectedFareType === 'Special fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                            </div>
+                            <span className="text-xl font-black text-red-500">₹ {specialFare.toLocaleString('en-IN')}.00</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
+                        </div>
 
-                <button 
-                  className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Coupon fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
-                >
-                  {selectedFareType === 'Coupon fares' ? 'Selected ✓' : 'Select'}
-                </button>
-              </div>
+                        <div className="flex gap-2 mb-3">
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
+                        </div>
 
-              {/* Card 3: Special Fares */}
-              <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Special fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Special fares')}>
-                <div>
-                  <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
-                    Special fares
-                  </div>
-                  <div className="text-[11px] text-[#8dc63f] font-bold text-center mb-3">Partially Refundable</div>
-
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Special fares' ? 'border-blue-600' : 'border-gray-300'}`}>
-                        {selectedFareType === 'Special fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Flexible date change policy</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Free standard seat selection included</li>
+                        </ul>
                       </div>
-                      <span className="text-xl font-black text-red-500">₹ {(getDisplayPrice(moreFaresFlight.price) + 1087).toLocaleString('en-IN')}.00</span>
+
+                      <button 
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Special fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
+                      >
+                        {selectedFareType === 'Special fares' ? 'Selected ✓' : 'Select'}
+                      </button>
                     </div>
-                    <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
-                  </div>
 
-                  <div className="flex gap-2 mb-3">
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
-                  </div>
+                    {/* Card 4: Corporate Fares */}
+                    <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Corporate Fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Corporate Fares')}>
+                      <div>
+                        <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
+                          Corporate Fares
+                        </div>
+                        <div className="text-[11px] text-[#00a651] font-bold text-center mb-3">Highly Flexible</div>
 
-                  <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Cancellation / Re-issue Permitted</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Seat & Meals available at charge</li>
-                  </ul>
-                </div>
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Corporate Fares' ? 'border-blue-600' : 'border-gray-300'}`}>
+                              {selectedFareType === 'Corporate Fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                            </div>
+                            <span className="text-xl font-black text-red-500">₹ {corporateFare.toLocaleString('en-IN')}.00</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
+                        </div>
 
-                <button 
-                  className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Special fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
-                >
-                  {selectedFareType === 'Special fares' ? 'Selected ✓' : 'Select'}
-                </button>
-              </div>
+                        <div className="flex gap-2 mb-3">
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 20 Kg</div>
+                          <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
+                        </div>
 
-              {/* Card 4: Corporate Fares */}
-              <div className={`min-w-[280px] bg-white rounded-xl border ${selectedFareType === 'Corporate Fares' ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-lg scale-[1.02]' : 'border-gray-200'} p-4 flex flex-col justify-between transition-all cursor-pointer`} onClick={() => setSelectedFareType('Corporate Fares')}>
-                <div>
-                  <div className="text-center text-[13px] font-black text-[#0c1a40] uppercase mb-1">
-                    Corporate Fares
-                  </div>
-                  <div className="text-[11px] text-[#8dc63f] font-bold text-center mb-3">Partially Refundable</div>
-
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedFareType === 'Corporate Fares' ? 'border-blue-600' : 'border-gray-300'}`}>
-                        {selectedFareType === 'Corporate Fares' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Complimentary Hot Meal</li>
+                          <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Free Priority Seats + Lowest Cancellation Fee</li>
+                        </ul>
                       </div>
-                      <span className="text-xl font-black text-red-500">₹ {(getDisplayPrice(moreFaresFlight.price) + 1133).toLocaleString('en-IN')}.00</span>
+
+                      <button 
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Corporate Fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
+                      >
+                        {selectedFareType === 'Corporate Fares' ? 'Selected ✓' : 'Select'}
+                      </button>
                     </div>
-                    <span className="text-[11px] font-bold text-red-500 underline cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowFareRulesForFlight(moreFaresFlight); }}>Fare Rules</span>
+                    </div>
+
+                    <button onClick={() => scrollCarousel('right')} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition shadow-sm z-10 hidden md:flex">
+                      <ChevronRight size={20} />
+                    </button>
                   </div>
 
-                  <div className="flex gap-2 mb-3">
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">CheckIn: 15 Kg</div>
-                    <div className="bg-blue-50/50 text-blue-900 border border-blue-100 px-3 py-1.5 rounded-full text-[10px] font-bold flex-1 text-center">Cabin: 7 Kg</div>
+                  {/* Modal Bottom Bar */}
+                  <div className="bg-white p-5 border-t border-gray-100 flex justify-between items-center rounded-b-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                    <div className="text-sm font-black text-[#0c1a40] uppercase">
+                      {selectedFareType} <span className="text-[#0c1a40] text-lg ml-3">₹ {getTierPrice(selectedFareType).toLocaleString('en-IN')}.00</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const finalPrice = getTierPrice(selectedFareType);
+                        const isTierRefundable = selectedFareType !== 'INSTANT FARE';
+                        const flightToBook = {
+                          ...moreFaresFlight,
+                          price: finalPrice,
+                          fareType: selectedFareType,
+                          isRefundable: isTierRefundable,
+                          refundable: isTierRefundable
+                        };
+                        setSelectedOutbound(flightToBook);
+                        navigate('/b2b/checkout', {
+                          state: {
+                            flight: flightToBook,
+                            fareType: selectedFareType,
+                            adults,
+                            children,
+                            infants
+                          }
+                        });
+                      }}
+                      className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-10 py-3 rounded-full transition-all shadow-md cursor-pointer"
+                    >
+                      Book
+                    </button>
                   </div>
-
-                  <ul className="text-[11px] text-gray-500 space-y-3 mb-3">
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Free standard seats</li>
-                    <li className="flex items-start gap-2"><span className="text-emerald-500 font-bold">✓</span> Lowest Cancellation & Reissue Fees</li>
-                  </ul>
-                </div>
-
-                <button 
-                  className={`w-full py-2 rounded-xl text-xs font-bold transition-all ${selectedFareType === 'Corporate Fares' ? 'bg-[#00a651] text-white shadow-md' : 'bg-[#0c1a40] text-white hover:bg-blue-900'}`}
-                >
-                  {selectedFareType === 'Corporate Fares' ? 'Selected ✓' : 'Select'}
-                </button>
-              </div>
-              </div>
-
-              <button onClick={() => scrollCarousel('right')} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition shadow-sm z-10 hidden md:flex">
-                <ChevronRight size={20} />
-              </button>
-            </div>
-
-            {/* Modal Bottom Bar */}
-            <div className="bg-white p-5 border-t border-gray-100 flex justify-between items-center rounded-b-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-              <div className="text-sm font-black text-[#0c1a40] uppercase">
-                {selectedFareType} <span className="text-[#0c1a40] text-lg ml-3">₹ {(getDisplayPrice(moreFaresFlight.price) + (selectedFareType === 'Coupon fares' ? 1035 : selectedFareType === 'Special fares' ? 1087 : selectedFareType === 'Corporate Fares' ? 1133 : 0)).toLocaleString('en-IN')}.00</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  let finalPrice = getDisplayPrice(moreFaresFlight.price);
-                  if (selectedFareType === 'Coupon fares') finalPrice += 1035;
-                  if (selectedFareType === 'Special fares') finalPrice += 1087;
-                  if (selectedFareType === 'Corporate Fares') finalPrice += 1133;
-                  
-                  const flightToBook = { ...moreFaresFlight, price: finalPrice };
-                  setSelectedOutbound(flightToBook);
-                  navigate('/b2b/checkout', { state: { flight: flightToBook, fareType: selectedFareType, adults, children, infants } });
-                }}
-                className="bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-sm px-10 py-3 rounded-full transition-all shadow-md"
-              >
-                Book
-              </button>
-            </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -1142,6 +1256,18 @@ export default function AgentFlightSearchResults(props: any) {
                   />
                   <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
+              </div>
+
+              <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+                <button 
+                  onClick={() => setShowMarkupModal(true)}
+                  className="flex items-center gap-1.5 bg-blue-500/20 hover:bg-blue-500/35 border border-blue-400/40 text-blue-200 hover:text-white px-2.5 py-1 rounded-full text-xs font-bold transition cursor-pointer select-none"
+                  title="Configure your commission / markup added to all flight fares on screen"
+                >
+                  <span className="text-[11px] text-gray-300">My Markup:</span>
+                  <span className="text-white font-black">{activeMarkupValue > 0 ? (markupTypeInput === 'percentage' ? `${activeMarkupValue}%` : `₹${activeMarkupValue}`) : '₹0'}</span>
+                  <span className="text-[9px] bg-blue-600 hover:bg-blue-500 text-white px-1.5 py-0.2 rounded font-black uppercase tracking-wider">Set</span>
+                </button>
               </div>
 
               <div className="flex items-center gap-2 border-l border-white/20 pl-4 text-xs font-bold text-gray-300">
@@ -1459,45 +1585,100 @@ export default function AgentFlightSearchResults(props: any) {
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[60vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Cancellation Table */}
-                <div>
-                  <h3 className="text-xs font-black text-white bg-[#0c1a40] py-2 px-4 rounded-t-lg">CANCELLATION CHARGES PER PAX</h3>
-                  <table className="w-full text-left border-collapse border border-gray-200">
-                    <thead>
-                      <tr className="bg-gray-50 text-[10px] text-gray-500 font-bold uppercase">
-                        <th className="border border-gray-200 px-4 py-2">Time Frame</th>
-                        <th className="border border-gray-200 px-4 py-2">Air Fee + TPC Fee</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-xs font-bold text-gray-700">
-                      <tr>
-                        <td className="border border-gray-200 px-4 py-3">0 Days - 365 Days</td>
-                        <td className="border border-gray-200 px-4 py-3 text-red-500">Non Refundable</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+              {(() => {
+                const isRef = isFlightRefundable(showFareRulesForFlight);
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Cancellation Table */}
+                      <div>
+                        <h3 className="text-xs font-black text-white bg-[#0c1a40] py-2 px-4 rounded-t-lg">CANCELLATION CHARGES PER PAX</h3>
+                        <table className="w-full text-left border-collapse border border-gray-200">
+                          <thead>
+                            <tr className="bg-gray-50 text-[10px] text-gray-500 font-bold uppercase">
+                              <th className="border border-gray-200 px-4 py-2">Time Frame</th>
+                              <th className="border border-gray-200 px-4 py-2">Air Fee + TPC Fee</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-xs font-bold text-gray-700">
+                            {isRef ? (
+                              <>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">72+ hours before departure</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-emerald-700">₹ 3,000 + ₹ 300 Fee</td>
+                                </tr>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">4 to 72 hours before departure</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-amber-700">₹ 3,500 + ₹ 300 Fee</td>
+                                </tr>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">Within 4 hours / No-Show</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-red-500">Non Refundable</td>
+                                </tr>
+                              </>
+                            ) : (
+                              <tr>
+                                <td className="border border-gray-200 px-4 py-3">0 Days - 365 Days</td>
+                                <td className="border border-gray-200 px-4 py-3 text-red-500">Non Refundable</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
 
-                {/* Reschedule Table */}
-                <div>
-                  <h3 className="text-xs font-black text-white bg-[#0c1a40] py-2 px-4 rounded-t-lg">RESCHEDULE CHARGES PER PAX</h3>
-                  <table className="w-full text-left border-collapse border border-gray-200">
-                    <thead>
-                      <tr className="bg-gray-50 text-[10px] text-gray-500 font-bold uppercase">
-                        <th className="border border-gray-200 px-4 py-2">Time Frame</th>
-                        <th className="border border-gray-200 px-4 py-2">Air Fee + TPC Fee + Fare Diff</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-xs font-bold text-gray-700">
-                      <tr>
-                        <td className="border border-gray-200 px-4 py-3">0 Days - 365 Days</td>
-                        <td className="border border-gray-200 px-4 py-3 text-red-500">Non Changeable</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                      {/* Reschedule Table */}
+                      <div>
+                        <h3 className="text-xs font-black text-white bg-[#0c1a40] py-2 px-4 rounded-t-lg">RESCHEDULE CHARGES PER PAX</h3>
+                        <table className="w-full text-left border-collapse border border-gray-200">
+                          <thead>
+                            <tr className="bg-gray-50 text-[10px] text-gray-500 font-bold uppercase">
+                              <th className="border border-gray-200 px-4 py-2">Time Frame</th>
+                              <th className="border border-gray-200 px-4 py-2">Air Fee + TPC Fee + Fare Diff</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-xs font-bold text-gray-700">
+                            {isRef ? (
+                              <>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">72+ hours before departure</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-emerald-700">₹ 2,500 + Fare Diff</td>
+                                </tr>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">4 to 72 hours before departure</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-amber-700">₹ 3,000 + Fare Diff</td>
+                                </tr>
+                                <tr>
+                                  <td className="border border-gray-200 px-4 py-2.5">Within 4 hours / No-Show</td>
+                                  <td className="border border-gray-200 px-4 py-2.5 text-red-500">Non Changeable</td>
+                                </tr>
+                              </>
+                            ) : (
+                              <tr>
+                                <td className="border border-gray-200 px-4 py-3">0 Days - 365 Days</td>
+                                <td className="border border-gray-200 px-4 py-3 text-red-500">Non Changeable</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* API Fare Rules if present */}
+                    {showFareRulesForFlight.fareRules && showFareRulesForFlight.fareRules.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">Airline Specific API Fare Rules</h4>
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2 text-gray-700">
+                          {showFareRulesForFlight.fareRules.map((rule: any, idx: number) => (
+                            <div key={idx} className="leading-relaxed">
+                              {rule.fareRuleDetail || rule.rule || (typeof rule === 'string' ? rule : JSON.stringify(rule))}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Disclaimer */}
               <div className="mt-8">
@@ -1842,6 +2023,83 @@ export default function AgentFlightSearchResults(props: any) {
         </div>
       , document.body)}
       
+      {/* Quick Agent Markup Modal */}
+      {showMarkupModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden text-gray-800 animate-in zoom-in-95 duration-200">
+            <div className="bg-[#0b1031] text-white px-6 py-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-black tracking-wide uppercase">Set Customer Markup</h3>
+                <p className="text-[11px] text-gray-400 mt-0.5">Automatically added to all fares shown on your screen</p>
+              </div>
+              <button onClick={() => setShowMarkupModal(false)} className="text-gray-400 hover:text-white transition p-1 cursor-pointer">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Markup Mode</label>
+                <div className="flex gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setMarkupTypeInput('fixed')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg border transition cursor-pointer ${markupTypeInput === 'fixed' ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Fixed Amount (₹ per pax)
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setMarkupTypeInput('percentage')}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg border transition cursor-pointer ${markupTypeInput === 'percentage' ? 'bg-[#0b1031] text-white border-[#0b1031] shadow-xs' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    Percentage (%)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Markup Value ({markupTypeInput === 'percentage' ? '%' : '₹'})
+                </label>
+                <div className="relative">
+                  <input 
+                    type="number"
+                    value={tempMarkupInput}
+                    onChange={(e) => setTempMarkupInput(e.target.value)}
+                    placeholder={markupTypeInput === 'percentage' ? 'e.g. 5' : 'e.g. 300'}
+                    className="w-full h-11 px-3 pr-8 border border-gray-300 rounded-lg text-sm font-black outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold pointer-events-none">
+                    {markupTypeInput === 'percentage' ? '%' : '₹'}
+                  </span>
+                </div>
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mt-3 text-[11px] text-blue-900 leading-relaxed">
+                  💡 <strong>How it works for Walk-in Customers:</strong> If a flight costs ₹4,000 and you set ₹{tempMarkupInput || '300'}, your customer sitting in front of you will see <strong>₹{4000 + (Number(tempMarkupInput) || 0)}</strong> on screen. When you click Book, only ₹4,000 is deducted from your wallet, and you keep ₹{tempMarkupInput || '300'} direct cash!
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowMarkupModal(false)}
+                  className="flex-1 py-2.5 rounded-full border border-gray-300 text-xs font-bold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleSaveMarkup}
+                  className="flex-1 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-md cursor-pointer"
+                >
+                  Save & Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </>
   );

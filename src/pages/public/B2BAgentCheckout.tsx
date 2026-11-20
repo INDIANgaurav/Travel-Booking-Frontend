@@ -34,26 +34,25 @@ const B2BAgentCheckout: React.FC = () => {
     if (saved) {
       const expiresAt = parseInt(saved, 10);
       const remaining = Math.floor((expiresAt - Date.now()) / 1000);
-      return remaining > 0 ? remaining : 0;
+      return remaining > 0 ? remaining : 15 * 60;
     }
-    return 10 * 60; // Temporary default
+    return 15 * 60; // Standard 15 minutes default
   });
 
   useEffect(() => {
     const initializeTimer = async () => {
-      if (sessionStorage.getItem(storageKey)) return;
-      
-      let timerMinutes = 10;
+      let timerMinutes = 15;
       try {
         const res = await settingsApi.getGeneralSettings();
-        if (res.success && res.data) {
-          timerMinutes = res.data.bookingSessionTimerMinutes || 10;
+        if (res.success && res.data && res.data.bookingSessionTimerMinutes) {
+          timerMinutes = res.data.bookingSessionTimerMinutes;
         }
       } catch (err) {
         console.error('Failed to load session timer settings:', err);
       }
       
-      if (!sessionStorage.getItem(storageKey)) {
+      const saved = sessionStorage.getItem(storageKey);
+      if (!saved) {
         sessionStorage.setItem(storageKey, (Date.now() + timerMinutes * 60 * 1000).toString());
         setTimeLeft(timerMinutes * 60);
       }
@@ -132,10 +131,23 @@ const B2BAgentCheckout: React.FC = () => {
   );
 
   // Extract fare details from router state
-  const fareType = location.state?.fareType || 'Coupon fares';
+  const fareType = location.state?.fareType || flight?.fareType || (flight?.isSeriesFare ? 'INSTANT FARE' : 'Regular Fare');
   const adults = location.state?.adults || 1;
   const childrenCount = location.state?.children || 0;
   const infants = location.state?.infants || 0;
+
+  const isNonRefundable = Boolean(
+    flight?.isRefundable === false ||
+    flight?.refundable === false ||
+    flight?.refundable === 'Non Refundable' ||
+    flight?.refundable === 'NON_REFUNDABLE' ||
+    fareType === 'INSTANT FARE' ||
+    flight?.isSeriesFare ||
+    (typeof flight?.refundable === 'string' && flight?.refundable.toLowerCase().includes('non'))
+  );
+
+  const [showFareRulesModal, setShowFareRulesModal] = useState(false);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
 
   const indianAirports = new Set(['DEL','BOM','NMI','BLR','MAA','CCU','HYD','AMD','PNQ','GOI','GOX','COK','TRV','CCJ','JAI','ATQ','LKO','BBI','PAT','GAU','IXB','IXZ','IXC','SXR','VNS','BHO','IDR','NAG','RPR','BDQ','STV']);
   const isInternational = flight && (!indianAirports.has(flight.departureAirportCode) || !indianAirports.has(flight.arrivalAirportCode));
@@ -462,10 +474,9 @@ const B2BAgentCheckout: React.FC = () => {
 
   useEffect(() => {
     if (timeLeft === 0) {
-      toast.error('Booking session expired. Please search again.', { duration: 5000 });
-      navigate('/');
+      setShowSessionExpiredModal(true);
     }
-  }, [timeLeft, navigate]);
+  }, [timeLeft]);
 
   if (!flight) return null;
 
@@ -739,7 +750,7 @@ const B2BAgentCheckout: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-start mb-6">
                   <div className="text-[10px] font-bold text-[#0c1a40]">
-                    {fareType} (HR) | <span className="text-emerald-600">Refundable</span>
+                    {fareType} (HR) | <span className={isNonRefundable ? "text-red-500 font-bold" : "text-emerald-600 font-bold"}>{isNonRefundable ? 'Non Refundable' : 'Refundable'}</span>
                   </div>
                   <div className="bg-[#eef2f9] text-[#0c1a40] text-[10px] font-bold px-4 py-1 rounded-full border border-blue-100">
                     One Way
@@ -855,7 +866,11 @@ const B2BAgentCheckout: React.FC = () => {
                   <div className="bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
                     ! Paid Meals
                   </div>
-                  <button className="text-[10px] font-bold text-gray-600 border border-gray-300 px-4 py-1.5 rounded bg-white hover:bg-gray-50">
+                  <button 
+                    type="button"
+                    onClick={() => setShowFareRulesModal(true)}
+                    className="text-[10px] font-bold text-gray-600 border border-gray-300 px-4 py-1.5 rounded bg-white hover:bg-gray-50 cursor-pointer shadow-xs"
+                  >
                     Fare Rules
                   </button>
                 </div>
@@ -1434,7 +1449,9 @@ const B2BAgentCheckout: React.FC = () => {
                       {Math.floor(flight.durationMinutes / 60)}h : {flight.durationMinutes % 60}m
                     </span>
                     <span className="border border-gray-200 rounded-full px-3 py-1">HR</span>
-                    <span className="text-emerald-600 font-black px-1">Refundable</span>
+                    <span className={`font-black px-1 ${isNonRefundable ? "text-red-500" : "text-emerald-600"}`}>
+                      {isNonRefundable ? 'Non Refundable' : 'Refundable'}
+                    </span>
                   </div>
 
                   <div className="flex justify-between items-center text-xs font-black text-[#0c1a40]">
@@ -1456,7 +1473,11 @@ const B2BAgentCheckout: React.FC = () => {
                   </div>
                   
                   <div className="mt-4 text-right">
-                    <button className="border border-[#0c1a40] text-[#0c1a40] text-[10px] font-bold px-4 py-1.5 rounded-lg hover:bg-gray-50">
+                    <button 
+                      type="button"
+                      onClick={() => setShowFareRulesModal(true)}
+                      className="border border-[#0c1a40] text-[#0c1a40] text-[10px] font-bold px-4 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
                       Fare Rules
                     </button>
                   </div>
@@ -1614,6 +1635,154 @@ const B2BAgentCheckout: React.FC = () => {
         </div>
       )}
       
+      {/* Fare Rules Modal */}
+      {showFareRulesModal && flight && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[115] flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 overflow-hidden my-8">
+            {/* Header */}
+            <div className="bg-[#0c182d] text-white px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                  <Plane size={15} />
+                </div>
+                <h3 className="text-sm font-black tracking-wide uppercase">Fare Rules & Airline Policy</h3>
+              </div>
+              <button 
+                onClick={() => setShowFareRulesModal(false)}
+                className="w-7 h-7 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Flight Sector Sub-header */}
+            <div className="bg-blue-50/70 px-6 py-3 border-b border-blue-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#0c1a40] font-bold">
+                <span>{flight.departureCity} ({flight.departureAirportCode})</span>
+                <span>→</span>
+                <span>{flight.arrivalCity} ({flight.arrivalAirportCode})</span>
+                <span className="text-gray-500 font-normal">| {new Date(flight.departureTime).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              <div className="text-gray-700 font-semibold flex items-center gap-2">
+                <span>{flight.airline}</span>
+                <span className="bg-white text-gray-700 px-2 py-0.5 rounded border border-blue-200 text-[11px] font-bold">{flight.flightNumber}</span>
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
+              {/* Refundability & Cancellation */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  1. Cancellation Policy
+                </h4>
+                <div className={`p-4 rounded-xl border text-xs font-medium ${isNonRefundable ? 'bg-red-50/60 border-red-200 text-red-900' : 'bg-emerald-50/60 border-emerald-200 text-emerald-900'}`}>
+                  <div className="font-bold flex items-center gap-2 mb-1.5 text-sm">
+                    <span className={`w-2.5 h-2.5 rounded-full ${isNonRefundable ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                    {isNonRefundable ? 'Non-Refundable Ticket' : 'Refundable with Cancellation Charges'}
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-gray-700">
+                    {isNonRefundable 
+                      ? 'This fare is strictly non-refundable upon cancellation. In the event of a cancellation, no refund of base fare or fuel surcharges will be issued. Government statutory taxes may be claimed as per prevailing DGCA / airline norms.' 
+                      : 'Cancellations initiated at least 4 hours before departure will be refunded after deducting standard airline cancellation penalties and service fees. No refund is granted for no-shows or cancellations within 4 hours of departure.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Reschedule / Date Change */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  2. Date Change & Reschedule Policy
+                </h4>
+                <div className="p-4 rounded-xl border bg-gray-50 border-gray-200 text-xs font-medium text-gray-800">
+                  <div className="font-bold mb-1 text-sm text-[#0c1a40]">
+                    {isNonRefundable ? 'Fixed Schedule (Non-Changeable)' : 'Date Change Allowed with Fare Difference'}
+                  </div>
+                  <p className="text-[12px] text-gray-600 leading-relaxed">
+                    {isNonRefundable 
+                      ? 'Special contracted, series, and promotional fares do not allow date, flight, or name alterations.' 
+                      : 'Applicable airline date change penalty plus any difference between the original fare and the new flight fare will be charged.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Baggage Allowance */}
+              <div>
+                <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                  3. Baggage Allowance
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center gap-3">
+                    <div className="text-2xl">🎒</div>
+                    <div>
+                      <div className="text-gray-500 text-[10px] uppercase font-bold">Cabin Baggage</div>
+                      <div className="font-bold text-gray-900 text-sm mt-0.5">{(flight as any).cabinBaggage || '7 Kg'} / Passenger</div>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center gap-3">
+                    <div className="text-2xl">🧳</div>
+                    <div>
+                      <div className="text-gray-500 text-[10px] uppercase font-bold">Check-In Baggage</div>
+                      <div className="font-bold text-gray-900 text-sm mt-0.5">{(flight as any).checkinBaggage || '15 Kg'} / Passenger</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* API Fare Rules if present */}
+              {flight?.fareRules && flight.fareRules.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-black text-[#0c1a40] uppercase tracking-wider mb-2">
+                    4. Airline Specific Fare Rules
+                  </h4>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2 text-gray-700">
+                    {flight.fareRules.map((rule: any, idx: number) => (
+                      <div key={idx} className="leading-relaxed">
+                        {rule.fareRuleDetail || rule.rule || (typeof rule === 'string' ? rule : JSON.stringify(rule))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setShowFareRulesModal(false)}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Session Expired Modal */}
+      {showSessionExpiredModal && (
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[130] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden text-center p-6">
+            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={28} />
+            </div>
+            <h3 className="text-lg font-black text-[#0c1a40] mb-2">Booking Session Expired</h3>
+            <p className="text-xs text-gray-600 mb-6 leading-relaxed">
+              Airline seat inventory and fares are live and session hold has expired. To view updated availability and fares, please re-search flights.
+            </p>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(storageKey);
+                navigate('/b2b/home');
+              }}
+              className="w-full py-3 bg-[#0b1031] hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              Re-Search Flights Now
+            </button>
+          </div>
+        </div>
+      )}
+
       <B2BMobileBottomNav onProfileClick={() => navigate('/b2b/profile')} />
     </div>
   );
