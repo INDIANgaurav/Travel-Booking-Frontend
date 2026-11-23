@@ -26,14 +26,20 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
       const dataUrl = await htmlToImage.toPng(element, {
         pixelRatio: 2,
         backgroundColor: '#ffffff',
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+        width: 820,
         style: {
+          width: '820px',
+          maxWidth: '820px',
+          minWidth: '820px',
           margin: '0',
           transform: 'none',
           left: '0',
           top: '0',
-          position: 'static'
+          position: 'static',
+          boxShadow: 'none',
+          borderRadius: '0px',
+          border: '1px solid #cbd5e1',
+          padding: '24px'
         }
       });
       
@@ -47,20 +53,11 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = 210;
       const pageHeight = 297;
-      const margin = 8;
-      const maxW = pageWidth - (margin * 2);
-      const maxH = pageHeight - (margin * 2);
-
-      const widthScale = maxW / img.width;
-      const heightScale = maxH / img.height;
-      const scale = Math.min(widthScale, heightScale);
+      const margin = 5; // Clean 5mm print margin
+      const contentWidth = pageWidth - (margin * 2); // 200mm
+      const contentHeight = (img.height * contentWidth) / img.width;
       
-      const imgWidth = img.width * scale;
-      const imgHeight = img.height * scale;
-      const xPos = (pageWidth - imgWidth) / 2;
-      const yPos = margin;
-      
-      pdf.addImage(dataUrl, 'PNG', xPos, yPos, imgWidth, imgHeight, undefined, 'FAST');
+      pdf.addImage(dataUrl, 'PNG', margin, margin, contentWidth, Math.min(contentHeight, pageHeight - (margin * 2)), undefined, 'FAST');
       pdf.save(`${type === 'ticket' ? 'Ticket' : 'Invoice'}_${booking?.bookingId}.pdf`);
       
       toast.success(`${type === 'ticket' ? 'Ticket' : 'Invoice'} PDF downloaded successfully!`, { id: toastId });
@@ -281,8 +278,8 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                     <p className="font-bold text-[13px] uppercase">{originCode}-{destCode} ({dateStr.toUpperCase()})</p>
                     <p className="text-[12px] text-gray-700">{flightNo}</p>
                   </div>
-                  <div className="w-full overflow-x-auto">
-                    <table className="w-full text-left text-[9px] md:text-[11px]">
+                  <div className="w-full overflow-hidden">
+                    <table className="w-full table-fixed text-left text-[9px] md:text-[11px]">
                       <thead className="bg-white border-b border-gray-200">
                         <tr>
                           <th className="px-3 py-2 font-normal text-gray-600 w-1/3">Passenger Name(s)</th>
@@ -374,8 +371,8 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                   <span className="uppercase">Flight Details</span>
                   <span className="text-[9px] text-gray-700 font-semibold">ALL TIMINGS IN 24HRS & LOCAL AIRPORT TIME</span>
                 </div>
-                <div className="w-full overflow-x-auto">
-                  <table className="w-full text-left text-[9px] md:text-[11px] border-b border-gray-200">
+                <div className="w-full overflow-hidden">
+                  <table className="w-full table-fixed text-left text-[9px] md:text-[11px] border-b border-gray-200">
                     <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
                       <tr>
                         <th className="p-1 md:p-3 font-normal text-gray-500 w-[20%]">Flight</th>
@@ -498,8 +495,8 @@ export default function ETicketModal({ booking, onClose, autoDownload, onAutoDow
                 <span className="uppercase">Passenger Details</span>
                 <span className="text-[9px] text-gray-700 font-semibold">( Phone: 9555934205 | Email: trippechaloindia@gmail.com )</span>
               </div>
-              <div className="w-full overflow-x-auto mt-1">
-                <table className="w-full text-left text-[9px] md:text-[11px]">
+              <div className="w-full overflow-hidden mt-1">
+                <table className="w-full table-fixed text-left text-[9px] md:text-[11px]">
                   <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
                     <tr>
                       <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>

@@ -83,8 +83,9 @@ const SupplierDashboardLayout: React.FC = () => {
 
 
   const confirmLogout = () => {
+    dispatch(logout());
     dispatch(logoutUserThunk() as any);
-    navigate('/supplier/login');
+    navigate('/', { replace: true });
   };
 
   const supplierName = currentUser?.name || (currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName || ''}`.trim() : currentUser?.companyName) || 'SUPPLIER';

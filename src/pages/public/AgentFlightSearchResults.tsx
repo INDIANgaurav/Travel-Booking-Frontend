@@ -406,8 +406,10 @@ export default function AgentFlightSearchResults(props: any) {
   }, []);
 
   const handleLogout = () => {
+    dispatch(logout());
     dispatch(logoutUserThunk() as any);
-    props.navigate('/b2b/login');
+    sessionStorage.removeItem('b2bSearchState');
+    props.navigate('/', { replace: true });
   };
 
   const renderFlightCard = (flight: Flight, isReturn = false) => {

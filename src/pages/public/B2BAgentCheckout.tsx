@@ -110,8 +110,10 @@ const B2BAgentCheckout: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
+    dispatch(logout());
     dispatch(logoutUserThunk() as any);
-    navigate('/b2b/login');
+    sessionStorage.removeItem('b2bSearchState');
+    navigate('/', { replace: true });
   };
 
   const [showReviewModal, setShowReviewModal] = useState(false);

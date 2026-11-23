@@ -167,9 +167,10 @@ const B2BAgentHomePage: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
+    dispatch(logout());
     dispatch(logoutUserThunk() as any);
     sessionStorage.removeItem('b2bSearchState');
-    navigate('/b2b/login');
+    navigate('/', { replace: true });
   };
   
   // Search Form State

@@ -76,13 +76,13 @@ const initialState: AuthState = {
 };
 
 export const logoutUserThunk = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
+  // Immediately clear client state and tokens synchronously to prevent any redirect race condition
+  dispatch(authSlice.actions.logout());
   try {
     const api = (await import('../services/api')).default;
     await api.post('/api/auth/logout');
   } catch (e) {
     // Ignore server error on logout
-  } finally {
-    dispatch(authSlice.actions.logout());
   }
 });
 

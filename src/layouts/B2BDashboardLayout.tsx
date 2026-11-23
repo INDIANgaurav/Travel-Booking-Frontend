@@ -40,8 +40,10 @@ const B2BDashboardLayout: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
+    dispatch(logout());
     dispatch(logoutUserThunk() as any);
-    navigate('/b2b/login');
+    sessionStorage.removeItem('b2bSearchState');
+    navigate('/', { replace: true });
   };
 
   const isMoreActive = location.pathname.startsWith('/b2b/dashboard') || 
