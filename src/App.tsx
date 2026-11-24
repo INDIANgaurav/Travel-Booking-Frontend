@@ -72,6 +72,7 @@ const SeriesFareManager = lazy(() => import('./pages/supplier/SeriesFareManager'
 const SupplierUserManagement = lazy(() => import('./pages/supplier/SupplierUserManagement'))
 const SupplierBookingHistory = lazy(() => import('./pages/supplier/SupplierBookingHistory'))
 const SupplierQueueHistory = lazy(() => import('./pages/supplier/SupplierQueueHistory'))
+const SupplierWalletPage = lazy(() => import('./pages/supplier/SupplierWalletPage'))
 
 // Lazy-Loaded Admin & Treasury Modules
 const AdminLoginPage = lazy(() => import('./pages/public/AdminLoginPage'))
@@ -311,7 +312,8 @@ function App() {
             <Route path="marketing/promos" element={<SupplierPromoCodes />} />
             <Route path="users" element={<SupplierUserManagement />} />
             <Route path="history" element={<SupplierBookingHistory />} />
-            <Route path="ledger" element={<B2BAccountStatement />} />
+            <Route path="ledger" element={<SupplierWalletPage />} />
+            <Route path="wallet" element={<SupplierWalletPage />} />
             <Route path="series-queue" element={<SupplierQueueHistory />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

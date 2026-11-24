@@ -13,7 +13,8 @@ import {
   addDays, 
   isBefore, 
   isAfter, 
-  startOfDay 
+  startOfDay,
+  getDay 
 } from 'date-fns';
 import api from '../../services/api';
 
@@ -138,16 +139,28 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
                 title={holiday.name}
               />
             )}
-            {/* Holiday Tooltip */}
+            {/* Holiday Tooltip with edge-aware alignment */}
             {holiday && !isPast && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-0.5 border border-slate-700/80 min-w-max">
+              <div className={`opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 ${
+                getDay(day) >= 5 
+                  ? 'right-0 translate-x-0' 
+                  : getDay(day) <= 1 
+                    ? 'left-0 translate-x-0' 
+                    : 'left-1/2 -translate-x-1/2'
+              } bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-0.5 border border-slate-700/80 min-w-max`}>
                 <div className="flex items-center gap-1.5 text-[10px] leading-tight font-bold text-amber-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                   <span>{holiday.name}</span>
                   <span className="text-[9px] font-normal text-slate-400">({format(day, 'dd MMM')})</span>
                 </div>
                 {/* Pointer Arrow */}
-                <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                <div className={`w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 ${
+                  getDay(day) >= 5 
+                    ? 'right-3' 
+                    : getDay(day) <= 1 
+                      ? 'left-3' 
+                      : 'left-1/2 -translate-x-1/2'
+                }`}></div>
               </div>
             )}
             

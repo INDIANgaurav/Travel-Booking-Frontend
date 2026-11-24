@@ -174,10 +174,11 @@ const SupplierDashboardLayout: React.FC = () => {
 
           <div 
             onClick={() => navigate('/supplier-portal/ledger')}
+            title="Click to view Supplier Financial Ledger & Wallet"
             className="flex flex-col items-end cursor-pointer group ml-1 sm:ml-2"
           >
-            <span className="hidden sm:block text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-gray-300 transition-colors">Balance</span>
-            <div className="flex items-center gap-1.5 text-green-400 font-black text-xs sm:text-sm bg-green-500/10 px-2 sm:px-4 py-1 rounded-lg border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+            <span className="hidden sm:block text-[10px] text-gray-400 font-bold tracking-wider uppercase mb-0.5 group-hover:text-green-300 transition-colors">Balance</span>
+            <div className="flex items-center gap-1.5 text-green-400 font-black text-xs sm:text-sm bg-green-500/10 group-hover:bg-green-500/20 px-2 sm:px-4 py-1 rounded-lg border border-green-500/20 group-hover:border-green-500/40 shadow-[0_0_15px_rgba(74,222,128,0.1)] transition-all">
               <span>₹ {(currentUser?.walletBalance ?? currentUser?.balance ?? 0).toLocaleString('en-IN')}</span>
             </div>
           </div>
@@ -372,7 +373,7 @@ const SupplierDashboardLayout: React.FC = () => {
           }
         >
           <Tag size={16} />
-          <span>LEDGER</span>
+          <span>LEDGER & WALLET</span>
         </NavLink>
 
         <NavLink 

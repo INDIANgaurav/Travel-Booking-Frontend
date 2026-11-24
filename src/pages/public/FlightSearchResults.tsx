@@ -16,6 +16,7 @@ import { useFlightSearch } from '../../hooks/useFlightSearch';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import InteractiveGridBackground from '../../components/ui/InteractiveGridBackground';
 import { format } from 'date-fns';
+import { formatAirlineName } from '../../utils/airlineFormatter';
 
 interface Flight {
   _id: string;
@@ -1042,7 +1043,7 @@ export default function FlightSearchResults() {
               <div className="flex items-center gap-4 border-b border-gray-100 pb-5 mb-6">
                 <img src={showFlightDetails.airlineLogo} alt="" className="w-12 h-12 object-contain" />
                 <div>
-                  <p className="font-black text-gray-900 text-xl">{showFlightDetails.airline}</p>
+                  <p className="font-black text-gray-900 text-xl capitalize">{formatAirlineName(showFlightDetails.airline)}</p>
                   <p className="text-sm font-medium text-gray-500">{showFlightDetails.flightNumber} • {(showFlightDetails as any).cabinClass || cabinClass.split('/')[0]}</p>
                 </div>
               </div>
@@ -1249,10 +1250,10 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-black text-slate-900 text-sm leading-tight">{flight.airline}</p>
+              <p className="font-black text-slate-900 text-sm leading-tight capitalize">{formatAirlineName(flight.airline)}</p>
               {flight.flightNumber && (
-                <span className="text-[10px] text-slate-600 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                  {flight.flightNumber}
+                <span className="text-[10px] text-slate-600 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 uppercase">
+                  {flight.flightNumber.toUpperCase()}
                 </span>
               )}
             </div>

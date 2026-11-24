@@ -102,6 +102,9 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
 
         const minD = minDate ? startOfDay(minDate) : startOfDay(new Date());
         const isPast = isBefore(startOfDay(day), minD);
+        const dayOfWeek = getDay(day);
+        const isRightEdge = dayOfWeek >= 5; // Friday (5) & Saturday (6)
+        const isLeftEdge = dayOfWeek <= 1;  // Sunday (0) & Monday (1)
         
         const isSelectedStart = startDate && isSameDay(day, startDate);
         const isSelectedEnd = endDate && isSameDay(day, endDate);
@@ -145,9 +148,15 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
             onClick={() => !isPast && onDateClick(day)}
             className={`flex flex-col items-center justify-center min-h-[36px] sm:min-h-[40px] py-1 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
           >
-            {/* Unified Smart Tooltip on Hover: Combines Holiday and Seats into ONE Clean Card */}
+            {/* Unified Smart Tooltip on Hover: Edge-aware collision prevention (avoids clipping on right/left edges) */}
             {!isPast && (holiday || (availableSeats != null && availableSeats > 0 && !isSelected)) && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-1 border border-slate-700/80 min-w-max">
+              <div className={`opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 sm:-top-13 ${
+                isRightEdge 
+                  ? 'right-0 translate-x-0' 
+                  : isLeftEdge 
+                    ? 'left-0 translate-x-0' 
+                    : 'left-1/2 -translate-x-1/2'
+              } bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-1 border border-slate-700/80 min-w-max`}>
                 {holiday && (
                   <div className="flex items-center gap-1.5 text-[10px] leading-tight font-bold text-amber-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
@@ -162,8 +171,14 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
                     <span className="font-bold text-emerald-300">{availableSeats} Seats Left</span>
                   </div>
                 )}
-                {/* Pointer Arrow */}
-                <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                {/* Pointer Arrow - Aligned to day cell center */}
+                <div className={`w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 ${
+                  isRightEdge 
+                    ? 'right-3' 
+                    : isLeftEdge 
+                      ? 'left-3' 
+                      : 'left-1/2 -translate-x-1/2'
+                }`}></div>
               </div>
             )}
 
@@ -224,7 +239,7 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
   };
 
   return (
-    <div className={`bg-white rounded-xl w-[calc(100vw-32px)] sm:w-[580px] shadow-2xl border border-gray-200 z-50 overflow-hidden`} onClick={e => e.stopPropagation()}>
+    <div className={`bg-white rounded-xl w-[calc(100vw-32px)] sm:w-[580px] shadow-2xl border border-gray-200 z-50 overflow-visible`} onClick={e => e.stopPropagation()}>
       <div className="flex items-center justify-between px-3 py-1.5 bg-white border-b border-gray-100">
         <div className="flex gap-4">
           <div className="font-bold text-gray-900 text-xs sm:text-sm">
