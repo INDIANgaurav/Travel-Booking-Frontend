@@ -1,10 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, setCredentials } from '../../../store/authSlice';
 import TopNavbar from '../../../components/layout/TopNavbar';
+import Dropdown from '../../../components/ui/Dropdown';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
-import { Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw, ArrowUpRight, ArrowDownLeft, CheckCircle2, Copy, X } from 'lucide-react';
+import { 
+  Wallet, CreditCard, Banknote, ShieldCheck, RefreshCw, 
+  ArrowUpRight, ArrowDownLeft, CheckCircle2, Copy, X,
+  Filter, Calendar, RotateCcw, AlertCircle
+} from 'lucide-react';
+
+const MONTHS = [
+  { value: '1', label: 'January' },
+  { value: '2', label: 'February' },
+  { value: '3', label: 'March' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'May' },
+  { value: '6', label: 'June' },
+  { value: '7', label: 'July' },
+  { value: '8', label: 'August' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'October' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'December' },
+];
+
+const YEARS = ['2026', '2025', '2024'];
+
+const TRANSACTION_TYPES = [
+  { id: 'ALL', label: 'All Types' },
+  { id: 'REFUND', label: 'Refunds' },
+  { id: 'CREDIT', label: 'Credits (Top-up)' },
+  { id: 'DEBIT', label: 'Debits (Bookings)' },
+  { id: 'FAILED', label: 'Failed' },
+];
 
 // Extend window for Razorpay
 declare global {
@@ -17,6 +47,10 @@ export default function WalletPage() {
   const currentUser = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
 
+  const now = new Date();
+  const currentMonthNum = String(now.getMonth() + 1);
+  const currentYearNum = String(now.getFullYear());
+
   const [walletBalance, setWalletBalance] = useState(currentUser?.walletBalance || 0);
   const [amount, setAmount] = useState<string>('500');
   const [paymentMethod, setPaymentMethod] = useState<string>('CC');
@@ -25,6 +59,12 @@ export default function WalletPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
+
+  // Filters State: Month & Year (Default to current) and Type (Default to 'ALL')
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthNum);
+  const [selectedYear, setSelectedYear] = useState<string>(currentYearNum);
+  const [selectedType, setSelectedType] = useState<string>('ALL');
+
   const isSubmittingRef = useRef(false);
 
   const PAYMENT_METHODS = [
@@ -37,7 +77,57 @@ export default function WalletPage() {
     fetchWallet();
   }, []);
 
+  const monthOptions = useMemo(() => [
+    { value: 'ALL', label: 'All Months' },
+    ...MONTHS.map(m => ({ value: m.value, label: m.label }))
+  ], []);
+
+  const yearOptions = useMemo(() => [
+    { value: 'ALL', label: 'All' },
+    ...YEARS.map(y => ({ value: y, label: y }))
+  ], []);
+
+  const typeOptions = useMemo(() => 
+    TRANSACTION_TYPES.map(t => ({ value: t.id, label: t.label })),
+  []);
+
+  // Instant reactive filtering on transactions list
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      // 1. Month & Year filter
+      if (t.date) {
+        const d = new Date(t.date);
+        if (selectedYear !== 'ALL' && d.getFullYear().toString() !== selectedYear) {
+          return false;
+        }
+        if (selectedMonth !== 'ALL' && (d.getMonth() + 1).toString() !== selectedMonth) {
+          return false;
+        }
+      }
+
+      // 2. Type filter
+      const desc = (t.description || '').toLowerCase();
+      const isRefund = desc.includes('refund');
+      const isFailed = desc.includes('fail') || t.status === 'FAILED';
+      const isCredit = t.type === 'CREDIT';
+      const isDebit = t.type === 'DEBIT';
+
+      if (selectedType === 'REFUND') {
+        if (!isRefund) return false;
+      } else if (selectedType === 'CREDIT') {
+        if (!isCredit || isRefund) return false;
+      } else if (selectedType === 'DEBIT') {
+        if (!isDebit) return false;
+      } else if (selectedType === 'FAILED') {
+        if (!isFailed) return false;
+      }
+
+      return true;
+    });
+  }, [transactions, selectedMonth, selectedYear, selectedType]);
+
   const fetchWallet = async () => {
+    setPageLoading(true);
     try {
       const { data } = await api.get('/api/wallet');
       setWalletBalance(data.balance);
@@ -50,6 +140,7 @@ export default function WalletPage() {
       }
     } catch (error) {
       console.error('Failed to fetch wallet', error);
+      toast.error('Failed to load transactions');
     } finally {
       setPageLoading(false);
     }
@@ -290,8 +381,8 @@ export default function WalletPage() {
 
           {/* Right Column: Transactions */}
           <div className="lg:col-span-5">
-            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 h-[500px] lg:h-full lg:max-h-[800px] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+            <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100 h-[550px] lg:h-full lg:max-h-[800px] flex flex-col relative">
+              <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
                 <div>
                   <h2 className="text-lg font-black text-gray-900">Recent Transactions</h2>
                   <p className="text-xs text-gray-400 font-medium mt-0.5">Click any transaction to view full details</p>
@@ -304,8 +395,74 @@ export default function WalletPage() {
                   <RefreshCw size={15} className={pageLoading ? 'animate-spin text-blue-600' : ''} />
                 </button>
               </div>
+
+              {/* Filter Controls: Date (Month & Year) + Type */}
+              <div className="bg-gray-50/90 rounded-xl p-3 border border-gray-200/70 mb-3 space-y-2 shrink-0 relative z-30">
+                <div className="grid grid-cols-12 gap-2">
+                  {/* Month */}
+                  <div className="col-span-5 relative z-30">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Calendar size={11} className="text-gray-400" />
+                      <span>Month</span>
+                    </label>
+                    <Dropdown
+                      value={selectedMonth}
+                      onChange={setSelectedMonth}
+                      options={monthOptions}
+                      placeholder="Select Month"
+                    />
+                  </div>
+
+                  {/* Year */}
+                  <div className="col-span-3 relative z-30">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                      Year
+                    </label>
+                    <Dropdown
+                      value={selectedYear}
+                      onChange={setSelectedYear}
+                      options={yearOptions}
+                      placeholder="Year"
+                    />
+                  </div>
+
+                  {/* Type */}
+                  <div className="col-span-4 relative z-30">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Filter size={11} className="text-gray-400" />
+                      <span>Type</span>
+                    </label>
+                    <Dropdown
+                      value={selectedType}
+                      onChange={setSelectedType}
+                      options={typeOptions}
+                      placeholder="All Types"
+                    />
+                  </div>
+                </div>
+
+                {/* Filter info & Reset */}
+                <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1.5 border-t border-gray-200/50">
+                  <span className="font-medium">
+                    Found <strong className="text-gray-900 font-bold">{filteredTransactions.length}</strong> record{filteredTransactions.length === 1 ? '' : 's'}
+                  </span>
+                  {(selectedMonth !== 'ALL' || selectedYear !== 'ALL' || selectedType !== 'ALL') && (
+                    <button
+                      onClick={() => {
+                        setSelectedMonth('ALL');
+                        setSelectedYear('ALL');
+                        setSelectedType('ALL');
+                      }}
+                      className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold hover:underline transition cursor-pointer"
+                    >
+                      <RotateCcw size={10} />
+                      <span>Reset Filters</span>
+                    </button>
+                  )}
+                </div>
+              </div>
               
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 relative z-10 custom-scrollbar">
                 {pageLoading ? (
                   [1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex items-center justify-between p-3">
@@ -322,56 +479,100 @@ export default function WalletPage() {
                       </div>
                     </div>
                   ))
-                ) : transactions.length === 0 ? (
+                ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-10">
                     <Banknote size={40} className="mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500 font-bold">No transactions yet</p>
+                    <p className="text-gray-800 font-bold">No transactions found</p>
+                    <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
+                      No records match for {selectedMonth !== 'ALL' ? `${MONTHS.find(m => m.value === selectedMonth)?.label} ` : ''}{selectedYear !== 'ALL' ? selectedYear : ''}{selectedType !== 'ALL' ? ` (${TRANSACTION_TYPES.find(t => t.id === selectedType)?.label})` : ''}.
+                    </p>
+                    {(selectedMonth !== 'ALL' || selectedYear !== 'ALL' || selectedType !== 'ALL') && (
+                      <button
+                        onClick={() => {
+                          setSelectedMonth('ALL');
+                          setSelectedYear('ALL');
+                          setSelectedType('ALL');
+                        }}
+                        className="mt-3 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5"
+                      >
+                        <RotateCcw size={12} />
+                        <span>View All Transactions</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  transactions.map((t, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={() => setSelectedTransaction(t)}
-                      className="group p-3.5 bg-gray-50/80 hover:bg-blue-50/50 rounded-xl transition-all duration-200 cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-xs"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black text-sm mt-0.5 ${
-                            t.type === 'CREDIT' 
-                              ? 'bg-emerald-100 text-emerald-700' 
-                              : 'bg-rose-100 text-rose-700'
-                          }`}>
-                            {t.type === 'CREDIT' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-sm text-gray-900 leading-snug group-hover:text-blue-600 transition-colors break-words">
-                              {t.description || (t.type === 'CREDIT' ? 'Wallet Top-up' : 'Wallet Debit')}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <span className="text-[11px] text-gray-500 font-medium">
-                                {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} • {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {t.pnr && (
-                                <span className="text-[10px] font-bold bg-white text-gray-700 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
-                                  PNR: {t.pnr}
-                                </span>
+                  filteredTransactions.map((t, idx) => {
+                    const isRefund = t.description?.toLowerCase().includes('refund');
+                    const isFailed = t.description?.toLowerCase().includes('fail') || t.status === 'FAILED';
+                    const isCredit = t.type === 'CREDIT';
+
+                    return (
+                      <div 
+                        key={idx} 
+                        onClick={() => setSelectedTransaction(t)}
+                        className="group p-3.5 bg-gray-50/80 hover:bg-blue-50/50 rounded-xl transition-all duration-200 cursor-pointer border border-gray-100 hover:border-blue-200 hover:shadow-xs"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black text-sm mt-0.5 ${
+                              isFailed
+                                ? 'bg-amber-100 text-amber-700'
+                                : isRefund
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : isCredit 
+                                    ? 'bg-emerald-100 text-emerald-700' 
+                                    : 'bg-rose-100 text-rose-700'
+                            }`}>
+                              {isFailed ? (
+                                <AlertCircle size={18} />
+                              ) : isRefund ? (
+                                <RotateCcw size={16} />
+                              ) : isCredit ? (
+                                <ArrowDownLeft size={18} />
+                              ) : (
+                                <ArrowUpRight size={18} />
                               )}
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-gray-900 leading-snug group-hover:text-blue-600 transition-colors break-words">
+                                {t.description || (isCredit ? 'Wallet Top-up' : 'Wallet Debit')}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                <span className="text-[11px] text-gray-500 font-medium">
+                                  {new Date(t.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} • {new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                {t.pnr && (
+                                  <span className="text-[10px] font-bold bg-white text-gray-700 px-1.5 py-0.5 rounded border border-gray-200 uppercase">
+                                    PNR: {t.pnr}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 pl-2">
+                            <p className={`font-black text-base whitespace-nowrap ${
+                              isFailed
+                                ? 'text-amber-600'
+                                : isCredit
+                                  ? 'text-emerald-600'
+                                  : 'text-rose-600'
+                            }`}>
+                              {isCredit ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                            </p>
+                            <span className={`inline-block text-[10px] font-extrabold px-1.5 py-0.5 rounded mt-1 uppercase ${
+                              isRefund 
+                                ? 'bg-blue-100 text-blue-700' 
+                                : isFailed
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-gray-200/60 text-gray-600'
+                            }`}>
+                              {isRefund ? 'REFUND' : isFailed ? 'FAILED' : (t.paymentMethod || 'WALLET')}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right shrink-0 pl-2">
-                          <p className={`font-black text-base whitespace-nowrap ${
-                            t.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
-                          }`}>
-                            {t.type === 'CREDIT' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
-                          </p>
-                          <span className="inline-block text-[10px] font-extrabold text-gray-500 bg-gray-200/60 px-1.5 py-0.5 rounded mt-1 uppercase">
-                            {t.paymentMethod || 'WALLET'}
-                          </span>
-                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

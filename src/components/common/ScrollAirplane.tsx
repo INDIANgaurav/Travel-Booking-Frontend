@@ -31,8 +31,11 @@ export default function ScrollAirplane() {
     
     if (navbarPlane) {
       const rect = navbarPlane.getBoundingClientRect();
-      startX = rect.left + rect.width / 2;
-      startY = rect.top + rect.height / 2;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (rect.width > 0 && rect.height > 0) {
+        startX = rect.left + rect.width / 2;
+        startY = rect.top + scrollTop + rect.height / 2;
+      }
     }
     
     let endX = width * 0.5;
@@ -101,13 +104,21 @@ export default function ScrollAirplane() {
 
     updateDimensions();
     
+    // Delayed re-calculations so navbarPlane coordinates settle after TopNavbar and festive banner mount
+    const t1 = setTimeout(updateDimensions, 50);
+    const t2 = setTimeout(updateDimensions, 200);
+    const t3 = setTimeout(updateDimensions, 600);
+    
     const resizeObserver = new ResizeObserver(() => {
       if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
-      resizeTimerRef.current = setTimeout(updateDimensions, 250);
+      resizeTimerRef.current = setTimeout(updateDimensions, 100);
     });
     resizeObserver.observe(document.body);
     
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       resizeObserver.disconnect();
       if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
     };
@@ -162,6 +173,8 @@ export default function ScrollAirplane() {
           
           if (planeRef.current) {
             planeRef.current.style.transform = `translate3d(${point.x}px, ${point.y}px, 0)`;
+            // Only show the scroll airplane when user actually begins scrolling (scrollY > 20)
+            planeRef.current.style.opacity = window.scrollY > 20 ? '1' : '0';
           }
           if (planeRotatorRef.current) {
             planeRotatorRef.current.style.transform = `rotate(${angle}deg)`;
@@ -221,9 +234,10 @@ export default function ScrollAirplane() {
       {/* Plane Element */}
       <div 
         ref={planeRef}
-        className="absolute w-10 h-10 -ml-5 -mt-5 flex items-center justify-center text-blue-400 z-10 will-change-transform"
+        className="absolute w-10 h-10 -ml-5 -mt-5 flex items-center justify-center text-blue-400 z-10 will-change-transform transition-opacity duration-300"
         style={{
           transform: 'translate3d(0px, 0px, 0)',
+          opacity: 0
         }}
       >
         <div ref={planeRotatorRef} className="will-change-transform">

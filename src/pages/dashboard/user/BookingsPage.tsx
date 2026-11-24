@@ -1,23 +1,69 @@
-import React, { useEffect, useState } from 'react';
-import { Plane, Calendar, Building2, ChevronRight, FileText, ChevronDown, ChevronUp, MapPin, Users, Briefcase, XCircle, CheckCircle2, AlertCircle, Ticket } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { 
+  Plane, Calendar, Building2, ChevronRight, FileText, ChevronDown, ChevronUp, 
+  MapPin, Users, Briefcase, XCircle, CheckCircle2, AlertCircle, Ticket, 
+  Clock, ExternalLink, ArrowRight, ShieldCheck, Copy, Check, Sparkles, Navigation
+} from 'lucide-react';
 import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../../store/authSlice';
 import toast from 'react-hot-toast';
-import TopNavbar from '../../../components/layout/TopNavbar';
 import CancellationModal from '../../../components/bookings/CancellationModal';
 import Loader from '../../../components/common/Loader';
 import ETicketModal from '../../../components/bookings/ETicketModal';
 
+const CITY_NAMES: Record<string, string> = {
+  DEL: 'New Delhi',
+  BOM: 'Mumbai',
+  BLR: 'Bengaluru',
+  MAA: 'Chennai',
+  CCU: 'Kolkata',
+  HYD: 'Hyderabad',
+  GOI: 'Goa',
+  PNQ: 'Pune',
+  AMD: 'Ahmedabad',
+  COK: 'Kochi',
+  JAI: 'Jaipur',
+  LKO: 'Lucknow',
+  IXC: 'Chandigarh',
+  GAU: 'Guwahati',
+  PAT: 'Patna',
+  DXB: 'Dubai',
+  BKK: 'Bangkok',
+  SIN: 'Singapore',
+  LHR: 'London'
+};
+
+const getAirlineInfo = (airlineName = '') => {
+  const name = (airlineName || '').toLowerCase();
+  if (name.includes('indigo') || name.includes('6e')) {
+    return { name: 'IndiGo', logo: '/indigo-logo.svg', code: '6E', color: '#001b94' };
+  }
+  if (name.includes('spice') || name.includes('sg')) {
+    return { name: 'SpiceJet', logo: '/spicejet-logo.svg', code: 'SG', color: '#ed1b24' };
+  }
+  if (name.includes('akasa') || name.includes('qp')) {
+    return { name: 'Akasa Air', logo: '/akasa-logo.svg', code: 'QP', color: '#ff6600' };
+  }
+  if (name.includes('air india') || name.includes('ai') || name.includes('express')) {
+    return { name: 'Air India Express', logo: '/airindia-express-logo.svg', code: 'IX', color: '#e31837' };
+  }
+  if (name.includes('emirates') || name.includes('ek')) {
+    return { name: 'Emirates', logo: '/emirates-logo.svg', code: 'EK', color: '#d71921' };
+  }
+  return { name: airlineName || 'Airlines', logo: null, code: 'FL', color: '#2563eb' };
+};
+
 export default function BookingsPage() {
   const user = useSelector(selectCurrentUser);
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('UPCOMING');
   const [cancellationBookingId, setCancellationBookingId] = useState<string | null>(null);
   const [ticketModalBooking, setTicketModalBooking] = useState<any | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchBookings = async () => {
@@ -36,345 +82,495 @@ export default function BookingsPage() {
   }, []);
 
   const toggleExpand = (id: string) => {
-    if (expandedBookingId === id) {
-      setExpandedBookingId(null);
-    } else {
-      setExpandedBookingId(id);
-    }
+    setExpandedBookingId(prev => prev === id ? null : id);
   };
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast.success('Copied to clipboard!', { id: 'copy-toast' });
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const tabCounts = useMemo(() => {
+    const counts = { UPCOMING: 0, CANCELLED: 0, COMPLETED: 0, UNSUCCESSFUL: 0 };
+    bookings.forEach((b: any) => {
+      const status = b.status?.toUpperCase() || 'PENDING';
+      const isHotel = b.type?.toUpperCase() === 'HOTEL';
+      const travelDate = isHotel ? new Date(b.details?.checkOut || b.createdAt) : new Date(b.date || b.createdAt);
+      const isPast = travelDate.getTime() < new Date().getTime();
+
+      if ((status === 'CONFIRMED' || status === 'PENDING') && !isPast) counts.UPCOMING++;
+      else if (status === 'CANCELLED') counts.CANCELLED++;
+      else if (status === 'COMPLETED' || (status === 'CONFIRMED' && isPast)) counts.COMPLETED++;
+      else if (status === 'FAILED' || (status === 'PENDING' && isPast)) counts.UNSUCCESSFUL++;
+    });
+    return counts;
+  }, [bookings]);
+
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b: any) => {
+      const status = b.status?.toUpperCase() || 'PENDING';
+      const isHotel = b.type?.toUpperCase() === 'HOTEL';
+      const travelDate = isHotel ? new Date(b.details?.checkOut || b.createdAt) : new Date(b.date || b.createdAt);
+      const isPast = travelDate.getTime() < new Date().getTime();
+
+      if (activeTab === 'UPCOMING') return (status === 'CONFIRMED' || status === 'PENDING') && !isPast;
+      if (activeTab === 'CANCELLED') return status === 'CANCELLED';
+      if (activeTab === 'COMPLETED') return status === 'COMPLETED' || (status === 'CONFIRMED' && isPast);
+      if (activeTab === 'UNSUCCESSFUL') return status === 'FAILED' || (status === 'PENDING' && isPast);
+      return true;
+    });
+  }, [bookings, activeTab]);
+
+  const tabs = [
+    { id: 'UPCOMING', label: 'Upcoming', icon: <Calendar size={16} />, count: tabCounts.UPCOMING },
+    { id: 'COMPLETED', label: 'Completed', icon: <CheckCircle2 size={16} />, count: tabCounts.COMPLETED },
+    { id: 'CANCELLED', label: 'Cancelled', icon: <XCircle size={16} />, count: tabCounts.CANCELLED },
+    { id: 'UNSUCCESSFUL', label: 'Failed / Expired', icon: <AlertCircle size={16} />, count: tabCounts.UNSUCCESSFUL },
+  ];
 
   if (loading) {
     return <Loader />;
   }
 
-  const filteredBookings = bookings.filter((b: any) => {
-    const status = b.status?.toUpperCase() || 'PENDING';
-    const isHotel = b.type?.toUpperCase() === 'HOTEL';
-    // Use checkOut for hotels, or flight date for flights to determine if past
-    const travelDate = isHotel ? new Date(b.details?.checkOut || b.createdAt) : new Date(b.date || b.createdAt);
-    const isPast = travelDate.getTime() < new Date().getTime();
-
-
-
-    if (activeTab === 'UPCOMING') return (status === 'CONFIRMED' || status === 'PENDING') && !isPast;
-    if (activeTab === 'CANCELLED') return status === 'CANCELLED';
-    if (activeTab === 'COMPLETED') return status === 'COMPLETED' || (status === 'CONFIRMED' && isPast);
-    if (activeTab === 'UNSUCCESSFUL') return status === 'FAILED' || (status === 'PENDING' && isPast);
-    return true;
-  });
-
-  const tabs = [
-    { id: 'UPCOMING', label: 'UPCOMING', icon: <Calendar size={18} /> },
-    { id: 'CANCELLED', label: 'CANCELLED', icon: <XCircle size={18} /> },
-    { id: 'COMPLETED', label: 'COMPLETED', icon: <CheckCircle2 size={18} /> },
-    { id: 'UNSUCCESSFUL', label: 'UNSUCCESSFUL', icon: <AlertCircle size={18} /> },
-  ];
-
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-gray-100 pb-20 relative font-sans">
-      {/* Background Gradient Header */}
-      <div className="absolute top-0 left-0 w-full h-[280px] bg-gradient-to-r from-[#00b4cc] to-[#0074d9] z-0"></div>
-
-      <div className="pt-24 max-w-[1100px] mx-auto px-4 md:px-8 space-y-6 relative z-10">
-        <h1 className="text-xl font-bold text-white mb-6">My Account &gt; My Trips</h1>
-
-        <div className="bg-white rounded-t-xl rounded-b-md shadow-lg border-b-4 border-blue-600 min-h-[500px]">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 px-6 pt-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-sm tracking-wide border-b-4 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-blue-500'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+    <div className="min-h-screen bg-[#F4F6F9] pb-24 font-sans relative">
+      
+      {/* Premium Navy Hero Header Banner */}
+      <div className="relative bg-gradient-to-br from-[#070b24] via-[#0b1031] to-[#040717] text-white pt-8 pb-20 px-6 sm:px-10 border-b border-white/10 shadow-lg overflow-hidden">
+        {/* Ambient Glow & Grid Accents */}
+        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="absolute -bottom-10 left-1/4 w-[400px] h-[200px] bg-indigo-500/10 blur-[90px] rounded-full pointer-events-none"></div>
+        
+        <div className="max-w-6xl mx-auto relative z-10">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-xs font-semibold text-blue-200/70 mb-3">
+            <span className="cursor-pointer hover:text-white transition" onClick={() => navigate('/')}>Home</span>
+            <span>/</span>
+            <span className="text-blue-300">My Account</span>
+            <span>/</span>
+            <span className="text-white font-bold">My Trips</span>
           </div>
 
-          <div className="p-6 md:p-8 bg-[#f4f4f4] min-h-[420px] rounded-b-md">
-            {filteredBookings.length === 0 ? (
-              <div className="bg-white p-6 md:p-20 rounded-lg text-center flex flex-col items-center justify-center min-h-[350px]">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-                  <Briefcase size={40} className="text-gray-400" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-300 rounded-full"></div>
-                  <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-gray-300 rounded-full"></div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/20">
+                  <Plane size={22} className="text-white" />
                 </div>
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-2">Looks empty, you've no {activeTab.toLowerCase()} bookings.</h2>
-                <p className="text-sm md:text-base text-gray-500 mb-8 font-medium">When you book a trip, you will see your itinerary here.</p>
-                <button 
-                  onClick={() => navigate('/')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full transition shadow-md"
-                >
-                  PLAN A TRIP
-                </button>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">My Trips & Bookings</h1>
+                  <p className="text-xs sm:text-sm text-blue-100/80 font-medium mt-0.5">
+                    Manage your flight & hotel itineraries, download verified e-tickets and board with ease.
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {filteredBookings.map((booking: any) => {
+            </div>
+
+            {/* Quick Action */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-blue-600/20 text-xs sm:text-sm transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <Sparkles size={16} />
+                <span>Book New Trip</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
+        
+        {/* Navigation Tabs Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-2 mb-6">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                    isActive 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-gray-200/70 text-gray-700'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bookings List */}
+        {filteredBookings.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-12 sm:p-20 text-center shadow-sm">
+            <div className="w-20 h-20 rounded-3xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto mb-5 text-blue-600 shadow-inner">
+              <Briefcase size={36} />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">
+              No {activeTab.toLowerCase()} trips found
+            </h3>
+            <p className="text-sm text-gray-500 max-w-md mx-auto mb-8 font-medium">
+              You don't have any bookings under the <strong className="text-gray-700">{activeTab.toLowerCase()}</strong> status. Start exploring domestic and international flights with exclusive series fares!
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+            >
+              <Navigation size={16} />
+              <span>Explore Flights & Hotels</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {filteredBookings.map((booking: any) => {
               const isHotel = booking.type?.toUpperCase() === 'HOTEL';
               const isExpanded = expandedBookingId === booking._id;
+              const status = booking.status?.toUpperCase() || 'PENDING';
+              const bookingIdStr = booking.bookingId || booking._id;
+              
+              // Airline & Route details
+              const airline = getAirlineInfo(booking.details?.airline);
+              const pnr = booking.details?.pnr || booking.pnr || booking.airlinePnr;
+              const fromCode = (booking.details?.from || 'DEL').toUpperCase();
+              const toCode = (booking.details?.to || 'BOM').toUpperCase();
+              const fromCity = CITY_NAMES[fromCode] || booking.details?.fromCity || fromCode;
+              const toCity = CITY_NAMES[toCode] || booking.details?.toCity || toCode;
+              const travelDate = new Date(booking.date || booking.createdAt);
+              const formattedDate = travelDate.toLocaleDateString('en-GB', { 
+                weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
+              });
+              const passengerCount = booking.details?.passengers?.length || 1;
+              const primaryPassenger = booking.details?.passengers?.[0]?.name || 
+                `${booking.details?.passengers?.[0]?.firstName || ''} ${booking.details?.passengers?.[0]?.lastName || ''}`.trim() || 
+                user?.name || 'Passenger';
 
               return (
-                <div key={booking._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                  {/* Header */}
-                  <div className="p-3 md:p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 gap-2 sm:gap-0">
-                    <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <span className={`px-2 py-1 md:px-3 rounded text-[9px] md:text-[10px] font-bold tracking-wider uppercase ${
-                          booking.status?.toUpperCase() === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
-                          booking.status?.toUpperCase() === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {booking.status?.toUpperCase()}
-                        </span>
-                        <span className="text-gray-500 text-[10px] md:text-xs font-medium">
-                          Booking ID: <span className="font-bold text-gray-700 uppercase">{booking.bookingId || booking._id.slice(-8)}</span>
-                        </span>
-                      </div>
-                      <div className="text-right sm:hidden">
-                        <span className="text-[13px] md:text-sm font-black text-gray-900">₹ {booking.totalAmount?.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <span className="text-sm font-black text-gray-900">₹ {booking.totalAmount?.toLocaleString()}</span>
-                    </div>
-                  </div>
+                <div 
+                  key={booking._id} 
+                  className="bg-white rounded-2xl border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.06)] hover:shadow-[0_10px_30px_-4px_rgba(15,23,42,0.1)] transition-all duration-300 overflow-hidden"
+                >
+                  {/* Top Bar: Status, Booking ID, PNR, Total Fare */}
+                  <div className="px-5 py-4 bg-slate-50/80 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Status Pill */}
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide uppercase border ${
+                        status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${
+                          status === 'CONFIRMED' ? 'bg-emerald-500 animate-pulse' :
+                          status === 'PENDING' ? 'bg-amber-500' : 'bg-rose-500'
+                        }`} />
+                        {status}
+                      </span>
 
-                  {/* Main Summary */}
-                  <div className="p-5 flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex-1 w-full">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className={`p-2 rounded-full ${isHotel ? 'bg-indigo-50 text-indigo-600' : 'bg-blue-50 text-blue-600'}`}>
-                          {isHotel ? <Building2 size={20} /> : <Plane size={20} />}
-                        </div>
-                        <span className="font-black text-lg text-gray-900">
-                          {isHotel ? booking.details?.hotelName : (
-                            <>{booking.details?.from} <span className="text-gray-400 mx-1 font-normal">→</span> {booking.details?.to}</>
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap gap-x-4 gap-y-4 text-sm text-gray-600">
-                        {isHotel ? (
-                          <>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Check In</span>
-                              <span className="font-bold text-gray-900 whitespace-nowrap">
-                                {booking.details?.checkIn ? new Date(booking.details.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Check Out</span>
-                              <span className="font-bold text-gray-900 whitespace-nowrap">
-                                {booking.details?.checkOut ? new Date(booking.details.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Room</span>
-                              <span className="font-bold text-gray-900">{booking.details?.roomType || 'Standard'}</span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Guests</span>
-                              <span className="font-bold text-gray-900">{booking.details?.guests || 1} Guests</span>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Date</span>
-                              <span className="font-bold text-gray-900 whitespace-nowrap">
-                                {new Date(booking.date || booking.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Airline</span>
-                              <span className="font-bold text-gray-900">{booking.details?.airline || 'N/A'}</span>
-                            </div>
-                            <div>
-                              <span className="block text-gray-400 text-[10px] font-bold uppercase mb-1">Passengers</span>
-                              <span className="font-bold text-gray-900">{booking.details?.passengers?.length || 1}</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-auto grid grid-cols-2 md:flex flex-wrap md:justify-end gap-2 md:gap-3 mt-4 md:mt-0">
-                      {activeTab === 'UPCOMING' && (
-                        <button 
-                          onClick={() => setCancellationBookingId(booking._id)}
-                          className="flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
+                      {/* Booking ID Pill */}
+                      <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 rounded-lg px-2.5 py-1 text-xs text-slate-600 font-semibold shadow-2xs">
+                        <span className="text-slate-400 font-medium">Booking ID:</span>
+                        <span className="font-mono font-bold text-slate-800">{bookingIdStr}</span>
+                        <button
+                          onClick={() => handleCopy(bookingIdStr, booking._id + '-bid')}
+                          className="text-slate-400 hover:text-blue-600 transition ml-1"
+                          title="Copy Booking ID"
                         >
-                          Cancel Booking
+                          {copiedId === booking._id + '-bid' ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                         </button>
-                      )}
-                      <button 
-                        onClick={() => toggleExpand(booking._id)}
-                        className="flex items-center justify-center gap-1 md:gap-2 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
-                      >
-                        <span className="hidden md:inline">View Details</span>
-                        <span className="md:hidden">Details</span>
-                        {isExpanded ? <ChevronUp size={14} className="md:w-4 md:h-4" /> : <ChevronDown size={14} className="md:w-4 md:h-4" />}
-                      </button>
-                      {booking.status !== 'PENDING' && (
-                        <>
-                          <button 
-                            onClick={() => setTicketModalBooking(booking)}
-                            className="flex items-center justify-center gap-1 md:gap-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
+                      </div>
+
+                      {/* Airline PNR Badge */}
+                      {pnr && (
+                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/70 rounded-lg px-2.5 py-1 text-xs text-blue-900 font-bold">
+                          <span className="text-blue-600/80 font-medium uppercase text-[10px] tracking-wider">PNR:</span>
+                          <span className="font-mono font-black">{pnr}</span>
+                          <button
+                            onClick={() => handleCopy(pnr, booking._id + '-pnr')}
+                            className="text-blue-400 hover:text-blue-800 transition ml-1"
+                            title="Copy PNR"
                           >
-                            <Ticket size={14} className="md:w-4 md:h-4" /> E-Ticket
+                            {copiedId === booking._id + '-pnr' ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                           </button>
-                          <button 
-                            onClick={() => {
-                              const basePath = user?.roles?.includes('B2B_AGENT') ? '/agent-portal' : user?.roles?.includes('SUPER_ADMIN') ? '/admin' : user?.roles?.includes('SUB_ADMIN') ? '/sub-admin' : '/dashboard';
-                              navigate(`${basePath}/invoice/${booking._id}`);
-                            }}
-                            className="flex items-center justify-center gap-1 md:gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
-                          >
-                            <FileText size={14} className="md:w-4 md:h-4" /> Invoice
-                          </button>
-                          {!isHotel && booking.status === 'CONFIRMED' && (
-                            <button 
-                              onClick={() => {
-                                toast.success('Redirecting to Airline Web Check-in portal...');
-                                setTimeout(() => {
-                                  window.open('https://www.google.com/search?q=web+check+in+' + booking.details?.airline, '_blank');
-                                }, 1500);
-                              }}
-                              className="col-span-2 md:col-span-1 flex items-center justify-center gap-1 md:gap-2 bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-2 py-2 md:px-4 rounded-lg font-bold text-[11px] md:text-sm transition-colors"
-                            >
-                              <Plane size={14} className="md:w-4 md:h-4" /> Web Check-in
-                            </button>
-                          )}
-                        </>
+                        </div>
                       )}
+                    </div>
+
+                    {/* Total Price */}
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Fare</span>
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                        ₹{booking.totalAmount?.toLocaleString('en-IN') || '0'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 p-5 bg-[#fafafa]">
-                      {isHotel ? (
-                        <div className="flex gap-6 flex-col sm:flex-row">
-                          <img 
-                            src={booking.details?.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=300&q=80'} 
-                            alt={booking.details?.hotelName} 
-                            className="w-full sm:w-48 h-auto object-cover rounded-md shadow-sm border border-gray-200"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=300&q=80';
-                            }}
-                          />
-                          <div className="flex-1 space-y-4">
-                            <div>
-                              <h4 className="font-black text-gray-900 text-lg">{booking.details?.hotelName}</h4>
-                              <p className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-1">
-                                <MapPin size={12} /> {booking.details?.address || 'Address not provided'}
-                              </p>
+                  {/* Main Journey Row */}
+                  <div className="p-5 sm:p-7">
+                    {isHotel ? (
+                      /* Hotel Summary */
+                      <div className="flex flex-col md:flex-row gap-6 items-start">
+                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                          <Building2 size={28} />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <h3 className="text-xl font-black text-slate-900">{booking.details?.hotelName || 'Luxury Hotel Stay'}</h3>
+                          <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                            <MapPin size={13} className="text-slate-400" />
+                            <span>{booking.details?.address || 'Prime City Location'}</span>
+                          </p>
+                          <div className="flex flex-wrap gap-4 pt-2 text-xs font-semibold text-slate-700">
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5">
+                              <span className="text-slate-400 block text-[10px] uppercase font-bold">Check-in</span>
+                              <span>{booking.details?.checkIn ? new Date(booking.details.checkIn).toLocaleDateString('en-GB') : 'N/A'}</span>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="border border-gray-200 rounded-md p-3 bg-white">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Stay Details</p>
-                                <div className="space-y-1.5 text-sm text-gray-800">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500">Check In:</span>
-                                    <span className="font-bold">{booking.details?.checkIn ? new Date(booking.details.checkIn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'} (2:00 PM)</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500">Check Out:</span>
-                                    <span className="font-bold">{booking.details?.checkOut ? new Date(booking.details.checkOut).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'} (11:00 AM)</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500">Duration:</span>
-                                    <span className="font-bold">
-                                      {booking.details?.checkIn && booking.details?.checkOut ? 
-                                        Math.max(1, Math.ceil((new Date(booking.details.checkOut).getTime() - new Date(booking.details.checkIn).getTime()) / (1000 * 60 * 60 * 24))) + ' Night(s)'
-                                      : 'N/A'}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-500">Room:</span>
-                                    <span className="font-bold">{booking.details?.roomType || 'Standard Room'}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="border border-gray-200 rounded-md p-3 bg-white">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Guest Information</p>
-                                <div className="space-y-1.5 text-sm text-gray-800">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Users size={14} className="text-gray-400" />
-                                    <span className="font-bold">{booking.details?.contactDetails?.name || booking.details?.contactDetails?.email?.split('@')[0] || 'N/A'}</span>
-                                  </div>
-                                  <p className="text-xs text-gray-500 pl-6">{booking.details?.contactDetails?.email}</p>
-                                  {booking.details?.contactDetails?.phone && (
-                                    <p className="text-xs text-gray-500 pl-6">{booking.details?.contactDetails?.phone}</p>
-                                  )}
-                                  
-                                  <div className="mt-2 pl-6 pt-2 border-t border-gray-100">
-                                    <span className="font-medium text-gray-700">Total Guests:</span> <span className="font-bold">{booking.details?.guests || 1} Person(s)</span>
-                                  </div>
-                                  {booking.details?.additionalGuests && booking.details?.additionalGuests.length > 0 && (
-                                    <div className="text-xs text-gray-500 pl-6 mt-1">
-                                      + {booking.details.additionalGuests.map((ag:any) => ag.firstName).join(', ')}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5">
+                              <span className="text-slate-400 block text-[10px] uppercase font-bold">Check-out</span>
+                              <span>{booking.details?.checkOut ? new Date(booking.details?.checkOut).toLocaleDateString('en-GB') : 'N/A'}</span>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5">
+                              <span className="text-slate-400 block text-[10px] uppercase font-bold">Room & Guests</span>
+                              <span>{booking.details?.roomType || 'Standard'} · {booking.details?.guests || 1} Guest(s)</span>
                             </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="bg-white border border-gray-200 rounded-md p-4">
-                           <div className="flex justify-between items-center mb-4">
-                             <div className="flex gap-3 items-center">
-                               <img src={`https://picsum.photos/seed/${booking.details?.airline}/50/50`} alt={booking.details?.airline} className="w-8 h-8 rounded-full" />
-                               <div>
-                                 <p className="font-black text-gray-900 text-sm">{booking.details?.airline || 'Airline'}</p>
-                                 <p className="text-[10px] text-gray-500 font-bold uppercase">{booking.details?.flightNumber || 'FL-1234'}</p>
-                               </div>
-                             </div>
-                             <div className="text-right">
-                               <p className="text-xs font-bold text-green-600">Economy</p>
-                             </div>
-                           </div>
+                      </div>
+                    ) : (
+                      /* Flight Summary Ticket Card */
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        
+                        {/* Airline Logo & Name */}
+                        <div className="lg:col-span-3 flex items-center gap-3.5">
+                          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200/90 shadow-2xs flex items-center justify-center p-2 shrink-0">
+                            {airline.logo ? (
+                              <img src={airline.logo} alt={airline.name} className="w-full h-full object-contain" />
+                            ) : (
+                              <Plane size={24} className="text-blue-600" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-black text-base text-slate-900 leading-snug">{airline.name}</h4>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                              {booking.details?.flightNumber || `${airline.code}-841`}
+                            </p>
+                            <span className="inline-block mt-1 text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
+                              Economy Class
+                            </span>
+                          </div>
+                        </div>
 
-                           <div className="flex items-center justify-between mt-4 bg-gray-50 p-3 rounded border border-gray-100">
-                             <div className="text-center">
-                               <p className="font-black text-gray-900">{booking.details?.from}</p>
-                               <p className="text-[10px] text-gray-500 font-bold uppercase">Terminal 1</p>
-                             </div>
-                             <div className="flex-1 px-4 text-center">
-                               <div className="border-t-2 border-dashed border-gray-300 relative">
-                                 <Plane size={16} className="text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-50 px-1" />
-                               </div>
-                               <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase">2h 45m</p>
-                             </div>
-                             <div className="text-center">
-                               <p className="font-black text-gray-900">{booking.details?.to}</p>
-                               <p className="text-[10px] text-gray-500 font-bold uppercase">Terminal 2</p>
-                             </div>
-                           </div>
-                           
-                           <div className="mt-4 border-t border-gray-100 pt-3">
-                             <p className="text-xs font-bold text-gray-900 mb-2">Passengers</p>
-                             {booking.details?.passengers?.map((p: any, i: number) => {
-                               const seat = booking.details?.seats?.[i] || p.seat;
-                               const seatStr = seat ? `Seat ${seat}` : 'Seat Unassigned';
-                               const fullName = p.name || `${p.title || ''} ${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Passenger';
-                               return (
-                                 <p key={i} className="text-xs text-gray-600">
-                                   {i+1}. {fullName} <span className="text-gray-400">({seatStr})</span>
-                                 </p>
-                               );
-                             })}
-                           </div>
+                        {/* Origin -> Route Duration -> Destination */}
+                        <div className="lg:col-span-6 bg-slate-50/60 border border-slate-100 rounded-2xl p-4 sm:p-5">
+                          <div className="flex items-center justify-between gap-4">
+                            
+                            {/* Origin */}
+                            <div className="text-left min-w-[80px]">
+                              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight block">
+                                {fromCode}
+                              </span>
+                              <span className="text-xs font-bold text-slate-600 truncate block max-w-[110px]" title={fromCity}>
+                                {fromCity}
+                              </span>
+                              <span className="text-[10px] font-medium text-slate-400 block mt-0.5">
+                                Terminal 1D
+                              </span>
+                            </div>
+
+                            {/* Dotted Flight Path Graphic */}
+                            <div className="flex-1 px-2 sm:px-4 text-center">
+                              <span className="text-[11px] font-bold text-slate-500 block mb-1">
+                                {formattedDate}
+                              </span>
+                              <div className="relative flex items-center justify-center">
+                                <div className="w-full border-t-2 border-dashed border-slate-300"></div>
+                                <div className="absolute w-7 h-7 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs">
+                                  <Plane size={14} className="rotate-90 transform" />
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mt-1.5">
+                                Non-Stop Flight
+                              </span>
+                            </div>
+
+                            {/* Destination */}
+                            <div className="text-right min-w-[80px]">
+                              <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight block">
+                                {toCode}
+                              </span>
+                              <span className="text-xs font-bold text-slate-600 truncate block max-w-[110px]" title={toCity}>
+                                {toCity}
+                              </span>
+                              <span className="text-[10px] font-medium text-slate-400 block mt-0.5">
+                                Terminal 2
+                              </span>
+                            </div>
+
+                          </div>
+                        </div>
+
+                        {/* Passenger & Baggage Chip Details */}
+                        <div className="lg:col-span-3 border-l-0 lg:border-l border-slate-100 lg:pl-6 space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-slate-600">
+                            <Users size={14} className="text-blue-600 shrink-0" />
+                            <span className="truncate font-semibold text-slate-800">{primaryPassenger}</span>
+                            {passengerCount > 1 && (
+                              <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full shrink-0">
+                                +{passengerCount - 1} more
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                            <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
+                            <span>15kg Check-in · 7kg Cabin</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-medium">
+                            Booked on: {new Date(booking.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions Footer Bar */}
+                  <div className="px-5 sm:px-7 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                    
+                    {/* View Details Accordion Trigger */}
+                    <button
+                      onClick={() => toggleExpand(booking._id)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-blue-600 transition cursor-pointer py-1.5"
+                    >
+                      <span>{isExpanded ? 'Hide Details' : 'View Flight Details'}</span>
+                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </button>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Cancel Booking (Only for upcoming active bookings) */}
+                      {activeTab === 'UPCOMING' && status === 'CONFIRMED' && (
+                        <button
+                          onClick={() => setCancellationBookingId(booking._id)}
+                          className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100/80 text-rose-700 border border-rose-200/80 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          <span>Cancel Booking</span>
+                        </button>
+                      )}
+
+                      {/* Web Check-in */}
+                      {!isHotel && status === 'CONFIRMED' && (
+                        <button
+                          onClick={() => {
+                            toast.success(`Redirecting to ${airline.name} Web Check-in...`);
+                            setTimeout(() => {
+                              window.open('https://www.google.com/search?q=web+check+in+' + encodeURIComponent(airline.name), '_blank');
+                            }, 1000);
+                          }}
+                          className="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer"
+                        >
+                          <Plane size={14} />
+                          <span>Web Check-in</span>
+                        </button>
+                      )}
+
+                      {/* Invoice */}
+                      {status !== 'PENDING' && (
+                        <button
+                          onClick={() => {
+                            const basePath = user?.roles?.includes('B2B_AGENT') ? '/agent-portal' : user?.roles?.includes('SUPER_ADMIN') ? '/admin' : user?.roles?.includes('SUB_ADMIN') ? '/sub-admin' : '/dashboard';
+                            navigate(`${basePath}/invoice/${booking._id}`);
+                          }}
+                          className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer"
+                        >
+                          <FileText size={14} className="text-slate-500" />
+                          <span>Invoice</span>
+                        </button>
+                      )}
+
+                      {/* E-Ticket (Primary CTA) */}
+                      {status !== 'PENDING' && (
+                        <button
+                          onClick={() => setTicketModalBooking(booking)}
+                          className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm shadow-blue-600/20 cursor-pointer"
+                        >
+                          <Ticket size={14} />
+                          <span>E-Ticket</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expanded Flight / Hotel Details Sheet */}
+                  {isExpanded && (
+                    <div className="border-t border-slate-100 p-6 bg-slate-50/50 space-y-5 animate-in fade-in duration-200">
+                      {isHotel ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
+                            <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Guest Information</h5>
+                            <p className="text-sm font-bold text-slate-800">{booking.details?.contactDetails?.name || user?.name}</p>
+                            <p className="text-xs text-slate-500 mt-1">{booking.details?.contactDetails?.email || user?.email}</p>
+                            <p className="text-xs text-slate-500">{booking.details?.contactDetails?.phone || user?.phone}</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
+                            <h5 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Hotel Policy & Timing</h5>
+                            <p className="text-xs text-slate-600">Standard Check-in: <strong>02:00 PM</strong></p>
+                            <p className="text-xs text-slate-600 mt-1">Standard Check-out: <strong>11:00 AM</strong></p>
+                            <p className="text-xs text-slate-500 mt-2">Government approved photo ID required during check-in.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Passenger List Cards */}
+                          <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs">
+                            <h5 className="text-xs font-black uppercase text-slate-500 tracking-wider mb-3 flex items-center justify-between">
+                              <span>Passenger Itinerary & Assigned Seats</span>
+                              <span className="text-[11px] font-bold text-blue-600">
+                                {booking.details?.passengers?.length || 1} Total
+                              </span>
+                            </h5>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                              {(booking.details?.passengers || [{ name: user?.name || 'Passenger' }]).map((p: any, idx: number) => {
+                                const seat = booking.details?.seats?.[idx] || p.seat || 'Assigned at Check-in';
+                                const fullName = p.name || `${p.title || ''} ${p.firstName || ''} ${p.lastName || ''}`.trim() || `Passenger ${idx + 1}`;
+                                return (
+                                  <div key={idx} className="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-center justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-slate-800 truncate">{idx + 1}. {fullName}</p>
+                                      <p className="text-[10px] text-slate-400 uppercase font-semibold">{p.type || 'Adult'}</p>
+                                    </div>
+                                    <span className="text-xs font-mono font-bold bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded shadow-2xs shrink-0">
+                                      {seat}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Important Airport Guidelines */}
+                          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-start gap-3 text-xs text-blue-900">
+                            <ShieldCheck size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-bold">Important Travel Guidelines:</p>
+                              <p className="text-blue-800/80 mt-0.5">
+                                Please reach the airport at least 2 hours before domestic flight departure. Web check-in opens 48 hours prior to flight departure. Carry a valid government photo ID card.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -385,10 +581,10 @@ export default function BookingsPage() {
             })}
           </div>
         )}
-          </div>
-        </div>
+
       </div>
-      
+
+      {/* Cancellation Modal */}
       {cancellationBookingId && (
         <CancellationModal 
           bookingId={cancellationBookingId} 
@@ -400,12 +596,14 @@ export default function BookingsPage() {
         />
       )}
 
+      {/* E-Ticket Preview Modal */}
       {ticketModalBooking && (
         <ETicketModal 
           booking={ticketModalBooking} 
           onClose={() => setTicketModalBooking(null)} 
         />
       )}
+
     </div>
   );
 }

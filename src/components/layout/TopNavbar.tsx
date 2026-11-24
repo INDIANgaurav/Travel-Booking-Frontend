@@ -328,7 +328,7 @@ export default function TopNavbar({ forceWhite = false, portalMode = false, onPr
             )}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
               <>
-                <Plane id="navbar-plane-icon" size={26} className={`${isNavWhite ? 'text-blue-600' : 'text-white'} ${location.pathname === '/' ? 'opacity-0' : ''}`} />
+                <Plane id="navbar-plane-icon" size={26} className={isNavWhite ? 'text-blue-600' : 'text-blue-400'} />
                 <span className={`text-2xl font-black tracking-tight ${isDarkText ? 'text-gray-900' : 'text-white'}`}>
                   Trippe<span className={isNavWhite ? 'text-blue-600' : 'text-blue-400'}>Chalo</span> <span className={isNavWhite ? 'text-orange-500 font-extrabold' : 'text-orange-400 font-extrabold'}>India</span>
                 </span>
