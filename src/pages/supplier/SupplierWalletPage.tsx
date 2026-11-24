@@ -50,9 +50,13 @@ export default function SupplierWalletPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
-  // Filters State: Defaults to ALL to show historical transactions immediately
-  const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
-  const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const now = new Date();
+  const currentMonthNum = String(now.getMonth() + 1);
+  const currentYearNum = String(now.getFullYear());
+
+  // Filters State: Defaults to current month & year, type 'ALL'
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthNum);
+  const [selectedYear, setSelectedYear] = useState<string>(currentYearNum);
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -142,12 +146,12 @@ export default function SupplierWalletPage() {
     });
   }, [transactions, selectedMonth, selectedYear, selectedType, searchQuery]);
 
-  // Financial KPI Metrics
+  // Financial KPI Metrics - Dynamically calculated from filtered transactions
   const metrics = useMemo(() => {
     let totalInflow = 0;
     let totalDeductions = 0;
 
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       if (t.type === 'CREDIT') {
         totalInflow += (t.amount || 0);
       } else if (t.type === 'DEBIT') {
@@ -156,7 +160,7 @@ export default function SupplierWalletPage() {
     });
 
     return { totalInflow, totalDeductions };
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   // Online Razorpay Topup Handler
   const handleTopUp = async () => {
@@ -366,7 +370,7 @@ export default function SupplierWalletPage() {
             -₹{metrics.totalDeductions.toLocaleString('en-IN')}
           </div>
           <p className="text-[11px] text-gray-400 font-medium mt-2">
-            Bookings, Charter blocks & Charges
+            {selectedMonth !== 'ALL' || selectedYear !== 'ALL' ? 'For filtered period' : 'Bookings, Charter blocks & Charges'}
           </p>
         </div>
 
@@ -382,23 +386,25 @@ export default function SupplierWalletPage() {
             +₹{metrics.totalInflow.toLocaleString('en-IN')}
           </div>
           <p className="text-[11px] text-gray-400 font-medium mt-2">
-            Deposits, Top-ups & Settlements
+            {selectedMonth !== 'ALL' || selectedYear !== 'ALL' ? 'For filtered period' : 'Deposits, Top-ups & Settlements'}
           </p>
         </div>
 
         {/* Ledger Records Count */}
         <div className="bg-[#161c3f] border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden group hover:border-purple-500/40 transition-colors">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Operations</span>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Operations</span>
             <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
               <Layers size={16} />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            {transactions.length} Records
+            {filteredTransactions.length} Records
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-[11px] text-gray-400 font-medium">All-time transactions</span>
+            <span className="text-[11px] text-gray-400 font-medium">
+              {filteredTransactions.length === transactions.length ? 'All records' : `Filtered from ${transactions.length} total`}
+            </span>
             <button 
               onClick={handleExportCSV}
               className="text-[10px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition"
