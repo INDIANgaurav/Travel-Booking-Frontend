@@ -390,17 +390,17 @@ export default function BookingsPage() {
                             </div>
 
                             {/* Dotted Flight Path Graphic */}
-                            <div className="flex-1 px-2 sm:px-4 text-center">
-                              <span className="text-[11px] font-bold text-slate-500 block mb-1">
+                            <div className="flex-1 px-2 sm:px-5 text-center">
+                              <span className="text-[11px] font-bold text-slate-500 block">
                                 {formattedDate}
                               </span>
-                              <div className="relative flex items-center justify-center">
+                              <div className="h-9 relative flex items-center justify-center my-1.5">
                                 <div className="w-full border-t-2 border-dashed border-slate-300"></div>
-                                <div className="absolute w-7 h-7 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs">
-                                  <Plane size={14} className="rotate-90 transform" />
+                                <div className="absolute w-8 h-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs">
+                                  <Plane size={15} className="rotate-90 transform" />
                                 </div>
                               </div>
-                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block mt-1.5">
+                              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider block">
                                 Non-Stop Flight
                               </span>
                             </div>
