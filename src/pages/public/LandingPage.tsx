@@ -555,15 +555,10 @@ export default function LandingPage() {
             {/* Main Image with slow zoom effect */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center opacity-80" style={{ animation: 'zoomInOut 30s infinite alternate ease-in-out' }}></div>
             
-            {/* Rich Atmospheric Sky Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#021333]/90 via-[#0a2552]/60 to-[#031538]/95"></div>
+            {/* Atmospheric Sky Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#070b24]/90 via-[#0b1031]/75 to-[#031538]/95 pointer-events-none"></div>
             {/* Smooth transition into page content at the very bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-white pointer-events-none"></div>
-            
-            {/* Decorative Floating Glowing Orbs */}
-            <div className="absolute top-[15%] left-[10%] w-72 h-72 bg-blue-400/25 rounded-full blur-[90px]"></div>
-            <div className="absolute top-[30%] right-[10%] w-96 h-96 bg-purple-500/25 rounded-full blur-[110px]"></div>
-            <div className="absolute top-[42%] left-1/2 -translate-x-1/2 w-[85%] max-w-[1100px] h-[380px] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-sky-400/20 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-10"></div>
             
             {/* Extra inline style for the subtle zoom animation */}
             <style>{`
@@ -1580,58 +1575,93 @@ export default function LandingPage() {
       </div>
 
 
-      {/* Why Choose TrippeChalo India Section */}
-      <div id="features-cards" className="relative bg-white py-16 w-full overflow-hidden border-t border-gray-100">
+      {/* The TrippeChalo Advantage Section */}
+      <div id="features-cards" className="relative bg-slate-50/70 py-20 w-full overflow-hidden border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 border-b border-gray-200 pb-6">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900">Why Book With Us?</h2>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-200/70 px-3 py-1 rounded-full inline-block mb-3">
+                Built For Modern Travellers
+              </span>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">The TrippeChalo Advantage</h2>
+              <p className="text-slate-500 font-medium text-sm md:text-base mt-1">Direct airline connectivity, transparent pricing, and instant automated refunds.</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-4 py-2 rounded-xl shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>100% IATA & Direct Airline Fares</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-            {/* Card 1 */}
-            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
-              <div className="mb-4">
-                <Calendar size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {/* Card 1: Official Series & Direct Fares */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-5 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Plane size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 inline-block mb-2">
+                  Direct Airline Inventory
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Exclusive Series Fares</h3>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium">Direct GDS & NDC pipeline with IndiGo, SpiceJet, and Akasa Air. Guaranteed lowest live market fares with zero middleman markups.</p>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Easy Booking</h3>
-              <p className="text-gray-500 text-xs leading-relaxed font-medium">We offer easy and convenient flight bookings with attractive offers.</p>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-bold text-blue-600">
+                <span>Verified Direct Inventory</span>
+              </div>
             </div>
 
-            {/* Card 2 */}
-            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
-              <div className="mb-4">
-                <CreditCard size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+            {/* Card 2: 15-Minute Instant Refunds */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-5 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <ArrowRightLeft size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 inline-block mb-2">
+                  Automated Reversal
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Instant Wallet Refunds</h3>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium">Cancellations shouldn't take weeks. Get your refund credited to your wallet in 15 minutes or tracked directly to your source bank account.</p>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Lowest Price</h3>
-              <p className="text-gray-500 text-xs leading-relaxed font-medium">We ensure low rates on hotel reservation, holiday packages and on flight tickets.</p>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                <span>Zero Manual Queue Delay</span>
+              </div>
             </div>
 
-            {/* Card 3 */}
-            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
-              <div className="mb-4">
-                <ArrowRightLeft size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+            {/* Card 3: Zero Hidden Fees */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-5 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Shield size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60 inline-block mb-2">
+                  100% Transparent
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">No Sneaky Surcharges</h3>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium">What you see on the search screen is what you pay. No forced insurance add-ons, auto-checked seat charges, or hidden convenience surprises.</p>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Instant Refund</h3>
-              <p className="text-gray-500 text-xs leading-relaxed font-medium">Get instant refunds effortlessly on your travel bookings with us.</p>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-bold text-indigo-600">
+                <span>Clear Itemized Breakdown</span>
+              </div>
             </div>
 
-            {/* Card 4 */}
-            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
-              <div className="mb-4">
-                <Smile size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+            {/* Card 4: 24/7 Human Concierge */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-5 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300 shadow-2xs">
+                  <Smile size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 inline-block mb-2">
+                  Dedicated Desk
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">24/7 Travel Assistance</h3>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium">Flight delayed or gate changed? Our real-time operations desk and priority WhatsApp helpline support your journey from booking to landing.</p>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">24/7 Support</h3>
-              <p className="text-gray-500 text-xs leading-relaxed font-medium">Get assistance 24/7 on any kind of travel related query. We are happy to assist you.</p>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs font-bold text-amber-600">
+                <span>Direct Operations Desk</span>
+              </div>
             </div>
 
-            {/* Card 5 */}
-            <div className="flex flex-col items-center text-center p-6 group hover:bg-gray-50 transition-colors">
-              <div className="mb-4">
-                <Gift size={48} className="text-[#4b9eff] group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Exciting Deals</h3>
-              <p className="text-gray-500 text-xs leading-relaxed font-medium">Enjoy exciting deals on flights, hotels, buses, car rental and tour packages.</p>
-            </div>
           </div>
         </div>
       </div>
