@@ -130,11 +130,24 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
             onClick={() => !isPast && onDateClick(cloneDay)}
           >
             <span className="z-10">{formattedDate}</span>
+            {/* Holiday indicator dot */}
+            {holiday && !isPast && (
+              <span 
+                className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full ring-1 ring-white" 
+                style={{ backgroundColor: holiday.color || '#ef4444' }}
+                title={holiday.name}
+              />
+            )}
             {/* Holiday Tooltip */}
             {holiday && !isPast && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-10 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
-                {format(day, 'dd MMM')} <br/>
-                <span className="font-bold text-yellow-300">{holiday.name}</span>
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-0.5 border border-slate-700/80 min-w-max">
+                <div className="flex items-center gap-1.5 text-[10px] leading-tight font-bold text-amber-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                  <span>{holiday.name}</span>
+                  <span className="text-[9px] font-normal text-slate-400">({format(day, 'dd MMM')})</span>
+                </div>
+                {/* Pointer Arrow */}
+                <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
               </div>
             )}
             
@@ -151,7 +164,7 @@ export default function DualMonthCalendar({ checkIn, checkOut, onDateChange, onC
                 
                 {holiday && (
                   <span className="text-[7px] font-bold truncate text-center w-full mt-[1px]" style={{ color: holiday.color }}>
-                    {holiday.name.substring(0, 5)}...
+                    {holiday.name}
                   </span>
                 )}
               </div>

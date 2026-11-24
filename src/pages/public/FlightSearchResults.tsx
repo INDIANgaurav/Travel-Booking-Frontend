@@ -1262,7 +1262,11 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
 
         <div className="flex items-center gap-2">
           {flight.isSeriesFare && (
-            <span className="bg-amber-50 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-200/80 uppercase tracking-wider">
+            <span 
+              className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-200/90 uppercase tracking-wider shadow-2xs"
+              title="Fixed Departure (FD) Series Fare - Direct Guaranteed Inventory"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
               Series Fare
             </span>
           )}

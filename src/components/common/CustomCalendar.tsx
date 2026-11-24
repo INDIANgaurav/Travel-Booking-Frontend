@@ -81,11 +81,11 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
     
     const startDayOfWeek = getDay(monthStart);
-    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="w-full h-8 sm:h-9"></div>);
+    const blanks = Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`blank-${i}`} className="w-full h-9 sm:h-10"></div>);
     const totalCells = startDayOfWeek + days.length;
     const rowsNeeded = Math.ceil(totalCells / 7);
     const cellsNeeded = rowsNeeded * 7;
-    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="w-full h-8 sm:h-9"></div>);
+    const trailingBlanks = Array.from({ length: cellsNeeded - totalCells }).map((_, i) => <div key={`trailing-blank-${i}`} className="w-full h-9 sm:h-10"></div>);
     
     const allCells = [
       ...blanks,
@@ -143,21 +143,37 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
           <div 
             key={day.toString()} 
             onClick={() => !isPast && onDateClick(day)}
-            className={`flex flex-col items-center justify-center min-h-[34px] sm:min-h-[38px] py-0.5 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
+            className={`flex flex-col items-center justify-center min-h-[36px] sm:min-h-[40px] py-1 w-full cursor-pointer transition-colors group/day relative ${bgClass} ${roundingClass} ${isPast ? 'cursor-not-allowed' : ''}`}
           >
-            {holiday && !isPast && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-300 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#005252] text-white text-[10px] whitespace-nowrap px-2 py-1 rounded z-20 shadow-lg pointer-events-none">
-                {format(day, 'dd MMM')} <br/>
-                <span className="font-bold text-yellow-300">{holiday.name}</span>
+            {/* Unified Smart Tooltip on Hover: Combines Holiday and Seats into ONE Clean Card */}
+            {!isPast && (holiday || (availableSeats != null && availableSeats > 0 && !isSelected)) && (
+              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-150 ease-out absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white rounded-lg px-2.5 py-1.5 shadow-2xl z-50 pointer-events-none flex flex-col items-center gap-1 border border-slate-700/80 min-w-max">
+                {holiday && (
+                  <div className="flex items-center gap-1.5 text-[10px] leading-tight font-bold text-amber-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                    <span>{holiday.name}</span>
+                    <span className="text-[9px] font-normal text-slate-400">({format(day, 'dd MMM')})</span>
+                  </div>
+                )}
+                {availableSeats != null && availableSeats > 0 && !isSelected && (
+                  <div className="flex items-center gap-1.5 text-[9.5px] leading-tight text-slate-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                    {airlineInfo ? <span className="font-medium text-slate-300">{airlineInfo} •</span> : null}
+                    <span className="font-bold text-emerald-300">{availableSeats} Seats Left</span>
+                  </div>
+                )}
+                {/* Pointer Arrow */}
+                <div className="w-2 h-2 bg-slate-900 border-r border-b border-slate-700/80 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
               </div>
             )}
 
-            {availableSeats != null && availableSeats > 0 && !isPast && !isSelected && (
-              <div className="opacity-0 invisible group-hover/day:opacity-100 group-hover/day:visible transition-all duration-200 ease-in-out absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] whitespace-nowrap px-2.5 py-1 rounded shadow-xl z-30 pointer-events-none flex items-center gap-1.5 border border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                {airlineInfo ? <span className="font-semibold text-gray-200">{airlineInfo} •</span> : null}
-                <span className="font-bold text-yellow-300">{availableSeats} Seats Left</span>
-              </div>
+            {/* Holiday indicator dot in cell corner (eliminates text cramming while keeping it prominent) */}
+            {holiday && !isPast && (
+              <span 
+                className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full ring-1 ring-white" 
+                style={{ backgroundColor: holiday.color || '#ef4444' }}
+                title={holiday.name}
+              />
             )}
             
             <span className={`text-[11px] sm:text-xs font-bold leading-none ${textClass}`}>{dateNum}</span>
@@ -171,23 +187,21 @@ export default function CustomCalendar({ startDate, endDate, minDate, isOneWay, 
                   <span className={`text-[7px] font-bold ${priceClass}`}>...</span>
                 ) : null}
 
-                {availableSeats != null && availableSeats > 0 && (
-                  <span className="text-[6.5px] font-black uppercase tracking-tighter text-emerald-800 bg-emerald-100/90 px-1 py-0.2 rounded mt-0.5 whitespace-nowrap">
+                {availableSeats != null && availableSeats > 0 ? (
+                  <span className="text-[6.5px] font-black uppercase tracking-tight text-emerald-800 bg-emerald-100/90 px-1 py-0.2 rounded mt-0.5 whitespace-nowrap">
                     {availableSeats} left
                   </span>
-                )}
-
-                {holiday && (
-                  <span className="text-[6px] font-bold truncate text-center w-[90%] mt-0.5" style={{ color: holiday.color }}>
-                    {holiday.name.substring(0, 5)}...
+                ) : holiday ? (
+                  <span className="text-[6.5px] font-bold truncate text-center max-w-[38px] mt-0.5" style={{ color: holiday.color }}>
+                    {holiday.name}
                   </span>
-                )}
+                ) : null}
               </div>
             )}
           </div>
         );
       }),
-      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-full h-8 sm:h-9"></div>)
+      ...trailingBlanks.map((b, i) => <div key={`tb-${i}`} className="w-full h-9 sm:h-10"></div>)
     ];
 
     const mappedRows = (
