@@ -38,13 +38,19 @@ export const useAdminSocket = () => {
       return;
     }
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      return;
+    }
+
     const newSocket = io(SOCKET_URL, {
       withCredentials: true,
+      auth: { token },
     });
 
     newSocket.on('connect', () => {
       console.log('Connected to Admin Socket');
-      newSocket.emit('join_admin_room');
+      newSocket.emit('join_admin_room', { token });
     });
 
     newSocket.on('activity', (data: ActivityEvent) => {

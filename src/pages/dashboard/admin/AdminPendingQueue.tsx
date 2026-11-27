@@ -93,7 +93,7 @@ export default function AdminPendingQueue() {
                 Pending B2B Agents ({agents.length})
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 overflow-x-auto">
               {agents.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 font-bold text-sm">No agents pending approval.</div>
               ) : (
@@ -139,7 +139,7 @@ export default function AdminPendingQueue() {
                 Pending Wallet Top-ups ({topups.length})
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 overflow-x-auto">
               {topups.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 font-bold text-sm">No wallet top-ups pending.</div>
               ) : (
@@ -181,7 +181,7 @@ export default function AdminPendingQueue() {
                 Pending Withdrawals ({withdrawals.length})
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 overflow-x-auto">
               {withdrawals.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 font-bold text-sm">No withdrawals pending.</div>
               ) : (
@@ -221,7 +221,7 @@ export default function AdminPendingQueue() {
                 Pending Offline Bookings ({offlineBookings.length})
               </h2>
             </div>
-            <div className="p-0">
+            <div className="p-0 overflow-x-auto">
               {offlineBookings.length === 0 ? (
                 <div className="p-8 text-center text-gray-500 font-bold text-sm">No offline bookings pending.</div>
               ) : (

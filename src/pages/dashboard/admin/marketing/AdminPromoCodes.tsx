@@ -467,7 +467,7 @@ const AdminPromoCodes = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="bg-white rounded-lg p-2.5 text-center border border-purple-100">
                         <p className="text-[9px] text-gray-400 uppercase font-bold">Airline</p>
                         <p className="text-xs font-bold text-gray-800 mt-0.5">{viewFlightPromo.flightDetails.airline || '—'}</p>

@@ -371,8 +371,8 @@ export default function FlightTicket() {
                 <span className="uppercase">Flight Details</span>
                 <span className="uppercase tracking-wider text-[9px]">ALL TIMINGS MENTIONED ARE IN 24HRS FORMAT AND LOCAL AIRPORT TIMINGS AT THE DEPARTURE/ARRIVAL AIRPORT.</span>
               </div>
-              <div className="w-full overflow-hidden">
-                <table className="w-full table-fixed text-left text-[9px] md:text-[11px] border-b border-gray-200">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-[520px] table-fixed text-left text-[10px] md:text-[11px] border-b border-gray-200">
                   <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
                     <tr>
                       <th className="p-1 md:p-3 font-normal text-gray-500 w-[20%]">Flight</th>
@@ -495,8 +495,8 @@ export default function FlightTicket() {
                 <span className="uppercase">Passenger Details</span>
                 <span className="text-[9px] text-gray-700 font-semibold">( Phone: 9555934205 | Email: trippechaloindia@gmail.com )</span>
               </div>
-              <div className="w-full overflow-hidden mt-1">
-                <table className="w-full table-fixed text-left text-[9px] md:text-[11px]">
+              <div className="w-full overflow-x-auto mt-1">
+                <table className="w-full min-w-[520px] table-fixed text-left text-[10px] md:text-[11px]">
                   <thead className="border-b border-gray-200 bg-white text-[8px] md:text-[11px]">
                   <tr>
                     <th className="py-1 px-1 md:py-2 md:px-3 font-normal text-gray-500 w-[20%] border-r border-gray-200">PNR</th>

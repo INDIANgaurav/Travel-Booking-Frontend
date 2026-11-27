@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
-import { ChevronDown, Check, Plane, Building2, User, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
+import { ChevronDown, Check, Plane, Building2, User, ArrowLeft, ArrowRight, ShieldCheck, SlidersHorizontal, Clock, RotateCcw, Tag } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import {  selectCurrentUser, logout, logoutUserThunk } from '../../store/authSlice';
 import CustomCalendar from '../../components/common/CustomCalendar';
@@ -16,7 +16,7 @@ import { useFlightSearch } from '../../hooks/useFlightSearch';
 import AgentFlightSearchResults from './AgentFlightSearchResults';
 import InteractiveGridBackground from '../../components/ui/InteractiveGridBackground';
 import { format } from 'date-fns';
-import { formatAirlineName } from '../../utils/airlineFormatter';
+import { formatAirlineName, resolveCrispAirlineLogo } from '../../utils/airlineFormatter';
 
 interface Flight {
   _id: string;
@@ -133,6 +133,75 @@ export default function FlightSearchResults() {
   const [calendarPrices, setCalendarPrices] = useState<Record<string, any>>({});
   const [sliderOffset, setSliderOffset] = useState(0);
 
+  // Sidebar Interactive Filter States
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
+  const [depTimeSlot, setDepTimeSlot] = useState<'ALL' | 'EARLY' | 'MORNING' | 'AFTERNOON' | 'EVENING'>('ALL');
+  const [fareTypeFilter, setFareTypeFilter] = useState<'ALL' | 'SERIES'>('ALL');
+
+  const airlineFilterOptions = useMemo(() => {
+    const map = new Map<string, { name: string; logo: string; minPrice: number; count: number }>();
+    [...sortedOutboundFlights, ...returnFlights].forEach((f) => {
+      const canonical = formatAirlineName(f.airline) || 'Airline';
+      const price = getDisplayPrice(f.price);
+      const existing = map.get(canonical);
+      if (!existing) {
+        map.set(canonical, { name: canonical, logo: f.airlineLogo, minPrice: price, count: 1 });
+      } else {
+        existing.count += 1;
+        if (price > 0 && (existing.minPrice <= 0 || price < existing.minPrice)) {
+          existing.minPrice = price;
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.minPrice - b.minPrice);
+  }, [sortedOutboundFlights, returnFlights, getDisplayPrice]);
+
+  const applySidebarFilters = (list: Flight[]) => {
+    return list.filter((f) => {
+      if (selectedAirlines.length > 0 && !selectedAirlines.includes(formatAirlineName(f.airline))) {
+        return false;
+      }
+      if (fareTypeFilter === 'SERIES' && !f.isSeriesFare) {
+        return false;
+      }
+      if (depTimeSlot !== 'ALL') {
+        const dt = new Date(f.departureTime);
+        const hr = isNaN(dt.getTime()) ? 12 : dt.getHours();
+        if (depTimeSlot === 'EARLY' && (hr < 0 || hr >= 6)) return false;
+        if (depTimeSlot === 'MORNING' && (hr < 6 || hr >= 12)) return false;
+        if (depTimeSlot === 'AFTERNOON' && (hr < 12 || hr >= 18)) return false;
+        if (depTimeSlot === 'EVENING' && hr < 18) return false;
+      }
+      return true;
+    });
+  };
+
+  const filteredOutboundFlights = useMemo(
+    () => applySidebarFilters(sortedOutboundFlights),
+    [sortedOutboundFlights, selectedAirlines, depTimeSlot, fareTypeFilter]
+  );
+
+  const filteredReturnFlights = useMemo(
+    () => applySidebarFilters(returnFlights),
+    [returnFlights, selectedAirlines, depTimeSlot, fareTypeFilter]
+  );
+
+  const activeSidebarFilterCount =
+    (nonStopFilter ? 1 : 0) +
+    (morningFilter ? 1 : 0) +
+    (selectedAirlines.length > 0 ? 1 : 0) +
+    (depTimeSlot !== 'ALL' ? 1 : 0) +
+    (fareTypeFilter !== 'ALL' ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setNonStopFilter(false);
+    setMorningFilter(false);
+    setSelectedAirlines([]);
+    setDepTimeSlot('ALL');
+    setFareTypeFilter('ALL');
+  };
+
   useEffect(() => {
     const fetchCalendarPrices = async () => {
       if (!from || !to) return;
@@ -208,13 +277,6 @@ export default function FlightSearchResults() {
             <div className="flex flex-col items-center cursor-pointer text-blue-600">
               <Plane size={20} />
               <span className="text-[10px] font-bold mt-1">Flights</span>
-            </div>
-            <div 
-              className="flex flex-col items-center cursor-pointer text-gray-500 hover:text-blue-600 transition"
-              onClick={() => navigate('/?tab=Hotels')}
-            >
-              <Building2 size={20} />
-              <span className="text-[10px] font-bold mt-1">Hotels</span>
             </div>
           </div>
 
@@ -505,9 +567,232 @@ export default function FlightSearchResults() {
           </div>
         </div>
       ) : (
-        <div className="max-w-[1000px] mx-auto px-4 xl:px-0 pt-2 pb-6 md:py-6 w-full">
-          {/* Main Content - Flight Results */}
-          <div className="w-full">
+        <div className="max-w-7xl mx-auto px-4 xl:px-6 pt-2 pb-6 md:py-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+            {/* Left Filters Sidebar (Fills Desktop Space with Real OTA Controls) */}
+            <aside className="hidden lg:flex flex-col gap-4 sticky top-24 z-10">
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5">
+                <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal size={16} className="text-blue-600" />
+                    <h3 className="font-black text-slate-900 text-sm tracking-tight">Filters</h3>
+                    {activeSidebarFilterCount > 0 && (
+                      <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-full">
+                        {activeSidebarFilterCount}
+                      </span>
+                    )}
+                  </div>
+                  {activeSidebarFilterCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearAllFilters}
+                      className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                    >
+                      <RotateCcw size={11} />
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Stops Filter */}
+                <div className="mb-5">
+                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2.5">Stops</p>
+                  <label className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200/80 hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer transition">
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={nonStopFilter}
+                        onChange={(e) => setNonStopFilter(e.target.checked)}
+                        className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-slate-800">Non-Stop Only</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {sortedOutboundFlights.filter((f) => !f.segments || f.segments.length <= 1).length}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Fare Type Filter */}
+                <div className="mb-5">
+                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <Tag size={12} className="text-amber-500" />
+                    Fare Type
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFareTypeFilter('ALL')}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        fareTypeFilter === 'ALL'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      All Fares
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFareTypeFilter('SERIES')}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        fareTypeFilter === 'SERIES'
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                          : 'bg-amber-50/60 text-amber-800 border-amber-200 hover:bg-amber-100/70'
+                      }`}
+                    >
+                      Series Fare
+                    </button>
+                  </div>
+                </div>
+
+                {/* Departure Time Slots */}
+                <div className="mb-5">
+                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-500" />
+                    Departure Time
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'EARLY', label: '00 - 06', sub: 'Early' },
+                      { id: 'MORNING', label: '06 - 12', sub: 'Morning' },
+                      { id: 'AFTERNOON', label: '12 - 18', sub: 'Afternoon' },
+                      { id: 'EVENING', label: '18 - 24', sub: 'Evening' },
+                    ].map((slot) => {
+                      const active = depTimeSlot === slot.id;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          onClick={() => setDepTimeSlot(active ? 'ALL' : (slot.id as any))}
+                          className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                            active
+                              ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-2xs'
+                              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="text-[11px] font-black">{slot.label}</div>
+                          <div className="text-[10px] text-slate-500 font-medium">{slot.sub}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Airlines Filter */}
+                {airlineFilterOptions.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2.5">Airlines</p>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {airlineFilterOptions.map((item) => {
+                        const isChecked = selectedAirlines.includes(item.name);
+                        return (
+                          <label
+                            key={item.name}
+                            className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition ${
+                              isChecked
+                                ? 'border-blue-500 bg-blue-50/40'
+                                : 'border-slate-200/80 hover:border-slate-300 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() =>
+                                  setSelectedAirlines((prev) =>
+                                    prev.includes(item.name)
+                                      ? prev.filter((a) => a !== item.name)
+                                      : [...prev, item.name]
+                                  )
+                                }
+                                className="w-3.5 h-3.5 rounded accent-blue-600 shrink-0 cursor-pointer"
+                              />
+                              {item.logo ? (
+                                <img src={item.logo} alt={item.name} className="w-6 h-6 object-contain rounded bg-white shrink-0" />
+                              ) : (
+                                <Plane size={14} className="text-blue-600 shrink-0" />
+                              )}
+                              <span className="text-xs font-bold text-slate-800 truncate">{item.name}</span>
+                            </div>
+                            <span className="text-[11px] font-black text-slate-600 ml-2 shrink-0">
+                              {item.minPrice > 0 ? `₹${item.minPrice.toLocaleString('en-IN')}` : '--'}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Route Price Summary */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-4">
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Route Summary</p>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Sector</span>
+                    <span className="font-bold text-slate-900">{from} → {to}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Lowest Fare</span>
+                    <span className="font-bold text-emerald-700">
+                      {cheapestFlight && cheapestFlight.price > 0 ? `₹${getDisplayPrice(cheapestFlight.price).toLocaleString('en-IN')}` : '--'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Travellers</span>
+                    <span className="font-bold text-slate-900">{adults + children + infants} Pax</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content - Flight Results */}
+            <div className="w-full min-w-0">
+              {/* Mobile & Tablet Filter Bar */}
+              <div className="flex lg:hidden items-center gap-2 mb-3 overflow-x-auto pb-1">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFiltersOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs font-black text-slate-800 shrink-0 cursor-pointer"
+                >
+                  <SlidersHorizontal size={14} className="text-blue-600" />
+                  Filters
+                  {activeSidebarFilterCount > 0 && (
+                    <span className="bg-blue-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                      {activeSidebarFilterCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNonStopFilter(!nonStopFilter)}
+                  className={`px-3 py-2 rounded-xl border text-xs font-bold shrink-0 cursor-pointer transition ${
+                    nonStopFilter ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200'
+                  }`}
+                >
+                  Non-Stop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFareTypeFilter(fareTypeFilter === 'SERIES' ? 'ALL' : 'SERIES')}
+                  className={`px-3 py-2 rounded-xl border text-xs font-bold shrink-0 cursor-pointer transition ${
+                    fareTypeFilter === 'SERIES' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-700 border-slate-200'
+                  }`}
+                >
+                  Series Fare
+                </button>
+                {activeSidebarFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="px-2.5 py-2 text-xs font-bold text-blue-600 shrink-0 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+
             <h2 className="hidden md:block text-2xl font-black text-gray-900 mb-4">
               Flights from {getCityName(from)} to {getCityName(to)}{tripType === 'Round Trip' ? ', and back' : ''}
             </h2>
@@ -685,13 +970,13 @@ export default function FlightSearchResults() {
                     </span>
                   </h3>
                   <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                    {sortedOutboundFlights.length} Flights Available
+                    {filteredOutboundFlights.length} Flights Available
                   </span>
                 </div>
                 
                 <div className="space-y-3">
-                  {sortedOutboundFlights.length > 0 ? (
-                    sortedOutboundFlights.map((flight, index) => (
+                  {filteredOutboundFlights.length > 0 ? (
+                    filteredOutboundFlights.map((flight, index) => (
                       <FlightCard 
                         key={`${flight._id}-${index}`} 
                         flight={flight} 
@@ -772,14 +1057,14 @@ export default function FlightSearchResults() {
                         {new Date(returnDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </span>
                     </h3>
-                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                      {returnFlights.length} Flights Available
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {returnFlights.length > 0 ? (
-                      returnFlights.map(flight => (
+                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {filteredReturnFlights.length} Flights Available
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  {filteredReturnFlights.length > 0 ? (
+                    filteredReturnFlights.map(flight => (
                         <FlightCard 
                           key={flight._id} 
                           flight={flight} 
@@ -810,7 +1095,7 @@ export default function FlightSearchResults() {
               (tripType === 'One Way' && selectedOutbound)
             ) ? createPortal(
               <div className="fixed bottom-16 lg:bottom-6 left-0 w-full z-[30] pointer-events-none flex justify-center animate-in slide-in-from-bottom-10 fade-in duration-500 ease-out px-4">
-                <div className="bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-xl md:rounded-full pointer-events-auto w-full max-w-[1000px] p-1.5 md:p-2.5 flex flex-row items-center justify-between gap-2 md:gap-4">
+                <div className="bg-[#0c1a40]/95 backdrop-blur-xl border border-slate-700/80 shadow-[0_20px_50px_rgba(12,26,64,0.45)] rounded-2xl md:rounded-full pointer-events-auto w-full max-w-[1000px] p-2 md:p-2.5 flex flex-row items-center justify-between gap-2 md:gap-4 text-white">
                    
                   <div className="hidden md:flex w-auto items-center gap-4 flex-1 overflow-hidden px-2">
                     {tripType === 'Multi City' ? (
@@ -818,14 +1103,14 @@ export default function FlightSearchResults() {
                         {multiCityLegs.map((leg, idx) => {
                           const flight = selectedLegFlights[idx];
                           return (
-                            <div key={idx} className="flex items-center gap-2 shrink-0 bg-slate-50/80 px-2.5 py-1 rounded-lg border border-slate-200/80">
-                              <span className="text-[10px] font-black text-blue-600">#{idx + 1}</span>
+                            <div key={idx} className="flex items-center gap-2 shrink-0 bg-white/10 px-2.5 py-1 rounded-lg border border-white/15">
+                              <span className="text-[10px] font-black text-blue-400">#{idx + 1}</span>
                               <div className="flex flex-col">
-                                <span className="text-xs font-black text-slate-800">{leg.from} ➔ {leg.to}</span>
+                                <span className="text-xs font-black text-white">{leg.from} ➔ {leg.to}</span>
                                 {flight ? (
-                                  <span className="text-[10px] font-bold text-slate-500">{flight.airline} • ₹{getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
+                                  <span className="text-[10px] font-bold text-slate-300">{flight.airline} • ₹{getDisplayPrice(flight.price).toLocaleString('en-IN')}</span>
                                 ) : (
-                                  <span className="text-[10px] font-bold text-amber-600">Pending</span>
+                                  <span className="text-[10px] font-bold text-amber-400">Pending</span>
                                 )}
                               </div>
                             </div>
@@ -836,22 +1121,21 @@ export default function FlightSearchResults() {
                       <>
                         {/* Outbound */}
                         <div className="flex-1 flex items-center gap-3 md:gap-4">
-                           <div className="relative">
-                             <div className="absolute inset-0 bg-blue-500 blur opacity-20 rounded-full"></div>
-                             <img src={selectedOutbound?.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                           <div className="w-16 h-10 bg-white rounded-xl shadow-sm px-1.5 py-1 flex items-center justify-center shrink-0 overflow-hidden">
+                             <img src={resolveCrispAirlineLogo(selectedOutbound?.airlineLogo)} alt="" className="max-w-full max-h-full object-contain" />
                            </div>
                            <div className="flex flex-col">
                              <div className="flex items-center gap-2 mb-0.5">
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{selectedOutbound ? formatTime(parseDate(selectedOutbound.departureTime)) : ''}</span>
-                               <span className="text-blue-500 text-[10px] md:text-xs">➔</span>
-                               <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{selectedOutbound ? formatTime(parseDate(selectedOutbound.arrivalTime)) : ''}</span>
+                               <span className="font-black text-sm md:text-[15px] text-white">{selectedOutbound ? formatTime(parseDate(selectedOutbound.departureTime)) : ''}</span>
+                               <span className="text-blue-400 text-[10px] md:text-xs">➔</span>
+                               <span className="font-black text-sm md:text-[15px] text-white">{selectedOutbound ? formatTime(parseDate(selectedOutbound.arrivalTime)) : ''}</span>
                               {selectedOutbound && ((selectedOutbound as any).dayChange > 0 || parseDate(selectedOutbound.arrivalTime) < parseDate(selectedOutbound.departureTime)) && (
-                                <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
+                                <span className="text-[9px] font-black text-rose-300 bg-rose-500/20 border border-rose-400/40 px-1 py-0.2 rounded leading-none">+{(selectedOutbound as any).dayChange || 1}D</span>
                               )}
                              </div>
-                             <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                             <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-slate-300 uppercase tracking-widest">
                                <span>{selectedOutbound?.airline} {selectedOutbound?.flightNumber ? `(${selectedOutbound.flightNumber})` : ''}</span>
-                               <span className="text-blue-400 hover:text-blue-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
+                               <span className="text-blue-400 hover:text-blue-300 cursor-pointer underline-offset-2 hover:underline" onClick={() => setShowFlightDetails(selectedOutbound)}>Details</span>
                              </div>
                            </div>
                         </div>
@@ -859,24 +1143,23 @@ export default function FlightSearchResults() {
                         {/* Return if roundtrip */}
                         {tripType === 'Round Trip' && selectedReturn && (
                           <>
-                            <div className="w-[1px] h-8 md:h-10 bg-gray-200/80 mx-1 md:mx-2"></div>
+                            <div className="w-[1px] h-8 md:h-10 bg-white/15 mx-1 md:mx-2"></div>
                             <div className="flex-1 flex items-center gap-3 md:gap-4">
-                               <div className="relative">
-                                 <div className="absolute inset-0 bg-emerald-500 blur opacity-20 rounded-full"></div>
-                                 <img src={selectedReturn.airlineLogo} alt="" className="w-8 h-8 md:w-10 md:h-10 object-contain bg-white rounded-full shadow-sm p-1.5 relative border border-gray-100" />
+                               <div className="w-16 h-10 bg-white rounded-xl shadow-sm px-1.5 py-1 flex items-center justify-center shrink-0 overflow-hidden">
+                                 <img src={resolveCrispAirlineLogo(selectedReturn.airlineLogo)} alt="" className="max-w-full max-h-full object-contain" />
                                </div>
                                <div className="flex flex-col">
                                  <div className="flex items-center gap-2 mb-0.5">
-                                   <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.departureTime))}</span>
-                                   <span className="text-emerald-500 text-[10px] md:text-xs">➔</span>
-                                   <span className="font-black text-sm md:text-[15px] text-[#0c1a40]">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
+                                   <span className="font-black text-sm md:text-[15px] text-white">{formatTime(parseDate(selectedReturn.departureTime))}</span>
+                                   <span className="text-emerald-400 text-[10px] md:text-xs">➔</span>
+                                   <span className="font-black text-sm md:text-[15px] text-white">{formatTime(parseDate(selectedReturn.arrivalTime))}</span>
                                   {((selectedReturn as any).dayChange > 0 || parseDate(selectedReturn.arrivalTime) < parseDate(selectedReturn.departureTime)) && (
-                                    <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
+                                    <span className="text-[9px] font-black text-rose-300 bg-rose-500/20 border border-rose-400/40 px-1 py-0.2 rounded leading-none">+{(selectedReturn as any).dayChange || 1}D</span>
                                   )}
                                  </div>
-                                 <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                 <div className="flex gap-2 md:gap-3 text-[9px] md:text-[10px] font-bold text-slate-300 uppercase tracking-widest">
                                    <span>{selectedReturn.airline} {selectedReturn.flightNumber ? `(${selectedReturn.flightNumber})` : ''}</span>
-                                   <span className="text-emerald-500 hover:text-emerald-600 cursor-pointer" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
+                                   <span className="text-emerald-400 hover:text-emerald-300 cursor-pointer underline-offset-2 hover:underline" onClick={() => setShowFlightDetails(selectedReturn)}>Details</span>
                                  </div>
                                </div>
                             </div>
@@ -887,14 +1170,14 @@ export default function FlightSearchResults() {
                   </div>
                   
                   {/* Action Area */}
-                  <div className="flex items-center justify-between md:justify-end gap-2 md:gap-6 px-4 md:px-6 py-1.5 md:py-2 rounded-xl md:rounded-full w-full md:w-auto shadow-none md:shadow-sm bg-transparent md:bg-white/60 border-none md:border md:border-white/60">
+                  <div className="flex items-center justify-between md:justify-end gap-2 md:gap-5 px-3 md:px-5 py-1.5 md:py-2 rounded-xl md:rounded-full w-full md:w-auto bg-white/10 border border-white/15">
                     <div className="flex flex-col items-start md:items-end justify-center">
-                      <p className="font-black text-lg md:text-[22px] text-[#0c1a40] leading-none mb-1">
+                      <p className="font-black text-lg md:text-[22px] text-white leading-none mb-1">
                         ₹ {(tripType === 'Multi City'
                           ? Object.values(selectedLegFlights).reduce((sum, f) => sum + getDisplayPrice(f.price), 0)
                           : ((selectedOutbound ? getDisplayPrice(selectedOutbound.price) : 0) + (tripType === 'Round Trip' && selectedReturn ? getDisplayPrice(selectedReturn.price) : 0))).toLocaleString('en-IN')}
                       </p>
-                      <p className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase cursor-pointer hover:text-blue-600 transition flex items-center gap-1" onClick={() => setShowFareSummaryModal(true)}>
+                      <p className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase cursor-pointer hover:text-blue-300 transition flex items-center gap-1" onClick={() => setShowFareSummaryModal(true)}>
                         Fare Summary
                       </p>
                     </div>
@@ -929,7 +1212,7 @@ export default function FlightSearchResults() {
                           }
                         }
                       }}
-                      className="group bg-[#0c1a40] hover:bg-blue-600 text-white font-black py-2 md:py-3 px-6 md:px-8 rounded-full text-xs md:text-sm shadow-[0_5px_15px_rgba(12,26,64,0.3)] hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wider flex items-center gap-1 md:gap-2 whitespace-nowrap"
+                      className="group bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 md:py-3 px-6 md:px-8 rounded-full text-xs md:text-sm shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:shadow-[0_8px_25px_rgba(59,130,246,0.55)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wider flex items-center gap-1 md:gap-2 whitespace-nowrap cursor-pointer"
                     >
                       {tripType === 'Multi City'
                         ? (multiCityLegs && Object.keys(selectedLegFlights).length === multiCityLegs.length
@@ -1019,7 +1302,94 @@ export default function FlightSearchResults() {
         )}
 
           </div>
+          </div>
         </div>
+      )}
+
+      {/* Mobile & Tablet Filters Drawer */}
+      {isMobileFiltersOpen && createPortal(
+        <div className="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center lg:hidden" onClick={() => setIsMobileFiltersOpen(false)}>
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-y-auto p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal size={16} className="text-blue-600" />
+                <h3 className="font-black text-slate-900 text-base">Filter Flights</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                {activeSidebarFilterCount > 0 && (
+                  <button type="button" onClick={clearAllFilters} className="text-xs font-bold text-blue-600">Reset All</button>
+                )}
+                <button type="button" onClick={() => setIsMobileFiltersOpen(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">✕</button>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Stops</p>
+                <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <input type="checkbox" checked={nonStopFilter} onChange={(e) => setNonStopFilter(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                    <span className="text-sm font-bold text-slate-800">Non-Stop Only</span>
+                  </div>
+                </label>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Fare Type</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setFareTypeFilter('ALL')} className={`py-2.5 rounded-xl text-xs font-bold border ${fareTypeFilter === 'ALL' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>All Fares</button>
+                  <button type="button" onClick={() => setFareTypeFilter('SERIES')} className={`py-2.5 rounded-xl text-xs font-bold border ${fareTypeFilter === 'SERIES' ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-800 border-amber-200'}`}>Series Fare</button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Departure Time</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'EARLY', label: '00 - 06', sub: 'Early' },
+                    { id: 'MORNING', label: '06 - 12', sub: 'Morning' },
+                    { id: 'AFTERNOON', label: '12 - 18', sub: 'Afternoon' },
+                    { id: 'EVENING', label: '18 - 24', sub: 'Evening' },
+                  ].map((slot) => (
+                    <button key={slot.id} type="button" onClick={() => setDepTimeSlot(depTimeSlot === slot.id ? 'ALL' : (slot.id as any))} className={`p-2.5 rounded-xl border text-left ${depTimeSlot === slot.id ? 'bg-blue-50 border-blue-600 text-blue-700' : 'bg-white border-slate-200 text-slate-700'}`}>
+                      <div className="text-xs font-black">{slot.label}</div>
+                      <div className="text-[11px] text-slate-500">{slot.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {airlineFilterOptions.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2">Airlines</p>
+                  <div className="space-y-2">
+                    {airlineFilterOptions.map((item) => {
+                      const isChecked = selectedAirlines.includes(item.name);
+                      return (
+                        <label key={item.name} className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 cursor-pointer">
+                          <div className="flex items-center gap-2.5">
+                            <input type="checkbox" checked={isChecked} onChange={() => setSelectedAirlines((prev) => prev.includes(item.name) ? prev.filter((a) => a !== item.name) : [...prev, item.name])} className="w-4 h-4 accent-blue-600" />
+                            <span className="text-xs font-bold text-slate-800">{item.name}</span>
+                          </div>
+                          <span className="text-xs font-black text-slate-600">{item.minPrice > 0 ? `₹${item.minPrice.toLocaleString('en-IN')}` : '--'}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsMobileFiltersOpen(false)}
+              className="mt-6 w-full py-3 rounded-xl bg-blue-600 text-white font-black text-sm shadow-md"
+            >
+              Show {filteredOutboundFlights.length} Flights
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Flight Details Modal */}
@@ -1041,7 +1411,9 @@ export default function FlightSearchResults() {
             
             <div className="p-6 md:p-8 max-h-[75vh] overflow-y-auto">
               <div className="flex items-center gap-4 border-b border-gray-100 pb-5 mb-6">
-                <img src={showFlightDetails.airlineLogo} alt="" className="w-12 h-12 object-contain" />
+                <div className="w-24 h-12 rounded-xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-center px-2 py-1 overflow-hidden shrink-0">
+                  <img src={resolveCrispAirlineLogo(showFlightDetails.airlineLogo)} alt="" className="max-w-full max-h-full object-contain" />
+                </div>
                 <div>
                   <p className="font-black text-gray-900 text-xl capitalize">{formatAirlineName(showFlightDetails.airline)}</p>
                   <p className="text-sm font-medium text-gray-500">{showFlightDetails.flightNumber} • {(showFlightDetails as any).cabinClass || cabinClass.split('/')[0]}</p>
@@ -1240,12 +1612,12 @@ function FlightCard({ flight, isSelected, onSelect, isRoundTrip, displayPrice }:
     >
       {/* Top Strip: Airline Logo, Name, Badges */}
       <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-center p-1 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-20 h-11 rounded-xl bg-white border border-slate-200/90 shadow-xs flex items-center justify-center px-2 py-1 overflow-hidden shrink-0">
             {flight.airlineLogo ? (
-              <img src={flight.airlineLogo} alt={flight.airline} className="w-full h-full object-contain" />
+              <img src={resolveCrispAirlineLogo(flight.airlineLogo)} alt={flight.airline} className="max-w-full max-h-full object-contain" />
             ) : (
-              <Plane size={16} className="text-blue-600" />
+              <Plane size={20} className="text-blue-600" />
             )}
           </div>
           <div>

@@ -929,7 +929,7 @@ const B2BAgentCheckout: React.FC = () => {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-[#0c1a40] mb-1">Title</label>
                           <div className={showErrors && !p.title ? "rounded-lg ring-1 ring-red-500" : ""}>
@@ -1496,8 +1496,8 @@ const B2BAgentCheckout: React.FC = () => {
                 {/* Passenger Details */}
                 <div>
                   <h3 className="text-[#0c1a40] text-sm font-black mb-3">Passenger Details</h3>
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <table className="w-full text-left">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[520px] text-left">
                       <thead className="bg-[#f0f4ff]">
                         <tr>
                           <th className="px-4 py-3 text-[10px] font-black text-gray-500 uppercase tracking-wider">Passenger Name</th>
@@ -1525,7 +1525,7 @@ const B2BAgentCheckout: React.FC = () => {
                 </div>
 
                 {/* Cancellation & Reschedule */}
-                <div className="flex gap-4">
+                <div className="flex flex-col md:flex-row gap-4">
                   {/* Cancellation */}
                   <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
                     <div className="bg-[#0b1031] text-white text-[10px] font-bold text-center py-3 uppercase tracking-wide">

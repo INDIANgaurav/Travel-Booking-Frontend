@@ -273,11 +273,11 @@ function App() {
         <Route path="/b2b/coming-soon" element={<FeatureComingSoonPage />} />
         <Route path="/b2b/signup" element={<AgentSignUpPage />} />
         <Route path="/b2b/login" element={<RetailAgentLoginPage />} />
-        <Route path="/b2b/home" element={<B2BAgentHomePage />} />
-        <Route path="/b2b/checkout" element={<B2BAgentCheckout />} />
         
-        {/* B2B Inner Tools Route */}
-        <Route element={<ProtectedRoute allowedRoles={['B2B_AGENT', 'B2B_AGENT', 'SELLER', 'SUPPLIER_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
+        {/* Protected B2B Agent Engine & Inner Tools */}
+        <Route element={<ProtectedRoute allowedRoles={['B2B_AGENT', 'SELLER', 'SUPPLIER_AGENT', 'SUPER_ADMIN', 'SUB_ADMIN']} />}>
+          <Route path="/b2b/home" element={<B2BAgentHomePage />} />
+          <Route path="/b2b/checkout" element={<B2BAgentCheckout />} />
           <Route element={<B2BDashboardLayout />}>
             <Route path="/b2b/account-statement" element={<B2BAccountStatement />} />
             <Route path="/b2b/markup" element={<B2BMarkup />} />

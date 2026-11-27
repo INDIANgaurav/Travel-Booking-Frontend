@@ -149,8 +149,8 @@ export default function HotelDetailsPage() {
         </div>
 
         {/* Image Grid */}
-        <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[450px] mb-8 rounded-xl overflow-hidden shadow-sm">
-          <div className="col-span-2 row-span-2 bg-gray-100 flex items-center justify-center relative overflow-hidden group">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-2 h-auto md:h-[450px] mb-8 rounded-xl overflow-hidden shadow-sm">
+          <div className="sm:col-span-2 md:col-span-2 md:row-span-2 h-56 sm:h-64 md:h-auto bg-gray-100 flex items-center justify-center relative overflow-hidden group">
             <img 
               src={hotel.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} 
               alt="Hotel Main" 

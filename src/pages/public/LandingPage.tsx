@@ -587,8 +587,7 @@ export default function LandingPage() {
           {/* Top Tabs Pill - Floating Glass Capsule */}
           <div className="flex bg-white/85 backdrop-blur-2xl border border-white/90 rounded-full shadow-[0_12px_36px_rgba(0,18,50,0.18),0_0_0_1px_rgba(255,255,255,0.7)_inset] items-center justify-center p-1.5 mx-auto relative z-30 w-fit mb-[-24px] lg:mb-[-28px] gap-2">
             {[
-              { name: 'Flights', icon: Plane },
-              { name: 'Hotels', icon: Building2 }
+              { name: 'Flights', icon: Plane }
             ].map(tab => {
               const isActive = activeTab === tab.name;
               const Icon = tab.icon;
@@ -1756,8 +1755,8 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* AI Chat Bot */}
-      <ChatBot />
+      {/* AI Chat Bot (hidden from UI while in development) */}
+      {false && <ChatBot />}
     </div>
   );
 }

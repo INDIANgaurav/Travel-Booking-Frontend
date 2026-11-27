@@ -1253,6 +1253,7 @@ export default function FlightBookingPage() {
                   const govtTaxes = totalTaxes - fuelSurcharge - airportFee;
 
                   return (
+                    <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <tbody className="divide-y divide-gray-200">
                         <tr className="py-2">
@@ -1309,6 +1310,7 @@ export default function FlightBookingPage() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   );
                 })()}
               </div>

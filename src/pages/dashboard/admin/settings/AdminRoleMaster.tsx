@@ -163,7 +163,7 @@ export default function AdminRoleMaster() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200">
+        <div className="rounded-lg border border-slate-200 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#1e3a8a] text-white">

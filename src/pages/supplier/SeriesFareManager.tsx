@@ -686,8 +686,8 @@ const SeriesFareManager: React.FC = () => {
                         <td colSpan={13} className="p-5">
                           <div className="bg-white rounded-xl shadow-lg border border-[#0b1031]/20 overflow-hidden space-y-4 p-5">
                             {/* Card Header Summary */}
-                            <div className="bg-[#f0f7ff] text-[#0b1031] p-4 rounded-lg flex items-center justify-between border border-[#0b1031]/20">
-                              <div className="grid grid-cols-8 gap-4 text-xs font-bold w-full items-center">
+                            <div className="bg-[#f0f7ff] text-[#0b1031] p-4 rounded-lg flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border border-[#0b1031]/20">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 lg:gap-4 text-xs font-bold w-full items-center">
                                 <div><span className="block text-[9px] opacity-75">FARE ID</span>{fare.sfId}</div>
                                 <div><span className="block text-[9px] opacity-75">Airline</span>{fare.airline}</div>
                                 <div><span className="block text-[9px] opacity-75">Origin</span>{fare.origin}</div>

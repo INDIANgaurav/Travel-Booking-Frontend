@@ -197,7 +197,7 @@ export default function AdminSubAdmins() {
       )}
 
       {/* Sub-Admins List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         {loading ? (
            <div className="flex justify-center p-8"><Loader2 className="animate-spin text-blue-600" /></div>
         ) : subAdmins.length === 0 ? (

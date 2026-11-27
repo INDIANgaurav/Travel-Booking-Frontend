@@ -398,9 +398,9 @@ export default function WalletPage() {
 
               {/* Filter Controls: Date (Month & Year) + Type */}
               <div className="bg-gray-50/90 rounded-xl p-3 border border-gray-200/70 mb-3 space-y-2 shrink-0 relative z-30">
-                <div className="grid grid-cols-12 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   {/* Month */}
-                  <div className="col-span-5 relative z-30">
+                  <div className="sm:col-span-5 relative z-30">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
                       <Calendar size={11} className="text-gray-400" />
                       <span>Month</span>
@@ -414,7 +414,7 @@ export default function WalletPage() {
                   </div>
 
                   {/* Year */}
-                  <div className="col-span-3 relative z-30">
+                  <div className="sm:col-span-3 relative z-30">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                       Year
                     </label>
@@ -427,7 +427,7 @@ export default function WalletPage() {
                   </div>
 
                   {/* Type */}
-                  <div className="col-span-4 relative z-30">
+                  <div className="sm:col-span-4 relative z-30">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
                       <Filter size={11} className="text-gray-400" />
                       <span>Type</span>

@@ -30,13 +30,6 @@ export default function MobileBottomNav({ onProfileClick }: { onProfileClick?: (
         <span className={`text-[10px] font-bold ${location.pathname === navItems[1].path ? 'text-blue-600' : 'text-gray-500'}`}>{navItems[1].label}</span>
       </button>
 
-      <button onClick={handleMyraClick} className="relative flex flex-col items-center justify-center gap-1 min-w-[65px] -mt-6">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_4px_15px_rgba(79,70,229,0.4)] border-4 border-white">
-          <MessageCircle size={24} className="text-white" />
-        </div>
-        <span className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">TC India AI</span>
-      </button>
-
       <button onClick={navItems[2].action} className={`flex flex-col items-center justify-center gap-1 min-w-[65px] ${location.pathname === navItems[2].path ? 'text-blue-600' : 'text-gray-500'}`}>
         <Heart size={22} strokeWidth={location.pathname === navItems[2].path ? 2.5 : 2} className={location.pathname === navItems[2].path ? 'text-blue-600' : 'text-gray-400'} />
         <span className={`text-[10px] font-bold ${location.pathname === navItems[2].path ? 'text-blue-600' : 'text-gray-500'}`}>{navItems[2].label}</span>

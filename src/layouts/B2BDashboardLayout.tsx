@@ -108,13 +108,6 @@ const B2BDashboardLayout: React.FC = () => {
               <span className="tracking-wide">Flights</span>
             </div>
 
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1.5 cursor-pointer hover:text-white transition-colors group">
-              <div className="w-8 h-8 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-colors">
-                <Building2 size={16} />
-              </div>
-              <span className="tracking-wide">Hotels</span>
-            </div>
-
             <div className={`relative flex flex-col items-center gap-1.5 cursor-pointer transition-colors group ${isMoreActive ? 'text-white' : 'hover:text-white'}`} ref={moreRef}>
               <div 
                 className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-colors ${showMoreMenu || isMoreActive ? 'bg-white/10 border-white/20 text-white' : 'bg-white/5 border-white/10 group-hover:bg-white/10'}`}

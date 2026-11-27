@@ -232,7 +232,7 @@ const B2BMarkup: React.FC = () => {
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 mt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
                       <div>
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Value</p>
                         <p className="text-xs font-bold text-blue-600">{r.type === 'percentage' ? `${r.value}%` : `₹${r.value}`}</p>

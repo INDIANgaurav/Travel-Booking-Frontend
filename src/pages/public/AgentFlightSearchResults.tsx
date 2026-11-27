@@ -1098,13 +1098,6 @@ export default function AgentFlightSearchResults(props: any) {
 
             <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
               <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Building2 size={16} />
-              </div>
-              <span>Hotel & Villas</span>
-            </div>
-
-            <div onClick={() => navigate('/b2b/coming-soon')} className="flex flex-col items-center gap-1 cursor-pointer text-gray-600 hover:text-blue-600 transition">
-              <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
                 <ShieldCheck size={16} />
               </div>
               <span>Insurance</span>

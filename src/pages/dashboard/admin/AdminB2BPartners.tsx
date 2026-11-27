@@ -2205,7 +2205,7 @@ Note: Keep these credentials safe. Do not share publicly.
                     )}
                   </button>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button 
                       onClick={() => openWalletModal(partner)}
                       className="w-full flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-1.5 rounded-xl transition text-xs font-bold shadow-xs cursor-pointer"
@@ -2228,7 +2228,7 @@ Note: Keep these credentials safe. Do not share publicly.
                       <Eye size={13} /> Docs
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button 
                       onClick={() => downloadCustomizedDoc(partner, partner.status === 'Live' ? 'live' : 'test')}
                       className="flex items-center justify-center gap-1.5 bg-blue-50/80 hover:bg-blue-100 text-blue-700 border border-blue-200/80 py-2 px-2 rounded-xl transition text-xs font-semibold cursor-pointer"
@@ -2467,7 +2467,7 @@ Note: Keep these credentials safe. Do not share publicly.
                       </span>
                       <span className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded font-bold">999 Seats</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                       <button
                         onClick={() => openDocViewer(selectedPartner, 'test')}
                         className="flex items-center justify-center gap-1 bg-amber-600 hover:bg-amber-700 text-white py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
@@ -2507,7 +2507,7 @@ Note: Keep these credentials safe. Do not share publicly.
                       </span>
                       <span className="text-[9px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">Real Flights</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-1.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                       <button
                         onClick={() => openDocViewer(selectedPartner, 'live')}
                         className="flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-1.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
